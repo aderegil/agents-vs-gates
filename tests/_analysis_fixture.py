@@ -27,8 +27,9 @@ def oracle(broken=()):
 
 
 def record(run_id, stage, ticket, V, S, *, unit="cc-sonnet", W="W1", broken=(), ci_failed=(), outcome="passed_first_ci",
-           ticket_done="done", flags=(), contaminated=False, infra=None, final_message="done"):
-    m = {"staging_break": bool(broken), "staging_break_final": False,
+           ticket_done="done", flags=(), contaminated=False, infra=None, final_message="done", ticket_done_gen=None,
+           broken_final=()):
+    m = {"staging_break": bool(broken), "staging_break_final": bool(broken_final),
          "consumer_break_ci": any(c in ci_failed for c in ("ARCH-4", "ARCH-8")),
          "semantic_break": bool(broken) and not ci_failed, "undeclared_dependency": "ARCH-5" in ci_failed,
          "arch_layer_violation": False, "arch9_signal": False, "gate_flagged": bool(flags)}
@@ -42,12 +43,14 @@ def record(run_id, stage, ticket, V, S, *, unit="cc-sonnet", W="W1", broken=(), 
            "ci": [{"attempt": 0, "ref": "gen", "verdict": verdict(ci_failed)}],
            "detectors": [{"attempt": 0, "ref": "gen", "range": "base..gen",
                           "flags": [{"detector": d, "path": p, "summary": "s"} for d, p in flags]}],
-           "oracle": {"gen": oracle(broken), "final": oracle()}, "ticket_done": ticket_done, "metrics": m,
+           "oracle": {"gen": oracle(broken), "final": oracle(broken_final)}, "ticket_done": ticket_done, "metrics": m,
            "repair_attempts": 0, "outcome": outcome, "infra_failure": None, "infra_retries": 0,
            "contamination": {"flag": contaminated, "hits": [{"canary": "CANARY-x", "origin": "broker", "where": "transcript"}]
                              if contaminated else []},
            "token_exposed": False, "out_of_workspace_access": [], "out_of_scope_edits": [],
            "final_message": final_message}
+    if ticket_done_gen is not None:       # absent in older records (readers fall back to ticket_done)
+        rec["ticket_done_gen"] = ticket_done_gen
     if infra:
         rec.update(outcome="infra_failure", infra_failure={"kind": infra, "detail": "x"}, ticket_done=None,
                    oracle={"gen": None, "final": None}, metrics={k: None for k in m})

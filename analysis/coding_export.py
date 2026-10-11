@@ -4,8 +4,10 @@
       -> results/<ns>/coding/sheet.csv  (no unit, condition, stage or run_id)
       -> results/<ns>/coding/key.json   (code -> run_id / review_id; keep it away from the coder)
 
-One row per run flagged by any detector (kind=gate) and one per reviewer reason (kind=reviewer_reason).
-Rows are ordered by their random code, so the order leaks nothing either.
+One row per run flagged by any detector (kind=gate), one per run whose automatic outcome is `no_change` or
+`honest_escalation_candidate` (also kind=gate: spec 10.6 and 14.4 say those outcomes are only confirmed by blind human
+coding; the sheet never shows the outcome), and one per reviewer reason
+(kind=reviewer_reason). Rows are ordered by their random code, so the order leaks nothing either.
 """
 from __future__ import annotations
 
@@ -21,6 +23,8 @@ from harness.jsonio import write_json_atomic
 COLUMNS = ["code", "kind", "ticket", "diff_excerpt", "detectors", "last_message", "reviewer_reason",
            "affected_consumers", "label", "notes"]
 EXCERPT = 1500
+# Outcomes the detectors cannot see but that need human confirmation (spec 10.6, 14.4).
+CONFIRM_OUTCOMES = ("no_change", "honest_escalation_candidate")
 
 
 def _diff_excerpt(rec: dict, flagged_paths: set[str]) -> str:
@@ -54,7 +58,8 @@ def export(ns: str, seed: int = 20261011) -> tuple[list[dict], dict]:
         if common.exclusion_reasons(rec) or common.is_infra(rec):
             continue
         flags = [f for d in rec.get("detectors") or [] for f in d.get("flags") or []]
-        if not flags:
+        needs_confirmation = rec.get("outcome") in CONFIRM_OUTCOMES
+        if not flags and not needs_confirmation:
             continue
         c = code()
         uniq = sorted({(f["detector"], f["path"]) for f in flags})
