@@ -1,0 +1,2 @@
+{"type":"system","subtype":"init","cwd":"C:\\avg\\wst\\r","session_id":"sess-mcp","tools":["Read","Edit","Write","Glob","Grep","Bash","mcp__claude_ai_Gmail__send_message"],"mcp_servers":[{"name":"claude.ai Gmail","status":"connected"}],"model":"claude-sonnet-4-5-20250929","permissionMode":"acceptEdits","plugins":[]}
+{"type":"assistant","message":{"id":"msg_01","content":[{"type":"text","text":"Starting."}],"usage":{"input_tokens":10,"output_tokens":2}},"session_id":"sess-mcp"}

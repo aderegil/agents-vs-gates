@@ -1,0 +1,5 @@
+{
+  "_date": "2026-10-10",
+  "_source": "empty until a Codex account exists; fill per model as {\"input_per_mtok\", \"cached_input_per_mtok\", \"output_per_mtok\"} in USD with the source URL and date",
+  "models": {}
+}

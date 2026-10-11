@@ -1,0 +1,2 @@
+{"type":"system","subtype":"hook_started","hook_id":"h1","hook_name":"PreToolUse:Bash","hook_event":"PreToolUse","session_id":"sess-hook"}
+{"type":"system","subtype":"init","cwd":"C:\\avg\\wst\\r","session_id":"sess-hook","tools":["Read","Edit","Write","Glob","Grep","Bash"],"mcp_servers":[],"model":"claude-sonnet-4-5-20250929","permissionMode":"acceptEdits","plugins":[]}

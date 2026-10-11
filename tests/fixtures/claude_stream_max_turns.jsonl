@@ -1,0 +1,5 @@
+{"type":"system","subtype":"init","cwd":"C:\\avg\\wst\\r","session_id":"sess-cap","tools":["Read","Edit","Write","Glob","Grep","Bash"],"mcp_servers":[],"model":"claude-sonnet-4-5-20250929","permissionMode":"acceptEdits","plugins":[]}
+{"type":"assistant","message":{"id":"msg_01","content":[{"type":"tool_use","id":"toolu_01","name":"Glob","input":{"pattern":"**/*"}}],"usage":{"input_tokens":100,"output_tokens":10}},"session_id":"sess-cap"}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_01","content":"package.json\nnotes.txt"}]},"session_id":"sess-cap"}
+{"type":"assistant","message":{"id":"msg_02","content":[{"type":"tool_use","id":"toolu_02","name":"Read","input":{"file_path":"package.json"}}],"usage":{"input_tokens":100,"output_tokens":10}},"session_id":"sess-cap"}
+{"type":"result","subtype":"error_max_turns","is_error":true,"duration_ms":9000,"num_turns":2,"session_id":"sess-cap","total_cost_usd":0.01,"usage":{"input_tokens":200,"output_tokens":20,"cache_read_input_tokens":0,"cache_creation_input_tokens":0}}

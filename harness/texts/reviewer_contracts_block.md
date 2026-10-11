@@ -1,0 +1,5 @@
+Consumer contracts:
+<<<
+{contracts}
+>>>
+

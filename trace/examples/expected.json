@@ -1,0 +1,106 @@
+{
+  "_comment": "Each invalid trace must produce exactly these violations (compared as a set of rule+seq). Generated 2026-10-10 by WP2.",
+  "valid": [
+    "valid-spec-example-2.1.jsonl",
+    "valid-m1-selftest.jsonl",
+    "valid-minimal.jsonl"
+  ],
+  "invalid": {
+    "invalid-rule01-no-session-ended.jsonl": [
+      {
+        "rule": 1,
+        "seq": 10
+      }
+    ],
+    "invalid-rule02-timestamp-backwards.jsonl": [
+      {
+        "rule": 2,
+        "seq": 4
+      }
+    ],
+    "invalid-rule02-seq-gap.jsonl": [
+      {
+        "rule": 2,
+        "seq": 7
+      }
+    ],
+    "invalid-rule03-unknown-actor.jsonl": [
+      {
+        "rule": 3,
+        "seq": 3
+      }
+    ],
+    "invalid-rule04-phase-mismatch.jsonl": [
+      {
+        "rule": 4,
+        "seq": 7
+      }
+    ],
+    "invalid-rule05-read-before-create.jsonl": [
+      {
+        "rule": 5,
+        "seq": 3
+      }
+    ],
+    "invalid-rule06-source-mismatch.jsonl": [
+      {
+        "rule": 6,
+        "seq": 2
+      }
+    ],
+    "invalid-rule07-unclosed-tool-call.jsonl": [
+      {
+        "rule": 7,
+        "seq": 3
+      }
+    ],
+    "invalid-rule08-agent-approves.jsonl": [
+      {
+        "rule": 8,
+        "seq": 6
+      }
+    ],
+    "invalid-rule09-check-by-agent.jsonl": [
+      {
+        "rule": 9,
+        "seq": 8
+      }
+    ],
+    "invalid-rule10-system-review.jsonl": [
+      {
+        "rule": 10,
+        "seq": 10
+      }
+    ],
+    "invalid-rule11-gate-touched-by-ci.jsonl": [
+      {
+        "rule": 11,
+        "seq": 10
+      }
+    ],
+    "invalid-rule12-ci-run-not-completed.jsonl": [
+      {
+        "rule": 12,
+        "seq": 7
+      }
+    ],
+    "invalid-rule12-ci-run-without-checks.jsonl": [
+      {
+        "rule": 12,
+        "seq": 8
+      }
+    ],
+    "invalid-rule13-human-not-simulated.jsonl": [
+      {
+        "rule": 13,
+        "seq": 0
+      }
+    ],
+    "invalid-schema-check-missing-category.jsonl": [
+      {
+        "rule": "schema",
+        "seq": 8
+      }
+    ]
+  }
+}
