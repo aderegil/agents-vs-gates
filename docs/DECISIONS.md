@@ -133,3 +133,14 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - Rules tab adds "In S1 / In S2" columns; Broker adds field-by-consumer matrices; S1/S2 columns collapse the shared S0 text by default.
 - Known: the plugin does not compare S1/S2 to the §5.7 texts character by character (only extension of S0 and word counts).
 - Side effect reported by the subagent: to clear a stuck headless screenshot run it ran `taskkill /IM msedge.exe`, closing every Edge window on the machine at that moment (~00:20–01:00).
+
+## WP4b · Results plugin (2026-10-11; Sonnet subagent)
+- Mutation matrix read from `results/mutation-matrix.json` (+ `.md`), shared by both namespaces · per-namespace copies · deterministic, no agents; in mock its charts still carry the MOCK watermark with a banner saying so.
+- Reviewer / PR-set data stay per namespace (`results/<ns>/reviews/`), as `analysis.summarize.aggregate` does.
+- One pure, DOM-free `web/charts.js` used by the browser and by `render-cli.mjs` (server SVG export via node) · a Python port · no drifting renderers; chart specs (source note, N, `simulated`, banner) are built server-side in `payload.py` so the watermark can't be dropped by the client.
+- Source note model id from `model_reported` of the visible records of the chart's units; dates from their `started_at`/`ended_at`.
+- RQ3 omits cells where every run passed first CI or had no change (noted on screen); RQ2 shows the V0·S0 reference next to V0·S1, V0·S2, V2·S0 of the same ticket/stage/unit; only H2 carries "Holm-adjusted p".
+- RQ5 pairs W2 cells with the W1 cell of the same ticket/V/S/unit from the earliest visible stage (P5's W1 counterpart lives in P1).
+- Mock watermark is not optional anywhere; empty matrix cells use the neutral tone; PNG made in the browser from the same SVG with IBM Plex embedded as base64. Deck style uses the deck purple (A000FF, C1A3FF, 7400C0, 450073), Graphik if installed.
+- Exclusion reasons and infra failures are listed even for blinded stages (isolation facts, not outcomes).
+- Side effect reported by the subagent: a `taskkill /IM msedge.exe` during screenshot cleanup ended two Edge processes; its script now kills only its own tree.

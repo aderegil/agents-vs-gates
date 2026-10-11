@@ -1,0 +1,40 @@
+/* Results plugin. Tokens come from /web/styles.css (Iniciativas): one accent, cyan = pass, pink = fail. */
+.res-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap;
+  padding: 8px 12px; background: var(--superficie); border: var(--trazo) solid var(--linea); border-radius: var(--radio); }
+.res-seg { display: inline-flex; border: var(--trazo) solid var(--linea-fuerte); border-radius: var(--radio); overflow: hidden; }
+.res-seg button { border: 0; background: none; padding: 3px 12px; font-size: 12.5px; font-weight: 500; color: var(--tinta-2); cursor: pointer; }
+.res-seg button + button { border-left: var(--trazo) solid var(--linea-fuerte); }
+.res-seg button[aria-pressed="true"] { background: var(--tinta); color: #fff; }
+.res-seg button:focus-visible { outline-offset: -2px; }
+
+.res-qhead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.res-qhead h2 { font-size: 16px; }
+.res-code { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; background: var(--tinta);
+  color: #fff; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
+.res-note { margin-top: -6px; max-width: 900px; }
+.res-sub { margin: 6px 0 -4px; font-size: 13px; color: var(--tinta-2); }
+.res-pad { padding: 8px 12px 10px; }
+
+.res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(580px, 1fr)); gap: 16px; align-items: start; }
+.res-card-titles { display: flex; flex-direction: column; min-width: 0; }
+.res-card-titles h2 { font-size: 13.5px; }
+.res-card .panel-head { align-items: flex-start; }
+.res-card-body { display: flex; flex-direction: column; gap: 8px; }
+.res-chart { border: 1px solid var(--linea); border-radius: 4px; padding: 10px 12px 4px; }
+.res-chart.style-deck { border-color: #2A2533; }
+.res-chart svg { display: block; width: 100%; height: auto; }
+.res-source { margin: 0; }
+.res-foot { margin: 0; max-width: 70ch; }
+details.res-numbers summary { cursor: pointer; font-size: 12.5px; color: var(--tinta-2); width: max-content; }
+details.res-numbers summary:hover { color: var(--tinta); }
+details.res-numbers .table-wrap { margin-top: 8px; border: 1px solid var(--linea); border-radius: 4px; max-height: 260px; }
+
+.res-blind { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: var(--trazo) dashed var(--linea-fuerte);
+  border-radius: var(--radio); background: var(--superficie); }
+.res-blind .icon { margin-top: 2px; color: var(--tinta-2); }
+
+.res-mut summary { cursor: pointer; padding: 2px 0; }
+.res-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0 4px 16px; }
+.res-chip { padding: 1px 6px; border: 1px solid var(--linea); border-radius: 3px; background: var(--suave); font-size: 11.5px; }
+
+@media (max-width: 1080px) { .res-grid { grid-template-columns: 1fr; } }
