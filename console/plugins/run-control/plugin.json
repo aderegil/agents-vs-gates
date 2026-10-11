@@ -1,0 +1,11 @@
+{
+  "id": "run-control",
+  "name": "Run Control",
+  "icon": "play-circle",
+  "order": 2,
+  "description": "Launch, stop and follow experiment batches.",
+  "roles": ["owner", "operator"],
+  "kind": "module",
+  "entry": "web/index.js",
+  "api": "api.py"
+}

@@ -161,3 +161,16 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - Patches: generated from `harness.workspace.materialize` trees (canary lines already stripped); X-dep adds a `StockGateway` port with `HttpStockGateway` default and a `FakeStock` in unit-test helpers; X-remove breaking removes `channel` from event and order model (tests updated); X-units additive adds `totalDollars` to event and REST response.
 - Mutation test: mutations applied by a wrapper re-exporting `createApp` (wraps the Kafka buffer when no publisher is injected); service code untouched (§8.4). Result: 104 mutants + 1 control — CI∧oracle 78, oracle only 15 (units ×100/rounding/truncation, duplicated/reordered lines, currency), CI only 0, neither 11 (harmless to deployed consumers).
 - (Lead) Fixed `harness/paths.py` `tool("depcruise")` → `bin/dependency-cruiser.mjs` (bug reported by WP1b; CI had a fallback).
+
+## WP4a · Run Control and Run Explorer (2026-10-11; Sonnet subagent)
+- Blinded stages: diff, CI, oracle, detectors **and transcript** → 403 "Blinded until stage complete"; trace returns only validity/counts/rule ids · transcript and diff open · the transcript carries CI feedback and the diff exposes gate edits — both are outcome channels.
+- Blinded summary/table rows = `redact_record` + an allowlist (identity, condition, timing, totals, contamination, `token_exposed`, infra kind) · `redact_record` alone · it leaves `sessions` (a fix1 entry reveals CI failed) and `out_of_*`.
+- `contaminated`, `token_exposed`, turns, duration and tokens stay visible while blinded (exclusion criteria and resource use, already in SSE).
+- Dry run computed in-process with the runner's selection logic · spawning `runner --dry-run` · the runner's startup writes the mock manifest/state.
+- A real batch needs a limit (runs or minutes); mock may run a whole stage; calibrate takes no limits · unbounded · quota safety.
+- "Mock pipeline pieces missing" is a non-blocking note in mock (MOCK has no guards; the runner refuses itself with exit 2).
+- Workers 1–3 = per-namespace console preference (`<data>/run-control/settings.json`) applied to the next batch · live resize · the runner has none.
+- Resume-at reuses the last launch's args with `--batch` reduced by what finished; accepts HH:MM (next local occurrence) or ISO; guards re-checked when scheduling.
+- `/stop` → 409 when no runner is alive; `start` deletes a stale `control.json` first.
+- Added owner-only `POST /api/run-control/unblind` (non-forced, refused while a runner is alive, typed confirm "UNBLIND Pn", console username stamped) · CLI only · Overview's next action points to Run Control. Forced unblind stays CLI-only.
+- Run Explorer lists archived runs only (`record.json` present); `fix<n>.diff` labelled incremental; stacked master-detail layout at 1440 px; transcript strings cut at 12 000 chars, events paged at 3000, diffs capped at 300 kB (flagged).
