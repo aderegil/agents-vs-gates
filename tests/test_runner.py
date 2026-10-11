@@ -39,8 +39,10 @@ class RunnerTest(unittest.TestCase):
         code, out, _ = run(["--stage", "P1", "--unit", "mock", "--batch", "2"], self.fs, self.scripts())
         self.assertEqual(code, 0)
         lines = [l for l in out.splitlines() if l.startswith("p1-")]
-        self.assertEqual(len(lines), 2)
-        for l in lines:   # one line per run: id, turns, duration, tokens — never outcome or cell
+        self.assertEqual(len([l for l in lines if " turns=" in l]), 2)
+        self.assertEqual(len([l for l in lines if " started" in l]), 2)
+        self.assertFalse([l for l in out.splitlines() if l.startswith("  p1-")])   # no agent activity: P1 is blinded
+        for l in lines:   # per run: id + worker, then id, turns, duration, tokens — never outcome or cell
             self.assertNotIn("fixed_code", l)
             self.assertNotIn("X-re", l)
         st = jsonio.read_json(paths.state_path("mock"))

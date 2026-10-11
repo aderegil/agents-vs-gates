@@ -208,9 +208,10 @@ class Batch:
                                               "attempt": "gen", "started_at": now(), "turns": 0, "tokens": 0}
             log(self.ns, "run_started", run_id=rid, worker=k, ticket=entry["ticket"], cell=entry["cell"])
             show = not self.quiet and blinding.is_visible(st.data, entry.get("stage"))
-            if not self.quiet:
-                print(f"{rid}  started  {entry['ticket']} {entry.get('visibility', '')}·{entry.get('spec', '')}·"
-                      f"{entry.get('wording', '')}  worker {k}", flush=True)
+            if not self.quiet:   # the cell only for visible stages, like every other stdout line
+                cell = (f"  {entry['ticket']} {entry.get('visibility', '')}·{entry.get('spec', '')}·"
+                        f"{entry.get('wording', '')}") if show else ""
+                print(f"{rid}  started{cell}  worker {k}", flush=True)
 
             def on_event(ev, k=k, rid=rid, show=show):
                 if show:
