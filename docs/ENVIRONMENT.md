@@ -35,4 +35,5 @@ Present in the help text: `--effort`, `--exclude-dynamic-system-prompt-sections`
   denied); `--resume`; the token does not reach the agent's Bash. Failed: system/init listed the built-in plugins
   `cc-plugin-agents-md`, `cc-plugin-telemetry`, `cc-plugin-plugin-authoring`. Now disabled per run in the isolated
   `settings.json` (see DECISIONS, "Smoke test #1 follow-up"). Details: `results/smoke.json`.
-- **#2:** pending, to confirm the fix.
+- **#2 (2026-10-11 17:00 UTC, run by Alfredo):** **PASS, 12 of 12.** system/init is clean with the three built-in
+  plugins disabled in the isolated `settings.json`; every other check as in #1. `--max-turns` is verified.
