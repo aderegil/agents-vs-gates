@@ -33,8 +33,7 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - 2026-10-10 · Avatars are served at `/api/teams/avatars` instead of `/api/avatars` · a core alias · keeps every
   plugin route under its own prefix (§21.2).
 - 2026-10-10 · `@types/node` pinned to 24.13.2 (an exact 24.x) · `^24` · reproducible `npm ci` across workers.
-- 2026-10-10 · (Corrected 2026-10-11 by WP5:) `C:w26pixel-soulsSOURCE.txt` does exist and records commit `046ad8e6…` (branch `claude/simulation-game-characters-5vvhqj`); `console/plugins/replay/app/ORIGIN.md` cites it. The lead first missed it.
-  Recorded in `console/plugins/replay/app/ORIGIN.md` as "commit unknown" · stopping to ask · the source is present.
+- 2026-10-10 · (Corrected 2026-10-11 by WP5:) `C:\avg\pixel-souls\SOURCE.txt` does exist and records commit `046ad8e6…` (branch `claude/simulation-game-characters-5vvhqj`); `console/plugins/replay/app/ORIGIN.md` cites it. The lead first missed it.
 - 2026-10-10 · The builder's subagents do not commit; the lead commits each package when it closes · subagents
   committing in parallel · avoids index races in one working tree.
 
