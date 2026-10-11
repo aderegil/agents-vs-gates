@@ -41,7 +41,9 @@ def list_stages(req):        # req: Request
   `GET /api/audit` (owner; filters `user`, `action`, `from`, `to`; `?format=csv`), `GET /api/health`.
 - Plugin routes (owners): `overview` → `/api/overview`; `run-control` → `/api/run-control/{stages,status,dry-run,start,stop,workers,resume-at}`;
   `results` → `/api/results/{rq,mutation,reviewer,excluded,export}`; `runs` → `/api/runs`, `/api/runs/{id}`,
-  `/api/runs/{id}/{diff,ci,oracle,detectors,transcript,trace,replay}`; `replay` → `/api/replay/{list,demo}`;
+  `/api/runs/{id}/{diff,ci,oracle,detectors,transcript,trace,replay}`; `replay` → `/api/replay/list` (runs of the ns that have an `events.jsonl`, with meta) and
+  `/api/replay/run/{run_id}` (the run's `replay.json`, built on demand with `replay.export.build_replay` and cached
+  in the run folder; `/api/runs/{id}/replay` delegates to the same function);
   `teams` → `/api/teams`, `/api/teams/{model}`, `/api/teams/avatars` (stands in for §23's `/api/avatars`);
   `scenario` → `/api/scenario/{repos,file,rules,catalog,tickets,contexts,broker}`;
   `readiness` → `/api/readiness/{doctor,smoke,lock,freeze,units,token,checklist}`; `users` → `/api/users…`.
