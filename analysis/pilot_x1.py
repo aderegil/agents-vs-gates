@@ -7,6 +7,7 @@ Per unit × ticket × V (V0 vs V2, S0, W1 base text):
   - outcomes (passed_first_ci, fixed_code, ...);
   - ticket_done on the final PR (and on gen), out_of_scope_edits (V2);
   - median turns, tokens (input + output) and minutes;
+  - covariates (calibration finding from P0): ran the checks in gen (ran_tests) and shell commands denied;
   - Fisher exact V0 vs V2 per ticket on "first attempt broke a consumer" and on passed_first_ci. Not corrected for
     multiplicity: exploratory.
 Infrastructure failures and excluded runs (contamination, token exposed, isolation breach) are counted apart.
@@ -29,6 +30,15 @@ NOTE = ("Pilot X1 · exploratory — run before the freeze; results disclosed, n
         "Fisher p-values are uncorrected.")
 
 
+def covariates_of(rec: dict) -> dict:
+    """record.covariates, or computed from the archived transcript for records written before it existed."""
+    if isinstance(rec.get("covariates"), dict):
+        return rec["covariates"]
+    from harness import covariates
+    tr = jsonio.read_jsonl(common.run_files(rec) / "transcript.jsonl") if rec.get("run_id") else []
+    return covariates.compute(tr or [])
+
+
 def _med(xs):
     return round(median(xs), 1) if xs else None
 
@@ -37,6 +47,7 @@ def _group(recs: list[dict]) -> dict:
     n = len(recs)
     sb = sum(1 for r in recs if (r.get("metrics") or {}).get("staging_break") is True)
     pfc = sum(1 for r in recs if r.get("outcome") == "passed_first_ci")
+    cov = [covariates_of(r) for r in recs]
     return {
         "n": n,
         "staging_break_gen": {"x": sb, "n": n, "ci": list(stats.clopper_pearson(sb, n)) if n else None},
@@ -49,6 +60,9 @@ def _group(recs: list[dict]) -> dict:
         "median_tokens": _med([(r.get("totals") or {}).get("input_tokens", 0) + (r.get("totals") or {}).get("output_tokens", 0)
                                for r in recs]),
         "median_minutes": _med([r.get("duration_ms", 0) / 60000 for r in recs]),
+        "ran_tests": {"x": sum(1 for c in cov if c.get("ran_tests")), "n": n},
+        "shell_denials": {"runs": sum(1 for c in cov if c.get("shell_denials")), "total": sum(c.get("shell_denials", 0) for c in cov),
+                          "median": _med([c.get("shell_denials", 0) for c in cov])},
         "run_ids": sorted(r["run_id"] for r in recs),
     }
 
@@ -123,6 +137,8 @@ def markdown(s: dict) -> str:
                   f"| Median turns | {a['median_turns'] if a['median_turns'] is not None else '—'} | {b['median_turns'] if b['median_turns'] is not None else '—'} |",
                   f"| Median tokens (in + out) | {a['median_tokens'] if a['median_tokens'] is not None else '—'} | {b['median_tokens'] if b['median_tokens'] is not None else '—'} |",
                   f"| Median minutes | {a['median_minutes'] if a['median_minutes'] is not None else '—'} | {b['median_minutes'] if b['median_minutes'] is not None else '—'} |",
+                  f"| Ran the checks in gen (npm test / typecheck / tsc) | {a['ran_tests']['x']} of {a['n']} | {b['ran_tests']['x']} of {b['n']} |",
+                  f"| Shell commands denied (runs with any / total) | {a['shell_denials']['runs']} / {a['shell_denials']['total']} | {b['shell_denials']['runs']} / {b['shell_denials']['total']} |",
                   "",
                   f"Fisher exact V0 vs V2 (two-sided, uncorrected, exploratory): first attempt broke a consumer p = "
                   f"{_p(g['fisher_staging_break'])}; passed the first CI p = {_p(g['fisher_passed_first_ci'])}.", ""]

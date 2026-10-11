@@ -49,7 +49,7 @@ def redact_record(record: dict, state: dict | None) -> dict:
     if is_visible(state, record.get("stage")):
         return record
     hidden = {"outcome", "ticket_done", "ticket_done_gen", "ticket_check", "ticket_check_gen", "metrics", "oracle", "ci",
-              "detectors", "final_message", "repair_attempts", "reviews"}
+              "detectors", "final_message", "repair_attempts", "reviews", "covariates"}
     out = {k: v for k, v in record.items() if k not in hidden}
     out["blinded"] = True
     return out

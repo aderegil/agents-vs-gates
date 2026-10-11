@@ -20,7 +20,11 @@ CALLS = 0
 EXPECTED_TOOLS = {"Read", "Edit", "Write", "Glob", "Grep", "Bash"}
 TOOLS_ARG = "Read,Edit,Write,Glob,Grep,Bash"
 ALLOWED_TOOLS = ["Bash(npm run *)", "Bash(npm test)", "Bash(npm test *)", "Bash(npx tsc)", "Bash(npx tsc *)",
-                 "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)"]
+                 "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
+                 # calibration finding from P0 (DECISIONS): reading, navigation and text commands a developer uses;
+                 # node, other npx, network, find, git writes and rm stay denied
+                 "Bash(cd *)", "Bash(ls*)", "Bash(pwd)", "Bash(cat *)", "Bash(head *)", "Bash(tail *)",
+                 "Bash(grep *)", "Bash(wc *)", "Bash(sed *)", "Bash(diff *)"]
 DISALLOWED_TOOLS = ["WebFetch", "WebSearch", "Agent"]
 BUILTIN_PLUGINS_OFF = ["cc-plugin-agents-md@builtin", "cc-plugin-telemetry@builtin",
                        "cc-plugin-plugin-authoring@builtin"]

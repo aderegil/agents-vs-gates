@@ -24,8 +24,14 @@ class ArgvEnv(unittest.TestCase):
         self.assertEqual(argv[:5], ["-p", "--model", "sonnet", "--effort", "medium"])
         self.assertEqual(argv[argv.index("--tools") + 1], "Read,Edit,Write,Glob,Grep,Bash")
         i = argv.index("--allowedTools")
-        self.assertEqual(argv[i + 1:i + 9], ["Bash(npm run *)", "Bash(npm test)", "Bash(npm test *)", "Bash(npx tsc)",
-                                             "Bash(npx tsc *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)"])
+        self.assertEqual(argv[i + 1:i + 19], ["Bash(npm run *)", "Bash(npm test)", "Bash(npm test *)", "Bash(npx tsc)",
+                                              "Bash(npx tsc *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
+                                              "Bash(cd *)", "Bash(ls*)", "Bash(pwd)", "Bash(cat *)", "Bash(head *)",
+                                              "Bash(tail *)", "Bash(grep *)", "Bash(wc *)", "Bash(sed *)", "Bash(diff *)"])
+        allowed = argv[i + 1:argv.index("--disallowedTools")]
+        for denied in ("node", "npx", "curl", "find", "git commit", "git push", "git reset", "git checkout", "rm"):
+            self.assertFalse(any(a == f"Bash({denied} *)" or a == f"Bash({denied}*)" or a == f"Bash({denied})"
+                                 for a in allowed), denied)
         j = argv.index("--disallowedTools")
         self.assertEqual(argv[j + 1:j + 4], ["WebFetch", "WebSearch", "Agent"])
         for flag in ("--strict-mcp-config", "--disable-slash-commands", "--exclude-dynamic-system-prompt-sections",

@@ -338,6 +338,8 @@ export async function mount(el, shell) {
           { m: "Median turns", v0: num(a.median_turns), v2: num(b.median_turns) },
           { m: "Median tokens (in + out)", v0: num(a.median_tokens), v2: num(b.median_tokens) },
           { m: "Median minutes", v0: num(a.median_minutes), v2: num(b.median_minutes) },
+          { m: "Ran the checks in gen", v0: a.ran_tests ? `${a.ran_tests.x} of ${a.ran_tests.n}` : "—", v2: b.ran_tests ? `${b.ran_tests.x} of ${b.ran_tests.n}` : "—" },
+          { m: "Shell commands denied (runs with any / total)", v0: a.shell_denials ? `${a.shell_denials.runs} / ${a.shell_denials.total}` : "—", v2: b.shell_denials ? `${b.shell_denials.runs} / ${b.shell_denials.total}` : "—" },
         ];
         out.push(panel({ title: `${ticket} · V0 vs V2 · ${unit} · S0 · W1 base text`,
           body: h("div", { class: "stack" },

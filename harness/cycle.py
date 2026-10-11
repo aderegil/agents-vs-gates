@@ -9,7 +9,7 @@ import json
 import time
 from pathlib import Path
 
-from harness import detectors, gitutil, jsonio, outcome, paths, record as record_mod, repair, sanitize, scenario_io
+from harness import covariates, detectors, gitutil, jsonio, outcome, paths, record as record_mod, repair, sanitize, scenario_io
 from harness import trace as trace_mod
 from harness.adapters.base import Limits, load_adapter, now_iso
 from harness.workspace import materialize
@@ -126,6 +126,7 @@ def execute_run(entry: dict, *, ns: str, worker_ns: str, worker: int, units: dic
         oracle_gen=oracle_gen, oracle_final=oracle_final, ticket_gen=ticket_gen, ticket_final=ticket_final, outcome=out, infra=infra,
         infra_retries=infra_retries, out_of_scope=oos, out_of_workspace=ooa, final_message=last.final_text,
         ticket_text=prompt, context_file=ctx_name, timing=timing, ws_notes=ws.notes)
+    rec["covariates"] = covariates.compute(transcript)   # ran_tests, shell_denials (calibration finding from P0)
 
     # canaries over transcript + diffs + final message; then token/user-path scrubbing everywhere
     hits = sanitize.canary_hits(json.dumps(transcript, ensure_ascii=False), "transcript")

@@ -93,6 +93,11 @@ primary metric is the oracle, not CI.
   Reaching a cap is an agent outcome (`capped`), never an infrastructure failure. Max 3 repair attempts.
 - **Isolation:** per-run `CLAUDE_CONFIG_DIR`, no MCP servers, no slash commands/skills, no hooks, allowlist without
   `node`, prompt via stdin, canaries in every forbidden source. Verified by the smoke test: **[FILL]**.
+- **Shell allowlist (calibration finding from P0):** `npm run *`, `npm test*`, `npx tsc*`, `git status|diff|log`, and
+  the reading/navigation/text commands `cd`, `ls`, `pwd`, `cat`, `head`, `tail`, `grep`, `wc`, `sed`, `diff`. In P0,
+  2 of 5 runs stopped testing after one harmless `sed -i` was denied; a real developer can use these commands. Still
+  denied: `node`, other `npx`, network, `find`, git writes, `rm`. Covariates per run and per cell: `ran_tests` (ran
+  npm test / typecheck / tsc in `gen`) and `shell_denials`.
 
 ## 5. Metrics and outcomes (per run)
 - `staging_break` (**primary for RQ1/RQ2**): at least one consumer oracle suite fails on the state of the first CI
