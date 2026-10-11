@@ -1,0 +1,8 @@
+# CANARY-dc900bedac960379
+name: payments-service
+owner: payments
+provides:
+  apis:   [{ name: payments-api, host: payments.payments.internal, version: 1, envAliases: ["PAYMENTS_API_URL", "PAYMENTS_API_BASE_URL", "PAYMENTS_API_HOST"] }]
+  events: [{ name: PaymentCaptured, topic: payments.captured, version: 1 }]
+dependsOn: []
+consumes: []

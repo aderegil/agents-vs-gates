@@ -1,0 +1,1 @@
+The new storefront shows order totals in dollars. Make the order total available in dollars (for example 12.5 for $12.50) in what the orders service exposes, so the storefront doesn't have to convert.

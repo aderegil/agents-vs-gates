@@ -1,0 +1,11 @@
+{
+  "_canary": "CANARY-ff21cffe287441a8",
+  "consumer": "analytics-ingest",
+  "provider": "orders-service",
+  "contract": "OrderCancelled",
+  "deployedVersion": 1,
+  "requires": {
+    "orderId": "string",
+    "cancelledAt": "iso-datetime"
+  }
+}

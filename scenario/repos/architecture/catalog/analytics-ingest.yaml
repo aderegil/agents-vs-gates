@@ -1,0 +1,10 @@
+# CANARY-dc900bedac960379
+name: analytics-ingest
+owner: data
+provides:
+  apis:   []
+  events: []
+dependsOn: []
+consumes:
+  - { service: orders-service, event: OrderPlaced }
+  - { service: orders-service, event: OrderCancelled }

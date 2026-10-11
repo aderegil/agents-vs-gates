@@ -1,0 +1,17 @@
+[
+  {
+    "type": "dependency",
+    "from": "src/api/legacyExport.ts",
+    "to": "src/adapters/inMemoryOrderRepository.ts",
+    "unresolvedTo": "../adapters/inMemoryOrderRepository.js",
+    "dependencyTypes": [
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "ARCH-2-api-no-adapters"
+    }
+  }
+]

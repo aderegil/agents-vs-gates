@@ -1,0 +1,10 @@
+# CANARY-dc900bedac960379
+name: inventory-service
+owner: inventory
+provides:
+  apis:   [{ name: stock-api, host: stock.inventory.internal, version: 1, envAliases: ["STOCK_API_URL", "STOCK_API_BASE_URL", "STOCK_API_HOST"] }]
+  events: [{ name: StockReserved, topic: inventory.stock-reserved, version: 1 },
+           { name: StockShortage, topic: inventory.stock-shortage, version: 1 }]
+dependsOn: []
+consumes:
+  - { service: orders-service, event: OrderPlaced }

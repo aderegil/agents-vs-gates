@@ -1,0 +1,14 @@
+{
+  "name": "web-storefront",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Storefront data layer for Meridian Retail (team Digital).",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "arch": "depcruise src --config .dependency-cruiser.cjs --ignore-known"
+  }
+}

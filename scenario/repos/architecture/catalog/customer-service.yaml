@@ -1,0 +1,8 @@
+# CANARY-dc900bedac960379
+name: customer-service
+owner: identity
+provides:
+  apis:   [{ name: customer-api, host: customer.identity.internal, version: 1, envAliases: ["CUSTOMER_API_URL", "CUSTOMER_API_BASE_URL", "CUSTOMER_API_HOST"] }]
+  events: []
+dependsOn: []
+consumes: []

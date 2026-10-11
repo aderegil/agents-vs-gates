@@ -1,0 +1,9 @@
+# CANARY-dc900bedac960379
+name: billing-service
+owner: finance
+provides:
+  apis:   []
+  events: []
+dependsOn: []
+consumes:
+  - { service: orders-service, event: OrderPlaced }

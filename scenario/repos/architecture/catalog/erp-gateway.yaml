@@ -1,0 +1,10 @@
+# CANARY-dc900bedac960379
+name: erp-gateway
+owner: integration
+provides:
+  apis:   [{ name: erp-api, host: erp.integration.internal, version: 1, envAliases: ["ERP_API_URL", "ERP_API_BASE_URL", "ERP_API_HOST"] }]
+  events: []
+dependsOn:
+  - { service: customer-service, api: customer-api, host: customer.identity.internal }
+consumes:
+  - { service: payments-service, event: PaymentCaptured }

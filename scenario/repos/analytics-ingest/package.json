@@ -1,0 +1,14 @@
+{
+  "name": "analytics-ingest",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Data ingestion service for Meridian Retail (team Data).",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "arch": "depcruise src --config .dependency-cruiser.cjs --ignore-known"
+  }
+}

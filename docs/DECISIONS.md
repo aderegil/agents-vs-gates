@@ -37,3 +37,27 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   Recorded in `console/plugins/replay/app/ORIGIN.md` as "commit unknown" · stopping to ask · the source is present.
 - 2026-10-10 · The builder's subagents do not commit; the lead commits each package when it closes · subagents
   committing in parallel · avoids index races in one working tree.
+
+## WP1a · Scenario repos (2026-10-10, night; Sonnet subagent)
+- 2026-10-10 · ESM `nodenext` with `.js` import suffixes in all four TS repos · CommonJS · works with the `.cjs`
+  dependency-cruiser config; all builds and `arch` green.
+- 2026-10-10 · `arch` = `depcruise src --config .dependency-cruiser.cjs --ignore-known` (default baseline file name),
+  `tsPreCompilationDeps: true` so type-only imports count (freezes `legacyExport`'s adapter import) · explicit file arg.
+- 2026-10-10 · LOC ranges (§5.2) are met by all three measures (total, non-blank, code-only) by adding genuine
+  features (customer order listing with cursor, 30-day cancel window, payment retry, `/health`; billing reminders and
+  payment recording; storefront cache, receipt, status badge) · padding · the metric is unspecified.
+- 2026-10-10 · Payments gateway exposes only `authorize` (no void on cancel) · a void call · one payments call is what
+  CI's netstub models.
+- 2026-10-10 · `POST /orders` and cancel return the same body as `GET /orders/{id}` (no `customerEmail`, no
+  `cancelledAt`) · full order · avoids PII in responses and keeps one response mapping (`toOrderResponse`).
+- 2026-10-10 · Consumers ignore unknown fields (incl. `schemaVersion`) · strict schema · additive changes must stay
+  compatible (ARCH-4).
+- 2026-10-10 · Broker `requires` use only the §5.4 field lists; storefront's `status` is a plain `string` · enum ·
+  new statuses stay compatible.
+- 2026-10-10 · Invented catalog hosts for M2 services (customer-api `customer.identity.internal`, erp-api
+  `erp.integration.internal`, `PaymentCaptured` on `payments.captured`); `envAliases` on every provided API ·
+  the spec leaves them open. inventory-service is a third catalog consumer of `OrderPlaced` without a broker file (M2).
+- 2026-10-10 · Consumer `.dependency-cruiser.cjs` files also carry the canary line · `.ts`/`.md` only · stripping
+  works on any line containing `CANARY-`.
+- 2026-10-10 · Known gap: `npm test` per repo takes ~5 s of test time but `tsc` adds 14–20 s and node startup ~2.8 s
+  on this machine, so the "< 10 s" target (§5.2) is not met end to end · not fixable without changing the toolchain.

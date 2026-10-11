@@ -1,0 +1,9 @@
+# CANARY-dc900bedac960379
+name: web-storefront
+owner: digital
+provides:
+  apis:   []
+  events: []
+dependsOn:
+  - { service: orders-service, api: orders-api, host: orders.checkout.internal }
+consumes: []

@@ -1,0 +1,14 @@
+{
+  "_canary": "CANARY-ff21cffe287441a8",
+  "consumer": "billing-service",
+  "provider": "orders-service",
+  "contract": "OrderPlaced",
+  "deployedVersion": 3,
+  "requires": {
+    "orderId": "string",
+    "customerId": "string",
+    "customerEmail": "string",
+    "totalCents": "integer",
+    "currency": "string"
+  }
+}

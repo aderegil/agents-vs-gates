@@ -1,0 +1,1 @@
+Reject orders when there isn't enough stock. Before placing an order, check availability with the inventory team's Stock API: GET https://stock.inventory.internal/v1/stock/{sku} returns { "sku": string, "available": number }. If any line asks for more than is available, POST /orders must return 409.

@@ -1,0 +1,28 @@
+# scenario
+
+The synthetic "Meridian Retail" order-to-cash platform used by the experiment (spec section 5 of
+`docs/construccion-experimento.md`). Everything here is code and text the experiment consumes; nothing in this folder
+calls a model.
+
+| Folder | Contents |
+|---|---|
+| `repos/orders-service/` | The repo the agent works on (team Checkout). Hexagonal TypeScript: `src/api`, `src/core`, `src/adapters`, `src/main.ts` (`createApp(deps?)`). No canary. |
+| `repos/billing-service/` | Consumer of `OrderPlaced` (team Finance). Carries the `consumer-billing-service` canary in every `.ts`/`.md` file. |
+| `repos/analytics-ingest/` | Consumer of `OrderPlaced` and `OrderCancelled` (team Data). Canary `consumer-analytics-ingest`. |
+| `repos/web-storefront/` | Typed client of `orders-api` plus view models (team Digital). Canary `consumer-web-storefront`. |
+| `repos/architecture/` | Human architect's repo: `ARCHITECTURE-RULES.md` (ARCH-1..9), `catalog/` (one YAML per service, including the M2 ones), `broker/` (consumer expectations), `pii-baseline.json`, `adr/`. Carries the `architecture` / `broker` canaries. |
+| `context/orders-service/` | The context files given to the agent: `S0.md` (= the orders-service README), `S1.md` (S0 + architecture prose), `S2.md` (S0 + rules ARCH-1..8). Texts are frozen at pre-registration. |
+| `tasks/` | Ticket texts (`X-*.md`, exact wording, no wrapper), the W2 wording of `X-rename`, and `TODO(human)` placeholders for the paraphrases `p1..p5`. |
+| `solutions/` | Reference patches (written later by another package). |
+
+Every service repo is independent and has no dependencies of its own: `typescript`, `dependency-cruiser` and
+`@types/node` are resolved from the `node_modules` of an ancestor folder. In a repo, run:
+
+```
+npm run build       # tsc
+npm test            # build + node --test "dist/test/**/*.test.js"
+npm run typecheck   # tsc --noEmit
+npm run arch        # depcruise with .dependency-cruiser.cjs and the known-violations baseline
+```
+
+`dist/` and `.ci-build/` are build output and are git-ignored.

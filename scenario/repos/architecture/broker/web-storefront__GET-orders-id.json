@@ -1,0 +1,18 @@
+{
+  "_canary": "CANARY-ff21cffe287441a8",
+  "consumer": "web-storefront",
+  "provider": "orders-service",
+  "contract": "GET /orders/{id}",
+  "deployedVersion": 1,
+  "requires": {
+    "id": "string",
+    "status": "string",
+    "currency": "string",
+    "totalCents": "integer",
+    "lines": "array",
+    "lines[].sku": "string",
+    "lines[].name": "string",
+    "lines[].qty": "integer",
+    "lines[].unitPriceCents": "integer"
+  }
+}

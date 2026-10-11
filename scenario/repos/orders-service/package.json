@@ -1,0 +1,14 @@
+{
+  "name": "orders-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Order management service for Meridian Retail (team Checkout).",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "arch": "depcruise src --config .dependency-cruiser.cjs --ignore-known"
+  }
+}

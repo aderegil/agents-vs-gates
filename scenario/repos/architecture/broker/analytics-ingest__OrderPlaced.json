@@ -1,0 +1,15 @@
+{
+  "_canary": "CANARY-ff21cffe287441a8",
+  "consumer": "analytics-ingest",
+  "provider": "orders-service",
+  "contract": "OrderPlaced",
+  "deployedVersion": 3,
+  "requires": {
+    "orderId": "string",
+    "placedAt": "iso-datetime",
+    "channel": "enum:web|store|marketplace",
+    "currency": "string",
+    "lines[].sku": "string",
+    "lines[].qty": "integer"
+  }
+}

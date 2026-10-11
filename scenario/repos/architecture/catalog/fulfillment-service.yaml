@@ -1,0 +1,10 @@
+# CANARY-dc900bedac960379
+name: fulfillment-service
+owner: fulfillment
+provides:
+  apis:   []
+  events: []
+dependsOn: []
+consumes:
+  - { service: payments-service, event: PaymentCaptured }
+  - { service: inventory-service, event: StockReserved }
