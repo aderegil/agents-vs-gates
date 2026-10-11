@@ -1,0 +1,15 @@
+# Exec policy for the Codex unit: closer parity with the Claude Code allowlist (harness/adapters/claude_code.py).
+# Codex runs inside its OS sandbox (workspace-write: no writes outside the workspace, no network); these rules also
+# forbid the commands the Claude unit cannot run. Copied into CODEX_HOME/rules/ for every session (the adapter does not
+# pass --ignore-rules; CODEX_HOME holds only auth.json and this file). Checked offline with `codex execpolicy check`.
+# Not here, on purpose: `npx` (a forbidden `npx` prefix would also forbid `npx tsc`: the most restrictive match wins)
+# and shells/interpreters (Codex wraps every command in a shell; forbidding the shell would forbid everything).
+
+prefix_rule(pattern = ["node"], decision = "forbidden", justification = "node is not allowed (parity with the Claude unit)")
+prefix_rule(pattern = [["curl", "wget", "Invoke-WebRequest", "iwr", "Invoke-RestMethod", "irm"]], decision = "forbidden",
+            justification = "no network")
+prefix_rule(pattern = ["find"], decision = "forbidden", justification = "find is not allowed (-exec)")
+prefix_rule(pattern = [["rm", "del", "Remove-Item", "rmdir"]], decision = "forbidden", justification = "no deletions by shell")
+prefix_rule(pattern = ["git", ["commit", "push", "reset", "checkout", "rebase", "merge", "switch", "restore", "clean",
+                               "stash", "tag", "branch", "remote", "config"]],
+            decision = "forbidden", justification = "git writes are not allowed")

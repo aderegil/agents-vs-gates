@@ -76,14 +76,17 @@ def register(router, ctx):
         return get_settings(ns)
 
     # ------------------------------------------------------------ guards (spec §22.2)
-    def guard_reasons(ns: str, stage: str, *, strict: bool = False) -> list[dict]:
-        """Why a real batch of `stage` must not start. MOCK has no guards. strict also re-verifies the lock hashes."""
+    def guard_reasons(ns: str, stage: str, *, strict: bool = False, units=None) -> list[dict]:
+        """Why a real batch of `stage` must not start. MOCK has no guards. strict also re-verifies the lock hashes.
+        units: the units that would run (Claude Code units need results/smoke.json, codex results/smoke-codex.json)."""
         if ns == "mock":
             return []
         out = []
-        smoke = read_json(paths.results_root() / "smoke.json", default=None)
-        if not (isinstance(smoke, dict) and smoke.get("ok")):
-            out.append({"code": "smoke", "message": "Live smoke test not approved (results/smoke.json)"})
+        from harness.runner import smoke_files
+        for name in smoke_files(set(units or ())):
+            smoke = read_json(paths.results_root() / name, default=None)
+            if not (isinstance(smoke, dict) and smoke.get("ok")):
+                out.append({"code": "smoke", "message": f"Live smoke test not approved (results/{name})"})
         if stage not in EXPLORATORY:
             try:
                 from harness import prereg
@@ -182,7 +185,8 @@ def register(router, ctx):
         limit = params["batch"]
         shown = todo[:limit] if limit else todo
         alive = runner_ctl.runner_alive(ns)
-        blocking = list(guard_reasons(ns, stage, strict=True))
+        blocking = list(guard_reasons(ns, stage, strict=True,
+                                      units={r["unit"] for r in todo} or ({params["unit"]} if params["unit"] else None)))
         notes = []
         if not manifest:
             if ns == "real":
@@ -278,7 +282,10 @@ def register(router, ctx):
             else:
                 status = "pending"
             runnable = stage in RUNNABLE
-            reasons = guard_reasons(ns, stage) if runnable else []
+            stage_units = {r.get("unit") for r in blinding.stage_runs(manifest, stage)}
+            if len(stage_units) > 1:     # a mixed stage (X1) is launched one unit at a time: the card shows Claude's
+                stage_units.discard("codex")
+            reasons = guard_reasons(ns, stage, units=stage_units) if runnable else []
             cards.append({
                 "stage": stage, "name": p["name"], "runnable": runnable, "note": STAGE_NOTE.get(stage),
                 "total": p["total"], "done": p["done"], "completed_ok": p["completed_ok"], "running": p["running"],
@@ -558,7 +565,8 @@ def register(router, ctx):
         at = resume_time(ns, body.get("at"), state.get("runner") or {})
         args = resume_args(ns, state)
         stage = stage_of_args(args)
-        blocking = guard_reasons(ns, stage, strict=True)
+        blocking = guard_reasons(ns, stage, strict=True,
+                                 units={args[args.index("--unit") + 1]} if "--unit" in args else None)
         local = at.astimezone()
         info = {"ns": ns, "at": _iso(at), "at_local": local.strftime("%H:%M"), "args": args,
                 "command": "python -m harness.runner " + " ".join(args), "blocking": blocking,

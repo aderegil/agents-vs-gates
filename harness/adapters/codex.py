@@ -2,7 +2,24 @@
 
 Invoked through its native entry (never the npm .cmd shim / cmd.exe), prompt on stdin (`-`), CODEX_HOME per run
 holding only a copy of auth.json. `exec resume` takes neither --sandbox nor -C: the sandbox goes in `-c` and the
-workspace is the subprocess cwd. No --ephemeral (it prevents resuming).
+workspace is the subprocess cwd. No --ephemeral (it prevents resuming). No --ignore-rules: CODEX_HOME holds only
+auth.json and harness/adapters/codex_rules/*.rules (exec policy mirroring the Claude allowlist's denials).
+
+Model and effort are explicit (units.json): --ignore-user-config means ~/.codex/config.toml never applies, so the
+effort goes in `-c model_reasoning_effort=...` (exec and resume) and the model in `-m` (exec) / `-c model=...` (resume).
+`approval_policy="never"`: exec has nobody to ask, so a command outside the sandbox policy fails instead of waiting.
+
+Turn cap (Codex audit 2026-10-11, #6): `codex exec` has no --max-turns, so the adapter counts turns in the --json
+stream like Claude Code's num_turns: one turn per tool call the model issues (command_execution, file_change,
+mcp_tool_call, web_search) plus the final answer, so num_turns = tool_calls + 1. When the model starts its
+max_turns-th tool call the process tree is killed and the session ends `capped` with subtype "error_max_turns" and
+turn_cap "max-turns", like Claude's `--max-turns N` (N turns, the last one cut). The wall clock stays as a second cap.
+
+Sandbox (spec 10.9): `sandbox_mode` comes from the unit ("workspace-write" by default) and the Windows backend from
+unit "windows_sandbox" (`-c windows.sandbox=...`). On this machine the default unelevated restricted-token backend
+refuses every command in workspace-write; "mxc" runs them (probed without a model, see DECISIONS); "elevated" needs a
+one-time admin setup. A command the sandbox backend refuses ends the session as an isolation failure that stops the
+batch: a run whose agent cannot use the shell is never data.
 """
 from __future__ import annotations
 
@@ -42,19 +59,39 @@ def cli_version() -> str | None:
     return _VERSION
 
 
+def _toml(v) -> str:
+    return json.dumps(str(v))
+
+
+def _config_args(unit: dict) -> list[str]:
+    out = ["-c", 'approval_policy="never"']
+    if unit.get("effort"):
+        out += ["-c", f"model_reasoning_effort={_toml(unit['effort'])}"]
+    if unit.get("windows_sandbox"):
+        out += ["-c", f"windows.sandbox={_toml(unit['windows_sandbox'])}"]
+    return out
+
+
 def build_argv(unit: dict, ws_root, resume: str | None = None) -> list[str]:
     """argv after the executable; the trailing '-' reads the prompt from stdin."""
+    mode = unit.get("sandbox") or "workspace-write"
     if resume:
-        return ["exec", "resume", resume, "--json", "-c", 'sandbox_mode="workspace-write"',
-                "--ignore-user-config", "--ignore-rules", "-"]
+        argv = ["exec", "resume", resume, "--json", "-c", f"sandbox_mode={_toml(mode)}"]
+        if unit.get("model"):
+            argv += ["-c", f"model={_toml(unit['model'])}"]
+        return argv + _config_args(unit) + ["--ignore-user-config", "-"]
     argv = ["exec", "--json"]
     if unit.get("model"):
         argv += ["-m", str(unit["model"])]
-    return argv + ["--sandbox", "workspace-write", "--ignore-user-config", "--ignore-rules", "-C", str(ws_root), "-"]
+    return argv + _config_args(unit) + ["--sandbox", mode, "--ignore-user-config", "-C", str(ws_root), "-"]
+
+
+RULES = Path(__file__).parent / "codex_rules"
 
 
 def prepare_home(cfg_dir, auth_source: Path | None = None) -> Path:
-    """Wipe CODEX_HOME and copy only auth.json into it (never logged)."""
+    """Wipe CODEX_HOME; copy only auth.json (never logged) and our exec-policy rules (parity with the Claude
+    allowlist) into it. No --ignore-rules: the only rules Codex can load are these."""
     home = Path(cfg_dir)
     if home.exists():
         shutil.rmtree(home, ignore_errors=True)
@@ -62,6 +99,9 @@ def prepare_home(cfg_dir, auth_source: Path | None = None) -> Path:
     src = auth_source or (Path.home() / ".codex" / "auth.json")
     if src.exists():
         shutil.copyfile(src, home / "auth.json")
+    (home / "rules").mkdir()
+    for r in sorted(RULES.glob("*.rules")):
+        shutil.copyfile(r, home / "rules" / r.name)
     return home
 
 
@@ -84,7 +124,32 @@ def price_cost(model: str | None, usage: dict, prices: dict | None = None) -> fl
                  + usage.get("output_tokens", 0) * p.get("output_per_mtok", 0) * m, 6)
 
 
-_RATE = re.compile(r"(usage limit|rate[ _-]?limit|\b429\b|too many requests|quota)", re.I)
+# ChatGPT-plan and API limit texts: "You've hit your usage limit ... try again in 2 hours 5 minutes",
+# "usage_limit_reached", "Rate limit reached for ...", "429 Too Many Requests", "insufficient_quota"
+_RATE = re.compile(r"(usage[ _-]?limit|rate[ _-]?limit|\b429\b|too many requests|quota)", re.I)
+# the Windows sandbox backend refusing to run a command (seen with the unelevated backend in workspace-write)
+_SANDBOX = re.compile(r"(restricted-token sandbox cannot|refusing to run unsandboxed|requires the elevated Windows "
+                      r"sandbox|sandbox (?:setup|provisioning) (?:required|failed|incomplete))", re.I)
+_TRANSIENT = re.compile(r"^\s*(reconnecting|retrying)\b", re.I)
+
+
+def parse_reset_codex(text: str, now=None) -> str | None:
+    """'try again in 4 days 20 hours 9 minutes' / 'in 1.5s' / 'try again at 3:05 PM' -> ISO; else Claude's parser."""
+    from datetime import datetime, timedelta
+    from harness.adapters.claude_code import parse_reset
+    now = now or datetime.now().astimezone()
+    m = re.search(r"try again in ([^.\n]+(?:\.\d+s)?)", text, re.I)
+    if m:
+        secs = 0.0
+        for n, u in re.findall(r"(\d+(?:\.\d+)?)\s*(days?|d\b|hours?|hrs?|h\b|minutes?|mins?|m\b|seconds?|secs?|s\b)",
+                               m.group(1), re.I):
+            secs += float(n) * {"d": 86400, "h": 3600, "m": 60, "s": 1}[u[0].lower()]
+        if secs:
+            return (now + timedelta(seconds=secs)).isoformat(timespec="seconds")
+    m = re.search(r"try again at (\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?)", text, re.I)
+    if m:
+        return parse_reset("resets at " + m.group(1), now)
+    return parse_reset(text, now)
 
 
 class JsonlParser:
@@ -93,8 +158,13 @@ class JsonlParser:
 
     TOOL_NAMES = {"command_execution": "Bash", "file_change": "Edit", "web_search": "WebSearch"}
 
-    def __init__(self, session: str, on_event=None):
+    def __init__(self, session: str, on_event=None, max_turns: int | None = None):
         self.session, self.on_event = session, on_event or (lambda e: None)
+        self.max_turns = max_turns
+        self.capped = False                 # the model started its max_turns-th tool call: the process is killed
+        self.model: str | None = None       # model id, when the stream reports one
+        self.notices: list[str] = []        # transient stream errors (reconnecting...), not failures
+        self.sandbox_error: str | None = None
         self.events: list[dict] = []
         self.thread_id: str | None = None
         self.usage = {"input_tokens": 0, "output_tokens": 0, "cache_read_input_tokens": 0,
@@ -123,6 +193,8 @@ class JsonlParser:
         else:
             name, inp = self.TOOL_NAMES.get(it, it), {"query": item.get("query", "")}
         self.tool_calls += 1
+        if self.max_turns and self.tool_calls >= self.max_turns:
+            self.capped = True
         self._emit(event(self.session, "tool_call", ts=ts, id=item.get("id"), name=name, input=inp))
 
     def feed(self, line: str, ts: str | None = None):
@@ -132,6 +204,9 @@ class JsonlParser:
         except ValueError:
             return
         t = msg.get("type")
+        for src in (msg, msg.get("item") if isinstance(msg.get("item"), dict) else {}):
+            if isinstance(src.get("model"), str) and src["model"]:
+                self.model = src["model"]
         if t == "thread.started":
             self.thread_id = msg.get("thread_id")
         elif t in ("item.started", "item.completed"):
@@ -161,6 +236,9 @@ class JsonlParser:
             else:
                 status = "success"
             out = item.get("aggregated_output")
+            said = (out if isinstance(out, str) else "") + " " + json.dumps(item.get("error") or "")
+            if status == "error" and _SANDBOX.search(said):
+                self.sandbox_error = self.sandbox_error or said.strip()[:300]
             if out is None:
                 out = item.get("result") if it == "mcp_tool_call" else \
                     ", ".join(f"{c.get('kind')} {c.get('path')}" for c in item.get("changes") or []) or ""
@@ -175,7 +253,8 @@ class JsonlParser:
         elif t == "turn.failed":
             self.errors.append(str((msg.get("error") or {}).get("message", "turn failed")))
         elif t == "error":
-            self.errors.append(str(msg.get("message", "error")))
+            text = str(msg.get("message", "error"))
+            (self.notices if _TRANSIENT.search(text) else self.errors).append(text)
 
 
 def parse_jsonl(lines, session: str) -> JsonlParser:
@@ -188,19 +267,25 @@ def parse_jsonl(lines, session: str) -> JsonlParser:
 
 
 def classify(parser: JsonlParser, rc: int | None, stderr: str, timed_out: bool) -> dict:
-    out = {"subtype": "success", "is_error": False, "capped": False, "turn_cap": "wall-clock-only", "infra": None}
+    out = {"subtype": "success", "is_error": False, "capped": False, "turn_cap": "max-turns", "infra": None}
     if parser.breach:
         out.update(subtype="error", is_error=True, infra={"kind": "isolation_breach", "detail": parser.breach, "reset_at": None})
         return out
+    if parser.sandbox_error:
+        out.update(subtype="error", is_error=True, infra={"kind": "isolation_breach", "reset_at": None,
+                                                          "detail": "sandbox unavailable: " + parser.sandbox_error})
+        return out
+    if parser.capped:
+        out.update(subtype="error_max_turns", is_error=True, capped=True, turn_cap="max-turns")
+        return out
     if timed_out:
-        out.update(subtype="wall_clock", capped=True)
+        out.update(subtype="wall_clock", capped=True, turn_cap="wall-clock-only")
         return out
     text = " ".join(parser.errors + [stderr or ""])
     if parser.errors or rc not in (0, None):
         out.update(subtype="error", is_error=True)
         if _RATE.search(text):
-            from harness.adapters.claude_code import parse_reset
-            out["infra"] = {"kind": "rate_limited", "detail": text.strip()[:300], "reset_at": parse_reset(text)}
+            out["infra"] = {"kind": "rate_limited", "detail": text.strip()[:300], "reset_at": parse_reset_codex(text)}
         elif parser.errors:
             out["infra"] = {"kind": "api_error", "detail": text.strip()[:300], "reset_at": None}
         else:
@@ -215,11 +300,11 @@ def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limit
     if resume is None:
         prepare_home(home)
     argv = entry_argv() + build_argv(unit, ws.root, resume)
-    parser = JsonlParser(limits.session, on_event)
+    parser = JsonlParser(limits.session, on_event, max_turns=limits.max_turns)
 
     def on_line(line, ts):
         parser.feed(line, ts)
-        if parser.breach:
+        if parser.breach or parser.capped or parser.sandbox_error:
             return "kill"
 
     CALLS += 1
@@ -237,5 +322,5 @@ def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limit
         session=limits.session, session_id=parser.thread_id or resume, events=parser.events, num_turns=num_turns,
         duration_ms=r["duration_ms"], usage=dict(parser.usage), cost_usd=cost, subtype=cls["subtype"],
         is_error=cls["is_error"], capped=cls["capped"], turn_cap=cls["turn_cap"], final_text=final_text,
-        infra=cls["infra"], model_reported=unit.get("model"), cli_version=version, isolation=None,
+        infra=cls["infra"], model_reported=parser.model or unit.get("model"), cli_version=version, isolation=None,
         started_at=started, ended_at=now_iso())

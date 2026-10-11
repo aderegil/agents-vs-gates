@@ -13,15 +13,24 @@ FIX = Path(__file__).parent / "fixtures" / "codex_exec.jsonl"
 
 
 class CodexArgv(unittest.TestCase):
+    UNIT = {"model": "gpt-x", "effort": "medium", "windows_sandbox": "mxc"}
+
     def test_exec_argv_exact(self):
-        self.assertEqual(codex.build_argv({"model": "gpt-x"}, r"C:\avg\w1\r"),
-                         ["exec", "--json", "-m", "gpt-x", "--sandbox", "workspace-write", "--ignore-user-config",
-                          "--ignore-rules", "-C", r"C:\avg\w1\r", "-"])
+        self.assertEqual(codex.build_argv(self.UNIT, r"C:\avg\w1\r"),
+                         ["exec", "--json", "-m", "gpt-x", "-c", 'approval_policy="never"',
+                          "-c", 'model_reasoning_effort="medium"', "-c", 'windows.sandbox="mxc"',
+                          "--sandbox", "workspace-write", "--ignore-user-config", "-C", r"C:\avg\w1\r", "-"])
+        # without effort/backend in the unit only the approval policy is added
+        self.assertEqual(codex.build_argv({"model": "gpt-x"}, "W")[:6],
+                         ["exec", "--json", "-m", "gpt-x", "-c", 'approval_policy="never"'])
+        self.assertNotIn("--ignore-rules", codex.build_argv(self.UNIT, "W"))
 
     def test_resume_argv_exact(self):
-        argv = codex.build_argv({"model": "gpt-x"}, r"C:\avg\w1\r", resume="th-1")
+        argv = codex.build_argv(self.UNIT, r"C:\avg\w1\r", resume="th-1")
         self.assertEqual(argv, ["exec", "resume", "th-1", "--json", "-c", 'sandbox_mode="workspace-write"',
-                                "--ignore-user-config", "--ignore-rules", "-"])
+                                "-c", 'model="gpt-x"', "-c", 'approval_policy="never"',
+                                "-c", 'model_reasoning_effort="medium"', "-c", 'windows.sandbox="mxc"',
+                                "--ignore-user-config", "-"])
         self.assertNotIn("--sandbox", argv)
         self.assertNotIn("-C", argv)
         self.assertNotIn("--ephemeral", argv)
@@ -41,7 +50,11 @@ class CodexArgv(unittest.TestCase):
         home = tmp / "home"
         (home / "old").mkdir(parents=True)
         codex.prepare_home(home, src)
-        self.assertEqual(sorted(p.name for p in home.iterdir()), ["auth.json"])
+        self.assertEqual(sorted(p.name for p in home.iterdir()), ["auth.json", "rules"])
+        self.assertEqual([p.name for p in (home / "rules").iterdir()], ["agents-vs-gates.rules"])
+        rules = (home / "rules" / "agents-vs-gates.rules").read_text(encoding="utf-8")
+        for denied in ('["node"]', '"curl"', '["find"]', '"rm"', '"commit"'):
+            self.assertIn(denied, rules)
         env = codex.build_env(home)
         self.assertEqual(env["CODEX_HOME"], str(home))
 
@@ -71,6 +84,62 @@ class CodexParse(unittest.TestCase):
                                                                             "server": "s", "tool": "t"}})], "gen")
         self.assertEqual(codex.classify(p, 0, "", False)["infra"]["kind"], "isolation_breach")
 
+    def test_turn_cap_counts_tool_calls(self):
+        def cmd(i):
+            return json.dumps({"type": "item.started", "item": {"id": f"c{i}", "type": "command_execution",
+                                                                "command": "bash -lc 'ls'", "status": "in_progress"}})
+        p = codex.JsonlParser("gen", max_turns=3)
+        p.feed(cmd(1))
+        p.feed(cmd(2))
+        self.assertFalse(p.capped)
+        p.feed(cmd(3))                        # the 3rd tool call = the 3rd turn: cut here, like --max-turns 3
+        self.assertTrue(p.capped)
+        c = codex.classify(p, None, "", False)
+        self.assertEqual((c["subtype"], c["capped"], c["turn_cap"], c["infra"]), ("error_max_turns", True, "max-turns", None))
+        # a wall-clock end is still capped, with its own turn_cap
+        q = codex.JsonlParser("gen", max_turns=30)
+        q.feed(cmd(1))
+        self.assertEqual(codex.classify(q, None, "", True)["turn_cap"], "wall-clock-only")
+
+    def test_sandbox_refusal_is_an_isolation_failure(self):
+        msg = ('CreateProcess { message: "UnsupportedOperation(\\"windows unelevated restricted-token sandbox cannot '
+               'enforce split writable root sets directly; refusing to run unsandboxed\\")" }')
+        p = codex.parse_jsonl([json.dumps({"type": "item.completed", "item": {
+            "id": "c1", "type": "command_execution", "command": "cat x", "aggregated_output": msg, "exit_code": -1,
+            "status": "failed"}})], "gen")
+        c = codex.classify(p, 0, "", False)
+        self.assertEqual(c["infra"]["kind"], "isolation_breach")
+        self.assertIn("sandbox unavailable", c["infra"]["detail"])
+        # an ordinary failing command is not
+        p = codex.parse_jsonl([json.dumps({"type": "item.completed", "item": {
+            "id": "c1", "type": "command_execution", "command": "npm test", "aggregated_output": "# fail 1",
+            "exit_code": 1, "status": "failed"}})], "gen")
+        self.assertIsNone(codex.classify(p, 0, "", False)["infra"])
+
+    def test_usage_limits_are_rate_limited_with_reset(self):
+        from datetime import datetime
+        now = datetime(2026, 10, 11, 12, 0).astimezone()
+        for text in ("You've hit your usage limit. Upgrade to Pro or try again in 2 hours 5 minutes.",
+                     "usage_limit_reached", "Rate limit reached for gpt-x. Please try again in 20s.",
+                     "429 Too Many Requests", "insufficient_quota"):
+            p = codex.parse_jsonl([json.dumps({"type": "turn.failed", "error": {"message": text}})], "gen")
+            self.assertEqual(codex.classify(p, 1, "", False)["infra"]["kind"], "rate_limited", text)
+        self.assertEqual(codex.parse_reset_codex("try again in 2 hours 5 minutes.", now)[:16], "2026-10-11T14:05")
+        self.assertEqual(codex.parse_reset_codex("try again in 3 days 1 hour", now)[:16], "2026-10-14T13:00")
+        self.assertEqual(codex.parse_reset_codex("usage limit; try again at 3:05 PM.", now)[:16], "2026-10-11T15:05")
+
+    def test_transient_reconnect_errors_are_not_failures(self):
+        lines = [json.dumps({"type": "error", "message": "Reconnecting... 1/5"})] + \
+            FIX.read_text(encoding="utf-8").splitlines()
+        p = codex.parse_jsonl(lines, "gen")
+        self.assertEqual(p.notices, ["Reconnecting... 1/5"])
+        self.assertIsNone(codex.classify(p, 0, "", False)["infra"])
+
+    def test_model_reported_from_stream(self):
+        p = codex.parse_jsonl([json.dumps({"type": "thread.started", "thread_id": "t", "model": "gpt-5.6-terra"})], "gen")
+        self.assertEqual(p.model, "gpt-5.6-terra")
+        self.assertIsNone(codex.parse_jsonl(FIX.read_text(encoding="utf-8").splitlines(), "gen").model)
+
     def test_prices_empty_means_no_cost(self):
         self.assertIsNone(codex.price_cost("gpt-x", {"input_tokens": 10}))
         prices = {"models": {"gpt-x": {"input_per_mtok": 1.0, "cached_input_per_mtok": 0.1, "output_per_mtok": 10.0}}}
@@ -95,7 +164,7 @@ class CodexParse(unittest.TestCase):
         self.assertEqual(res.session_id, "0199a213-81c0-7800-8aa1-bbab2a035a53")
         self.assertEqual(res.events[-1]["kind"], "final")
         self.assertEqual(res.final_text, "Renamed totalCents to amountCents.")
-        self.assertEqual(res.turn_cap, "wall-clock-only")
+        self.assertEqual(res.turn_cap, "max-turns")
 
 
 class GeminiStub(unittest.TestCase):

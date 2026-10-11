@@ -1,7 +1,7 @@
 {
   "cc-sonnet": { "adapter": "claude_code", "model": "sonnet", "effort": "medium" },
   "cc-opus":   { "adapter": "claude_code", "model": "opus",   "effort": "medium" },
-  "codex":     { "adapter": "codex",       "model": null,     "effort": null },
+  "codex":     { "adapter": "codex",       "model": "gpt-5.6-terra", "effort": "medium", "sandbox": "workspace-write", "windows_sandbox": "mxc" },
   "gemini":    { "adapter": "gemini",      "model": null,     "effort": null },
   "mock":      { "adapter": "mock" }
 }

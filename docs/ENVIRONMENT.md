@@ -7,7 +7,7 @@
 | Git | 2.55.0.windows.5 |
 | Python | 3.13.15 in `.venv` (+ jsonschema 4.26.0) |
 | Claude Code | 2.1.296 (`claude --help` saved in `docs/cli-help/claude-help.txt`) |
-| Codex CLI | codex-cli 0.154.0; native entry `~\AppData\Roaming\npm\node_modules\@openai\codex\node_modules\@openai\codex-win32-x64\vendor\x86_64-pc-windows-msvc\bin\codex.exe` (the `codex` shim on PATH is a `.cmd`; never invoke through it) |
+| Codex CLI | codex-cli **0.162.1** (2026-10-11; was 0.154.0; signed in with ChatGPT; same native entry, re-verified by `harness.doctor.codex_native_entry`): native entry `~\AppData\Roaming\npm\node_modules\@openai\codex\node_modules\@openai\codex-win32-x64\vendor\x86_64-pc-windows-msvc\bin\codex.exe` (the `codex` shim on PATH is a `.cmd`; never invoke through it) |
 | npm toolchain (repo + every worker) | typescript 6.0.3, dependency-cruiser 18.5.0, @types/node 24.13.2 (`package-lock.json` versioned) |
 | Workers | `C:\avg\w1..w3` (real), `C:\avg\wm1..wm3` (mock), `C:\avg\wst` (selftest), each with `npm ci` done |
 
@@ -37,3 +37,11 @@ Present in the help text: `--effort`, `--exclude-dynamic-system-prompt-sections`
   `settings.json` (see DECISIONS, "Smoke test #1 follow-up"). Details: `results/smoke.json`.
 - **#2 (2026-10-11 17:00 UTC, run by Alfredo):** **PASS, 12 of 12.** system/init is clean with the three built-in
   plugins disabled in the isolated `settings.json`; every other check as in #1. `--max-turns` is verified.
+
+## Codex sandbox on this machine (2026-10-11, probed without a model: `codex sandbox`, native entry, isolated CODEX_HOME)
+- Default backend (unelevated restricted token) + `workspace-write`: every command refused ("windows unelevated restricted-token sandbox cannot enforce split writable root sets directly; refusing to run unsandboxed", reported by the design session; `codex sandbox -P :workspace` hung 40 s without output here). `-P :read-only` runs reads and `npm test` and refuses writes.
+- **MXC backend** (`-c windows.sandbox="mxc"`, no admin setup) + `:workspace`, workspace under `C:\avg\`: `echo` ok, write inside ok, write outside refused, `npm test` of a real orders-service copy ok (tsc build into dist, 39 tests pass). Reads outside the workspace are allowed (Codex's sandbox restricts writes and network, not reads; the out-of-workspace detector flags them). With the workspace under `%TEMP%` (AppData) MXC also refused writes inside, so workspaces must stay under `C:\avg\`. Files created inside the sandbox are owned by `BUILTIN\Administrators` (a `git` run *by the sandbox* in a repo it created hits "dubious ownership"; the harness creates the run repos itself, so it does not apply; the harness could delete those files).
+- Elevated backend: `codex sandbox setup --elevated --current-user` once from an admin shell (creates machine-wide accounts and network rules; `codex sandbox uninstall` removes them). Not used.
+- `codex execpolicy check --rules harness/adapters/codex_rules/agents-vs-gates.rules <cmd>` verified offline: node, curl, find, rm, git commit → forbidden; npm test, git status, sed, cat → no rule.
+- Four `codex.exe` processes from the first probe (PIDs 268252, 388768, 170328, 284864, 16:48–16:51) run under the sandbox token and could not be terminated ("Access is denied"); they go away with a reboot.
+

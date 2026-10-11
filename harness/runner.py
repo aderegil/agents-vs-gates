@@ -104,13 +104,33 @@ def activity_line(rid: str, ev: dict) -> str | None:
 
 # ---------------------------------------------------------------- guards -----------------------------------------
 
+def smoke_files(units_used) -> dict:
+    """results/<file> that must hold a passed smoke for these units -> the extra CLI args that produce it.
+    Claude Code units: smoke.json; the codex adapter: smoke-codex.json (harness/smoke_codex.py)."""
+    try:
+        from harness import cycle
+        table = cycle.load_units()
+    except (OSError, ValueError):
+        table = {}
+    out = {}
+    for u in sorted(units_used):
+        adapter = (table.get(u) or {}).get("adapter")
+        if adapter == "codex":
+            out["smoke-codex.json"] = " --unit codex"
+        elif adapter != "mock":
+            out["smoke.json"] = ""
+    return out or {"smoke.json": ""}
+
+
 def guard_errors(ns: str, stage: str, units_used: set[str]) -> list[str]:
     if ns == "mock":
         return []
     errs = []
-    smoke = jsonio.read_json(paths.results_root() / "smoke.json")
-    if not (smoke and smoke.get("ok")):
-        errs.append("live smoke test not passed (results/smoke.json); run `python -m harness.smoke` with authorization")
+    for name, cmd in smoke_files(units_used).items():
+        smoke = jsonio.read_json(paths.results_root() / name)
+        if not (smoke and smoke.get("ok")):
+            errs.append(f"live smoke test not passed (results/{name}); run `python -m harness.smoke{cmd}` with "
+                        "authorization")
     if stage not in EXPLORATORY:
         from harness import prereg
         ok, problems = prereg.verify()
