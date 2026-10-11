@@ -122,3 +122,14 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - Theater lockfile re-resolved within the original ranges (Vite 8.3.4, TypeScript 6.0.3); oxlint, the dev proxy, the LLM director and its server removed.
 - Missing `metadata.source` is labelled "real" in the legend (as briefed). Not built: a "Use in Replay" button; the clip recorder is untested headless.
 - (Lead) The shell's plugin iframe gets `allow="fullscreen"` so the theater's F key goes truly fullscreen inside the console.
+
+## WP6 · Scenario plugin (2026-10-11; Sonnet subagent)
+- Fairness spread = (longer − shorter) / shorter; green < 15 %, amber 15–20 %, red > 20 % · vs the mean · the stricter reading of "±20 % of each other". Today S1 +100, S2 +107 words → 7.0 %, green.
+- Words = whitespace split, skipping lines with a canary · markdown tokens · simple, reproducible.
+- Files over 512 KB return the first 512 KB with `truncated: true` · 413 · the viewer still shows something.
+- Links/junctions rejected anywhere in a path and skipped in listings · following in-tree links · no escape by link.
+- Catalog graph: services left, APIs/events right, barycenter-ordered · layered columns with duplicates · each service once.
+- Mini YAML parser rejects anchors, tags, block scalars and duplicate keys · guessing · an error beats a silent misparse.
+- Rules tab adds "In S1 / In S2" columns; Broker adds field-by-consumer matrices; S1/S2 columns collapse the shared S0 text by default.
+- Known: the plugin does not compare S1/S2 to the §5.7 texts character by character (only extension of S0 and word counts).
+- Side effect reported by the subagent: to clear a stuck headless screenshot run it ran `taskkill /IM msedge.exe`, closing every Edge window on the machine at that moment (~00:20–01:00).
