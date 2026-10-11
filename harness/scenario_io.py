@@ -68,7 +68,8 @@ def scenario_hash() -> str:
         if not base.exists():
             continue
         for f in sorted(p for p in base.rglob("*") if p.is_file() and "node_modules" not in p.parts
-                        and "dist" not in p.parts):
+                        and "dist" not in p.parts
+                        and not (base == paths.TASKS and p.name.startswith("S-"))):  # M2 story drafts
             h.update(f.relative_to(paths.SCENARIO).as_posix().encode())
             h.update(b"\0")
             h.update(f.read_bytes())

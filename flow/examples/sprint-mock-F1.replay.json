@@ -1,0 +1,3885 @@
+{
+  "meta": {
+    "run_id": "sprint-mock-F1",
+    "source": "mock",
+    "unit": "flow-mock",
+    "model": "mock",
+    "date": "2026-10-12",
+    "started_at": "2026-10-12T15:00:00.000Z",
+    "ticket": "EPIC-RQ6",
+    "condition": {},
+    "outcome": "released",
+    "ticket_done": null,
+    "session_outcome": "success",
+    "stage": "M2b",
+    "title": "Sprint · EPIC-RQ6 Multi-currency checkout · F1",
+    "scenario": "meridian-retail/M2-flow",
+    "trace_sha256": "8eff6dfeb3c3bb8ce23d83556d8f2fef3a5250d22e23e522d6a88fa649a31a77",
+    "schema": "replay/1",
+    "exporter_version": 1,
+    "legend": "SIMULATED (mock agent) — not a real run",
+    "duration_ms": 308000,
+    "duration_real_ms": 1337000,
+    "event_count": 156
+  },
+  "places": [
+    {
+      "id": "product-desk",
+      "label": "Product desk",
+      "kind": "desk",
+      "x": 0.1,
+      "y": 0.2,
+      "note": "discovery"
+    },
+    {
+      "id": "planning-room",
+      "label": "Planning room",
+      "kind": "room",
+      "x": 0.3,
+      "y": 0.2,
+      "note": "planning"
+    },
+    {
+      "id": "architecture-library",
+      "label": "Architecture library",
+      "kind": "library",
+      "x": 0.52,
+      "y": 0.18,
+      "note": "ARCH-n rules, catalog, ADRs"
+    },
+    {
+      "id": "dispatch",
+      "label": "Dispatch board",
+      "kind": "system",
+      "x": 0.8,
+      "y": 0.18,
+      "note": "flow engine"
+    },
+    {
+      "id": "desk-orders",
+      "label": "Checkout · orders",
+      "kind": "desk",
+      "x": 0.1,
+      "y": 0.55,
+      "note": "orders-service"
+    },
+    {
+      "id": "desk-billing",
+      "label": "Finance · billing",
+      "kind": "desk",
+      "x": 0.1,
+      "y": 0.84,
+      "note": "billing-service"
+    },
+    {
+      "id": "desk-analytics",
+      "label": "Data · analytics",
+      "kind": "desk",
+      "x": 0.3,
+      "y": 0.84,
+      "note": "analytics-ingest"
+    },
+    {
+      "id": "desk-storefront",
+      "label": "Digital · storefront",
+      "kind": "desk",
+      "x": 0.5,
+      "y": 0.84,
+      "note": "web-storefront"
+    },
+    {
+      "id": "review-table",
+      "label": "Review table",
+      "kind": "room",
+      "x": 0.36,
+      "y": 0.53,
+      "note": "pull request"
+    },
+    {
+      "id": "ci-tower",
+      "label": "CI Tower",
+      "kind": "system",
+      "x": 0.6,
+      "y": 0.5,
+      "note": "one light per check"
+    },
+    {
+      "id": "merge-gate",
+      "label": "Merge gate",
+      "kind": "gate",
+      "x": 0.84,
+      "y": 0.5,
+      "note": "merge"
+    },
+    {
+      "id": "staging-bench",
+      "label": "Staging bench",
+      "kind": "stage",
+      "x": 0.8,
+      "y": 0.84,
+      "note": "hidden from the agent"
+    }
+  ],
+  "actors": [
+    {
+      "id": "flow-engine",
+      "role": "flow_engine",
+      "actor_type": "system",
+      "display_name": "Flow engine",
+      "avatar": {
+        "style": "system",
+        "seed": "flow-engine",
+        "badge": null
+      },
+      "home": "dispatch"
+    },
+    {
+      "id": "originator",
+      "role": "originator",
+      "actor_type": "human",
+      "display_name": "Olivia · Originator (Sales)",
+      "avatar": {
+        "style": "human",
+        "seed": "originator",
+        "badge": null
+      },
+      "home": "product-desk",
+      "simulated": true
+    },
+    {
+      "id": "product-owner",
+      "role": "product_owner",
+      "actor_type": "human",
+      "display_name": "Priya · Product Owner",
+      "avatar": {
+        "style": "human",
+        "seed": "product-owner",
+        "badge": null
+      },
+      "home": "product-desk",
+      "simulated": true
+    },
+    {
+      "id": "engineer",
+      "role": "engineer",
+      "actor_type": "human",
+      "display_name": "Ethan · Engineer",
+      "avatar": {
+        "style": "human",
+        "seed": "engineer",
+        "badge": null
+      },
+      "home": "planning-room",
+      "simulated": true
+    },
+    {
+      "id": "tech-lead",
+      "role": "tech_lead",
+      "actor_type": "human",
+      "display_name": "Tomás · Tech Lead",
+      "avatar": {
+        "style": "human",
+        "seed": "tech-lead",
+        "badge": null
+      },
+      "home": "planning-room",
+      "simulated": true
+    },
+    {
+      "id": "architect",
+      "role": "architect",
+      "actor_type": "human",
+      "display_name": "Maya · Architect",
+      "avatar": {
+        "style": "human",
+        "seed": "architect",
+        "badge": null
+      },
+      "home": "architecture-library",
+      "simulated": true
+    },
+    {
+      "id": "requirements-agent",
+      "role": "requirements_agent",
+      "actor_type": "agent",
+      "display_name": "Requirements Agent",
+      "avatar": {
+        "style": "agent",
+        "seed": "requirements-agent",
+        "badge": "Mock"
+      },
+      "home": "product-desk"
+    },
+    {
+      "id": "task-planner",
+      "role": "task_planner",
+      "actor_type": "agent",
+      "display_name": "Task Planner",
+      "avatar": {
+        "style": "agent",
+        "seed": "task-planner",
+        "badge": "Mock"
+      },
+      "home": "planning-room"
+    },
+    {
+      "id": "code-storefront",
+      "role": "code_agent",
+      "actor_type": "agent",
+      "display_name": "Code Agent · web-storefront",
+      "avatar": {
+        "style": "agent",
+        "seed": "code-storefront",
+        "badge": "Mock"
+      },
+      "home": "desk-storefront"
+    },
+    {
+      "id": "code-orders",
+      "role": "code_agent",
+      "actor_type": "agent",
+      "display_name": "Code Agent · orders-service",
+      "avatar": {
+        "style": "agent",
+        "seed": "code-orders",
+        "badge": "Mock"
+      },
+      "home": "desk-orders"
+    },
+    {
+      "id": "code-payments",
+      "role": "code_agent",
+      "actor_type": "agent",
+      "display_name": "Code Agent · payments-service",
+      "avatar": {
+        "style": "agent",
+        "seed": "code-payments",
+        "badge": "Mock"
+      },
+      "home": "desk-orders"
+    },
+    {
+      "id": "code-billing",
+      "role": "code_agent",
+      "actor_type": "agent",
+      "display_name": "Code Agent · billing-service",
+      "avatar": {
+        "style": "agent",
+        "seed": "code-billing",
+        "badge": "Mock"
+      },
+      "home": "desk-billing"
+    },
+    {
+      "id": "code-analytics",
+      "role": "code_agent",
+      "actor_type": "agent",
+      "display_name": "Code Agent · analytics-ingest",
+      "avatar": {
+        "style": "agent",
+        "seed": "code-analytics",
+        "badge": "Mock"
+      },
+      "home": "desk-analytics"
+    },
+    {
+      "id": "code-inventory",
+      "role": "code_agent",
+      "actor_type": "agent",
+      "display_name": "Code Agent · inventory-service",
+      "avatar": {
+        "style": "agent",
+        "seed": "code-inventory",
+        "badge": "Mock"
+      },
+      "home": "desk-orders"
+    },
+    {
+      "id": "review-agent",
+      "role": "review_agent",
+      "actor_type": "agent",
+      "display_name": "Review Agent",
+      "avatar": {
+        "style": "agent",
+        "seed": "review-agent",
+        "badge": "Mock"
+      },
+      "home": "review-table"
+    },
+    {
+      "id": "verifier",
+      "role": "verifier",
+      "actor_type": "agent",
+      "display_name": "Verifier",
+      "avatar": {
+        "style": "agent",
+        "seed": "verifier",
+        "badge": "Mock"
+      },
+      "home": "review-table"
+    },
+    {
+      "id": "owner-storefront",
+      "role": "code_owner",
+      "actor_type": "human",
+      "display_name": "Code Owner · web-storefront (Digital)",
+      "avatar": {
+        "style": "human",
+        "seed": "owner-storefront",
+        "badge": null
+      },
+      "home": "review-table",
+      "simulated": true
+    },
+    {
+      "id": "owner-orders",
+      "role": "code_owner",
+      "actor_type": "human",
+      "display_name": "Code Owner · orders-service (Checkout)",
+      "avatar": {
+        "style": "human",
+        "seed": "owner-orders",
+        "badge": null
+      },
+      "home": "review-table",
+      "simulated": true
+    },
+    {
+      "id": "owner-billing",
+      "role": "code_owner",
+      "actor_type": "human",
+      "display_name": "Code Owner · billing-service (Finance)",
+      "avatar": {
+        "style": "human",
+        "seed": "owner-billing",
+        "badge": null
+      },
+      "home": "review-table",
+      "simulated": true
+    },
+    {
+      "id": "owner-analytics",
+      "role": "code_owner",
+      "actor_type": "human",
+      "display_name": "Code Owner · analytics-ingest (Data)",
+      "avatar": {
+        "style": "human",
+        "seed": "owner-analytics",
+        "badge": null
+      },
+      "home": "review-table",
+      "simulated": true
+    },
+    {
+      "id": "release-manager",
+      "role": "release_manager",
+      "actor_type": "human",
+      "display_name": "Rosa · Release Manager",
+      "avatar": {
+        "style": "human",
+        "seed": "release-manager",
+        "badge": null
+      },
+      "home": "merge-gate",
+      "simulated": true
+    },
+    {
+      "id": "ci",
+      "role": "ci",
+      "actor_type": "system",
+      "display_name": "CI",
+      "avatar": {
+        "style": "system",
+        "seed": "ci",
+        "badge": null
+      },
+      "home": "ci-tower"
+    },
+    {
+      "id": "staging",
+      "role": "staging",
+      "actor_type": "system",
+      "display_name": "Staging (oracle)",
+      "avatar": {
+        "style": "system",
+        "seed": "staging",
+        "badge": null
+      },
+      "home": "staging-bench"
+    }
+  ],
+  "steps": [
+    {
+      "t_ms": 0,
+      "t_real_ms": 0,
+      "seq": 0,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "Sprint · EPIC-RQ6 Multi-currency checkout · F1",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "SESSION_STARTED",
+        "event_id": "evt-0000",
+        "phase": "discovery",
+        "to_phase": "discovery",
+        "scenario": "meridian-retail/M2-flow",
+        "condition": ""
+      }
+    },
+    {
+      "t_ms": 2000,
+      "t_real_ms": 2000,
+      "seq": 1,
+      "actor": "architect",
+      "action": "work",
+      "target": null,
+      "place": "architecture-library",
+      "text": "architecture/ARCHITECTURE-RULES.md · ARCH-1..9 (fixed for the experiment)",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0001",
+        "phase": "discovery",
+        "artifact_id": "art-arch-rules",
+        "artifact_type": "architecture_rules"
+      }
+    },
+    {
+      "t_ms": 3500,
+      "t_real_ms": 12000,
+      "seq": 2,
+      "actor": "originator",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "product-desk",
+      "text": "Shoppers abroad abandon checkout because we only charge in USD. I want multi-currency checkout this sprint.",
+      "key": null,
+      "narration": "The originator asks for multi-currency checkout.",
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0002",
+        "phase": "discovery",
+        "interaction_type": "task_assignment",
+        "content": "Shoppers abroad abandon checkout because we only charge in USD. I want multi-currency checkout this sprint."
+      }
+    },
+    {
+      "t_ms": 5500,
+      "t_real_ms": 14000,
+      "seq": 3,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "requirements-agent",
+      "place": "dispatch",
+      "text": "Draft intent.md for EPIC-RQ6 with the originator",
+      "key": "task_assigned",
+      "narration": null,
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0003",
+        "phase": "discovery",
+        "task_id": "EPIC-RQ6-intent"
+      }
+    },
+    {
+      "t_ms": 7000,
+      "t_real_ms": 74000,
+      "seq": 4,
+      "actor": "requirements-agent",
+      "action": "work",
+      "target": null,
+      "place": "product-desk",
+      "text": "backlog/intent.md · A shopper can see prices, place an order and pay in a supported local currency; invoices, revenue reports and stock reservation follow the order's currency.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0004",
+        "phase": "discovery",
+        "artifact_id": "art-intent",
+        "artifact_type": "intent"
+      }
+    },
+    {
+      "t_ms": 9000,
+      "t_real_ms": 76000,
+      "seq": 5,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "product-owner",
+      "place": "dispatch",
+      "text": "Approve intent.md for the epic?",
+      "key": null,
+      "narration": "Gate intent-approval: Priya · Product Owner decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0005",
+        "phase": "discovery",
+        "gate": "intent-approval",
+        "request_id": "apr-01"
+      }
+    },
+    {
+      "t_ms": 10500,
+      "t_real_ms": 106000,
+      "seq": 6,
+      "actor": "product-owner",
+      "action": "speak",
+      "target": null,
+      "place": "product-desk",
+      "text": "approved · intent.md states the problem, the users and the expected outcome.",
+      "key": null,
+      "narration": "Priya · Product Owner: approved (intent-approval).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0006",
+        "phase": "discovery",
+        "request_id": "apr-01",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 11500,
+      "t_real_ms": 107000,
+      "seq": 7,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "intent.md approved by the product owner",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "PHASE_CHANGED",
+        "event_id": "evt-0007",
+        "phase": "planning",
+        "from_phase": "discovery",
+        "to_phase": "planning"
+      }
+    },
+    {
+      "t_ms": 13500,
+      "t_real_ms": 109000,
+      "seq": 8,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "requirements-agent",
+      "place": "dispatch",
+      "text": "Write spec.md from the approved intent and the story drafts",
+      "key": "task_assigned",
+      "narration": null,
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0008",
+        "phase": "planning",
+        "task_id": "EPIC-RQ6-spec"
+      }
+    },
+    {
+      "t_ms": 15500,
+      "t_real_ms": 111000,
+      "seq": 9,
+      "actor": "requirements-agent",
+      "action": "work",
+      "target": null,
+      "place": "product-desk",
+      "text": "backlog/intent.md · source of the spec",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0009",
+        "phase": "planning",
+        "artifact_id": "art-intent"
+      }
+    },
+    {
+      "t_ms": 17500,
+      "t_real_ms": 113000,
+      "seq": 10,
+      "actor": "requirements-agent",
+      "action": "work",
+      "target": null,
+      "place": "product-desk",
+      "text": "architecture/ARCHITECTURE-RULES.md · mark contract changes additive or breaking",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0010",
+        "phase": "planning",
+        "artifact_id": "art-arch-rules"
+      }
+    },
+    {
+      "t_ms": 19000,
+      "t_real_ms": 203000,
+      "seq": 11,
+      "actor": "requirements-agent",
+      "action": "work",
+      "target": null,
+      "place": "product-desk",
+      "text": "backlog/spec.md · 6 stories with acceptance criteria, risk and contract changes",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0011",
+        "phase": "planning",
+        "artifact_id": "art-spec",
+        "artifact_type": "spec"
+      }
+    },
+    {
+      "t_ms": 21000,
+      "t_real_ms": 205000,
+      "seq": 12,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "product-owner",
+      "place": "dispatch",
+      "text": "Approve spec.md?",
+      "key": null,
+      "narration": "Gate spec-approval: Priya · Product Owner decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0012",
+        "phase": "planning",
+        "gate": "spec-approval",
+        "request_id": "apr-02"
+      }
+    },
+    {
+      "t_ms": 22500,
+      "t_real_ms": 235000,
+      "seq": 13,
+      "actor": "product-owner",
+      "action": "speak",
+      "target": null,
+      "place": "product-desk",
+      "text": "approved · All 6 stories name a repo and have acceptance criteria; money stays in minor units.",
+      "key": null,
+      "narration": "Priya · Product Owner: approved (spec-approval).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0013",
+        "phase": "planning",
+        "request_id": "apr-02",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 24500,
+      "t_real_ms": 237000,
+      "seq": 14,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "tech-lead",
+      "place": "dispatch",
+      "text": "spec.md has high-risk stories (S-3). Sign off?",
+      "key": null,
+      "narration": "Gate spec-risk-review: Tomás · Tech Lead decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0014",
+        "phase": "planning",
+        "gate": "spec-risk-review",
+        "request_id": "apr-03"
+      }
+    },
+    {
+      "t_ms": 26000,
+      "t_real_ms": 267000,
+      "seq": 15,
+      "actor": "tech-lead",
+      "action": "speak",
+      "target": null,
+      "place": "planning-room",
+      "text": "approved · High-risk stories (S-3) state their failure behaviour.",
+      "key": null,
+      "narration": "Tomás · Tech Lead: approved (spec-risk-review).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0015",
+        "phase": "planning",
+        "request_id": "apr-03",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 28000,
+      "t_real_ms": 269000,
+      "seq": 16,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "architect",
+      "place": "dispatch",
+      "text": "spec.md changes published contracts. Are they all additive (ARCH-4)?",
+      "key": null,
+      "narration": "Gate contract-review: Maya · Architect decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0016",
+        "phase": "planning",
+        "gate": "contract-review",
+        "request_id": "apr-04"
+      }
+    },
+    {
+      "t_ms": 29500,
+      "t_real_ms": 299000,
+      "seq": 17,
+      "actor": "architect",
+      "action": "speak",
+      "target": null,
+      "place": "architecture-library",
+      "text": "approved · 4 contract changes, all additive (ARCH-4); money in minor units (ADR-0003).",
+      "key": null,
+      "narration": "Maya · Architect: approved (contract-review).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0017",
+        "phase": "planning",
+        "request_id": "apr-04",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 31500,
+      "t_real_ms": 301000,
+      "seq": 18,
+      "actor": "tech-lead",
+      "action": "work",
+      "target": null,
+      "place": "planning-room",
+      "text": "backlog/REVIEW.md · What the review agent must flag",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0018",
+        "phase": "planning",
+        "artifact_id": "art-review-md",
+        "artifact_type": "review_guidelines"
+      }
+    },
+    {
+      "t_ms": 33500,
+      "t_real_ms": 303000,
+      "seq": 19,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "task-planner",
+      "place": "dispatch",
+      "text": "Break spec.md into one task per story (plan.md)",
+      "key": "task_assigned",
+      "narration": null,
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0019",
+        "phase": "planning",
+        "task_id": "EPIC-RQ6-plan"
+      }
+    },
+    {
+      "t_ms": 35500,
+      "t_real_ms": 305000,
+      "seq": 20,
+      "actor": "task-planner",
+      "action": "work",
+      "target": null,
+      "place": "planning-room",
+      "text": "backlog/spec.md · decompose into tasks",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0020",
+        "phase": "planning",
+        "artifact_id": "art-spec"
+      }
+    },
+    {
+      "t_ms": 37000,
+      "t_real_ms": 365000,
+      "seq": 21,
+      "actor": "task-planner",
+      "action": "work",
+      "target": null,
+      "place": "planning-room",
+      "text": "backlog/plan.md · 6 tasks; blocked: S-3, S-6",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0021",
+        "phase": "planning",
+        "artifact_id": "art-plan",
+        "artifact_type": "plan"
+      }
+    },
+    {
+      "t_ms": 39000,
+      "t_real_ms": 367000,
+      "seq": 22,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "engineer",
+      "place": "dispatch",
+      "text": "Approve plan.md?",
+      "key": null,
+      "narration": "Gate plan-approval: Ethan · Engineer decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0022",
+        "phase": "planning",
+        "gate": "plan-approval",
+        "request_id": "apr-05"
+      }
+    },
+    {
+      "t_ms": 40500,
+      "t_real_ms": 397000,
+      "seq": 23,
+      "actor": "engineer",
+      "action": "speak",
+      "target": null,
+      "place": "planning-room",
+      "text": "approved · One task per story, each with one repo and one code agent. Blocked: S-3, S-6 (reason stated).",
+      "key": null,
+      "narration": "Ethan · Engineer: approved (plan-approval).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0023",
+        "phase": "planning",
+        "request_id": "apr-05",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 41500,
+      "t_real_ms": 398000,
+      "seq": 24,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "plan.md approved by the engineer",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "PHASE_CHANGED",
+        "event_id": "evt-0024",
+        "phase": "implementation",
+        "from_phase": "planning",
+        "to_phase": "implementation"
+      }
+    },
+    {
+      "t_ms": 43500,
+      "t_real_ms": 400000,
+      "seq": 25,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "code-storefront",
+      "place": "dispatch",
+      "text": "S-1 · Let shoppers pick a display currency (web-storefront)",
+      "key": "task_assigned",
+      "narration": "S-1 assigned to Code Agent · web-storefront.",
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0025",
+        "phase": "implementation",
+        "task_id": "S-1"
+      }
+    },
+    {
+      "t_ms": 45500,
+      "t_real_ms": 402000,
+      "seq": 26,
+      "actor": "code-storefront",
+      "action": "speak",
+      "target": null,
+      "place": "desk-storefront",
+      "text": "Add a display-currency picker next to formatMoney; keep the orders client untouched.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ACTOR_STATE_CHANGED",
+        "event_id": "evt-0026",
+        "phase": "implementation",
+        "to_state": "thinking",
+        "thought": true
+      }
+    },
+    {
+      "t_ms": 47500,
+      "t_real_ms": 404000,
+      "seq": 27,
+      "actor": "code-storefront",
+      "action": "work",
+      "target": null,
+      "place": "desk-storefront",
+      "text": "backlog/plan.md · task T-S-1",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0027",
+        "phase": "implementation",
+        "artifact_id": "art-plan"
+      }
+    },
+    {
+      "t_ms": 50500,
+      "t_real_ms": 407000,
+      "seq": 28,
+      "actor": "code-storefront",
+      "action": "work",
+      "target": null,
+      "place": "desk-storefront",
+      "text": "Write · web-storefront/src/viewModels/displayCurrency.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0028",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "input_summary": "web-storefront/src/viewModels/displayCurrency.ts",
+        "correlation_id": "S-1-v1-0"
+      }
+    },
+    {
+      "t_ms": 53500,
+      "t_real_ms": 410000,
+      "seq": 29,
+      "actor": "code-storefront",
+      "action": "work",
+      "target": null,
+      "place": "desk-storefront",
+      "text": "created src/viewModels/displayCurrency.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0029",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "status": "success",
+        "output_summary": "created src/viewModels/displayCurrency.ts",
+        "correlation_id": "S-1-v1-0"
+      }
+    },
+    {
+      "t_ms": 56500,
+      "t_real_ms": 413000,
+      "seq": 30,
+      "actor": "code-storefront",
+      "action": "work",
+      "target": null,
+      "place": "desk-storefront",
+      "text": "Write · web-storefront/test/displayCurrency.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0030",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "input_summary": "web-storefront/test/displayCurrency.test.ts",
+        "correlation_id": "S-1-v1-1"
+      }
+    },
+    {
+      "t_ms": 59500,
+      "t_real_ms": 416000,
+      "seq": 31,
+      "actor": "code-storefront",
+      "action": "work",
+      "target": null,
+      "place": "desk-storefront",
+      "text": "created test/displayCurrency.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0031",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "status": "success",
+        "output_summary": "created test/displayCurrency.test.ts",
+        "correlation_id": "S-1-v1-1"
+      }
+    },
+    {
+      "t_ms": 61000,
+      "t_real_ms": 436000,
+      "seq": 32,
+      "actor": "code-storefront",
+      "action": "move",
+      "target": null,
+      "place": "review-table",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0032",
+        "phase": "implementation"
+      }
+    },
+    {
+      "t_ms": 61000,
+      "t_real_ms": 436000,
+      "seq": 32,
+      "actor": "code-storefront",
+      "action": "handoff",
+      "target": "review-table",
+      "place": "review-table",
+      "text": "PR S-1 · web-storefront · 2 files, +46 -0",
+      "key": "pr_opened",
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0032",
+        "phase": "implementation",
+        "artifact_id": "art-pr-S-1",
+        "diff": {
+          "files_changed": 2,
+          "lines_added": 46,
+          "lines_removed": 0
+        }
+      }
+    },
+    {
+      "t_ms": 63000,
+      "t_real_ms": 438000,
+      "seq": 33,
+      "actor": "code-storefront",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "review-table",
+      "text": "S-1: Let shoppers pick a display currency. Changed 2 files (src/viewModels/displayCurrency.ts, test/displayCurrency.test.ts). Tests added.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0033",
+        "phase": "implementation",
+        "interaction_type": "report",
+        "content": "S-1: Let shoppers pick a display currency. Changed 2 files (src/viewModels/displayCurrency.ts, test/displayCurrency.test.ts). Tests added."
+      }
+    },
+    {
+      "t_ms": 65000,
+      "t_real_ms": 440000,
+      "seq": 34,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "code-orders",
+      "place": "dispatch",
+      "text": "S-2 · Record the FX quote used at checkout (orders-service)",
+      "key": "task_assigned",
+      "narration": "S-2 assigned to Code Agent · orders-service.",
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0034",
+        "phase": "implementation",
+        "task_id": "S-2"
+      }
+    },
+    {
+      "t_ms": 67000,
+      "t_real_ms": 442000,
+      "seq": 35,
+      "actor": "code-orders",
+      "action": "speak",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Additive only: optional fxQuoteId on the request, the order and OrderPlaced; no field renamed.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ACTOR_STATE_CHANGED",
+        "event_id": "evt-0035",
+        "phase": "implementation",
+        "to_state": "thinking",
+        "thought": true
+      }
+    },
+    {
+      "t_ms": 69000,
+      "t_real_ms": 444000,
+      "seq": 36,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "backlog/plan.md · task T-S-2",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0036",
+        "phase": "implementation",
+        "artifact_id": "art-plan"
+      }
+    },
+    {
+      "t_ms": 72000,
+      "t_real_ms": 447000,
+      "seq": 37,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Edit · orders-service/src/api/requestParsing.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0037",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "input_summary": "orders-service/src/api/requestParsing.ts",
+        "correlation_id": "S-2-v1-0"
+      }
+    },
+    {
+      "t_ms": 75000,
+      "t_real_ms": 450000,
+      "seq": 38,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "edited src/api/requestParsing.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0038",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "status": "success",
+        "output_summary": "edited src/api/requestParsing.ts",
+        "correlation_id": "S-2-v1-0"
+      }
+    },
+    {
+      "t_ms": 78000,
+      "t_real_ms": 453000,
+      "seq": 39,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Edit · orders-service/src/core/events.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0039",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "input_summary": "orders-service/src/core/events.ts",
+        "correlation_id": "S-2-v1-1"
+      }
+    },
+    {
+      "t_ms": 81000,
+      "t_real_ms": 456000,
+      "seq": 40,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "edited src/core/events.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0040",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "status": "success",
+        "output_summary": "edited src/core/events.ts",
+        "correlation_id": "S-2-v1-1"
+      }
+    },
+    {
+      "t_ms": 84000,
+      "t_real_ms": 459000,
+      "seq": 41,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Edit · orders-service/src/core/order.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0041",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "input_summary": "orders-service/src/core/order.ts",
+        "correlation_id": "S-2-v1-2"
+      }
+    },
+    {
+      "t_ms": 87000,
+      "t_real_ms": 462000,
+      "seq": 42,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "edited src/core/order.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0042",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "status": "success",
+        "output_summary": "edited src/core/order.ts",
+        "correlation_id": "S-2-v1-2"
+      }
+    },
+    {
+      "t_ms": 90000,
+      "t_real_ms": 465000,
+      "seq": 43,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Edit · orders-service/test/app.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0043",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "input_summary": "orders-service/test/app.test.ts",
+        "correlation_id": "S-2-v1-3"
+      }
+    },
+    {
+      "t_ms": 93000,
+      "t_real_ms": 468000,
+      "seq": 44,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "edited test/app.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0044",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "status": "success",
+        "output_summary": "edited test/app.test.ts",
+        "correlation_id": "S-2-v1-3"
+      }
+    },
+    {
+      "t_ms": 94500,
+      "t_real_ms": 488000,
+      "seq": 45,
+      "actor": "code-orders",
+      "action": "move",
+      "target": null,
+      "place": "review-table",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0045",
+        "phase": "implementation"
+      }
+    },
+    {
+      "t_ms": 94500,
+      "t_real_ms": 488000,
+      "seq": 45,
+      "actor": "code-orders",
+      "action": "handoff",
+      "target": "review-table",
+      "place": "review-table",
+      "text": "PR S-2 · orders-service · 4 files, +32 -1",
+      "key": "pr_opened",
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0045",
+        "phase": "implementation",
+        "artifact_id": "art-pr-S-2",
+        "diff": {
+          "files_changed": 4,
+          "lines_added": 32,
+          "lines_removed": 1
+        }
+      }
+    },
+    {
+      "t_ms": 96500,
+      "t_real_ms": 490000,
+      "seq": 46,
+      "actor": "code-orders",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "review-table",
+      "text": "S-2: Record the FX quote used at checkout. Changed 4 files (src/api/requestParsing.ts, src/core/events.ts, src/core/order.ts, test/app.test.ts). Tests added.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0046",
+        "phase": "implementation",
+        "interaction_type": "report",
+        "content": "S-2: Record the FX quote used at checkout. Changed 4 files (src/api/requestParsing.ts, src/core/events.ts, src/core/order.ts, test/app.test.ts). Tests added."
+      }
+    },
+    {
+      "t_ms": 98500,
+      "t_real_ms": 492000,
+      "seq": 47,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "code-payments",
+      "place": "dispatch",
+      "text": "S-3 · Authorize payments in the order's currency (payments-service)",
+      "key": "task_assigned",
+      "narration": "S-3 assigned to Code Agent · payments-service.",
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0047",
+        "phase": "implementation",
+        "task_id": "S-3"
+      }
+    },
+    {
+      "t_ms": 100500,
+      "t_real_ms": 494000,
+      "seq": 48,
+      "actor": "code-payments",
+      "action": "speak",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Looking for payments-service in the sprint workspace.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ACTOR_STATE_CHANGED",
+        "event_id": "evt-0048",
+        "phase": "implementation",
+        "to_state": "thinking",
+        "thought": true
+      }
+    },
+    {
+      "t_ms": 103500,
+      "t_real_ms": 497000,
+      "seq": 49,
+      "actor": "code-payments",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Bash · git -C repos/payments-service status",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0049",
+        "phase": "implementation",
+        "tool_name": "Bash",
+        "input_summary": "git -C repos/payments-service status",
+        "correlation_id": "S-3-probe"
+      }
+    },
+    {
+      "t_ms": 106500,
+      "t_real_ms": 500000,
+      "seq": 50,
+      "actor": "code-payments",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "fatal: cannot change to 'repos/payments-service': No such file or directory",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0050",
+        "phase": "implementation",
+        "tool_name": "Bash",
+        "status": "error",
+        "output_summary": "fatal: cannot change to 'repos/payments-service': No such file or directory",
+        "correlation_id": "S-3-probe"
+      }
+    },
+    {
+      "t_ms": 108500,
+      "t_real_ms": 502000,
+      "seq": 51,
+      "actor": "code-payments",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "desk-orders",
+      "text": "Blocked: payments-service is not in the sprint workspace (repo not yet in scenario, M2a). Nothing changed.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0051",
+        "phase": "implementation",
+        "interaction_type": "escalation",
+        "content": "Blocked: payments-service is not in the sprint workspace (repo not yet in scenario, M2a). Nothing changed."
+      }
+    },
+    {
+      "t_ms": 110500,
+      "t_real_ms": 504000,
+      "seq": 52,
+      "actor": "flow-engine",
+      "action": "speak",
+      "target": null,
+      "place": "dispatch",
+      "text": "S-3: payments-service is not in the scenario yet (M2a)",
+      "key": null,
+      "narration": "S-3 blocked: payments-service is not in the scenario yet (M2a).",
+      "detail": {
+        "event_type": "ERROR_RAISED",
+        "event_id": "evt-0052",
+        "phase": "implementation",
+        "error_code": "repo_missing",
+        "recoverable": true
+      }
+    },
+    {
+      "t_ms": 112500,
+      "t_real_ms": 506000,
+      "seq": 53,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "engineer",
+      "place": "dispatch",
+      "text": "S-3 is blocked (repo not yet in scenario (M2a)). Carry it over to a later sprint?",
+      "key": null,
+      "narration": "Gate carry-over: Ethan · Engineer decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0053",
+        "phase": "implementation",
+        "gate": "carry-over",
+        "request_id": "apr-06"
+      }
+    },
+    {
+      "t_ms": 114000,
+      "t_real_ms": 526000,
+      "seq": 54,
+      "actor": "engineer",
+      "action": "speak",
+      "target": null,
+      "place": "planning-room",
+      "text": "approved · Carry S-3 over to a later sprint: repo not yet in scenario (M2a).",
+      "key": null,
+      "narration": "Ethan · Engineer: approved (carry-over).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0054",
+        "phase": "implementation",
+        "request_id": "apr-06",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 116000,
+      "t_real_ms": 528000,
+      "seq": 55,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "code-billing",
+      "place": "dispatch",
+      "text": "S-4 · Invoice only in currencies Finance can settle (billing-service)",
+      "key": "task_assigned",
+      "narration": "S-4 assigned to Code Agent · billing-service.",
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0055",
+        "phase": "implementation",
+        "task_id": "S-4"
+      }
+    },
+    {
+      "t_ms": 118000,
+      "t_real_ms": 530000,
+      "seq": 56,
+      "actor": "code-billing",
+      "action": "speak",
+      "target": null,
+      "place": "desk-billing",
+      "text": "Settlement currencies with their digits; unknown currency is a typed error, not 2 decimals.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ACTOR_STATE_CHANGED",
+        "event_id": "evt-0056",
+        "phase": "implementation",
+        "to_state": "thinking",
+        "thought": true
+      }
+    },
+    {
+      "t_ms": 120000,
+      "t_real_ms": 532000,
+      "seq": 57,
+      "actor": "code-billing",
+      "action": "work",
+      "target": null,
+      "place": "desk-billing",
+      "text": "backlog/plan.md · task T-S-4",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0057",
+        "phase": "implementation",
+        "artifact_id": "art-plan"
+      }
+    },
+    {
+      "t_ms": 123000,
+      "t_real_ms": 535000,
+      "seq": 58,
+      "actor": "code-billing",
+      "action": "work",
+      "target": null,
+      "place": "desk-billing",
+      "text": "Write · billing-service/src/core/settlement.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0058",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "input_summary": "billing-service/src/core/settlement.ts",
+        "correlation_id": "S-4-v1-0"
+      }
+    },
+    {
+      "t_ms": 126000,
+      "t_real_ms": 538000,
+      "seq": 59,
+      "actor": "code-billing",
+      "action": "work",
+      "target": null,
+      "place": "desk-billing",
+      "text": "created src/core/settlement.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0059",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "status": "success",
+        "output_summary": "created src/core/settlement.ts",
+        "correlation_id": "S-4-v1-0"
+      }
+    },
+    {
+      "t_ms": 129000,
+      "t_real_ms": 541000,
+      "seq": 60,
+      "actor": "code-billing",
+      "action": "work",
+      "target": null,
+      "place": "desk-billing",
+      "text": "Write · billing-service/test/settlement.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0060",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "input_summary": "billing-service/test/settlement.test.ts",
+        "correlation_id": "S-4-v1-1"
+      }
+    },
+    {
+      "t_ms": 132000,
+      "t_real_ms": 544000,
+      "seq": 61,
+      "actor": "code-billing",
+      "action": "work",
+      "target": null,
+      "place": "desk-billing",
+      "text": "created test/settlement.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0061",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "status": "success",
+        "output_summary": "created test/settlement.test.ts",
+        "correlation_id": "S-4-v1-1"
+      }
+    },
+    {
+      "t_ms": 133500,
+      "t_real_ms": 564000,
+      "seq": 62,
+      "actor": "code-billing",
+      "action": "move",
+      "target": null,
+      "place": "review-table",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0062",
+        "phase": "implementation"
+      }
+    },
+    {
+      "t_ms": 133500,
+      "t_real_ms": 564000,
+      "seq": 62,
+      "actor": "code-billing",
+      "action": "handoff",
+      "target": "review-table",
+      "place": "review-table",
+      "text": "PR S-4 · billing-service · 2 files, +46 -0",
+      "key": "pr_opened",
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0062",
+        "phase": "implementation",
+        "artifact_id": "art-pr-S-4",
+        "diff": {
+          "files_changed": 2,
+          "lines_added": 46,
+          "lines_removed": 0
+        }
+      }
+    },
+    {
+      "t_ms": 135500,
+      "t_real_ms": 566000,
+      "seq": 63,
+      "actor": "code-billing",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "review-table",
+      "text": "S-4: Invoice only in currencies Finance can settle. Changed 2 files (src/core/settlement.ts, test/settlement.test.ts). Tests added.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0063",
+        "phase": "implementation",
+        "interaction_type": "report",
+        "content": "S-4: Invoice only in currencies Finance can settle. Changed 2 files (src/core/settlement.ts, test/settlement.test.ts). Tests added."
+      }
+    },
+    {
+      "t_ms": 137500,
+      "t_real_ms": 568000,
+      "seq": 64,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "code-analytics",
+      "place": "dispatch",
+      "text": "S-5 · Report revenue in one reporting currency (analytics-ingest)",
+      "key": "task_assigned",
+      "narration": "S-5 assigned to Code Agent · analytics-ingest.",
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0064",
+        "phase": "implementation",
+        "task_id": "S-5"
+      }
+    },
+    {
+      "t_ms": 139500,
+      "t_real_ms": 570000,
+      "seq": 65,
+      "actor": "code-analytics",
+      "action": "speak",
+      "target": null,
+      "place": "desk-analytics",
+      "text": "Integer FX rates in parts per million; scale by minor-unit digits so JPY converts correctly.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ACTOR_STATE_CHANGED",
+        "event_id": "evt-0065",
+        "phase": "implementation",
+        "to_state": "thinking",
+        "thought": true
+      }
+    },
+    {
+      "t_ms": 141500,
+      "t_real_ms": 572000,
+      "seq": 66,
+      "actor": "code-analytics",
+      "action": "work",
+      "target": null,
+      "place": "desk-analytics",
+      "text": "backlog/plan.md · task T-S-5",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0066",
+        "phase": "implementation",
+        "artifact_id": "art-plan"
+      }
+    },
+    {
+      "t_ms": 144500,
+      "t_real_ms": 575000,
+      "seq": 67,
+      "actor": "code-analytics",
+      "action": "work",
+      "target": null,
+      "place": "desk-analytics",
+      "text": "Write · analytics-ingest/src/core/reportingCurrency.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0067",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "input_summary": "analytics-ingest/src/core/reportingCurrency.ts",
+        "correlation_id": "S-5-v1-0"
+      }
+    },
+    {
+      "t_ms": 147500,
+      "t_real_ms": 578000,
+      "seq": 68,
+      "actor": "code-analytics",
+      "action": "work",
+      "target": null,
+      "place": "desk-analytics",
+      "text": "created src/core/reportingCurrency.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0068",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "status": "success",
+        "output_summary": "created src/core/reportingCurrency.ts",
+        "correlation_id": "S-5-v1-0"
+      }
+    },
+    {
+      "t_ms": 150500,
+      "t_real_ms": 581000,
+      "seq": 69,
+      "actor": "code-analytics",
+      "action": "work",
+      "target": null,
+      "place": "desk-analytics",
+      "text": "Write · analytics-ingest/test/reportingCurrency.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0069",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "input_summary": "analytics-ingest/test/reportingCurrency.test.ts",
+        "correlation_id": "S-5-v1-1"
+      }
+    },
+    {
+      "t_ms": 153500,
+      "t_real_ms": 584000,
+      "seq": 70,
+      "actor": "code-analytics",
+      "action": "work",
+      "target": null,
+      "place": "desk-analytics",
+      "text": "created test/reportingCurrency.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0070",
+        "phase": "implementation",
+        "tool_name": "Write",
+        "status": "success",
+        "output_summary": "created test/reportingCurrency.test.ts",
+        "correlation_id": "S-5-v1-1"
+      }
+    },
+    {
+      "t_ms": 155000,
+      "t_real_ms": 604000,
+      "seq": 71,
+      "actor": "code-analytics",
+      "action": "move",
+      "target": null,
+      "place": "review-table",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0071",
+        "phase": "implementation"
+      }
+    },
+    {
+      "t_ms": 155000,
+      "t_real_ms": 604000,
+      "seq": 71,
+      "actor": "code-analytics",
+      "action": "handoff",
+      "target": "review-table",
+      "place": "review-table",
+      "text": "PR S-5 · analytics-ingest · 2 files, +57 -0",
+      "key": "pr_opened",
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0071",
+        "phase": "implementation",
+        "artifact_id": "art-pr-S-5",
+        "diff": {
+          "files_changed": 2,
+          "lines_added": 57,
+          "lines_removed": 0
+        }
+      }
+    },
+    {
+      "t_ms": 157000,
+      "t_real_ms": 606000,
+      "seq": 72,
+      "actor": "code-analytics",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "review-table",
+      "text": "S-5: Report revenue in one reporting currency. Changed 2 files (src/core/reportingCurrency.ts, test/reportingCurrency.test.ts). Tests added.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0072",
+        "phase": "implementation",
+        "interaction_type": "report",
+        "content": "S-5: Report revenue in one reporting currency. Changed 2 files (src/core/reportingCurrency.ts, test/reportingCurrency.test.ts). Tests added."
+      }
+    },
+    {
+      "t_ms": 159000,
+      "t_real_ms": 608000,
+      "seq": 73,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "code-inventory",
+      "place": "dispatch",
+      "text": "S-6 · Reserve stock in the shopper's region (inventory-service)",
+      "key": "task_assigned",
+      "narration": "S-6 assigned to Code Agent · inventory-service.",
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0073",
+        "phase": "implementation",
+        "task_id": "S-6"
+      }
+    },
+    {
+      "t_ms": 161000,
+      "t_real_ms": 610000,
+      "seq": 74,
+      "actor": "code-inventory",
+      "action": "speak",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Looking for inventory-service in the sprint workspace.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ACTOR_STATE_CHANGED",
+        "event_id": "evt-0074",
+        "phase": "implementation",
+        "to_state": "thinking",
+        "thought": true
+      }
+    },
+    {
+      "t_ms": 164000,
+      "t_real_ms": 613000,
+      "seq": 75,
+      "actor": "code-inventory",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Bash · git -C repos/inventory-service status",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0075",
+        "phase": "implementation",
+        "tool_name": "Bash",
+        "input_summary": "git -C repos/inventory-service status",
+        "correlation_id": "S-6-probe"
+      }
+    },
+    {
+      "t_ms": 167000,
+      "t_real_ms": 616000,
+      "seq": 76,
+      "actor": "code-inventory",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "fatal: cannot change to 'repos/inventory-service': No such file or directory",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0076",
+        "phase": "implementation",
+        "tool_name": "Bash",
+        "status": "error",
+        "output_summary": "fatal: cannot change to 'repos/inventory-service': No such file or directory",
+        "correlation_id": "S-6-probe"
+      }
+    },
+    {
+      "t_ms": 169000,
+      "t_real_ms": 618000,
+      "seq": 77,
+      "actor": "code-inventory",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "desk-orders",
+      "text": "Blocked: inventory-service is not in the sprint workspace (repo not yet in scenario, M2a). Nothing changed.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0077",
+        "phase": "implementation",
+        "interaction_type": "escalation",
+        "content": "Blocked: inventory-service is not in the sprint workspace (repo not yet in scenario, M2a). Nothing changed."
+      }
+    },
+    {
+      "t_ms": 171000,
+      "t_real_ms": 620000,
+      "seq": 78,
+      "actor": "flow-engine",
+      "action": "speak",
+      "target": null,
+      "place": "dispatch",
+      "text": "S-6: inventory-service is not in the scenario yet (M2a)",
+      "key": null,
+      "narration": "S-6 blocked: inventory-service is not in the scenario yet (M2a).",
+      "detail": {
+        "event_type": "ERROR_RAISED",
+        "event_id": "evt-0078",
+        "phase": "implementation",
+        "error_code": "repo_missing",
+        "recoverable": true
+      }
+    },
+    {
+      "t_ms": 173000,
+      "t_real_ms": 622000,
+      "seq": 79,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "engineer",
+      "place": "dispatch",
+      "text": "S-6 is blocked (repo not yet in scenario (M2a)). Carry it over to a later sprint?",
+      "key": null,
+      "narration": "Gate carry-over: Ethan · Engineer decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0079",
+        "phase": "implementation",
+        "gate": "carry-over",
+        "request_id": "apr-07"
+      }
+    },
+    {
+      "t_ms": 174500,
+      "t_real_ms": 642000,
+      "seq": 80,
+      "actor": "engineer",
+      "action": "speak",
+      "target": null,
+      "place": "planning-room",
+      "text": "approved · Carry S-6 over to a later sprint: repo not yet in scenario (M2a).",
+      "key": null,
+      "narration": "Ethan · Engineer: approved (carry-over).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0080",
+        "phase": "implementation",
+        "request_id": "apr-07",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 175500,
+      "t_real_ms": 643000,
+      "seq": 81,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "4 PRs opened; CI runs as a PR check",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "PHASE_CHANGED",
+        "event_id": "evt-0081",
+        "phase": "review",
+        "from_phase": "implementation",
+        "to_phase": "review"
+      }
+    },
+    {
+      "t_ms": 177500,
+      "t_real_ms": 645000,
+      "seq": 82,
+      "actor": "review-agent",
+      "action": "work",
+      "target": null,
+      "place": "review-table",
+      "text": "backlog/REVIEW.md · review guidelines",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0082",
+        "phase": "review",
+        "artifact_id": "art-review-md"
+      }
+    },
+    {
+      "t_ms": 179000,
+      "t_real_ms": 650000,
+      "seq": 83,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "CI_RUN_STARTED",
+        "event_id": "evt-0083",
+        "phase": "review",
+        "run_attempt": 0,
+        "subject_artifact_id": "art-pr-S-1"
+      }
+    },
+    {
+      "t_ms": 181000,
+      "t_real_ms": 652000,
+      "seq": 84,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "typecheck PASS: tsc reported no errors",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "typecheck",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0084",
+        "phase": "review",
+        "category": "build",
+        "duration_ms": 1672,
+        "output": "typecheck PASS: tsc reported no errors"
+      }
+    },
+    {
+      "t_ms": 183000,
+      "t_real_ms": 654000,
+      "seq": 85,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "unit-tests PASS: npm test exited 0\nℹ tests 23\nℹ pass 23\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "unit-tests",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0085",
+        "phase": "review",
+        "category": "test",
+        "duration_ms": 14885,
+        "output": "unit-tests PASS: npm test exited 0\nℹ tests 23\nℹ pass 23\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0"
+      }
+    },
+    {
+      "t_ms": 185000,
+      "t_real_ms": 656000,
+      "seq": 86,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-1 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-1",
+        "status": "pass",
+        "rule": "ARCH-1"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0086",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1938,
+        "output": "ARCH-1 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 187000,
+      "t_real_ms": 658000,
+      "seq": 87,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-2 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-2",
+        "status": "pass",
+        "rule": "ARCH-2"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0087",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1938,
+        "output": "ARCH-2 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 189000,
+      "t_real_ms": 660000,
+      "seq": 88,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-3",
+        "status": "pass",
+        "rule": "ARCH-3"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0088",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1995,
+        "output": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)"
+      }
+    },
+    {
+      "t_ms": 190000,
+      "t_real_ms": 661000,
+      "seq": 89,
+      "actor": "ci",
+      "action": "ci_result",
+      "target": null,
+      "place": "ci-tower",
+      "text": "S-1 · web-storefront: CI passed: all checks green.",
+      "key": "ci_pass",
+      "narration": "S-1 · web-storefront: CI passed: all checks green.",
+      "check": {
+        "id": "attempt-0",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CI_RUN_COMPLETED",
+        "event_id": "evt-0089",
+        "phase": "review",
+        "run_attempt": 0,
+        "ok": true,
+        "failed_checks": []
+      }
+    },
+    {
+      "t_ms": 191500,
+      "t_real_ms": 701000,
+      "seq": 90,
+      "actor": "review-agent",
+      "action": "speak",
+      "target": "code-storefront",
+      "place": "review-table",
+      "text": "No blocking findings; acceptance criteria covered by the tests in the PR.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0090",
+        "phase": "review",
+        "decision": "commented",
+        "subject_artifact_id": "art-pr-S-1"
+      }
+    },
+    {
+      "t_ms": 193000,
+      "t_real_ms": 721000,
+      "seq": 91,
+      "actor": "verifier",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "Verified the PR version (mock: evidence from its CI run: typecheck pass, unit tests pass (23 tests)). No fixes made.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0091",
+        "phase": "review",
+        "decision": "commented",
+        "subject_artifact_id": "art-pr-S-1"
+      }
+    },
+    {
+      "t_ms": 195000,
+      "t_real_ms": 723000,
+      "seq": 92,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "owner-storefront",
+      "place": "dispatch",
+      "text": "Merge S-1 v1 into web-storefront?",
+      "key": null,
+      "narration": "Gate merge: Code Owner · web-storefront (Digital) decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0092",
+        "phase": "review",
+        "gate": "merge",
+        "request_id": "apr-08"
+      }
+    },
+    {
+      "t_ms": 196500,
+      "t_real_ms": 753000,
+      "seq": 93,
+      "actor": "owner-storefront",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "approved · CI green on the last version; no changes requested by the review agent or the verifier.",
+      "key": null,
+      "narration": "Code Owner · web-storefront (Digital): approved (merge).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0093",
+        "phase": "review",
+        "request_id": "apr-08",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 198000,
+      "t_real_ms": 758000,
+      "seq": 94,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "CI_RUN_STARTED",
+        "event_id": "evt-0094",
+        "phase": "review",
+        "run_attempt": 1,
+        "subject_artifact_id": "art-pr-S-2"
+      }
+    },
+    {
+      "t_ms": 200000,
+      "t_real_ms": 760000,
+      "seq": 95,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "typecheck PASS: tsc reported no errors",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "typecheck",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0095",
+        "phase": "review",
+        "category": "build",
+        "duration_ms": 2187,
+        "output": "typecheck PASS: tsc reported no errors"
+      }
+    },
+    {
+      "t_ms": 202000,
+      "t_real_ms": 762000,
+      "seq": 96,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "unit-tests PASS: npm test exited 0\nℹ tests 40\nℹ pass 40\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "unit-tests",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0096",
+        "phase": "review",
+        "category": "test",
+        "duration_ms": 17702,
+        "output": "unit-tests PASS: npm test exited 0\nℹ tests 40\nℹ pass 40\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0"
+      }
+    },
+    {
+      "t_ms": 204000,
+      "t_real_ms": 764000,
+      "seq": 97,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-1 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-1",
+        "status": "pass",
+        "rule": "ARCH-1"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0097",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 2152,
+        "output": "ARCH-1 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 206000,
+      "t_real_ms": 766000,
+      "seq": 98,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-2 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-2",
+        "status": "pass",
+        "rule": "ARCH-2"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0098",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 2152,
+        "output": "ARCH-2 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 208000,
+      "t_real_ms": 768000,
+      "seq": 99,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-3",
+        "status": "pass",
+        "rule": "ARCH-3"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0099",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 2244,
+        "output": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)"
+      }
+    },
+    {
+      "t_ms": 210000,
+      "t_real_ms": 770000,
+      "seq": 100,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-4 PASS analytics-ingest: OrderCancelled (2 required fields present)\nARCH-4 PASS analytics-ingest: OrderPlaced (6 required fields present)\nARCH-4 PASS billing-service: OrderPlaced (5 required fields present)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-4",
+        "status": "pass",
+        "rule": "ARCH-4"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0100",
+        "phase": "review",
+        "category": "contract",
+        "duration_ms": 1394,
+        "output": "ARCH-4 PASS analytics-ingest: OrderCancelled (2 required fields present)\nARCH-4 PASS analytics-ingest: OrderPlaced (6 required fields present)\nARCH-4 PASS billing-service: OrderPlaced (5 required fields present)"
+      }
+    },
+    {
+      "t_ms": 212000,
+      "t_real_ms": 772000,
+      "seq": 101,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-5 PASS: every outgoing call is declared in catalog/orders-service.yaml",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-5",
+        "status": "pass",
+        "rule": "ARCH-5"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0101",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 92,
+        "output": "ARCH-5 PASS: every outgoing call is declared in catalog/orders-service.yaml"
+      }
+    },
+    {
+      "t_ms": 214000,
+      "t_real_ms": 774000,
+      "seq": 102,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-6 PASS: no new PII fields (baseline: OrderPlaced.customerEmail)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-6",
+        "status": "pass",
+        "rule": "ARCH-6"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0102",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 2,
+        "output": "ARCH-6 PASS: no new PII fields (baseline: OrderPlaced.customerEmail)"
+      }
+    },
+    {
+      "t_ms": 216000,
+      "t_real_ms": 776000,
+      "seq": 103,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-7 PASS: no database connections or clients",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-7",
+        "status": "pass",
+        "rule": "ARCH-7"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0103",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 92,
+        "output": "ARCH-7 PASS: no database connections or clients"
+      }
+    },
+    {
+      "t_ms": 218000,
+      "t_real_ms": 778000,
+      "seq": 104,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-8 PASS web-storefront: GET /orders/{id} (9 required fields present)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-8",
+        "status": "pass",
+        "rule": "ARCH-8"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0104",
+        "phase": "review",
+        "category": "contract",
+        "duration_ms": 1394,
+        "output": "ARCH-8 PASS web-storefront: GET /orders/{id} (9 required fields present)"
+      }
+    },
+    {
+      "t_ms": 219000,
+      "t_real_ms": 779000,
+      "seq": 105,
+      "actor": "ci",
+      "action": "ci_result",
+      "target": null,
+      "place": "ci-tower",
+      "text": "S-2 · orders-service: CI passed: all checks green.",
+      "key": "ci_pass",
+      "narration": "S-2 · orders-service: CI passed: all checks green.",
+      "check": {
+        "id": "attempt-1",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CI_RUN_COMPLETED",
+        "event_id": "evt-0105",
+        "phase": "review",
+        "run_attempt": 1,
+        "ok": true,
+        "failed_checks": []
+      }
+    },
+    {
+      "t_ms": 220500,
+      "t_real_ms": 819000,
+      "seq": 106,
+      "actor": "review-agent",
+      "action": "speak",
+      "target": "code-orders",
+      "place": "review-table",
+      "text": "No blocking findings; acceptance criteria covered by the tests in the PR.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0106",
+        "phase": "review",
+        "decision": "commented",
+        "subject_artifact_id": "art-pr-S-2"
+      }
+    },
+    {
+      "t_ms": 222000,
+      "t_real_ms": 839000,
+      "seq": 107,
+      "actor": "verifier",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "Verified the PR version (mock: evidence from its CI run: typecheck pass, unit tests pass (40 tests)). No fixes made.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0107",
+        "phase": "review",
+        "decision": "commented",
+        "subject_artifact_id": "art-pr-S-2"
+      }
+    },
+    {
+      "t_ms": 224000,
+      "t_real_ms": 841000,
+      "seq": 108,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "owner-orders",
+      "place": "dispatch",
+      "text": "Merge S-2 v1 into orders-service?",
+      "key": null,
+      "narration": "Gate merge: Code Owner · orders-service (Checkout) decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0108",
+        "phase": "review",
+        "gate": "merge",
+        "request_id": "apr-09"
+      }
+    },
+    {
+      "t_ms": 225500,
+      "t_real_ms": 871000,
+      "seq": 109,
+      "actor": "owner-orders",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "approved · CI green on the last version; no changes requested by the review agent or the verifier.",
+      "key": null,
+      "narration": "Code Owner · orders-service (Checkout): approved (merge).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0109",
+        "phase": "review",
+        "request_id": "apr-09",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 227000,
+      "t_real_ms": 876000,
+      "seq": 110,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "CI_RUN_STARTED",
+        "event_id": "evt-0110",
+        "phase": "review",
+        "run_attempt": 2,
+        "subject_artifact_id": "art-pr-S-4"
+      }
+    },
+    {
+      "t_ms": 229000,
+      "t_real_ms": 878000,
+      "seq": 111,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "typecheck PASS: tsc reported no errors",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "typecheck",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0111",
+        "phase": "review",
+        "category": "build",
+        "duration_ms": 2042,
+        "output": "typecheck PASS: tsc reported no errors"
+      }
+    },
+    {
+      "t_ms": 231000,
+      "t_real_ms": 880000,
+      "seq": 112,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "unit-tests PASS: npm test exited 0\nℹ tests 23\nℹ pass 23\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "unit-tests",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0112",
+        "phase": "review",
+        "category": "test",
+        "duration_ms": 17245,
+        "output": "unit-tests PASS: npm test exited 0\nℹ tests 23\nℹ pass 23\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0"
+      }
+    },
+    {
+      "t_ms": 233000,
+      "t_real_ms": 882000,
+      "seq": 113,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-1 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-1",
+        "status": "pass",
+        "rule": "ARCH-1"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0113",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1743,
+        "output": "ARCH-1 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 235000,
+      "t_real_ms": 884000,
+      "seq": 114,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-2 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-2",
+        "status": "pass",
+        "rule": "ARCH-2"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0114",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1743,
+        "output": "ARCH-2 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 237000,
+      "t_real_ms": 886000,
+      "seq": 115,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-3",
+        "status": "pass",
+        "rule": "ARCH-3"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0115",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1779,
+        "output": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)"
+      }
+    },
+    {
+      "t_ms": 238000,
+      "t_real_ms": 887000,
+      "seq": 116,
+      "actor": "ci",
+      "action": "ci_result",
+      "target": null,
+      "place": "ci-tower",
+      "text": "S-4 · billing-service: CI passed: all checks green.",
+      "key": "ci_pass",
+      "narration": "S-4 · billing-service: CI passed: all checks green.",
+      "check": {
+        "id": "attempt-2",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CI_RUN_COMPLETED",
+        "event_id": "evt-0116",
+        "phase": "review",
+        "run_attempt": 2,
+        "ok": true,
+        "failed_checks": []
+      }
+    },
+    {
+      "t_ms": 239500,
+      "t_real_ms": 927000,
+      "seq": 117,
+      "actor": "review-agent",
+      "action": "speak",
+      "target": "code-billing",
+      "place": "review-table",
+      "text": "Settlement digits for zero-decimal currencies are not tested; the story requires it.",
+      "key": null,
+      "narration": "Review agent on S-4 v1: changes_requested.",
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0117",
+        "phase": "review",
+        "decision": "changes_requested",
+        "subject_artifact_id": "art-pr-S-4"
+      }
+    },
+    {
+      "t_ms": 241500,
+      "t_real_ms": 929000,
+      "seq": 118,
+      "actor": "flow-engine",
+      "action": "speak",
+      "target": "code-billing",
+      "place": "dispatch",
+      "text": "Settlement digits for zero-decimal currencies are not tested; the story requires it.\n- [medium] No test for JPY (0 decimals) (test/settlement.test.ts)",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0118",
+        "phase": "review",
+        "interaction_type": "feedback_request",
+        "content": "Settlement digits for zero-decimal currencies are not tested; the story requires it.\n- [medium] No test for JPY (0 decimals) (test/settlement.test.ts)"
+      }
+    },
+    {
+      "t_ms": 241500,
+      "t_real_ms": 929000,
+      "seq": 118,
+      "actor": "code-billing",
+      "action": "move",
+      "target": null,
+      "place": "desk-billing",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0118",
+        "phase": "review"
+      }
+    },
+    {
+      "t_ms": 244500,
+      "t_real_ms": 932000,
+      "seq": 119,
+      "actor": "code-billing",
+      "action": "work",
+      "target": null,
+      "place": "desk-billing",
+      "text": "Edit · billing-service/test/settlement.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0119",
+        "phase": "review",
+        "tool_name": "Edit",
+        "input_summary": "billing-service/test/settlement.test.ts",
+        "correlation_id": "S-4-v2-0"
+      }
+    },
+    {
+      "t_ms": 247500,
+      "t_real_ms": 935000,
+      "seq": 120,
+      "actor": "code-billing",
+      "action": "work",
+      "target": null,
+      "place": "desk-billing",
+      "text": "edited test/settlement.test.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0120",
+        "phase": "review",
+        "tool_name": "Edit",
+        "status": "success",
+        "output_summary": "edited test/settlement.test.ts",
+        "correlation_id": "S-4-v2-0"
+      }
+    },
+    {
+      "t_ms": 249000,
+      "t_real_ms": 955000,
+      "seq": 121,
+      "actor": "code-billing",
+      "action": "move",
+      "target": null,
+      "place": "review-table",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_UPDATED",
+        "event_id": "evt-0121",
+        "phase": "review"
+      }
+    },
+    {
+      "t_ms": 249000,
+      "t_real_ms": 955000,
+      "seq": 121,
+      "actor": "code-billing",
+      "action": "handoff",
+      "target": "review-table",
+      "place": "review-table",
+      "text": "PR S-4 · billing-service · Added a JPY (0 decimals) test, as the review asked.",
+      "key": "repair",
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_UPDATED",
+        "event_id": "evt-0121",
+        "phase": "review",
+        "artifact_id": "art-pr-S-4",
+        "version": 2,
+        "diff": {
+          "files_changed": 2,
+          "lines_added": 50,
+          "lines_removed": 0
+        }
+      }
+    },
+    {
+      "t_ms": 251000,
+      "t_real_ms": 957000,
+      "seq": 122,
+      "actor": "code-billing",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "review-table",
+      "text": "Added a JPY (0 decimals) test, as the review asked.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0122",
+        "phase": "review",
+        "interaction_type": "report",
+        "content": "Added a JPY (0 decimals) test, as the review asked."
+      }
+    },
+    {
+      "t_ms": 252500,
+      "t_real_ms": 962000,
+      "seq": 123,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "CI_RUN_STARTED",
+        "event_id": "evt-0123",
+        "phase": "review",
+        "run_attempt": 3,
+        "subject_artifact_id": "art-pr-S-4"
+      }
+    },
+    {
+      "t_ms": 254500,
+      "t_real_ms": 964000,
+      "seq": 124,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "typecheck PASS: tsc reported no errors",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "typecheck",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0124",
+        "phase": "review",
+        "category": "build",
+        "duration_ms": 1949,
+        "output": "typecheck PASS: tsc reported no errors"
+      }
+    },
+    {
+      "t_ms": 256500,
+      "t_real_ms": 966000,
+      "seq": 125,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "unit-tests PASS: npm test exited 0\nℹ tests 24\nℹ pass 24\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "unit-tests",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0125",
+        "phase": "review",
+        "category": "test",
+        "duration_ms": 17251,
+        "output": "unit-tests PASS: npm test exited 0\nℹ tests 24\nℹ pass 24\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0"
+      }
+    },
+    {
+      "t_ms": 258500,
+      "t_real_ms": 968000,
+      "seq": 126,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-1 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-1",
+        "status": "pass",
+        "rule": "ARCH-1"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0126",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1884,
+        "output": "ARCH-1 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 260500,
+      "t_real_ms": 970000,
+      "seq": 127,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-2 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-2",
+        "status": "pass",
+        "rule": "ARCH-2"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0127",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1884,
+        "output": "ARCH-2 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 262500,
+      "t_real_ms": 972000,
+      "seq": 128,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-3",
+        "status": "pass",
+        "rule": "ARCH-3"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0128",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1910,
+        "output": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)"
+      }
+    },
+    {
+      "t_ms": 263500,
+      "t_real_ms": 973000,
+      "seq": 129,
+      "actor": "ci",
+      "action": "ci_result",
+      "target": null,
+      "place": "ci-tower",
+      "text": "S-4 · billing-service: CI passed: all checks green.",
+      "key": "ci_pass",
+      "narration": "S-4 · billing-service: CI passed: all checks green.",
+      "check": {
+        "id": "attempt-3",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CI_RUN_COMPLETED",
+        "event_id": "evt-0129",
+        "phase": "review",
+        "run_attempt": 3,
+        "ok": true,
+        "failed_checks": []
+      }
+    },
+    {
+      "t_ms": 265000,
+      "t_real_ms": 1013000,
+      "seq": 130,
+      "actor": "review-agent",
+      "action": "speak",
+      "target": "code-billing",
+      "place": "review-table",
+      "text": "No blocking findings; acceptance criteria covered by the tests in the PR.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0130",
+        "phase": "review",
+        "decision": "commented",
+        "subject_artifact_id": "art-pr-S-4"
+      }
+    },
+    {
+      "t_ms": 266500,
+      "t_real_ms": 1033000,
+      "seq": 131,
+      "actor": "verifier",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "Verified the PR version (mock: evidence from its CI run: typecheck pass, unit tests pass (24 tests)). No fixes made.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0131",
+        "phase": "review",
+        "decision": "commented",
+        "subject_artifact_id": "art-pr-S-4"
+      }
+    },
+    {
+      "t_ms": 268500,
+      "t_real_ms": 1035000,
+      "seq": 132,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "owner-billing",
+      "place": "dispatch",
+      "text": "Merge S-4 v2 into billing-service?",
+      "key": null,
+      "narration": "Gate merge: Code Owner · billing-service (Finance) decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0132",
+        "phase": "review",
+        "gate": "merge",
+        "request_id": "apr-10"
+      }
+    },
+    {
+      "t_ms": 270000,
+      "t_real_ms": 1065000,
+      "seq": 133,
+      "actor": "owner-billing",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "approved · CI green on the last version; no changes requested by the review agent or the verifier.",
+      "key": null,
+      "narration": "Code Owner · billing-service (Finance): approved (merge).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0133",
+        "phase": "review",
+        "request_id": "apr-10",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 271500,
+      "t_real_ms": 1070000,
+      "seq": 134,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "CI_RUN_STARTED",
+        "event_id": "evt-0134",
+        "phase": "review",
+        "run_attempt": 4,
+        "subject_artifact_id": "art-pr-S-5"
+      }
+    },
+    {
+      "t_ms": 273500,
+      "t_real_ms": 1072000,
+      "seq": 135,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "typecheck PASS: tsc reported no errors",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "typecheck",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0135",
+        "phase": "review",
+        "category": "build",
+        "duration_ms": 2274,
+        "output": "typecheck PASS: tsc reported no errors"
+      }
+    },
+    {
+      "t_ms": 275500,
+      "t_real_ms": 1074000,
+      "seq": 136,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "unit-tests PASS: npm test exited 0\nℹ tests 19\nℹ pass 19\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "unit-tests",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0136",
+        "phase": "review",
+        "category": "test",
+        "duration_ms": 14192,
+        "output": "unit-tests PASS: npm test exited 0\nℹ tests 19\nℹ pass 19\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0"
+      }
+    },
+    {
+      "t_ms": 277500,
+      "t_real_ms": 1076000,
+      "seq": 137,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-1 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-1",
+        "status": "pass",
+        "rule": "ARCH-1"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0137",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1465,
+        "output": "ARCH-1 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 279500,
+      "t_real_ms": 1078000,
+      "seq": 138,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-2 PASS: no violations (dependency-cruiser)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-2",
+        "status": "pass",
+        "rule": "ARCH-2"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0138",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1465,
+        "output": "ARCH-2 PASS: no violations (dependency-cruiser)"
+      }
+    },
+    {
+      "t_ms": 281500,
+      "t_real_ms": 1080000,
+      "seq": 139,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-3",
+        "status": "pass",
+        "rule": "ARCH-3"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0139",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 1487,
+        "output": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan)"
+      }
+    },
+    {
+      "t_ms": 282500,
+      "t_real_ms": 1081000,
+      "seq": 140,
+      "actor": "ci",
+      "action": "ci_result",
+      "target": null,
+      "place": "ci-tower",
+      "text": "S-5 · analytics-ingest: CI passed: all checks green.",
+      "key": "ci_pass",
+      "narration": "S-5 · analytics-ingest: CI passed: all checks green.",
+      "check": {
+        "id": "attempt-4",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CI_RUN_COMPLETED",
+        "event_id": "evt-0140",
+        "phase": "review",
+        "run_attempt": 4,
+        "ok": true,
+        "failed_checks": []
+      }
+    },
+    {
+      "t_ms": 284000,
+      "t_real_ms": 1121000,
+      "seq": 141,
+      "actor": "review-agent",
+      "action": "speak",
+      "target": "code-analytics",
+      "place": "review-table",
+      "text": "No blocking findings. Note: amountMinor * rate * scale can exceed 2^53 for amounts above ~9e7 JPY; fine for current order limits.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0141",
+        "phase": "review",
+        "decision": "commented",
+        "subject_artifact_id": "art-pr-S-5"
+      }
+    },
+    {
+      "t_ms": 285500,
+      "t_real_ms": 1141000,
+      "seq": 142,
+      "actor": "verifier",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "Verified the PR version (mock: evidence from its CI run: typecheck pass, unit tests pass (19 tests)). No fixes made.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0142",
+        "phase": "review",
+        "decision": "commented",
+        "subject_artifact_id": "art-pr-S-5"
+      }
+    },
+    {
+      "t_ms": 287500,
+      "t_real_ms": 1143000,
+      "seq": 143,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "owner-analytics",
+      "place": "dispatch",
+      "text": "Merge S-5 v1 into analytics-ingest?",
+      "key": null,
+      "narration": "Gate merge: Code Owner · analytics-ingest (Data) decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0143",
+        "phase": "review",
+        "gate": "merge",
+        "request_id": "apr-11"
+      }
+    },
+    {
+      "t_ms": 289000,
+      "t_real_ms": 1173000,
+      "seq": 144,
+      "actor": "owner-analytics",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "approved · CI green on the last version; no changes requested by the review agent or the verifier.",
+      "key": null,
+      "narration": "Code Owner · analytics-ingest (Data): approved (merge).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0144",
+        "phase": "review",
+        "request_id": "apr-11",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 290000,
+      "t_real_ms": 1174000,
+      "seq": 145,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "merged PRs go to verification and staging",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "PHASE_CHANGED",
+        "event_id": "evt-0145",
+        "phase": "testing",
+        "from_phase": "review",
+        "to_phase": "testing"
+      }
+    },
+    {
+      "t_ms": 291500,
+      "t_real_ms": 1204000,
+      "seq": 146,
+      "actor": "verifier",
+      "action": "work",
+      "target": null,
+      "place": "review-table",
+      "text": "backlog/verification.md · Per-story verification (no fixes)",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0146",
+        "phase": "testing",
+        "artifact_id": "art-verification",
+        "artifact_type": "test_results"
+      }
+    },
+    {
+      "t_ms": 293000,
+      "t_real_ms": 1209000,
+      "seq": 147,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "billing-service (final): 5 tests passed",
+      "key": "oracle",
+      "narration": null,
+      "check": {
+        "id": "billing-service",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0147",
+        "phase": "testing",
+        "consumer": "billing-service",
+        "state": "final",
+        "ok": true,
+        "message": "5 tests passed",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 294500,
+      "t_real_ms": 1214000,
+      "seq": 148,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "analytics-ingest (final): 5 tests passed",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "analytics-ingest",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0148",
+        "phase": "testing",
+        "consumer": "analytics-ingest",
+        "state": "final",
+        "ok": true,
+        "message": "5 tests passed",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 296000,
+      "t_real_ms": 1219000,
+      "seq": 149,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "web-storefront (final): 4 tests passed",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "web-storefront",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0149",
+        "phase": "testing",
+        "consumer": "web-storefront",
+        "state": "final",
+        "ok": true,
+        "message": "4 tests passed",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 297000,
+      "t_real_ms": 1220000,
+      "seq": 150,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "verification done; release candidate next",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "PHASE_CHANGED",
+        "event_id": "evt-0150",
+        "phase": "deployment",
+        "from_phase": "testing",
+        "to_phase": "deployment"
+      }
+    },
+    {
+      "t_ms": 298500,
+      "t_real_ms": 1250000,
+      "seq": 151,
+      "actor": "flow-engine",
+      "action": "work",
+      "target": null,
+      "place": "dispatch",
+      "text": "backlog/release.md · 4 PRs; flag multiCurrencyCheckout off",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0151",
+        "phase": "deployment",
+        "artifact_id": "art-release",
+        "artifact_type": "release"
+      }
+    },
+    {
+      "t_ms": 300000,
+      "t_real_ms": 1270000,
+      "seq": 152,
+      "actor": "verifier",
+      "action": "speak",
+      "target": null,
+      "place": "review-table",
+      "text": "Release candidate checked: 4 merged PRs green; carried over: S-3, S-6.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "REVIEW_SUBMITTED",
+        "event_id": "evt-0152",
+        "phase": "deployment",
+        "decision": "commented",
+        "subject_artifact_id": "art-release"
+      }
+    },
+    {
+      "t_ms": 302000,
+      "t_real_ms": 1272000,
+      "seq": 153,
+      "actor": "flow-engine",
+      "action": "handoff",
+      "target": "release-manager",
+      "place": "dispatch",
+      "text": "Release EPIC-RQ6 r1 to production (4 PRs, flag multiCurrencyCheckout off)?",
+      "key": null,
+      "narration": "Gate production-release: Rosa · Release Manager decides.",
+      "detail": {
+        "event_type": "APPROVAL_REQUESTED",
+        "event_id": "evt-0153",
+        "phase": "deployment",
+        "gate": "production-release",
+        "request_id": "apr-12"
+      }
+    },
+    {
+      "t_ms": 303500,
+      "t_real_ms": 1332000,
+      "seq": 154,
+      "actor": "release-manager",
+      "action": "speak",
+      "target": null,
+      "place": "merge-gate",
+      "text": "approved · 4 merged PRs with green CI; verifier found no failures; S-3, S-6 carried over, flag multiCurrencyCheckout off.",
+      "key": null,
+      "narration": "Rosa · Release Manager: approved (production-release).",
+      "detail": {
+        "event_type": "APPROVAL_DECIDED",
+        "event_id": "evt-0154",
+        "phase": "deployment",
+        "request_id": "apr-12",
+        "decision": "approved"
+      }
+    },
+    {
+      "t_ms": 305000,
+      "t_real_ms": 1337000,
+      "seq": 155,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "Released EPIC-RQ6 r1 behind flag multiCurrencyCheckout (off): merged S-1, S-2, S-4, S-5; S-3 blocked, S-6 blocked.",
+      "key": "session_end",
+      "narration": "Released EPIC-RQ6 r1 behind flag multiCurrencyCheckout (off): merged S-1, S-2, S-4, S-5; S-3 blocked, S-6 blocked.",
+      "detail": {
+        "event_type": "SESSION_ENDED",
+        "event_id": "evt-0155",
+        "phase": "deployment",
+        "outcome": "success",
+        "stats": {
+          "run_outcome": "released",
+          "ticket_done": null,
+          "condition": "F1",
+          "stories_merged": [
+            "S-1",
+            "S-2",
+            "S-4",
+            "S-5"
+          ],
+          "stories_blocked": [
+            "S-3",
+            "S-6"
+          ],
+          "stories_rejected": [],
+          "ci_runs": 5,
+          "human_gates": 12,
+          "model_calls": 0
+        }
+      }
+    }
+  ],
+  "markers": [
+    {
+      "t_ms": 5500,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 13500,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 33500,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 43500,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 61000,
+      "label": "PR opened · 2 files, +46 -0",
+      "kind": "pr_opened"
+    },
+    {
+      "t_ms": 65000,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 94500,
+      "label": "PR opened · 4 files, +32 -1",
+      "kind": "pr_opened"
+    },
+    {
+      "t_ms": 98500,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 116000,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 133500,
+      "label": "PR opened · 2 files, +46 -0",
+      "kind": "pr_opened"
+    },
+    {
+      "t_ms": 137500,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 155000,
+      "label": "PR opened · 2 files, +57 -0",
+      "kind": "pr_opened"
+    },
+    {
+      "t_ms": 159000,
+      "label": "Task assigned: EPIC-RQ6",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 190000,
+      "label": "CI passed",
+      "kind": "ci_pass"
+    },
+    {
+      "t_ms": 219000,
+      "label": "CI passed",
+      "kind": "ci_pass"
+    },
+    {
+      "t_ms": 238000,
+      "label": "CI passed",
+      "kind": "ci_pass"
+    },
+    {
+      "t_ms": 249000,
+      "label": "Repair 1 pushed · Added a JPY (0 decimals) test, as the review asked.",
+      "kind": "repair"
+    },
+    {
+      "t_ms": 263500,
+      "label": "CI passed",
+      "kind": "ci_pass"
+    },
+    {
+      "t_ms": 282500,
+      "label": "CI passed",
+      "kind": "ci_pass"
+    },
+    {
+      "t_ms": 293000,
+      "label": "Oracle (final): all 3 consumers pass",
+      "kind": "oracle"
+    },
+    {
+      "t_ms": 305000,
+      "label": "End: released",
+      "kind": "session_end"
+    }
+  ]
+}

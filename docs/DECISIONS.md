@@ -181,3 +181,17 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - The shell's plugin iframe gets `allow="fullscreen"` (requested by WP5).
 - The real manifest was generated tonight (`results/real/manifest.json`; seed 20261011; P0 5, P1 40, P2 10, P4 61, P5 60), with paraphrase slots on the base text ×10 because p1–p5 are `TODO(human)`. That makes `runner --stage P0 --dry-run` list the 5 calibration runs (M1e). Regenerate it with `python -m harness.manifest --ns real --force` after writing the paraphrases, **before** the freeze.
 - Leftover processes from subagents (a `vite preview` on :4174 and a headless Edge on CDP :9334) were killed by PID. The user's own Python and Edge processes were left alone.
+
+## M2b · Multi-role AI-SDLC flow, mock only (2026-10-11; Opus subagent)
+- `python -m flow.run --mock --condition F0|F1 [--permissive] [--keep]`: one sprint of the "Multi-currency checkout" epic (S-1…S-6). A run releases S-1, S-2, S-4 and S-5; S-3 (payments) and S-6 (inventory) end as "blocked: repo not yet in scenario (M2a)" with ERROR_RAISED `repo_missing`, and the engineer carries them over · leave them out · they must still go through planning and review.
+- `devops_agent` appears only with `--permissive`; by default flow_engine assembles the release (§16.2).
+- Every gate = APPROVAL_REQUESTED by flow_engine + APPROVAL_DECIDED by a simulated human carrying `metadata.policy` · human REVIEW_SUBMITTED · checkable by trace rules 7, 8, 13. One code owner per existing repo. The review agent runs on a different (mock) model than the code agents.
+- S-2 reuses `X-add/correct.patch` with renames (couponCode → fxQuoteId); S-1, S-4 and S-5 use small scripted edits in `flow/mock_edits/`; S-4 v1 is sent back by the review agent (missing JPY test) and v2 fixes it.
+- F0 = typecheck + unit-tests only; F1 adds ARCH-1..3 on every repo and ARCH-4..8 on orders-service (those checks are orders-specific).
+- The oracle runs in the testing phase as an instrument (`instrument: true`); no human policy reads it.
+- Fixed simulated clock from 2026-10-12T15:00Z for reproducible traces; CI `duration_ms` is measured.
+- Sprint workspaces in `C:\avg\wflow\<session>` (deleted unless `--keep`); `C:\avg\wflow\node_modules` is a junction to the repo's `node_modules`. Canaries are stripped from sprint copies, as in V2.
+- Without `--mock` the real-adapter hook raises NotImplementedError → exit 2 (no silent mock fallback, §0.1).
+- Human roles also get short policy cards in `flow/prompts/` (spec 16.3 says "one per role").
+- Known gaps: `flow/ci_gate.py` calls private helpers of `ci/run.py` (a public repo-checks function would be safer); the oracle only covers orders-service as provider; the mock verifier only reads the PR's CI; replay has no desks for payments/inventory, no gate marker type, and labels review-requested fixes "Repair n".
+- (Lead) The M2 story drafts `scenario/tasks/S-*.md` are excluded from the pre-registration lock (`harness/prereg.py` now freezes `scenario/tasks/X-*.md`) and from `scenario_io.scenario_hash()` · freeze them with M1 · they are M2 drafts for Alfredo, not part of the M1 experiment.

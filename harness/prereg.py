@@ -3,7 +3,7 @@
   python -m harness.prereg --freeze [--repo DIR]    write PREREGISTRATION.lock + commit "Freeze pre-registration"
   python -m harness.prereg --verify [--repo DIR] [--json]   OK, or the list of differences (exit 1)
 
-Frozen set (SHA-256 per file): PREREGISTRATION.md, scenario/tasks/*.md, scenario/context/orders-service/*.md,
+Frozen set (SHA-256 per file): PREREGISTRATION.md, scenario/tasks/X-*.md (M1 tickets; the M2 story drafts S-* are not frozen), scenario/context/orders-service/*.md,
 harness/texts/*, analysis/RUBRIC.md, results/real/manifest.json, harness/units.json, every file under ci/.
 Freezing is Alfredo's step (after P0 and fixing units.json); builders only test it on a temp copy (--repo).
 """
@@ -19,7 +19,7 @@ from pathlib import Path
 from harness import paths
 
 LOCK_NAME = "PREREGISTRATION.lock"
-GLOBS = ("PREREGISTRATION.md", "scenario/tasks/*.md", "scenario/context/orders-service/*.md", "harness/texts/*",
+GLOBS = ("PREREGISTRATION.md", "scenario/tasks/X-*.md", "scenario/context/orders-service/*.md", "harness/texts/*",
          "analysis/RUBRIC.md", "harness/units.json", "ci/**/*")
 SKIP_PARTS = {"__pycache__", "node_modules", ".ci-build"}
 
