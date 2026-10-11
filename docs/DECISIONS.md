@@ -222,3 +222,8 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 
 ## Results "Deck" export stays black (2026-10-11, Alfredo)
 - "No dark mode" applies to the console UI and the Replay Theater. The Results "Deck" export is a slide asset for the the talk deck (black, deck purple, cyan = pass, pink = fail), so it stays black; the "App" export stays light.
+
+## Runner output panel and no terminal windows (2026-10-11, lead; Alfredo's request)
+- Run Control has a **Runner output** panel on the right: the stdout/stderr of the last runner launched from the console, read incrementally (`GET /api/run-control/log?offset=`; first read = last 48 KB; the core sanitizes it), polled every 1.5 s while the runner is alive. Follow toggle, Hide/Show remembered per browser (`localStorage["avg.rc.output"]`). Below 1200 px it moves under the page.
+- The runner now prints a `started` line per run and, **only for visible stages** (P0, mock, unblinded), one line per agent action (`<run> [gen|fixN] Read src\…`, `says: …`, `-> denied`). For blinded stages it prints nothing per action, because the sequence of sessions would reveal when CI failed (spec 11.4). Workspace prefixes are stripped.
+- Terminal windows: the console spawned the runner with `DETACHED_PROCESS`, so every console program it started (claude, git, npm) got its own visible terminal, and closing one killed that run. It now uses `CREATE_NO_WINDOW` (a hidden console the children inherit), still in its own process group and outside the console's job.

@@ -35,6 +35,8 @@ MAX_MINUTES = 24 * 60
 FINISHED_LIMIT = 20
 QUEUE_LIMIT = 5
 HEARTBEAT_STALE_S = 30
+LOG_FIRST = 48_000      # bytes of the runner log shown when the panel opens
+LOG_MAX = 256_000       # most bytes returned by one /log call
 WRITE_ROLES = ["owner", "operator"]
 HHMM = re.compile(r"^(\d{1,2}):(\d{2})$")
 
@@ -383,6 +385,36 @@ def register(router, ctx):
             "stop_requested": bool(read_json(paths.control_path(ns), default=None)),
         }
 
+    def get_log(req):
+        """The spawned runner's stdout/stderr, read incrementally for the Runner output panel.
+        ?offset=<bytes already shown>; 0 (or a stale offset) returns the last LOG_FIRST bytes. The core sanitizes it."""
+        ns = req.ns
+        launch = runner_ctl.last_launch(ns) or {}
+        rel = launch.get("log")
+        out = {"ns": ns, "log": rel, "alive": runner_ctl.status(ns)["alive"], "launched_at": launch.get("at"),
+               "args": launch.get("args"), "size": 0, "offset": 0, "reset": True, "text": ""}
+        if not isinstance(rel, str) or ".." in rel or not re.match(r"^logs/[A-Za-z0-9_.-]+\.log$", rel):
+            return out
+        try:
+            offset = max(0, int(req.query.get("offset", "0") or 0))
+        except ValueError:
+            offset = 0
+        try:
+            with open(ctx.data_dir / rel, "rb") as f:
+                f.seek(0, 2)
+                size = f.tell()
+                reset = offset == 0 or offset > size
+                start = max(0, size - LOG_FIRST) if reset else offset
+                start = max(start, size - LOG_MAX)
+                f.seek(start)
+                data = f.read(size - start)
+        except OSError:
+            return out
+        if reset and start > 0 and b"\n" in data:
+            data = data[data.index(b"\n") + 1:]  # start on a whole line
+        out.update(size=size, offset=size, reset=reset, text=data.decode("utf-8", "replace"))
+        return out
+
     def log_tail(rel) -> list[str]:
         """Last lines of the spawned runner's stdout/stderr log (the core sanitizes the response)."""
         if not isinstance(rel, str) or ".." in rel or not re.match(r"^logs/[A-Za-z0-9_.-]+\.log$", rel):
@@ -564,6 +596,7 @@ def register(router, ctx):
 
     router.get("/stages", get_stages)
     router.get("/status", get_status)
+    router.get("/log", get_log)
     router.post("/dry-run", post_dry_run, roles=WRITE_ROLES)
     router.post("/start", post_start, roles=WRITE_ROLES)
     router.post("/stop", post_stop, roles=WRITE_ROLES)

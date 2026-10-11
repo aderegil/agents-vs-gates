@@ -1,16 +1,19 @@
 // Run Control (spec §22.2): stage cards, launch / stop / workers / dry run, live view of the runner.
-// Data: GET /api/run-control/{stages,status}; actions POST …/{dry-run,start,stop,workers,resume-at,unblind}.
+// Data: GET /api/run-control/{stages,status,log}; actions POST …/{dry-run,start,stop,workers,resume-at,unblind}.
 // Live: shell.subscribe("runner.progress" | "runner.run_started" | "runner.run_finished" | "runner.stopped" | "runner.rate_limited").
 import { h, table, badge, bar, button, panel, notice, empty, field, fmtInt, fmtDuration, fmtTime, fmtDate, iconEl } from "/web/lib/ui.js";
 import {
   fmtElapsed, fmtCompact, cellLabel, cellKeyLabel, stageBadges, outcomeEntries, launchBody, validAmount, reasonFor, launchSignature, hhmm,
 } from "./model.js";
+import { outputPanel } from "./output.js";
 
 let alive = false;
 let timers = [];
+let term = null;
 
 export function unmount() {
   alive = false;
+  if (term) { term.stop(); term = null; }
   timers.forEach((t) => { clearTimeout(t); clearInterval(t); });
   timers = [];
 }
@@ -34,12 +37,19 @@ export async function mount(el, shell) {
   const launch = h("div", { class: "rc-launch-box" });
   const live = h("div", { class: "stack rc-live" });
   const root = h("div", { class: "stack rc" }, strip, cards, launch, live);
-  el.replaceChildren(root);
+  term = outputPanel(shell, { isAlive: () => !!(S.status && S.status.alive), onToggle: (v) => layout.classList.toggle("is-term-closed", !v) });
+  const layout = h("div", { class: ["rc-layout", !term.isOpen() && "is-term-closed"] }, root, term.el);
+  el.replaceChildren(layout);
   cards.append(h("p", { class: "loading" }, "Loading…"));
 
   // ---------------------------------------------------------------- loading
   async function loadStatus() {
-    try { S.status = await shell.api.get("run-control/status"); paintStrip(); paintLive(); paintLaunch(); }
+    try {
+      const was = S.status && S.status.alive;
+      S.status = await shell.api.get("run-control/status");
+      if (term && was !== S.status.alive) term.nudge();
+      paintStrip(); paintLive(); paintLaunch();
+    }
     catch (e) { if (alive) strip.replaceChildren(notice(e.error || String(e), "fail", "circle-alert")); }
   }
   async function loadStages() {

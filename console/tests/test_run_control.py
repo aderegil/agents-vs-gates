@@ -180,6 +180,39 @@ class StatusTest(unittest.TestCase):
             self.assertIsNone(rl["scheduled_at"])
 
 
+class LogTest(unittest.TestCase):
+    def test_log_is_read_incrementally_and_sanitized(self):
+        with ConsoleFixture(copy_real=PLUGINS) as fx:
+            seed(fx.results)
+            data = fx.tmp / "data"
+            (data / "logs").mkdir(parents=True, exist_ok=True)
+            log = data / "logs" / "runner-mock-1.log"
+            log.write_text("=== spawn\np0-0001  started  X-rename V0·S0·W1  worker 1\n", encoding="utf-8")
+            write_json_atomic(data / "runner-launch.json", {"mock": {"pid": 1, "at": "2026-10-11T00:00:00+00:00",
+                                                                   "args": ["--stage", "P0"], "log": "logs/runner-mock-1.log"}})
+            d = fx.owner.get("/api/run-control/log?ns=mock").json
+            self.assertTrue(d["reset"])
+            self.assertIn("p0-0001  started", d["text"])
+            self.assertEqual(d["offset"], log.stat().st_size)
+            self.assertFalse(d["alive"])
+            with open(log, "a", encoding="utf-8") as f:
+                f.write("  p0-0001 [gen] Read C:\\Users\\someone\\x.ts\n")
+            d2 = fx.owner.get(f"/api/run-control/log?ns=mock&offset={d['offset']}").json
+            self.assertFalse(d2["reset"])
+            self.assertTrue(d2["text"].startswith("  p0-0001 [gen] Read"))
+            self.assertNotIn("someone", d2["text"])                          # the core scrubs user paths
+            d3 = fx.owner.get("/api/run-control/log?ns=mock&offset=999999").json
+            self.assertTrue(d3["reset"])                                    # stale offset: start again
+            self.assertEqual(fx.client("v1", "viewer").get("/api/run-control/log?ns=mock").status, 403)
+
+    def test_no_launch_yet(self):
+        with ConsoleFixture(copy_real=PLUGINS) as fx:
+            seed(fx.results)
+            d = fx.owner.get("/api/run-control/log?ns=mock").json
+            self.assertIsNone(d["log"])
+            self.assertEqual(d["text"], "")
+
+
 class DryRunStartTest(unittest.TestCase):
     def test_dry_run_matches_the_runners_own_dry_run(self):
         with ConsoleFixture(copy_real=PLUGINS) as fx:

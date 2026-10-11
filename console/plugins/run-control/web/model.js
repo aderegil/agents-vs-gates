@@ -100,3 +100,16 @@ export function hhmm(iso) {
   if (Number.isNaN(d.getTime())) return "";
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
+
+// Runner output panel (output.js)
+/** Line → CSS class (pure; tested in output.test.mjs). */
+export function lineKind(line) {
+  if (/^=== /.test(line)) return "spawn";
+  if (/^\s+\S+ \[[^\]]+\]\s+->\s*(denied|error)/.test(line)) return "fail";
+  if (/^\s+\S+ \[[^\]]+\] says: /.test(line)) return "say";
+  if (/^\s+\S+ \[[^\]]+\] /.test(line)) return "tool";
+  if (/^\S+\s+started\s/.test(line)) return "start";
+  if (/^\S+\s+turns=\d+/.test(line)) return "done";
+  if (/infrastructure failure|^stopped:|^refused|Traceback|Error\b/.test(line)) return "warn";
+  return "";
+}

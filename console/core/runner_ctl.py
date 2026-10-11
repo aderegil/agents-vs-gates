@@ -34,7 +34,7 @@ from .plugin_api import ApiError, default_python
 _cfg = {"data_dir": paths.REPO / "console" / "data", "audit": None, "python": default_python(paths.REPO)}
 _lock = threading.RLock()
 
-DETACHED_PROCESS = 0x00000008
+CREATE_NO_WINDOW = 0x08000000
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 CREATE_BREAKAWAY_FROM_JOB = 0x01000000
 LAUNCH_GRACE_S = 120
@@ -97,7 +97,9 @@ def spawn_detached(argv: list[str], log_name: str, data_dir: Path | None = None,
         kw = dict(cwd=str(cwd or paths.REPO), env=e, stdin=subprocess.DEVNULL, stdout=logf,
                   stderr=subprocess.STDOUT, close_fds=True)
         if os.name == "nt":
-            base = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+            # A hidden console, not DETACHED_PROCESS: without a console of its own, every console program the runner
+            # starts (claude, git, node, npm) would open a visible terminal window, and closing one kills that run.
+            base = CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP
             try:  # leave the console's job object too (some terminals kill the whole job on close)
                 p = subprocess.Popen(list(argv), creationflags=base | CREATE_BREAKAWAY_FROM_JOB, **kw)
             except OSError:

@@ -79,6 +79,26 @@ def log(ns: str, event: str, **kw) -> None:
     jsonio.append_jsonl(paths.runner_log_path(ns), {"ts": now(), "event": event, **kw})
 
 
+_WS_PREFIX = re.compile(r"(?i)[a-z]:[\\/]avg[\\/]w[^\\/\s]*[\\/](?:r[\\/])?")
+
+
+def activity_line(rid: str, ev: dict) -> str | None:
+    """One stdout line per agent action, for the console's Runner output panel. Only printed for visible stages
+    (spec 11.4): the sequence of sessions would tell a blinded stage when CI failed."""
+    kind, sess = ev.get("kind"), ev.get("session") or "gen"
+    if kind == "tool_call":
+        inp = ev.get("input") or {}
+        arg = next((inp[k] for k in ("command", "file_path", "pattern", "path", "url") if isinstance(inp.get(k), str)), "")
+        what = f"{ev.get('name') or 'tool'} {_WS_PREFIX.sub('', arg)}".strip()
+    elif kind == "text":
+        what = "says: " + " ".join(str(ev.get("text") or "").split())
+    elif kind == "tool_result" and ev.get("status") in ("denied", "error"):
+        what = f"  -> {ev['status']}"
+    else:
+        return None
+    return f"  {rid} [{sess}] {what[:160]}"
+
+
 # ---------------------------------------------------------------- guards -----------------------------------------
 
 def guard_errors(ns: str, stage: str, units_used: set[str]) -> list[str]:
@@ -187,8 +207,16 @@ class Batch:
                 st.data["workers"][str(k)] = {"run_id": rid, "ticket": entry["ticket"], "cell": entry["cell"],
                                               "attempt": "gen", "started_at": now(), "turns": 0, "tokens": 0}
             log(self.ns, "run_started", run_id=rid, worker=k, ticket=entry["ticket"], cell=entry["cell"])
+            show = not self.quiet and blinding.is_visible(st.data, entry.get("stage"))
+            if not self.quiet:
+                print(f"{rid}  started  {entry['ticket']} {entry.get('visibility', '')}·{entry.get('spec', '')}·"
+                      f"{entry.get('wording', '')}  worker {k}", flush=True)
 
-            def on_event(ev, k=k):
+            def on_event(ev, k=k, rid=rid, show=show):
+                if show:
+                    line = activity_line(rid, ev)
+                    if line:
+                        print(line, flush=True)
                 with st.lock:
                     w = st.data["workers"].get(str(k)) or {}
                     w["attempt"] = ev.get("session", w.get("attempt"))
