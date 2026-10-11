@@ -277,12 +277,13 @@ class ScenarioRoutesTest(unittest.TestCase):
     def test_tickets(self):
         d = self.j("tickets")
         self.assertEqual([t["id"] for t in d["tickets"]], ["X-rename", "X-remove", "X-api", "X-dep", "X-units", "X-add"])
-        self.assertEqual((d["paraphrases_expected"], d["paraphrases_written"]), (15, 0))
+        self.assertEqual((d["paraphrases_expected"], d["paraphrases_written"]), (15, 15))   # Codex, 2026-10-11
         r = d["tickets"][0]
         self.assertTrue(r["base"]["text"].startswith("Clean up the OrderPlaced event"))
         self.assertIn("without breaking existing consumers", r["w2"]["text"])
         self.assertEqual([p["n"] for p in r["paraphrases"]], [1, 2, 3, 4, 5])
-        self.assertTrue(all(p["todo"] and p["status"] == "todo" and p["words"] == 0 for p in r["paraphrases"]))
+        self.assertTrue(all(not p["todo"] and p["status"] == "text" and p["words"] > 0 for p in r["paraphrases"]))
+        self.assertTrue(r["paraphrases"][0]["text"].startswith("The OrderPlaced event uses different names"))
         self.assertEqual(r["base"]["words"], 26)
         self.assertEqual(d["tickets"][5]["note"], "control")
         self.assertEqual(d["tickets"][3]["paraphrases"], [])

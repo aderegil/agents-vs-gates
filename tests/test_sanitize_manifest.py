@@ -38,9 +38,9 @@ class ManifestTest(unittest.TestCase):
         self.m = manifest.generate(20261011, "real")
 
     def test_stage_counts(self):
-        self.assertEqual(self.m["stage_counts"], {"P0": 5, "P1": 40, "P2": 10, "P4": 61, "P5": 60})
+        self.assertEqual(self.m["stage_counts"], {"P0": 5, "P1": 60, "P2": 10, "P4": 51, "P5": 60})
         p6 = manifest.generate(20261011, "real", with_p6=True)
-        self.assertEqual(p6["stage_counts"]["P6"], 40 + 10 + 61)
+        self.assertEqual(p6["stage_counts"]["P6"], 40 + 10 + 61)    # P6 keeps the cells from before the V2·S0 move
         self.assertEqual(manifest.validate(self.m), [])
 
     def test_ids_rounds_and_balance(self):
@@ -48,7 +48,7 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual([r["run_id"] for r in p1[:2]], ["p1-0001", "p1-0002"])
         self.assertEqual(len({r["run_id"] for r in self.m["runs"]}), len(self.m["runs"]))
         for k in range(1, 11):          # cut after k rounds: every cell has k replicates
-            c = Counter(r["cell"] for r in p1[: 4 * k])
+            c = Counter(r["cell"] for r in p1[: 6 * k])
             self.assertEqual(set(c.values()), {k})
         p4 = [r for r in self.m["runs"] if r["stage"] == "P4"]
         self.assertEqual(sum(1 for r in p4 if r.get("control")), 6)

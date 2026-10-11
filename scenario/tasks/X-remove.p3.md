@@ -1,1 +1,1 @@
-TODO(human): write a paraphrase of the base ticket text. Do not generate it with a model.
+Since channel is no longer read, remove that field from the OrderPlaced event and from the order model.

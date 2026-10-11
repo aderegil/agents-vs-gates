@@ -70,14 +70,14 @@ class StagesTest(unittest.TestCase):
             self.assertEqual([c["stage"] for c in d["stages"]], ["P0", "X1", "P1", "P2", "P3", "P4", "P5", "P6"])
             by = {c["stage"]: c for c in d["stages"]}
             self.assertEqual((by["P0"]["done"], by["P0"]["total"], by["P0"]["status"], by["P0"]["blinding"]), (5, 5, "complete", "visible"))
-            self.assertEqual((by["P1"]["done"], by["P1"]["total"], by["P1"]["status"], by["P1"]["blinding"]), (3, 40, "in_progress", "blinded"))
+            self.assertEqual((by["P1"]["done"], by["P1"]["total"], by["P1"]["status"], by["P1"]["blinding"]), (3, 60, "in_progress", "blinded"))
             self.assertEqual(by["P2"]["status"], "pending")
             self.assertEqual(by["P3"]["status"], "not_in_manifest")
             self.assertFalse(by["P3"]["runnable"])
             self.assertEqual((by["X1"]["total"], by["X1"]["blinding"], by["X1"]["runnable"], by["X1"]["name"]),
                              (40, "visible", True, "Pilot X1 · exploratory"))
             self.assertEqual((by["P0"]["minutes"], by["P1"]["tokens"]), (4.5, 13200))
-            self.assertEqual(len(by["P1"]["cells"]), 4)
+            self.assertEqual(len(by["P1"]["cells"]), 6)
             self.assertEqual(sum(c["done"] for c in by["P1"]["cells"]), 3)
             # outcomes: visible stage yes, blinded stage never
             self.assertEqual(by["P0"]["outcomes"], {MARK: 5})
@@ -89,12 +89,12 @@ class StagesTest(unittest.TestCase):
 
     def test_complete_stage_stays_blinded_until_unblinded(self):
         with ConsoleFixture(copy_real=PLUGINS) as fx:
-            seed(fx.results, p1_done=40)
+            seed(fx.results, p1_done=60)
             p1 = next(c for c in fx.owner.get("/api/run-control/stages?ns=mock").json["stages"] if c["stage"] == "P1")
             self.assertEqual((p1["status"], p1["blinding"], p1["outcomes"]), ("complete", "blinded", None))
-            seed(fx.results, p1_done=40, unblind=("P1",))
+            seed(fx.results, p1_done=60, unblind=("P1",))
             p1 = next(c for c in fx.owner.get("/api/run-control/stages?ns=mock").json["stages"] if c["stage"] == "P1")
-            self.assertEqual((p1["blinding"], p1["outcomes"]), ("unblinded", {MARK: 40}))
+            self.assertEqual((p1["blinding"], p1["outcomes"]), ("unblinded", {MARK: 60}))
 
     def test_guards_per_namespace(self):
         with ConsoleFixture(copy_real=PLUGINS) as fx:
@@ -221,7 +221,7 @@ class DryRunStartTest(unittest.TestCase):
             seed(fx.results, p1_done=3)
             p = fx.owner.post("/api/run-control/dry-run?ns=mock", {"stage": "P1", "batch": 5, "workers": 2}).json
             self.assertEqual(p["args"], ["--stage", "P1", "--ns", "mock", "--unit", "mock", "--workers", "2", "--batch", "5"])
-            self.assertEqual((p["count"], p["pending"]), (5, 37))
+            self.assertEqual((p["count"], p["pending"]), (5, 57))
             self.assertTrue(p["would_start"])
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
@@ -229,7 +229,7 @@ class DryRunStartTest(unittest.TestCase):
             self.assertEqual(rc, 0)
             lines = buf.getvalue().strip().splitlines()
             self.assertEqual([ln.split()[0] for ln in lines[:-1]], [r["run_id"] for r in p["runs"]])
-            self.assertTrue(lines[-1].startswith("5 run(s) would run (37 pending in P1, namespace mock)"))
+            self.assertTrue(lines[-1].startswith("5 run(s) would run (57 pending in P1, namespace mock)"))
             self.assertIn("Command: python -m harness.runner --stage P1", p["summary"][-1])
 
     def test_every_built_command_parses_with_the_runners_argparse(self):
@@ -486,7 +486,7 @@ class StopWorkersResumeTest(unittest.TestCase):
 class UnblindTest(unittest.TestCase):
     def test_owner_unblinds_a_complete_stage(self):
         with ConsoleFixture(copy_real=PLUGINS) as fx:
-            seed(fx.results, p1_done=40)
+            seed(fx.results, p1_done=60)
             op = fx.client("op1", "operator")
             self.assertEqual(op.post("/api/run-control/unblind?ns=mock", {"stage": "P1", "confirm": "UNBLIND P1"}).status, 403)
             self.assertEqual(fx.owner.post("/api/run-control/unblind?ns=mock", {"stage": "P1", "confirm": "yes"}).status, 400)
@@ -500,11 +500,11 @@ class UnblindTest(unittest.TestCase):
 
     def test_incomplete_stage_and_live_runner_refuse(self):
         with ConsoleFixture(copy_real=PLUGINS) as fx:
-            seed(fx.results, p1_done=39)
+            seed(fx.results, p1_done=59)
             r = fx.owner.post("/api/run-control/unblind?ns=mock", {"stage": "P1", "confirm": "UNBLIND P1"})
             self.assertEqual(r.status, 409)
             self.assertIsNone(read_json(paths.state_path("mock"))["unblinded"].get("P1"))
-            seed(fx.results, p1_done=40, runner_state=running_state())
+            seed(fx.results, p1_done=60, runner_state=running_state())
             self.assertEqual(fx.owner.post("/api/run-control/unblind?ns=mock", {"stage": "P1", "confirm": "UNBLIND P1"}).status, 409)
 
 

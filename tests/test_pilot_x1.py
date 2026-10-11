@@ -44,7 +44,7 @@ class PilotManifestTest(unittest.TestCase):
         merged = manifest.with_pilots(m, "real")
         self.assertEqual(manifest.validate(merged), [])
         self.assertEqual(merged["runs"][:len(m["runs"])], m["runs"])
-        self.assertEqual(m["stage_counts"], {"P0": 5, "P1": 40, "P2": 10, "P4": 61, "P5": 60})
+        self.assertEqual(m["stage_counts"], {"P0": 5, "P1": 60, "P2": 10, "P4": 51, "P5": 60})
 
     def test_x1_is_always_visible(self):
         self.assertTrue(blinding.is_visible({}, "X1"))

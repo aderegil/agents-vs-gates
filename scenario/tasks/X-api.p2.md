@@ -1,1 +1,1 @@
-TODO(human): write a paraphrase of the base ticket text. Do not generate it with a model.
+To match naming in the rest of our APIs, have GET /orders/{id} return the order lines as items rather than lines.

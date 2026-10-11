@@ -99,8 +99,8 @@ class RunnerTest(unittest.TestCase):
         self.assertIsInstance(json.loads(out)["stages"]["P0"]["outcomes"], dict)    # P0 is always visible
         proj = runner.projection("mock")
         self.assertEqual(proj["runs"], 4)
-        self.assertEqual(proj["projection"]["P1"]["runs"], 40)
-        self.assertEqual(proj["projection"]["P4"]["runs"], 61)
+        self.assertEqual(proj["projection"]["P1"]["runs"], 60)
+        self.assertEqual(proj["projection"]["P4"]["runs"], 51)
 
     def test_4_control_stop_and_dry_run(self):
         jsonio.write_json_atomic(paths.control_path("mock"), {"stop_after_current": True, "by": "test", "at": "now"})
@@ -111,7 +111,7 @@ class RunnerTest(unittest.TestCase):
         self.assertFalse(any(st["runs"][r["run_id"]]["status"] == "done" for r in self.m["runs"] if r["stage"] == "P4"))
         code, out, _ = run(["--stage", "P4", "--unit", "mock", "--dry-run", "--batch", "3"], self.fs)
         self.assertEqual(code, 0)
-        self.assertIn("3 run(s) would run (61 pending in P4", out)
+        self.assertIn("3 run(s) would run (51 pending in P4", out)
 
     @SLOW
     def test_6_parallel_workers(self):

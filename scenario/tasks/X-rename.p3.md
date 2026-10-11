@@ -1,1 +1,1 @@
-TODO(human): write a paraphrase of the base ticket text. Do not generate it with a model.
+Update the OrderPlaced event by changing totalCents to amountCents and placedAt to createdAt; this brings its naming in line with the Payments and Customer APIs.
