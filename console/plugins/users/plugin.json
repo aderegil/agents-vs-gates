@@ -1,0 +1,11 @@
+{
+  "id": "users",
+  "name": "Users & Audit",
+  "icon": "user-cog",
+  "order": 9,
+  "description": "Local accounts, roles and the audit log.",
+  "roles": ["owner"],
+  "kind": "module",
+  "entry": "web/index.js",
+  "api": "api.py"
+}

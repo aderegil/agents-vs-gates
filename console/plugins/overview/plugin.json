@@ -1,0 +1,11 @@
+{
+  "id": "overview",
+  "name": "Overview",
+  "icon": "layout-dashboard",
+  "order": 1,
+  "description": "Where the experiment stands and what to do next.",
+  "roles": ["owner", "operator", "presenter", "viewer"],
+  "kind": "module",
+  "entry": "web/index.js",
+  "api": "api.py"
+}

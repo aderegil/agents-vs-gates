@@ -62,3 +62,24 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - 2026-10-10 · Known gap: `npm test` per repo takes ~5 s of test time but `tsc` adds 14–20 s and node startup ~2.8 s
   on this machine, so the "< 10 s" target (§5.2) is not met end to end · not fixable without changing the toolchain.
 - 2026-10-11 · Oracle-suite author prompt recorded verbatim in `docs/ORACLE-AUTHOR-PROMPT.md` (§8.2) · inline here · it is long.
+
+## WP3 · Console shell (2026-10-11; Opus subagent)
+- 2026-10-11 · Namespace default: `?ns=` > session switch > `real` only if `results/real` has a non-pending/archived run, else `mock` · always `real` · mock until a real run exists.
+- 2026-10-11 · Sessions persisted in `console/data/sessions.json` keyed by SHA-256 of the token; 12 h absolute expiry · memory only · a restart must not log everyone out.
+- 2026-10-11 · Login/setup protected by a pre-session CSRF token (`avg_csrf` cookie) · no CSRF before login · login CSRF.
+- 2026-10-11 · Writes (POST/PUT/DELETE) by a role in `readonly_roles` get 403 at the core unless the route lists that role in `roles=[…]` · per-plugin enforcement only · defence in depth.
+- 2026-10-11 · Host header must be `127.0.0.1:<port>`/`localhost:<port>` (else 421); foreign Origin on POST → 403; CSP `script-src 'self'` · no checks · DNS rebinding and cross-site posts.
+- 2026-10-11 · Only `/plugins/<id>/web/**` is served statically · the whole plugin folder · keeps `api.py`/`plugin.json` private.
+- 2026-10-11 · SSE sends both namespaces to every client (each event carries `ns`); `audit.new` to owners only; a `runner.progress` snapshot on connect · per-session filtering · the status bar shows both runners.
+- 2026-10-11 · `runner.run_finished.outcome` comes from `record.json` only when `blinding.is_visible` · from the log · the log never carries outcomes.
+- 2026-10-11 · Scheduled resume in `console/data/scheduled.json`; `state.resume_at` mirrored only while no runner is alive · writing state.json any time · state.json belongs to the runner.
+- 2026-10-11 · Passwords ≥ 10 chars; usernames `[a-z0-9][a-z0-9._-]{1,31}`; users disabled, never deleted; no self-disable/demote; ≥ 1 active owner · hard delete · audit trail stays readable.
+- 2026-10-11 · `g`+digit uses manifest `order` · rail position · same shortcuts for every role.
+- 2026-10-11 · Login rate limit: 5 failures per IP or username in 5 min → 429 · lockout · simple.
+- 2026-10-11 · Doctor result cached in `console/data/readiness/doctor.json`, "Re-check" re-runs it · run on every view · ~15 s.
+- 2026-10-11 · Checklist item ids = sha1(section|text); marks in `console/data/checklist.json`; `[x]` in the file counts as checked "by file" · positional ids · edits elsewhere keep marks.
+- 2026-10-11 · units.json editor writes only `model`/`effort`, refuses once `PREREGISTRATION.lock` exists, audits a diff · free JSON editing · only those fields change.
+- 2026-10-11 · Lucide icons generated from local lucide-react 1.45.0 (ISC) · 0.460.0 · the copy on disk, no internet.
+- 2026-10-11 · Plugin `api.py` imported as package `avg_plugin_<id>` · `console.plugins.<id>` · ids contain hyphens.
+- 2026-10-11 · The server always drains the request body before an early error response · replying first · Windows resets the connection otherwise.
+- 2026-10-11 · `console --check` treats missing plugins as SKIP, not FAIL (integration makes it strict once all 9 exist).

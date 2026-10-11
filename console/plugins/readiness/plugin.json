@@ -1,0 +1,12 @@
+{
+  "id": "readiness",
+  "name": "Readiness",
+  "icon": "shield-check",
+  "order": 8,
+  "description": "Environment health, smoke test, pre-registration lock, units, token and review checklist.",
+  "roles": ["owner", "operator"],
+  "readonly_roles": ["operator"],
+  "kind": "module",
+  "entry": "web/index.js",
+  "api": "api.py"
+}
