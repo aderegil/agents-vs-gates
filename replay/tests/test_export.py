@@ -297,7 +297,7 @@ class SceneV2(unittest.TestCase):
     def test_captions_are_templates_over_trace_fields(self):
         r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"))
         caps = {s.get("key"): s.get("caption") for s in r["steps"] if s.get("caption") and s.get("key")}
-        self.assertEqual(caps["ci_fail"], "CI blocks the pull request: ARCH-4 failed (1 of 10 checks).")
+        self.assertEqual(caps["ci_fail"], "CI blocks the pull request: ARCH-4 failed (1 of 10 checks). Its output goes back to Code Agent · orders-service.")
         self.assertEqual(caps["ci_pass"], "CI passes: all 10 checks pass.")
         oracle = [s["caption"] for s in r["steps"] if s["action"] == "oracle" and s.get("caption")]
         self.assertIn("first pull request. 2 of 3 break.", oracle[0])
@@ -308,7 +308,7 @@ class SceneV2(unittest.TestCase):
         a = ex.build_replay(events)["meta"]["extras_sha256"]
         b = ex.build_replay(events, self._extras(record={"visibility": "V0"}))["meta"]["extras_sha256"]
         self.assertNotEqual(a, b)
-        self.assertEqual(ex.build_replay(events)["meta"]["exporter_version"], 2)
+        self.assertEqual(ex.build_replay(events)["meta"]["exporter_version"], 3)
 
     def test_real_p0_runs_export_when_present(self):
         root = REPO / "results" / "real" / "runs"

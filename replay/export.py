@@ -20,7 +20,7 @@ from datetime import datetime
 from pathlib import Path
 
 SCHEMA = "replay/1"
-EXPORTER_VERSION = 2
+EXPORTER_VERSION = 3
 GAP_THRESHOLD_MS = 3000
 GAP_COMPRESSED_MS = 1500
 TEXT_MAX = 600
@@ -423,8 +423,13 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
             feedback = src_role == "flow_engine" and to_agent and str(p.get("content") or "").startswith("CI ")
             step("speak", text=p.get("content"), target=target or (agent_ids[0] if feedback else None),
                  detail={"interaction_type": itype, "content": p.get("content"),
-                         **({"feedback": "ci_output"} if feedback else {})},
-                 caption=f"The CI output goes back to {name_of(target or agent_ids[0])}." if feedback else None)
+                         **({"feedback": "ci_output"} if feedback else {})})
+            if feedback:
+                # one subtitle for "CI failed and the agent gets its output", on the CI verdict
+                fail = next((s for s in reversed(steps) if s.get("key") == "ci_fail"), None)
+                back = f" Its output goes back to {name_of(target or agent_ids[0])}."
+                if fail is not None and fail.get("caption") and not fail["caption"].endswith(back):
+                    fail["caption"] = _clip(fail["caption"] + back, CAPTION_MAX)
             if itype == "feedback_request" and target in by_id:
                 move(target, by_id[target]["home"])
         elif et == "PHASE_CHANGED":
