@@ -174,3 +174,10 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - `/stop` → 409 when no runner is alive; `start` deletes a stale `control.json` first.
 - Added owner-only `POST /api/run-control/unblind` (non-forced, refused while a runner is alive, typed confirm "UNBLIND Pn", console username stamped) · CLI only · Overview's next action points to Run Control. Forced unblind stays CLI-only.
 - Run Explorer lists archived runs only (`record.json` present); `fix<n>.diff` labelled incremental; stacked master-detail layout at 1440 px; transcript strings cut at 12 000 chars, events paged at 3000, diffs capped at 300 kB (flagged).
+
+## Integration (2026-10-11, lead)
+- `console --check` made strict: all 9 plugins required, and the mock-run step no longer skips. The replay step now asserts that a blinded P1 replay is refused (403) and validates an export made with `replay.export.build_replay`. The alternative was unblinding P1 inside the check, but step 7 must find P1 blinded.
+- Results exports: the mock banner and stamp switched from pink to amber (`mockInk`) · pink · pink means "fail" only (§20).
+- The shell's plugin iframe gets `allow="fullscreen"` (requested by WP5).
+- The real manifest was generated tonight (`results/real/manifest.json`; seed 20261011; P0 5, P1 40, P2 10, P4 61, P5 60), with paraphrase slots on the base text ×10 because p1–p5 are `TODO(human)`. That makes `runner --stage P0 --dry-run` list the 5 calibration runs (M1e). Regenerate it with `python -m harness.manifest --ns real --force` after writing the paraphrases, **before** the freeze.
+- Leftover processes from subagents (a `vite preview` on :4174 and a headless Edge on CDP :9334) were killed by PID. The user's own Python and Edge processes were left alone.
