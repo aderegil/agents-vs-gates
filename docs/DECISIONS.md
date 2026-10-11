@@ -195,3 +195,9 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - Human roles also get short policy cards in `flow/prompts/` (spec 16.3 says "one per role").
 - Known gaps: `flow/ci_gate.py` calls private helpers of `ci/run.py` (a public repo-checks function would be safer); the oracle only covers orders-service as provider; the mock verifier only reads the PR's CI; replay has no desks for payments/inventory, no gate marker type, and labels review-requested fixes "Repair n".
 - (Lead) The M2 story drafts `scenario/tasks/S-*.md` are excluded from the pre-registration lock (`harness/prereg.py` now freezes `scenario/tasks/X-*.md`) and from `scenario_io.scenario_hash()` · freeze them with M1 · they are M2 drafts for Alfredo, not part of the M1 experiment.
+
+## Smoke test #1 follow-up (2026-10-11, lead)
+- Alfredo ran the smoke test: 11 of 12 checks passed (token auth, `--max-turns` → `error_max_turns`, acceptEdits, allowlist, curl/`node -e`/outside-read denied, `--resume`, token not visible to Bash). It failed only "system/init clean": `plugins: cc-plugin-agents-md, cc-plugin-telemetry, cc-plugin-plugin-authoring`.
+- These are **built-in** plugins of Claude Code 2.1.296 (`@builtin`), not Alfredo's; they load even with an empty `CLAUDE_CONFIG_DIR`. `plugin-authoring` adds a skill the agent could see; `agents-md` changes how AGENTS.md is read.
+- Fix: `prepare_cfg` now writes `settings.json` with `enabledPlugins: {<id>: false}` for the three (`BUILTIN_PLUGINS_OFF` in `harness/adapters/claude_code.py`) — the same file `claude plugin disable <id> --scope user` writes, checked without a model call in a temp config dir. `check_init` stays strict, so any other plugin that appears still fails the run. Needs a second smoke test to confirm.
+- Cosmetic: the smoke's "no hook events" row showed the plugins reason as its detail; it now says "none" unless the breach is a hook.

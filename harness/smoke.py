@@ -121,7 +121,8 @@ def evaluate(n: int, p, r, ws: Path) -> list[dict]:
             res.get("result", "")[:80] or f"rc={r.get('rc')}")
         add("system/init clean (no MCP, plugins, skills, extra tools)", p.init is not None and not cc.check_init(p.init, ws),
             cc.check_init(p.init or {}, ws) or "clean")
-        add("no hook events", not (p.breach or "").startswith("hook"), p.breach or "none")
+        hook = (p.breach or "").startswith("hook")
+        add("no hook events", not hook, p.breach if hook else "none")
         add("model id reported", bool((p.init or {}).get("model")), (p.init or {}).get("model"))
     elif n == 2:
         add("--max-turns accepted and respected",

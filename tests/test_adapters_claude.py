@@ -58,6 +58,17 @@ class ArgvEnv(unittest.TestCase):
         self.assertEqual(env["ENABLE_CLAUDEAI_MCP_SERVERS"], "false")
         self.assertEqual(env["PATH"], "p")
 
+    def test_cfg_disables_builtin_plugins(self):
+        import json
+        with tempfile.TemporaryDirectory() as td:
+            cfg = Path(td) / "cfg"
+            (cfg / "stale").mkdir(parents=True)
+            cc.prepare_cfg(cfg)
+            self.assertEqual(sorted(p.name for p in cfg.iterdir()), ["settings.json"])
+            s = json.loads((cfg / "settings.json").read_text(encoding="utf-8"))
+        self.assertEqual(s["enabledPlugins"], {p: False for p in cc.BUILTIN_PLUGINS_OFF})
+        self.assertIn("cc-plugin-plugin-authoring@builtin", s["enabledPlugins"])
+
 
 class Parser(unittest.TestCase):
     def test_success_stream(self):

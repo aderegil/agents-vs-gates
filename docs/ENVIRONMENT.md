@@ -29,4 +29,10 @@ Present in the help text: `--effort`, `--exclude-dynamic-system-prompt-sections`
 `--tools`, `--resume`. `--max-turns` is not in the help (hidden flag per §10.4) — **to verify in smoke #2**.
 
 ## Smoke test
-Not run. It requires Alfredo's explicit authorization (§0.1, §10.8, §17).
+- **#1 (2026-10-11 15:11 UTC, run by Alfredo):** FAIL, 11 of 12. CLI `2.1.296 (Claude Code)`, model `claude-sonnet-5-5`.
+  Verified: token auth with an isolated `CLAUDE_CONFIG_DIR`; `--max-turns` is accepted and closes with
+  `error_max_turns`; acceptEdits; the Bash allowlist (npm allowed; curl, `node -e` and reads outside the workspace
+  denied); `--resume`; the token does not reach the agent's Bash. Failed: system/init listed the built-in plugins
+  `cc-plugin-agents-md`, `cc-plugin-telemetry`, `cc-plugin-plugin-authoring`. Now disabled per run in the isolated
+  `settings.json` (see DECISIONS, "Smoke test #1 follow-up"). Details: `results/smoke.json`.
+- **#2:** pending, to confirm the fix.

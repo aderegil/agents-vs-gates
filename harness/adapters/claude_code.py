@@ -22,6 +22,8 @@ TOOLS_ARG = "Read,Edit,Write,Glob,Grep,Bash"
 ALLOWED_TOOLS = ["Bash(npm run *)", "Bash(npm test)", "Bash(npm test *)", "Bash(npx tsc)", "Bash(npx tsc *)",
                  "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)"]
 DISALLOWED_TOOLS = ["WebFetch", "WebSearch", "Agent"]
+BUILTIN_PLUGINS_OFF = ["cc-plugin-agents-md@builtin", "cc-plugin-telemetry@builtin",
+                       "cc-plugin-plugin-authoring@builtin"]
 _VERSION: str | None = None
 
 
@@ -80,6 +82,10 @@ def prepare_cfg(cfg_dir) -> Path:
     if cfg.exists():
         shutil.rmtree(cfg, ignore_errors=True)
     cfg.mkdir(parents=True, exist_ok=True)
+    # Built-in plugins ship with the CLI and load even from an empty config dir (smoke test of 2026-10-11 saw them
+    # in system/init). Disabled the same way `claude plugin disable <id> --scope user` does it.
+    (cfg / "settings.json").write_text(
+        json.dumps({"enabledPlugins": {p: False for p in BUILTIN_PLUGINS_OFF}}, indent=2) + "\n", encoding="utf-8")
     return cfg
 
 
