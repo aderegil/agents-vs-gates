@@ -1,0 +1,1089 @@
+{
+  "meta": {
+    "run_id": "st-0002",
+    "source": "mock",
+    "unit": "mock",
+    "model": "mock",
+    "date": "2026-10-11",
+    "started_at": "2026-10-11T09:05:00.000Z",
+    "ticket": "X-rename",
+    "condition": {
+      "V": "V0",
+      "S": "S2",
+      "W": "W1"
+    },
+    "outcome": "passed_first_ci",
+    "ticket_done": "done",
+    "session_outcome": "success",
+    "stage": "selftest",
+    "title": "X-rename · V0·S2 · W1",
+    "scenario": "meridian-retail/M1",
+    "trace_sha256": "5d101147f7ff116dc870020d7749164b5be41bc538601f1433372a37a5a2ac2a",
+    "schema": "replay/1",
+    "exporter_version": 1,
+    "legend": "SIMULATED (mock agent) — not a real run",
+    "duration_ms": 48000,
+    "duration_real_ms": 55500,
+    "event_count": 37
+  },
+  "places": [
+    {
+      "id": "product-desk",
+      "label": "Product desk",
+      "kind": "desk",
+      "x": 0.1,
+      "y": 0.2,
+      "note": "discovery"
+    },
+    {
+      "id": "planning-room",
+      "label": "Planning room",
+      "kind": "room",
+      "x": 0.3,
+      "y": 0.2,
+      "note": "planning"
+    },
+    {
+      "id": "architecture-library",
+      "label": "Architecture library",
+      "kind": "library",
+      "x": 0.52,
+      "y": 0.18,
+      "note": "ARCH-n rules, catalog, ADRs"
+    },
+    {
+      "id": "dispatch",
+      "label": "Dispatch board",
+      "kind": "system",
+      "x": 0.8,
+      "y": 0.18,
+      "note": "flow engine"
+    },
+    {
+      "id": "desk-orders",
+      "label": "Checkout · orders",
+      "kind": "desk",
+      "x": 0.1,
+      "y": 0.55,
+      "note": "orders-service"
+    },
+    {
+      "id": "desk-billing",
+      "label": "Finance · billing",
+      "kind": "desk",
+      "x": 0.1,
+      "y": 0.84,
+      "note": "billing-service"
+    },
+    {
+      "id": "desk-analytics",
+      "label": "Data · analytics",
+      "kind": "desk",
+      "x": 0.3,
+      "y": 0.84,
+      "note": "analytics-ingest"
+    },
+    {
+      "id": "desk-storefront",
+      "label": "Digital · storefront",
+      "kind": "desk",
+      "x": 0.5,
+      "y": 0.84,
+      "note": "web-storefront"
+    },
+    {
+      "id": "review-table",
+      "label": "Review table",
+      "kind": "room",
+      "x": 0.36,
+      "y": 0.53,
+      "note": "pull request"
+    },
+    {
+      "id": "ci-tower",
+      "label": "CI Tower",
+      "kind": "system",
+      "x": 0.6,
+      "y": 0.5,
+      "note": "one light per check"
+    },
+    {
+      "id": "merge-gate",
+      "label": "Merge gate",
+      "kind": "gate",
+      "x": 0.84,
+      "y": 0.5,
+      "note": "merge"
+    },
+    {
+      "id": "staging-bench",
+      "label": "Staging bench",
+      "kind": "stage",
+      "x": 0.8,
+      "y": 0.84,
+      "note": "hidden from the agent"
+    }
+  ],
+  "actors": [
+    {
+      "id": "flow-engine",
+      "role": "flow_engine",
+      "actor_type": "system",
+      "display_name": "Flow engine",
+      "avatar": {
+        "style": "system",
+        "seed": "flow-engine",
+        "badge": null
+      },
+      "home": "dispatch"
+    },
+    {
+      "id": "code-orders",
+      "role": "code_agent",
+      "actor_type": "agent",
+      "display_name": "Code Agent · orders-service",
+      "avatar": {
+        "style": "agent",
+        "seed": "code-orders",
+        "badge": "Mock"
+      },
+      "home": "desk-orders"
+    },
+    {
+      "id": "ci",
+      "role": "ci",
+      "actor_type": "system",
+      "display_name": "CI",
+      "avatar": {
+        "style": "system",
+        "seed": "ci",
+        "badge": null
+      },
+      "home": "ci-tower"
+    },
+    {
+      "id": "staging",
+      "role": "staging",
+      "actor_type": "system",
+      "display_name": "Staging (oracle)",
+      "avatar": {
+        "style": "system",
+        "seed": "staging",
+        "badge": null
+      },
+      "home": "staging-bench"
+    },
+    {
+      "id": "architect",
+      "role": "architect",
+      "actor_type": "human",
+      "display_name": "Maya · Architect",
+      "avatar": {
+        "style": "human",
+        "seed": "architect",
+        "badge": null
+      },
+      "home": "architecture-library",
+      "simulated": true
+    }
+  ],
+  "steps": [
+    {
+      "t_ms": 0,
+      "t_real_ms": 0,
+      "seq": 0,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "X-rename · V0·S2 · W1",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "SESSION_STARTED",
+        "event_id": "evt-0000",
+        "phase": "implementation",
+        "to_phase": "implementation",
+        "scenario": "meridian-retail/M1",
+        "condition": "V0·S2·W1"
+      }
+    },
+    {
+      "t_ms": 500,
+      "t_real_ms": 500,
+      "seq": 1,
+      "actor": "flow-engine",
+      "action": "work",
+      "target": null,
+      "place": "dispatch",
+      "text": "CLAUDE.md · Context S2",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0001",
+        "phase": "implementation",
+        "artifact_id": "art-context",
+        "artifact_type": "context_file"
+      }
+    },
+    {
+      "t_ms": 1000,
+      "t_real_ms": 1000,
+      "seq": 2,
+      "actor": "flow-engine",
+      "action": "assign",
+      "target": "code-orders",
+      "place": "dispatch",
+      "text": "Clean up the OrderPlaced event: rename totalCents to amountCents and placedAt to createdAt, so the event matches the naming used by the Payments and Customer APIs.",
+      "key": "task_assigned",
+      "narration": "Ticket X-rename assigned to the code agent (V0·S2).",
+      "detail": {
+        "event_type": "TASK_ASSIGNED",
+        "event_id": "evt-0002",
+        "phase": "implementation",
+        "task_id": "st-0002"
+      }
+    },
+    {
+      "t_ms": 1500,
+      "t_real_ms": 1500,
+      "seq": 3,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "CLAUDE.md · loaded as context",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_READ",
+        "event_id": "evt-0003",
+        "phase": "implementation",
+        "artifact_id": "art-context"
+      }
+    },
+    {
+      "t_ms": 4500,
+      "t_real_ms": 4500,
+      "seq": 4,
+      "actor": "code-orders",
+      "action": "speak",
+      "target": null,
+      "place": "desk-orders",
+      "text": "The context file says consumers read OrderPlaced; I'll add the new names without removing the old.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ACTOR_STATE_CHANGED",
+        "event_id": "evt-0004",
+        "phase": "implementation",
+        "to_state": "thinking",
+        "thought": true
+      }
+    },
+    {
+      "t_ms": 6500,
+      "t_real_ms": 6500,
+      "seq": 5,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Read · src/core/events.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0005",
+        "phase": "implementation",
+        "tool_name": "Read",
+        "input_summary": "src/core/events.ts",
+        "correlation_id": "toolu_0005"
+      }
+    },
+    {
+      "t_ms": 8500,
+      "t_real_ms": 8500,
+      "seq": 6,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "export interface OrderPlaced { type: \"OrderPlaced\"; schemaVersion: 3; ...",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0006",
+        "phase": "implementation",
+        "tool_name": "Read",
+        "status": "success",
+        "output_summary": "export interface OrderPlaced { type: \"OrderPlaced\"; schemaVersion: 3; ...",
+        "correlation_id": "toolu_0005"
+      }
+    },
+    {
+      "t_ms": 11000,
+      "t_real_ms": 11000,
+      "seq": 7,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Grep · totalCents|placedAt",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0007",
+        "phase": "implementation",
+        "tool_name": "Grep",
+        "input_summary": "totalCents|placedAt",
+        "correlation_id": "toolu_0007"
+      }
+    },
+    {
+      "t_ms": 12500,
+      "t_real_ms": 12500,
+      "seq": 8,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "src/core/events.ts:14, src/core/order.ts:22, test/events.test.ts:9",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0008",
+        "phase": "implementation",
+        "tool_name": "Grep",
+        "status": "success",
+        "output_summary": "src/core/events.ts:14, src/core/order.ts:22, test/events.test.ts:9",
+        "correlation_id": "toolu_0007"
+      }
+    },
+    {
+      "t_ms": 14000,
+      "t_real_ms": 16500,
+      "seq": 9,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Edit · src/core/events.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0009",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "input_summary": "src/core/events.ts",
+        "correlation_id": "toolu_0009"
+      }
+    },
+    {
+      "t_ms": 16000,
+      "t_real_ms": 18500,
+      "seq": 10,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Edited src/core/events.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0010",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "status": "success",
+        "output_summary": "Edited src/core/events.ts",
+        "correlation_id": "toolu_0009"
+      }
+    },
+    {
+      "t_ms": 19000,
+      "t_real_ms": 21500,
+      "seq": 11,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Edit · src/core/order.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0011",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "input_summary": "src/core/order.ts",
+        "correlation_id": "toolu_0011"
+      }
+    },
+    {
+      "t_ms": 21000,
+      "t_real_ms": 23500,
+      "seq": 12,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Edited src/core/order.ts",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0012",
+        "phase": "implementation",
+        "tool_name": "Edit",
+        "status": "success",
+        "output_summary": "Edited src/core/order.ts",
+        "correlation_id": "toolu_0011"
+      }
+    },
+    {
+      "t_ms": 22500,
+      "t_real_ms": 28500,
+      "seq": 13,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "Bash · npm test",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_STARTED",
+        "event_id": "evt-0013",
+        "phase": "implementation",
+        "tool_name": "Bash",
+        "input_summary": "npm test",
+        "correlation_id": "toolu_0013"
+      }
+    },
+    {
+      "t_ms": 24000,
+      "t_real_ms": 34500,
+      "seq": 14,
+      "actor": "code-orders",
+      "action": "work",
+      "target": null,
+      "place": "desk-orders",
+      "text": "# tests 15  # pass 15",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "TOOL_CALL_COMPLETED",
+        "event_id": "evt-0014",
+        "phase": "implementation",
+        "tool_name": "Bash",
+        "status": "success",
+        "output_summary": "# tests 15  # pass 15",
+        "correlation_id": "toolu_0013"
+      }
+    },
+    {
+      "t_ms": 24500,
+      "t_real_ms": 35000,
+      "seq": 15,
+      "actor": "code-orders",
+      "action": "move",
+      "target": null,
+      "place": "review-table",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0015",
+        "phase": "implementation"
+      }
+    },
+    {
+      "t_ms": 24500,
+      "t_real_ms": 35000,
+      "seq": 15,
+      "actor": "code-orders",
+      "action": "handoff",
+      "target": "review-table",
+      "place": "review-table",
+      "text": "PR st-0002 · 2 files changed, +9 -1",
+      "key": "pr_opened",
+      "narration": null,
+      "detail": {
+        "event_type": "ARTIFACT_CREATED",
+        "event_id": "evt-0015",
+        "phase": "implementation",
+        "artifact_id": "art-pr",
+        "diff": {
+          "files_changed": 2,
+          "lines_added": 9,
+          "lines_removed": 1
+        }
+      }
+    },
+    {
+      "t_ms": 25000,
+      "t_real_ms": 35500,
+      "seq": 16,
+      "actor": "code-orders",
+      "action": "speak",
+      "target": "flow-engine",
+      "place": "review-table",
+      "text": "Added amountCents and createdAt to OrderPlaced and kept totalCents and placedAt, marked @deprecated, so existing consumers keep working. Tests pass.",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "MESSAGE_EXCHANGED",
+        "event_id": "evt-0016",
+        "phase": "implementation",
+        "interaction_type": "report",
+        "content": "Added amountCents and createdAt to OrderPlaced and kept totalCents and placedAt, marked @deprecated, so existing consumers keep working. Tests pass."
+      }
+    },
+    {
+      "t_ms": 25500,
+      "t_real_ms": 36000,
+      "seq": 17,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "PR st-0002 opened",
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "PHASE_CHANGED",
+        "event_id": "evt-0017",
+        "phase": "review",
+        "from_phase": "implementation",
+        "to_phase": "review"
+      }
+    },
+    {
+      "t_ms": 26000,
+      "t_real_ms": 36500,
+      "seq": 18,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": null,
+      "key": null,
+      "narration": null,
+      "detail": {
+        "event_type": "CI_RUN_STARTED",
+        "event_id": "evt-0018",
+        "phase": "review",
+        "run_attempt": 0,
+        "subject_artifact_id": "art-pr"
+      }
+    },
+    {
+      "t_ms": 26900,
+      "t_real_ms": 37400,
+      "seq": 19,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "typecheck ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "typecheck",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0019",
+        "phase": "review",
+        "category": "build",
+        "duration_ms": 900,
+        "output": "typecheck ok"
+      }
+    },
+    {
+      "t_ms": 27800,
+      "t_real_ms": 38300,
+      "seq": 20,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "unit-tests ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "unit-tests",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0020",
+        "phase": "review",
+        "category": "test",
+        "duration_ms": 900,
+        "output": "unit-tests ok"
+      }
+    },
+    {
+      "t_ms": 28700,
+      "t_real_ms": 39200,
+      "seq": 21,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-1 ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-1",
+        "status": "pass",
+        "rule": "ARCH-1"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0021",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 900,
+        "output": "ARCH-1 ok"
+      }
+    },
+    {
+      "t_ms": 29600,
+      "t_real_ms": 40100,
+      "seq": 22,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-2 ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-2",
+        "status": "pass",
+        "rule": "ARCH-2"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0022",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 900,
+        "output": "ARCH-2 ok"
+      }
+    },
+    {
+      "t_ms": 30500,
+      "t_real_ms": 41000,
+      "seq": 23,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-3 ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-3",
+        "status": "pass",
+        "rule": "ARCH-3"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0023",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 900,
+        "output": "ARCH-3 ok"
+      }
+    },
+    {
+      "t_ms": 31400,
+      "t_real_ms": 41900,
+      "seq": 24,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-4 ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-4",
+        "status": "pass",
+        "rule": "ARCH-4"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0024",
+        "phase": "review",
+        "category": "contract",
+        "duration_ms": 900,
+        "output": "ARCH-4 ok"
+      }
+    },
+    {
+      "t_ms": 32300,
+      "t_real_ms": 42800,
+      "seq": 25,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-5 ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-5",
+        "status": "pass",
+        "rule": "ARCH-5"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0025",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 900,
+        "output": "ARCH-5 ok"
+      }
+    },
+    {
+      "t_ms": 33200,
+      "t_real_ms": 43700,
+      "seq": 26,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-6 ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-6",
+        "status": "pass",
+        "rule": "ARCH-6"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0026",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 900,
+        "output": "ARCH-6 ok"
+      }
+    },
+    {
+      "t_ms": 34100,
+      "t_real_ms": 44600,
+      "seq": 27,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-7 ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-7",
+        "status": "pass",
+        "rule": "ARCH-7"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0027",
+        "phase": "review",
+        "category": "gate",
+        "duration_ms": 900,
+        "output": "ARCH-7 ok"
+      }
+    },
+    {
+      "t_ms": 35000,
+      "t_real_ms": 45500,
+      "seq": 28,
+      "actor": "ci",
+      "action": "check",
+      "target": null,
+      "place": "ci-tower",
+      "text": "ARCH-8 ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "ARCH-8",
+        "status": "pass",
+        "rule": "ARCH-8"
+      },
+      "detail": {
+        "event_type": "CHECK_COMPLETED",
+        "event_id": "evt-0028",
+        "phase": "review",
+        "category": "contract",
+        "duration_ms": 900,
+        "output": "ARCH-8 ok"
+      }
+    },
+    {
+      "t_ms": 35500,
+      "t_real_ms": 46000,
+      "seq": 29,
+      "actor": "ci",
+      "action": "ci_result",
+      "target": null,
+      "place": "ci-tower",
+      "text": "CI passed: all checks green.",
+      "key": "ci_pass",
+      "narration": "CI passed: all checks green.",
+      "check": {
+        "id": "attempt-0",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "CI_RUN_COMPLETED",
+        "event_id": "evt-0029",
+        "phase": "review",
+        "run_attempt": 0,
+        "ok": true,
+        "failed_checks": []
+      }
+    },
+    {
+      "t_ms": 37000,
+      "t_real_ms": 47500,
+      "seq": 30,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "billing-service (gen): ok",
+      "key": "oracle",
+      "narration": null,
+      "check": {
+        "id": "billing-service",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0030",
+        "phase": "review",
+        "consumer": "billing-service",
+        "state": "gen",
+        "ok": true,
+        "message": "ok",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 38500,
+      "t_real_ms": 49000,
+      "seq": 31,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "analytics-ingest (gen): ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "analytics-ingest",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0031",
+        "phase": "review",
+        "consumer": "analytics-ingest",
+        "state": "gen",
+        "ok": true,
+        "message": "ok",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 40000,
+      "t_real_ms": 50500,
+      "seq": 32,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "web-storefront (gen): ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "web-storefront",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0032",
+        "phase": "review",
+        "consumer": "web-storefront",
+        "state": "gen",
+        "ok": true,
+        "message": "ok",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 41500,
+      "t_real_ms": 52000,
+      "seq": 33,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "billing-service (final): ok",
+      "key": "oracle",
+      "narration": null,
+      "check": {
+        "id": "billing-service",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0033",
+        "phase": "review",
+        "consumer": "billing-service",
+        "state": "final",
+        "ok": true,
+        "message": "ok",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 43000,
+      "t_real_ms": 53500,
+      "seq": 34,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "analytics-ingest (final): ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "analytics-ingest",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0034",
+        "phase": "review",
+        "consumer": "analytics-ingest",
+        "state": "final",
+        "ok": true,
+        "message": "ok",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 44500,
+      "t_real_ms": 55000,
+      "seq": 35,
+      "actor": "staging",
+      "action": "oracle",
+      "target": null,
+      "place": "staging-bench",
+      "text": "web-storefront (final): ok",
+      "key": null,
+      "narration": null,
+      "check": {
+        "id": "web-storefront",
+        "status": "pass",
+        "rule": null
+      },
+      "detail": {
+        "event_type": "ORACLE_RESULT",
+        "event_id": "evt-0035",
+        "phase": "review",
+        "consumer": "web-storefront",
+        "state": "final",
+        "ok": true,
+        "message": "ok",
+        "hidden_from_agent": true,
+        "contradicts_ci": false
+      }
+    },
+    {
+      "t_ms": 45000,
+      "t_real_ms": 55500,
+      "seq": 36,
+      "actor": "flow-engine",
+      "action": "phase",
+      "target": null,
+      "place": "dispatch",
+      "text": "passed_first_ci; ticket done",
+      "key": "session_end",
+      "narration": "Run finished: additive change, CI green at the first attempt.",
+      "detail": {
+        "event_type": "SESSION_ENDED",
+        "event_id": "evt-0036",
+        "phase": "review",
+        "outcome": "success",
+        "stats": {
+          "run_outcome": "passed_first_ci",
+          "ticket_done": "done",
+          "turns": 7,
+          "repair_attempts": 0,
+          "detectors": [],
+          "ci_attempts": 1
+        }
+      }
+    }
+  ],
+  "markers": [
+    {
+      "t_ms": 1000,
+      "label": "Task assigned: X-rename",
+      "kind": "task_assigned"
+    },
+    {
+      "t_ms": 24500,
+      "label": "PR opened · 2 files changed, +9 -1",
+      "kind": "pr_opened"
+    },
+    {
+      "t_ms": 35500,
+      "label": "CI passed",
+      "kind": "ci_pass"
+    },
+    {
+      "t_ms": 37000,
+      "label": "Oracle (gen): all 3 consumers pass",
+      "kind": "oracle"
+    },
+    {
+      "t_ms": 41500,
+      "label": "Oracle (final): all 3 consumers pass",
+      "kind": "oracle"
+    },
+    {
+      "t_ms": 45000,
+      "label": "End: passed_first_ci · ticket done",
+      "kind": "session_end"
+    }
+  ]
+}

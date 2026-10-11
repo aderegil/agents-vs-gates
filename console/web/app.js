@@ -439,7 +439,7 @@ async function route(force = false) {
 
 function mountFrame(plugin, params, body, current) {
   body.classList.add("is-frame");
-  const frame = h("iframe", { class: "plugin-frame", src: plugin.entry_url, title: plugin.name, sandbox: "allow-scripts allow-same-origin" });
+  const frame = h("iframe", { class: "plugin-frame", src: plugin.entry_url, title: plugin.name, sandbox: "allow-scripts allow-same-origin", allow: "fullscreen" });
   const hello = () => frame.contentWindow?.postMessage({ type: "avg:hello", apiBase: "/api", csrf: S.session.csrf,
     user: { ...S.session.user }, ns: S.ns, params: { ...params } }, location.origin);
   frame.addEventListener("load", hello);

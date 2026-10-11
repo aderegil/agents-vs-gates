@@ -1,0 +1,5 @@
+repo: aderegil/pixel-souls
+branch: claude/simulation-game-characters-5vvhqj
+commit: 046ad8e624d41be69c6b5d03f2cebbd202102541
+copied: 2026-10-10
+method: GitHub MCP (no git history)

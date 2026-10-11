@@ -33,7 +33,7 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - 2026-10-10 · Avatars are served at `/api/teams/avatars` instead of `/api/avatars` · a core alias · keeps every
   plugin route under its own prefix (§21.2).
 - 2026-10-10 · `@types/node` pinned to 24.13.2 (an exact 24.x) · `^24` · reproducible `npm ci` across workers.
-- 2026-10-10 · `C:\avg\pixel-souls\SOURCE.txt` does not exist (the folder and its sources do; not a git checkout).
+- 2026-10-10 · (Corrected 2026-10-11 by WP5:) `C:w26pixel-soulsSOURCE.txt` does exist and records commit `046ad8e6…` (branch `claude/simulation-game-characters-5vvhqj`); `console/plugins/replay/app/ORIGIN.md` cites it. The lead first missed it.
   Recorded in `console/plugins/replay/app/ORIGIN.md` as "commit unknown" · stopping to ask · the source is present.
 - 2026-10-10 · The builder's subagents do not commit; the lead commits each package when it closes · subagents
   committing in parallel · avoids index races in one working tree.
@@ -105,3 +105,21 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - Fixed clock `2026-10-10T12:00:00.000Z`, ids `id-0001…`, gateway authorizes everything; analytics dates must parse as `YYYY-MM-DD`, not equal the clock date.
 - Billing asserts `amountCents`, `currency`, `orderId`, invoice `customerEmail` and exactly one sent email to the fixture address; storefront fetches B after cancelling it and also exercises `renderReceipt`/`createStorefront`.
 - Fixtures placed once per file; each test builds a fresh consumer. Result against canonical builds: billing 5/5, analytics 5/5, storefront 4/4. The author reports reading only the three consumer repos.
+
+## WP5 · Replay Theater, Teams & Avatars, replay exporter (2026-10-11; Opus subagent)
+- Extra office place `dispatch` (kind system) as home of `flow_engine` · Planning room · the spec makes the flow engine a dispatch-board object.
+- Derived `move` steps from events (PR opened → review table, feedback → desk, GATE_TOUCHED → CI tower), each carrying the source event's seq · no movement · walking kept; no invented text.
+- Repair marker on the PR update (ARTIFACT_UPDATED) · on the feedback message · avoids duplicating the CI-pink marker.
+- `trace_sha256` over canonical JSONL (sorted keys); replay cache key = sha + `exporter_version` · file bytes · `build_replay(events)` stays pure.
+- Blinded runs: `/api/replay/run` → 403 and the picker disables them · redacted replay · CI/oracle states are outcomes.
+- Shared lookup in `replay/service.py` (`list_replayable`, `load_run_replay`) so Run Explorer delegates to the same code.
+- Watermark painted into every canvas frame (mock: amber/ink stripes; real: boxed label) · DOM overlay · survives recorded clips; amber, not pink (pink = fail).
+- Agent outline = accent blue #2563eb · cyan · cyan/pink reserved for pass/fail; three helmet variants by seed.
+- IBM Plex bundled into the theater (OFL) · shell `/web/fonts/` · standalone preview must work.
+- Theater tests import `.ts` directly via Node 24 type stripping; Rolldown's build-timing hint disabled (not a code warning).
+- Extra standalone query params `t`, `view`, `present` for deep links and QA.
+- Teams API tests live in `replay/tests/` (plugin folders are not unittest-discoverable); "AI · Claude" badge only for Anthropic (other frameworks are harness-agnostic).
+- Teams data (5 models: Anthropic 16, AWS 17, Kiro 12, ai-sdlc.io 12 "early-stage open-source project, not an industry standard", Agents vs. Gates 17) written from the public sources in `fuentes\ai-sdlc` only; every member and gap cites a file that exists (tested).
+- Theater lockfile re-resolved within the original ranges (Vite 8.3.4, TypeScript 6.0.3); oxlint, the dev proxy, the LLM director and its server removed.
+- Missing `metadata.source` is labelled "real" in the legend (as briefed). Not built: a "Use in Replay" button; the clip recorder is untested headless.
+- (Lead) The shell's plugin iframe gets `allow="fullscreen"` so the theater's F key goes truly fullscreen inside the console.

@@ -1,0 +1,222 @@
+{
+  "id": "kiro",
+  "order": 3,
+  "name": "Kiro — Specs and custom agents",
+  "short": "Kiro",
+  "publisher": "Kiro (AWS) — official documentation, unsigned",
+  "date": null,
+  "date_note": "Pages carry no publication date; captured 2026-10-10.",
+  "url": "https://kiro.dev/docs/specs/",
+  "related_urls": [
+    "https://kiro.dev/docs/custom-agents/",
+    "https://kiro.dev/docs/hooks/"
+  ],
+  "label": null,
+  "summary": "An agentic IDE/CLI where specs (requirements.md, design.md, tasks.md) structure the work, built-in and custom agents do it, and hooks automate checks inside the session.",
+  "source_phases": "Requirements or Bug Analysis · Design · Tasks",
+  "members": [
+    {
+      "id": "product-manager",
+      "role": "product manager",
+      "v21_role": "product_owner",
+      "v21_note": "Mentioned only in an example pattern, not a defined role.",
+      "actor_type": "human",
+      "responsibility": "Provides user stories and iterates on the formalized requirements with Kiro.",
+      "phase": "discovery",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-specs.md",
+        "section": "Requirements-First Workflow — Common Patterns: Pattern 1: Product Feature Development"
+      },
+      "display_name": "Bruno · Product Manager",
+      "seed": "kiro:product-manager"
+    },
+    {
+      "id": "user",
+      "role": "user ('Your role')",
+      "v21_role": "engineer",
+      "v21_note": "One generic user also covers product_owner and tech_lead approvals.",
+      "actor_type": "human",
+      "responsibility": "Reviews and confirms requirements, design and tasks at each phase, then starts implementation.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-specs.md",
+        "section": "Requirements-First Workflow — Workflow Steps ('Your role')"
+      },
+      "display_name": "Elif · User",
+      "seed": "kiro:user"
+    },
+    {
+      "id": "spec",
+      "role": "Spec",
+      "v21_role": "requirements_agent",
+      "v21_note": "Also covers task_planner (tasks.md).",
+      "actor_type": "agent",
+      "responsibility": "Produces requirements.md, design.md and tasks.md, with approval gates between phases.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+        "section": "Built-in agents — Spec agents"
+      },
+      "display_name": "Spec agent",
+      "seed": "kiro:spec"
+    },
+    {
+      "id": "quick-spec",
+      "role": "Quick Spec",
+      "v21_role": "requirements_agent",
+      "v21_note": "Same output as Spec, no human gates.",
+      "actor_type": "agent",
+      "responsibility": "Auto-generates all three spec phases without approval gates.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+        "section": "Built-in agents (table); Spec agents"
+      },
+      "display_name": "Quick Spec agent",
+      "seed": "kiro:quick-spec"
+    },
+    {
+      "id": "bug-fix",
+      "role": "Bug Fix",
+      "v21_role": "requirements_agent",
+      "v21_note": "Bug analysis in place of requirements.",
+      "actor_type": "agent",
+      "responsibility": "Root cause analysis, fix design and implementation tasks for a bug (bugfix.md).",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+        "section": "Built-in agents — Spec agents"
+      },
+      "display_name": "Bug Fix agent",
+      "seed": "kiro:bug-fix"
+    },
+    {
+      "id": "plan",
+      "role": "Plan",
+      "v21_role": "task_planner",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Read-only: explores the codebase and produces an implementation plan; hands off to Default once approved.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+        "section": "Built-in agents — Plan agent"
+      },
+      "display_name": "Plan agent",
+      "seed": "kiro:plan"
+    },
+    {
+      "id": "default",
+      "role": "Default",
+      "v21_role": "code_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "General-purpose coding agent that starts every session: writes code, debugs, refactors.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+        "section": "Built-in agents — Default agent"
+      },
+      "display_name": "Default agent",
+      "seed": "kiro:default"
+    },
+    {
+      "id": "context-gathering",
+      "role": "Context gathering",
+      "v21_role": "researcher",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Built-in sub-agent that explores the project structure and gathers relevant files and context.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+        "section": "Invoking as sub-agents — Built-in sub-agents"
+      },
+      "display_name": "Context gathering sub-agent",
+      "seed": "kiro:context-gathering"
+    },
+    {
+      "id": "general-purpose",
+      "role": "General purpose",
+      "v21_role": "code_agent",
+      "v21_note": "Parallel helper of the main agent.",
+      "actor_type": "agent",
+      "responsibility": "Built-in sub-agent for parallelized tasks of any kind, using the default agent configuration.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+        "section": "Invoking as sub-agents — Built-in sub-agents"
+      },
+      "display_name": "General purpose sub-agent",
+      "seed": "kiro:general-purpose"
+    },
+    {
+      "id": "custom-agents",
+      "role": "custom agents (e.g. code-review-agent)",
+      "v21_role": "review_agent",
+      "v21_note": "Example only; teams can define any role.",
+      "actor_type": "agent",
+      "responsibility": "Team-defined agents in .kiro/agents/ with their own tools, permissions and prompt; example: code review.",
+      "phase": "review",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+        "section": "Agent examples — Code review agent"
+      },
+      "display_name": "Custom agent · code-review-agent",
+      "seed": "kiro:custom-agents"
+    },
+    {
+      "id": "hook-pre-tool-use",
+      "role": "Pre Tool Use hook",
+      "v21_role": null,
+      "v21_note": "In-session automation; no CI equivalent in the docs.",
+      "actor_type": "system",
+      "responsibility": "Triggers before the agent invokes a tool and can validate and block the call.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-steering-hooks.md",
+        "section": "Hook types — Pre Tool Use"
+      },
+      "display_name": "Hook · Pre Tool Use",
+      "seed": "kiro:hook-pre-tool-use"
+    },
+    {
+      "id": "hook-post-task",
+      "role": "Post Task Execution hook",
+      "v21_role": null,
+      "v21_note": "In-session automation; no CI equivalent in the docs.",
+      "actor_type": "system",
+      "responsibility": "Triggers after a spec task completes, e.g. to run tests or linting on changed files.",
+      "phase": "testing",
+      "citation": {
+        "file": "fuentes/ai-sdlc/kiro/kiro-steering-hooks.md",
+        "section": "Hook types — Post Task Execution"
+      },
+      "display_name": "Hook · Post Task Execution",
+      "seed": "kiro:hook-post-task"
+    }
+  ],
+  "gaps": [
+    {
+      "text": "No product owner, QA or architect is defined as a role; the human is a generic user ('Your role').",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§2 Kiro: Specs y Custom agents — Roles"
+      }
+    },
+    {
+      "text": "Checks run inside the agent session (hooks, optional property-based tests); the reviewed specs and agents docs do not mention CI/CD gates or architecture rules, which live in design.md and steering as context.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§5.1 Reglas de arquitectura verificadas en CI (fitness functions) — Kiro"
+      }
+    },
+    {
+      "text": "Kiro Web can plan changes across several repositories in one spec session, but the reviewed docs do not say how the cross-repo result is verified.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§5.2 Cambios que cruzan repositorios — Kiro"
+      }
+    }
+  ]
+}

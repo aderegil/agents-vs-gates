@@ -1,0 +1,299 @@
+{
+  "id": "agents-vs-gates",
+  "order": 5,
+  "name": "Agents vs. Gates — this experiment (AISDLC-Trace 2.1)",
+  "short": "Agents vs. Gates",
+  "publisher": "Agents vs. Gates experiment (Alfredo De Regil)",
+  "date": "2026-10-10",
+  "url": null,
+  "label": null,
+  "summary": "The v2.1 roles that act in this experiment: one code agent per repo against CI with architecture gates (M1), and a multi-role AI-SDLC flow with humans simulated by fixed policy (M2).",
+  "source_phases": "discovery · planning · implementation · review · testing · deployment · maintenance",
+  "members": [
+    {
+      "id": "originator",
+      "role": "originator",
+      "v21_role": "originator",
+      "v21_note": "M2 only; simulated: true.",
+      "actor_type": "human",
+      "responsibility": "Simulated by fixed policy: raises the problem and produces the first intent.md (M2).",
+      "phase": "discovery",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Felix · Originator",
+      "seed": "originator"
+    },
+    {
+      "id": "product-owner",
+      "role": "product_owner",
+      "v21_role": "product_owner",
+      "v21_note": "M2 only; simulated: true.",
+      "actor_type": "human",
+      "responsibility": "Simulated by fixed policy: approves spec.md if it meets its checklist (M2).",
+      "phase": "discovery",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Amara · Product Owner",
+      "seed": "product-owner"
+    },
+    {
+      "id": "requirements-agent",
+      "role": "requirements_agent",
+      "v21_role": "requirements_agent",
+      "v21_note": "M2 only.",
+      "actor_type": "agent",
+      "responsibility": "Drafts intent.md and spec.md with acceptance criteria and risks (M2).",
+      "phase": "discovery",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Requirements Agent",
+      "seed": "requirements-agent"
+    },
+    {
+      "id": "task-planner",
+      "role": "task_planner",
+      "v21_role": "task_planner",
+      "v21_note": "M2 only.",
+      "actor_type": "agent",
+      "responsibility": "Breaks the approved spec into tasks in plan.md (M2).",
+      "phase": "planning",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Task Planner",
+      "seed": "task-planner"
+    },
+    {
+      "id": "engineer",
+      "role": "engineer",
+      "v21_role": "engineer",
+      "v21_note": "M2 only; simulated: true.",
+      "actor_type": "human",
+      "responsibility": "Simulated by fixed policy: approves plan.md (M2).",
+      "phase": "planning",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Yusuf · Engineer",
+      "seed": "engineer"
+    },
+    {
+      "id": "tech-lead",
+      "role": "tech_lead",
+      "v21_role": "tech_lead",
+      "v21_note": "M2 only; simulated: true.",
+      "actor_type": "human",
+      "responsibility": "Simulated by fixed policy: reviews higher-risk specs and PRs and owns REVIEW.md (M2).",
+      "phase": "planning",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Greta · Tech Lead",
+      "seed": "tech-lead"
+    },
+    {
+      "id": "architect",
+      "role": "architect",
+      "v21_role": "architect",
+      "v21_note": "v2.1 extension; on the roster with simulated: true.",
+      "actor_type": "human",
+      "responsibility": "Owns ARCHITECTURE-RULES.md, the catalog and ADRs; CODEOWNER of gate paths. Fixed artifacts; does not act in runs.",
+      "phase": "planning",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§13.2 Extensiones v2.1 (1. Rol humano architect); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      },
+      "display_name": "Maya · Architect",
+      "seed": "architect"
+    },
+    {
+      "id": "flow-engine",
+      "role": "flow_engine",
+      "v21_role": "flow_engine",
+      "v21_note": "v2.1 extension; replaces an agent supervisor.",
+      "actor_type": "system",
+      "responsibility": "Deterministic harness orchestrator: assigns the task, relays CI feedback, changes phases; coordinates M2.",
+      "phase": "implementation",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§13.2 Extensiones v2.1 (2. roles de sistema); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      },
+      "display_name": "Flow engine",
+      "seed": "flow-engine"
+    },
+    {
+      "id": "code-orders",
+      "role": "code_agent",
+      "v21_role": "code_agent",
+      "v21_note": "M1 and M2.",
+      "actor_type": "agent",
+      "responsibility": "Implements the ticket in orders-service and fixes it after CI feedback; opens the PR.",
+      "phase": "implementation",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      },
+      "display_name": "Code Agent · orders-service",
+      "seed": "code-orders"
+    },
+    {
+      "id": "code-payments",
+      "role": "code_agent",
+      "v21_role": "code_agent",
+      "v21_note": "M2 only.",
+      "actor_type": "agent",
+      "responsibility": "One code agent per affected repo in M2; this one implements the payments-service stories.",
+      "phase": "implementation",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/); §16.1 Escenario completo"
+      },
+      "display_name": "Code Agent · payments-service",
+      "seed": "code-payments"
+    },
+    {
+      "id": "ci",
+      "role": "ci",
+      "v21_role": "ci",
+      "v21_note": "v2.1 extension.",
+      "actor_type": "system",
+      "responsibility": "Runs build, test, contract and architecture-gate (ARCH-n) checks on every PR attempt.",
+      "phase": "review",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§13.2 Extensiones v2.1 (2. roles de sistema; 3. Eventos nuevos); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      },
+      "display_name": "CI",
+      "seed": "ci"
+    },
+    {
+      "id": "review-agent",
+      "role": "review_agent",
+      "v21_role": "review_agent",
+      "v21_note": "M2 only.",
+      "actor_type": "agent",
+      "responsibility": "Reviews PRs on a different model than the code agent; can request changes, never approves (M2).",
+      "phase": "review",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Review Agent",
+      "seed": "review-agent"
+    },
+    {
+      "id": "code-owner",
+      "role": "code_owner",
+      "v21_role": "code_owner",
+      "v21_note": "M2 only; simulated: true.",
+      "actor_type": "human",
+      "responsibility": "Simulated by fixed policy: approves the merge if CI is green and the reviewer requested no changes (M2).",
+      "phase": "review",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Kenji · Code Owner",
+      "seed": "code-owner"
+    },
+    {
+      "id": "verifier",
+      "role": "verifier",
+      "v21_role": "verifier",
+      "v21_note": "M2 only.",
+      "actor_type": "agent",
+      "responsibility": "Runs the app and tests in isolation and reports without fixing (M2).",
+      "phase": "testing",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Verifier",
+      "seed": "verifier"
+    },
+    {
+      "id": "staging",
+      "role": "staging",
+      "v21_role": "staging",
+      "v21_note": "v2.1 extension; metadata.instrument = true.",
+      "actor_type": "system",
+      "responsibility": "Oracle instrument: checks consumers after the loop; its results are hidden from the agent and never fed back.",
+      "phase": "testing",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§13.2 Extensiones v2.1 (2. roles de sistema); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      },
+      "display_name": "Staging (oracle)",
+      "seed": "staging"
+    },
+    {
+      "id": "devops-agent",
+      "role": "devops_agent",
+      "v21_role": "devops_agent",
+      "v21_note": "M2 only, permissive condition.",
+      "actor_type": "agent",
+      "responsibility": "Prepares pipelines, containers and rollback; in M2 it acts only in the permissive condition.",
+      "phase": "deployment",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "DevOps Agent",
+      "seed": "devops-agent"
+    },
+    {
+      "id": "release-manager",
+      "role": "release_manager",
+      "v21_role": "release_manager",
+      "v21_note": "M2 only; simulated: true.",
+      "actor_type": "human",
+      "responsibility": "Simulated by fixed policy: authorizes the production release (M2).",
+      "phase": "deployment",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      },
+      "display_name": "Lucía · Release Manager",
+      "seed": "release-manager"
+    }
+  ],
+  "gaps": [
+    {
+      "text": "No Scrum Master, by design: no reviewed source includes one and the role spec does not either.",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      }
+    },
+    {
+      "text": "Human roles are simulated by fixed policy (simulated: true), not played by people.",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§16.2 AI-SDLC flow multi-rol (flow/); §13.2 Extensiones v2.1 (rule 13)"
+      }
+    },
+    {
+      "text": "Coordination is deterministic code (flow_engine), not a supervisor agent.",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§13.2 Extensiones v2.1 (2. roles de sistema)"
+      }
+    },
+    {
+      "text": "Team composition is not measured in the experiment; this view exists for the visual demo.",
+      "citation": {
+        "file": "docs/construccion-experimento.md",
+        "section": "§22.6 Teams & Avatars"
+      }
+    }
+  ]
+}

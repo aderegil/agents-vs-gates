@@ -1,0 +1,11 @@
+{
+  "id": "replay",
+  "name": "Replay Theater",
+  "icon": "clapperboard",
+  "order": 5,
+  "description": "Replay an individual run from its trace: people, AI agents and systems in the AI-SDLC Office.",
+  "roles": ["owner", "operator", "presenter", "viewer"],
+  "kind": "iframe",
+  "entry": "web/dist/index.html",
+  "api": "api.py"
+}

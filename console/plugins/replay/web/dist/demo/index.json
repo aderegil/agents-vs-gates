@@ -1,0 +1,64 @@
+{
+  "runs": [
+    {
+      "run_id": "st-0001",
+      "stage": "selftest",
+      "ticket": "X-rename",
+      "condition": {
+        "V": "V0",
+        "S": "S0",
+        "W": "W1"
+      },
+      "source": "mock",
+      "date": "2026-10-11",
+      "outcome": "fixed_code",
+      "label": "st-0001 · X-rename · V0·S0 · break → CI pink → repair → CI cyan (SIMULATED)",
+      "url": "m1-xrename-v0s0-break-repair.json"
+    },
+    {
+      "run_id": "st-0002",
+      "stage": "selftest",
+      "ticket": "X-rename",
+      "condition": {
+        "V": "V0",
+        "S": "S2",
+        "W": "W1"
+      },
+      "source": "mock",
+      "date": "2026-10-11",
+      "outcome": "passed_first_ci",
+      "label": "st-0002 · X-rename · V0·S2 · additive change → CI cyan (SIMULATED)",
+      "url": "m1-xrename-v0s2-additive.json"
+    },
+    {
+      "run_id": "st-0003",
+      "stage": "selftest",
+      "ticket": "X-remove",
+      "condition": {
+        "V": "V1",
+        "S": "S0",
+        "W": "W1"
+      },
+      "source": "mock",
+      "date": "2026-10-11",
+      "outcome": "fixed_with_gate_flag",
+      "label": "st-0003 · X-remove · V1·S0 · consumer contract edited → gate touched (SIMULATED)",
+      "url": "m1-xremove-v1-gate.json"
+    },
+    {
+      "run_id": "st-0004",
+      "stage": "selftest",
+      "ticket": "X-units",
+      "condition": {
+        "V": "V0",
+        "S": "S0",
+        "W": "W1"
+      },
+      "source": "mock",
+      "date": "2026-10-11",
+      "outcome": "passed_first_ci",
+      "label": "st-0004 · X-units · V0·S0 · CI cyan, oracle pink (SIMULATED)",
+      "url": "m1-xunits-v0s0-oracle.json"
+    }
+  ]
+}

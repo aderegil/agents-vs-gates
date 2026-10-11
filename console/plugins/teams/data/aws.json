@@ -1,0 +1,302 @@
+{
+  "id": "aws",
+  "order": 2,
+  "name": "AWS — AI-Driven Development Life Cycle (AI-DLC)",
+  "short": "AWS AI-DLC",
+  "publisher": "AWS (Raja SP, AWS DevOps & Developer Productivity Blog); awslabs/aidlc-workflows",
+  "date": "2025-07-31",
+  "url": "https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/",
+  "related_urls": [
+    "https://github.com/awslabs/aidlc-workflows"
+  ],
+  "label": null,
+  "summary": "A methodology in which AI plans, asks and implements only after human validation; the blog names only human roles, and the 14 agents come from the awslabs open-source implementation (aidlc-workflows v2.11.0, MIT-0).",
+  "source_phases": "Inception · Construction · Operations",
+  "members": [
+    {
+      "id": "product-owners",
+      "role": "product owners",
+      "v21_role": "product_owner",
+      "v21_note": "From the blog, not from aidlc-workflows.",
+      "actor_type": "human",
+      "responsibility": "Named in the blog; in Mob Elaboration the entire team validates AI's requirements, stories and units.",
+      "phase": "discovery",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/aws-ai-dlc-blog-2025-07-31.md",
+        "section": "Why do we need a transformative approach to AI in software?; How does AI-DLC work? (Inception phase)"
+      },
+      "display_name": "Chen · Product Owner",
+      "seed": "aws:product-owners"
+    },
+    {
+      "id": "architects",
+      "role": "architects",
+      "v21_role": "architect",
+      "v21_note": "From the blog, not from aidlc-workflows.",
+      "actor_type": "human",
+      "responsibility": "Named in the blog; in Mob Construction the team clarifies technical and architectural choices in real time.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/aws-ai-dlc-blog-2025-07-31.md",
+        "section": "Why do we need a transformative approach to AI in software?; How does AI-DLC work? (Construction phase)"
+      },
+      "display_name": "Kwame · Architect",
+      "seed": "aws:architects"
+    },
+    {
+      "id": "developers",
+      "role": "developers",
+      "v21_role": "engineer",
+      "v21_note": "From the blog, not from aidlc-workflows.",
+      "actor_type": "human",
+      "responsibility": "Named in the blog; shift from routine coding to problem-solving while AI generates code and tests.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/aws-ai-dlc-blog-2025-07-31.md",
+        "section": "What are the benefits of this methodology? (Velocity; Developer Experience)"
+      },
+      "display_name": "Nadia · Developer",
+      "seed": "aws:developers"
+    },
+    {
+      "id": "product-agent",
+      "role": "Product Agent",
+      "v21_role": "requirements_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Leads intent capture, market research, scope definition, requirements analysis and user stories.",
+      "phase": "discovery",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-product-agent.md"
+      },
+      "display_name": "Product Agent",
+      "seed": "aws:product-agent"
+    },
+    {
+      "id": "product-lead",
+      "role": "Product Lead",
+      "v21_role": "review_agent",
+      "v21_note": "Reviews requirements/UX, not PRs; in v2.1 only a human product_owner approves.",
+      "actor_type": "agent",
+      "responsibility": "Reviews requirements, stories and UX artifacts; does not produce; the customer's voice at the quality gate.",
+      "phase": "discovery",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-product-lead-agent.md"
+      },
+      "display_name": "Product Lead",
+      "seed": "aws:product-lead"
+    },
+    {
+      "id": "design-agent",
+      "role": "Design Agent",
+      "v21_role": null,
+      "v21_note": "No design role in v2.1.",
+      "actor_type": "agent",
+      "responsibility": "UX/UI designer: leads rough and refined mockups, interaction design and accessibility.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-design-agent.md"
+      },
+      "display_name": "Design Agent",
+      "seed": "aws:design-agent"
+    },
+    {
+      "id": "architect-agent",
+      "role": "Architect Agent",
+      "v21_role": "architect",
+      "v21_note": "Agent here; architect is a human role in v2.1.",
+      "actor_type": "agent",
+      "responsibility": "Leads feasibility, domain, contract, functional and NFR design, and units generation.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-architect-agent.md"
+      },
+      "display_name": "Architect Agent",
+      "seed": "aws:architect-agent"
+    },
+    {
+      "id": "architecture-reviewer",
+      "role": "Architecture Reviewer",
+      "v21_role": "review_agent",
+      "v21_note": "Reviews design artifacts, not code.",
+      "actor_type": "agent",
+      "responsibility": "Reviews technical design artifacts for soundness, implementability and coherence.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-architecture-reviewer-agent.md"
+      },
+      "display_name": "Architecture Reviewer",
+      "seed": "aws:architecture-reviewer"
+    },
+    {
+      "id": "compliance-agent",
+      "role": "Compliance Agent",
+      "v21_role": "policy_owner",
+      "v21_note": "Agent here; policy_owner is a human role in v2.1.",
+      "actor_type": "agent",
+      "responsibility": "Support-only GRC analyst: compliance mapping, data classification and risk assessment.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-compliance-agent.md"
+      },
+      "display_name": "Compliance Agent",
+      "seed": "aws:compliance-agent"
+    },
+    {
+      "id": "devsecops-agent",
+      "role": "DevSecOps Agent",
+      "v21_role": "policy_owner",
+      "v21_note": "Agent here; security policy sits with a human policy_owner in v2.1.",
+      "actor_type": "agent",
+      "responsibility": "Threat modelling, security requirements, secure design review and security pipeline integration.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-devsecops-agent.md"
+      },
+      "display_name": "DevSecOps Agent",
+      "seed": "aws:devsecops-agent"
+    },
+    {
+      "id": "delivery-agent",
+      "role": "Delivery Agent",
+      "v21_role": "task_planner",
+      "v21_note": "Partial: delivery planning and Bolt sequencing.",
+      "actor_type": "agent",
+      "responsibility": "Engineering-manager agent: team formation, Bolt sequencing, phase handoffs and delivery planning.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-delivery-agent.md"
+      },
+      "display_name": "Delivery Agent",
+      "seed": "aws:delivery-agent"
+    },
+    {
+      "id": "composer-agent",
+      "role": "Composer Agent",
+      "v21_role": "supervisor",
+      "v21_note": "Partial: composes the workflow; dispatched by the /aidlc orchestrator.",
+      "actor_type": "agent",
+      "responsibility": "Estimates implementation entropy and composes the minimum viable sequence of stages for the intent.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-composer-agent.md"
+      },
+      "display_name": "Composer Agent",
+      "seed": "aws:composer-agent"
+    },
+    {
+      "id": "developer-agent",
+      "role": "Developer Agent",
+      "v21_role": "code_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Leads code generation and the reverse-engineering code scan; also data modelling.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-developer-agent.md"
+      },
+      "display_name": "Developer Agent",
+      "seed": "aws:developer-agent"
+    },
+    {
+      "id": "quality-agent",
+      "role": "Quality Agent",
+      "v21_role": "verifier",
+      "v21_note": "Partial: also designs the tests.",
+      "actor_type": "agent",
+      "responsibility": "QA lead: test strategy, test case design and quality gates; leads Build and Test and performance validation.",
+      "phase": "testing",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-quality-agent.md"
+      },
+      "display_name": "Quality Agent",
+      "seed": "aws:quality-agent"
+    },
+    {
+      "id": "aws-platform-agent",
+      "role": "AWS Platform Agent",
+      "v21_role": "devops_agent",
+      "v21_note": "Partial: infrastructure, not pipelines.",
+      "actor_type": "agent",
+      "responsibility": "Leads AWS infrastructure design and environment provisioning.",
+      "phase": "deployment",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-aws-platform-agent.md"
+      },
+      "display_name": "AWS Platform Agent",
+      "seed": "aws:aws-platform-agent"
+    },
+    {
+      "id": "pipeline-deploy-agent",
+      "role": "Pipeline & Deploy Agent",
+      "v21_role": "devops_agent",
+      "v21_note": "Release approval stays human (release_manager) in v2.1.",
+      "actor_type": "agent",
+      "responsibility": "'CI/CD engineer and release manager': leads CI pipeline, deployment pipeline and deployment execution.",
+      "phase": "deployment",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-pipeline-deploy-agent.md"
+      },
+      "display_name": "Pipeline & Deploy Agent",
+      "seed": "aws:pipeline-deploy-agent"
+    },
+    {
+      "id": "operations-agent",
+      "role": "Operations Agent",
+      "v21_role": "monitoring_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "SRE: observability setup, incident response, and feedback and optimization.",
+      "phase": "maintenance",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-operations-agent.md"
+      },
+      "display_name": "Operations Agent",
+      "seed": "aws:operations-agent"
+    }
+  ],
+  "gaps": [
+    {
+      "text": "The blog defines no formal roles and names no agents; the 14 agents come from the separate awslabs implementation.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§1 AWS: AI-Driven Development Life Cycle (AI-DLC) — Roles"
+      }
+    },
+    {
+      "text": "No Scrum Master: 'sprints' become 'bolts', and in aidlc-workflows the Delivery Agent sequences them.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§4 Tabla comparativa de roles (row 'Scrum master')"
+      }
+    },
+    {
+      "text": "The CI quality gates listed for the Pipeline & Deploy Agent are lint, coverage, security scan, integration tests, manual approval and smoke tests; none checks architecture rules, which an LLM agent (Architecture Reviewer) reviews.",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "3. cicd-patterns.md — Quality Gates"
+      }
+    },
+    {
+      "text": "Cross-repo verification appears only as advice in the agent's knowledge file: 'Use contract testing (Pact) to verify compatibility across repos'.",
+      "citation": {
+        "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+        "section": "3. cicd-patterns.md — Monorepo vs Polyrepo CI Strategies (Polyrepo)"
+      }
+    }
+  ]
+}

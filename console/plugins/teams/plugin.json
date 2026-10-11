@@ -1,0 +1,11 @@
+{
+  "id": "teams",
+  "name": "Teams & Avatars",
+  "icon": "users",
+  "order": 6,
+  "description": "How each AI-SDLC model staffs a team, mapped to the v2.1 roles, with the theater's avatars.",
+  "roles": ["owner", "operator", "presenter", "viewer"],
+  "kind": "module",
+  "entry": "web/index.js",
+  "api": "api.py"
+}

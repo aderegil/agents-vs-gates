@@ -1,0 +1,284 @@
+{
+  "id": "anthropic",
+  "order": 1,
+  "name": "Anthropic — AI-native SDLC playbook",
+  "short": "Anthropic",
+  "publisher": "Anthropic (Louis Claxton)",
+  "date": "2026-08-21",
+  "url": "https://claude.com/resources/articles/the-ai-native-sdlc-playbook",
+  "label": null,
+  "summary": "A playbook of plays across six stages in which each stage commits an artifact (intent.md, spec.md, plan.md, PR, incident record) that triggers the next, with humans approving at the gates.",
+  "source_phases": "Plan · Design · Build · Test · Deploy · Maintain",
+  "members": [
+    {
+      "id": "originator",
+      "role": "originator",
+      "v21_role": "originator",
+      "v21_note": null,
+      "actor_type": "human",
+      "responsibility": "Describes the problem to Claude in their own words and corrects the resulting intent.md.",
+      "phase": "discovery",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Plan — Capture as intent.md (How to execute it)"
+      },
+      "display_name": "Priya · Originator",
+      "seed": "anthropic:originator"
+    },
+    {
+      "id": "product-owner",
+      "role": "product owner",
+      "v21_role": "product_owner",
+      "v21_note": null,
+      "actor_type": "human",
+      "responsibility": "Reviews and corrects intent.md, approves it, and reviews and signs off spec.md.",
+      "phase": "discovery",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Plan — Capture as intent.md; Design — Requirements and design"
+      },
+      "display_name": "Tomás · Product Owner",
+      "seed": "anthropic:product-owner"
+    },
+    {
+      "id": "policy-owner",
+      "role": "policy owner",
+      "v21_role": "policy_owner",
+      "v21_note": null,
+      "actor_type": "human",
+      "responsibility": "Resolves flagged spec concerns with the product owner; signs off changes to the skill that encodes the policy.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Design — Requirements and design; Build — Skills as institutional knowledge"
+      },
+      "display_name": "Aiko · Policy Owner",
+      "seed": "anthropic:policy-owner"
+    },
+    {
+      "id": "tech-lead",
+      "role": "tech lead",
+      "v21_role": "tech_lead",
+      "v21_note": "Higher-risk plans go to a 'tech lead or architect' (Build — plan mode).",
+      "actor_type": "human",
+      "responsibility": "Writes REVIEW.md, sets the human review threshold and tunes review findings monthly.",
+      "phase": "review",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Deploy — AI in the PR review loop (How to execute it)"
+      },
+      "display_name": "Femi · Tech Lead",
+      "seed": "anthropic:tech-lead"
+    },
+    {
+      "id": "engineer",
+      "role": "engineer",
+      "v21_role": "engineer",
+      "v21_note": null,
+      "actor_type": "human",
+      "responsibility": "Iterates on and approves plan.md in plan mode, then steers several parallel Claude Code sessions.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Build — Claude Code plan mode as the default starting point; Parallel sessions and subagents"
+      },
+      "display_name": "Lena · Engineer",
+      "seed": "anthropic:engineer"
+    },
+    {
+      "id": "claude-code",
+      "role": "Claude Code",
+      "v21_role": "code_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Drafts the plan in plan mode, then implements code and tests; can run in auto mode once the plan is approved.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Build — Claude Code plan mode as the default starting point; Claude Code on auto mode"
+      },
+      "display_name": "Claude Code",
+      "seed": "anthropic:claude-code"
+    },
+    {
+      "id": "researcher",
+      "role": "researcher",
+      "v21_role": "researcher",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Subagent that explores the codebase and reports back without flooding the main context.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Build — Parallel sessions and subagents (How to execute it)"
+      },
+      "display_name": "Researcher subagent",
+      "seed": "anthropic:researcher"
+    },
+    {
+      "id": "code-simplifier",
+      "role": "code simplifier",
+      "v21_role": "code_simplifier",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Subagent that strips needless complexity after the main agent finishes.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Build — Parallel sessions and subagents (How to execute it)"
+      },
+      "display_name": "Code Simplifier subagent",
+      "seed": "anthropic:code-simplifier"
+    },
+    {
+      "id": "verifier",
+      "role": "verifier",
+      "v21_role": "verifier",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Subagent that runs the app, checks the change against plan.md and reports; it does not fix anything.",
+      "phase": "testing",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Build — Parallel sessions and subagents (.claude/agents/verifier.md)"
+      },
+      "display_name": "Verifier subagent",
+      "seed": "anthropic:verifier"
+    },
+    {
+      "id": "code-review",
+      "role": "Code Review",
+      "v21_role": "review_agent",
+      "v21_note": "Managed Code Review service (research preview) or claude-code-action in CI.",
+      "actor_type": "agent",
+      "responsibility": "Runs the REVIEW.md passes (Bugs, Security, Compliance) on every PR; findings alone neither approve nor block.",
+      "phase": "review",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Deploy — AI in the PR review loop"
+      },
+      "display_name": "Code Review",
+      "seed": "anthropic:code-review"
+    },
+    {
+      "id": "code-owner",
+      "role": "code owner",
+      "v21_role": "code_owner",
+      "v21_note": null,
+      "actor_type": "human",
+      "responsibility": "Approves the PR through branch protection; the agent that wrote the code has no way to approve it.",
+      "phase": "review",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Deploy — AI in the PR review loop (Governance considerations); Test — Give Claude a feedback loop"
+      },
+      "display_name": "Omar · Code Owner",
+      "seed": "anthropic:code-owner"
+    },
+    {
+      "id": "platform-engineer",
+      "role": "platform engineer",
+      "v21_role": null,
+      "v21_note": "No v2.1 equivalent; the platform team also owns managed settings.",
+      "actor_type": "human",
+      "responsibility": "Collects eval tasks, expresses approval gates as hooks and runs Claude non-interactively in CI/CD.",
+      "phase": "deployment",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Test — Continuous evals in CI; Deploy — Hooks as approval gates; CI/CD integration and deployment"
+      },
+      "display_name": "Sofia · Platform Engineer",
+      "seed": "anthropic:platform-engineer"
+    },
+    {
+      "id": "release-manager",
+      "role": "release manager",
+      "v21_role": "release_manager",
+      "v21_note": null,
+      "actor_type": "human",
+      "responsibility": "Authorizes production releases; a hook blocks the production deploy until a named release manager signs off.",
+      "phase": "deployment",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Deploy — CI/CD integration and deployment (Governance considerations)"
+      },
+      "display_name": "Ravi · Release Manager",
+      "seed": "anthropic:release-manager"
+    },
+    {
+      "id": "monitoring-agent",
+      "role": "monitoring agent",
+      "v21_role": "monitoring_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Diagnoses a breached control band and writes it up as a new intent.md; acts only through gated routes.",
+      "phase": "maintenance",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Maintain — Maintenance and closing the loop"
+      },
+      "display_name": "Monitoring Agent",
+      "seed": "anthropic:monitoring-agent"
+    },
+    {
+      "id": "service-owner",
+      "role": "service owner / on-call engineer",
+      "v21_role": null,
+      "v21_note": "No v2.1 equivalent; v2.1 routes alert-born intent.md to product_owner.",
+      "actor_type": "human",
+      "responsibility": "Picks the metric and detection script, then triages agent findings: fix now, schedule, or dismiss.",
+      "phase": "maintenance",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Maintain — Closing the loop (How to execute it)"
+      },
+      "display_name": "Mateo · Service Owner",
+      "seed": "anthropic:service-owner"
+    },
+    {
+      "id": "security-lead",
+      "role": "security lead",
+      "v21_role": "policy_owner",
+      "v21_note": "Partial: security policy only.",
+      "actor_type": "human",
+      "responsibility": "Connects repositories to scheduled Claude Security scans and organizes them so finding ownership is clear.",
+      "phase": "maintenance",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Maintain — Recurring codebase scans (How to execute it)"
+      },
+      "display_name": "Ingrid · Security Lead",
+      "seed": "anthropic:security-lead"
+    }
+  ],
+  "gaps": [
+    {
+      "text": "No Scrum Master role is defined.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§4 Tabla comparativa de roles (row 'Scrum master')"
+      }
+    },
+    {
+      "text": "In the AI-native process the human architect appears once, as the 'tech lead or architect' who approves higher-risk plans (the other mention describes the traditional SDLC).",
+      "citation": {
+        "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+        "section": "Build — Claude Code plan mode as the default starting point (Governance considerations)"
+      }
+    },
+    {
+      "text": "Architecture rules are context (CLAUDE.md) checked by in-session hooks and an LLM Compliance review pass; the playbook does not propose them as deterministic CI checks.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§5.1 Reglas de arquitectura verificadas en CI (fitness functions) — Anthropic"
+      }
+    },
+    {
+      "text": "Cross-repository work is barely addressed: a dedicated intent repo is suggested only when intent spans many repositories; CLAUDE.md, hooks and review are per repo.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§5.2 Cambios que cruzan repositorios — Anthropic"
+      }
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+{
+  "id": "ai-sdlc-io",
+  "order": 4,
+  "name": "ai-sdlc.io — AI-SDLC Framework (spec v1alpha1)",
+  "short": "ai-sdlc.io",
+  "publisher": "AI-SDLC Framework (GitHub org ai-sdlc-framework; no company named)",
+  "date": null,
+  "date_note": "Pages carry no publication date; spec v1alpha1, Status: Draft; captured 2026-10-10.",
+  "url": "https://ai-sdlc.io/",
+  "related_urls": [
+    "https://ai-sdlc.io/docs/spec/primer",
+    "https://github.com/ai-sdlc-framework/ai-sdlc"
+  ],
+  "label": "early-stage open-source project, not an industry standard",
+  "summary": "A declarative governance framework (Kubernetes-style YAML resources) in which an operator decides open questions, an orchestrator dispatches agents, and cross-harness reviewers and quality gates run before merge.",
+  "source_phases": "CAPTURE · DECIDE · ADMIT · DISPATCH · REVIEW · ATTEST · MERGE",
+  "members": [
+    {
+      "id": "operator",
+      "role": "operator",
+      "v21_role": "engineer",
+      "v21_note": "Its PR approval maps to code_owner in v2.1.",
+      "actor_type": "human",
+      "responsibility": "Resolves open questions until the Definition-of-Ready gate passes, and approves the PR before merge.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-home.md",
+        "section": "From idea to merged PR — 2. DECIDE; 7. MERGE"
+      },
+      "display_name": "Hana · Operator",
+      "seed": "ai-sdlc-io:operator"
+    },
+    {
+      "id": "refinement-reviewer",
+      "role": "refinement-reviewer",
+      "v21_role": "review_agent",
+      "v21_note": "Reviews task readiness, not code.",
+      "actor_type": "agent",
+      "responsibility": "LLM evaluator in DoR Stage B: scores semantic gates such as whether acceptance criteria are verifiable.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+        "section": "Definition-of-Ready gate — How it works"
+      },
+      "display_name": "refinement-reviewer",
+      "seed": "ai-sdlc-io:refinement-reviewer"
+    },
+    {
+      "id": "security-compliance-lead",
+      "role": "Security / Compliance Lead",
+      "v21_role": "policy_owner",
+      "v21_note": null,
+      "actor_type": "human",
+      "responsibility": "Persona that enforces security and regulatory compliance: hard-mandatory gates, audit trails, provenance.",
+      "phase": "planning",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-primer.md",
+        "section": "9. Target Personas"
+      },
+      "display_name": "Zara · Security Lead",
+      "seed": "ai-sdlc-io:security-compliance-lead"
+    },
+    {
+      "id": "cli-orchestrator",
+      "role": "cli-orchestrator",
+      "v21_role": "flow_engine",
+      "v21_note": "spec-roles §1 maps it to supervisor; modelled here as deterministic code (flow_engine).",
+      "actor_type": "system",
+      "responsibility": "Walks the dependency graph, admits ready work, dispatches developer subagents in worktrees and opens PRs.",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-home.md",
+        "section": "Five pillars — Autonomous Orchestrator"
+      },
+      "display_name": "cli-orchestrator",
+      "seed": "ai-sdlc-io:cli-orchestrator"
+    },
+    {
+      "id": "code-agent",
+      "role": "code-agent / coding-agent",
+      "v21_role": "code_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Implements features with tested code; executes the pipeline's implement stage (AgentRole 'Software Engineer').",
+      "phase": "implementation",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-primer.md",
+        "section": "7. Getting Started — Step 3: Add Agent Roles"
+      },
+      "display_name": "code-agent",
+      "seed": "ai-sdlc-io:code-agent"
+    },
+    {
+      "id": "code-reviewer",
+      "role": "code-reviewer",
+      "v21_role": "review_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Catches implementation mistakes, on a harness other than the implementer's (default: Codex).",
+      "phase": "review",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+        "section": "Cross-harness review — What we ship"
+      },
+      "display_name": "code-reviewer",
+      "seed": "ai-sdlc-io:code-reviewer"
+    },
+    {
+      "id": "test-reviewer",
+      "role": "test-reviewer",
+      "v21_role": "review_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Reviews test coverage and quality, on a harness other than the implementer's (default: Codex).",
+      "phase": "review",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+        "section": "Cross-harness review — What we ship"
+      },
+      "display_name": "test-reviewer",
+      "seed": "ai-sdlc-io:test-reviewer"
+    },
+    {
+      "id": "security-reviewer",
+      "role": "security-reviewer",
+      "v21_role": "review_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Hostile-input security analysis, on a harness independent of the implementer (default: Claude Opus).",
+      "phase": "review",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+        "section": "Cross-harness review — What we ship"
+      },
+      "display_name": "security-reviewer",
+      "seed": "ai-sdlc-io:security-reviewer"
+    },
+    {
+      "id": "tester-agent",
+      "role": "tester-agent",
+      "v21_role": "verifier",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Receives a handoff from code-agent when implementation completes; named only as a handoff target.",
+      "phase": "testing",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-spec.md",
+        "section": "5.2.3 Example (AgentRole handoffs)"
+      },
+      "display_name": "tester-agent",
+      "seed": "ai-sdlc-io:tester-agent"
+    },
+    {
+      "id": "ci-verifier",
+      "role": "CI verifier",
+      "v21_role": "ci",
+      "v21_note": "scripts/verify-attestation.mjs",
+      "actor_type": "system",
+      "responsibility": "Checks the PR's signed attestation holds all three reviewer verdicts, approved, before allowing merge.",
+      "phase": "testing",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+        "section": "Cross-harness review — What you'll see in your PRs"
+      },
+      "display_name": "CI verifier",
+      "seed": "ai-sdlc-io:ci-verifier"
+    },
+    {
+      "id": "deploy-agent",
+      "role": "deploy-agent",
+      "v21_role": "devops_agent",
+      "v21_note": null,
+      "actor_type": "agent",
+      "responsibility": "Runs the pipeline's deploy stage, gated by a staging-verification quality gate.",
+      "phase": "deployment",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-spec.md",
+        "section": "5.1.3 Example (Pipeline, stage 'deploy')"
+      },
+      "display_name": "deploy-agent",
+      "seed": "ai-sdlc-io:deploy-agent"
+    },
+    {
+      "id": "engineering-manager",
+      "role": "Engineering Manager",
+      "v21_role": null,
+      "v21_note": "Governs the agent, not the artifacts; outside v2.1 scope (spec-roles §1).",
+      "actor_type": "human",
+      "responsibility": "Approves an agent's autonomy promotions; persona that owns team delivery and quality.",
+      "phase": "maintenance",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-primer.md",
+        "section": "7. Getting Started — Step 4: Configure Autonomy; 9. Target Personas"
+      },
+      "display_name": "Diego · Engineering Manager",
+      "seed": "ai-sdlc-io:engineering-manager"
+    }
+  ],
+  "gaps": [
+    {
+      "text": "No architect role; architecture appears only as the AutonomyPolicy option 'requireApproval: architecture-changes-only'.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§4 Tabla comparativa de roles (row 'Arquitectura')"
+      }
+    },
+    {
+      "text": "The example quality gates cover coverage, security, reviewers and provenance; the reviewed docs propose no architecture-rule gate.",
+      "citation": {
+        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "section": "§5.1 Reglas de arquitectura verificadas en CI (fitness functions) — ai-sdlc.io"
+      }
+    },
+    {
+      "text": "Cross-repo appears only as an Enterprise feature ('Enterprise MCP tools (SSO, org policy, cross-repo)'), without detail.",
+      "citation": {
+        "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-home.md",
+        "section": "Free and open source — Enterprise"
+      }
+    }
+  ]
+}

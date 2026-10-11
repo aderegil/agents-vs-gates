@@ -1,0 +1,2 @@
+# The Replay Theater ships its built bundle so the console runs without npm (spec 21.1). Overrides the root "dist/".
+!dist/
