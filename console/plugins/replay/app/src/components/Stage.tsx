@@ -1,12 +1,14 @@
 // The office floor: pixel-souls' InteriorView (canvas 2D, pseudo-3D floor, characters that walk to their station)
 // turned into the AI-SDLC Office stage. Everything drawn is a function of (replay, scene state, clock), so the same
-// clock always renders the same frame. Watermark and subtitles are painted into the canvas so recorded clips carry
-// them too.
+// clock always renders the same frame: idle breathing, blinks, typing, talking and the CI reactions are keyed to the
+// replay clock and the actor's seed, never to wall time or Math.random. Watermark and subtitles are painted into the
+// canvas so recorded clips carry them too. One light palette (no dark variant, also in presentation mode).
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import {
-  DARK, FAIL, LIGHT, PASS, PORTRAIT_H, PORTRAIT_W, drawBadge, drawSystemObject, portraitGrid,
-  type LightState, type Palette,
+  FAIL, LIGHT, PASS, PORTRAIT_H, PORTRAIT_W, drawBadge, drawSystemObject, portraitGrid,
+  type AvatarSpec, type LightState, type Palette,
 } from "../engine/avatarStyles";
+import { lastCiResult, poseFor, type CiReaction } from "../engine/motion";
 import {
   bubbleVisible, isActive, narrationAt, walkProgress,
   type ActorView, type Bubble, type ReplayActor, type ReplayEngine, type ReplayPlace,
@@ -25,6 +27,10 @@ export const MONO = 'ui-monospace, "Cascadia Mono", Consolas, monospace';
 const DEFAULT_CHECKS = 10;
 const DEFAULT_CONSUMERS = ["billing-service", "analytics-ingest", "web-storefront"];
 const SYSTEM_PLACES = new Set(["ci-tower", "staging-bench", "dispatch"]);
+/** Device pixels per CSS pixel of the stage canvas (it is allocated at 2× STAGE_W). */
+const DEVICE = 2;
+/** Characters are about this wide at the front of the floor (scale 1), snapped to whole device pixels per grid pixel. */
+const ACTOR_W = 124;
 
 interface StageColors extends Palette {
   wall: string;
@@ -34,10 +40,8 @@ interface StageColors extends Palette {
   subtitleInk: string;
 }
 
-const LIGHT_STAGE: StageColors = { ...LIGHT, wall: "#eceff3", floor: "#f6f7f9", grid: "#e3e6eb",
+const STAGE_COLORS: StageColors = { ...LIGHT, wall: "#eceff3", floor: "#f6f7f9", grid: "#e3e6eb",
   subtitleBg: "#111827", subtitleInk: "#ffffff" };
-const DARK_STAGE: StageColors = { ...DARK, wall: "#0b0d11", floor: "#12151b", grid: "#1f242c",
-  subtitleBg: "#000000", subtitleInk: "#ffffff" };
 
 export interface StageHandle {
   draw: () => void;
@@ -46,7 +50,6 @@ export interface StageHandle {
 
 interface Props {
   engine: ReplayEngine;
-  dark: boolean;
   largeSubtitles: boolean;
   label?: string;
 }
@@ -66,25 +69,24 @@ function fmtClock(ms: number): string {
   return `${String(m).padStart(2, "0")}:${(s - m * 60).toFixed(1).padStart(4, "0")}`;
 }
 
-export const Stage = forwardRef<StageHandle, Props>(function Stage({ engine, dark, largeSubtitles, label }, ref) {
+export const Stage = forwardRef<StageHandle, Props>(function Stage({ engine, largeSubtitles, label }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const opts = useRef({ dark, largeSubtitles, label });
-  opts.current = { dark, largeSubtitles, label };
+  const opts = useRef({ largeSubtitles, label });
+  opts.current = { largeSubtitles, label };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = STAGE_W * 2;
-    canvas.height = STAGE_H * 2;
+    canvas.width = STAGE_W * DEVICE;
+    canvas.height = STAGE_H * DEVICE;
   }, []);
 
   function draw() {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    ctx.setTransform(2, 0, 0, 2, 0, 0);
-    renderFrame(ctx, engine, opts.current.dark ? DARK_STAGE : LIGHT_STAGE, opts.current.largeSubtitles,
-      opts.current.label);
+    ctx.setTransform(DEVICE, 0, 0, DEVICE, 0, 0);
+    renderFrame(ctx, engine, STAGE_COLORS, opts.current.largeSubtitles, opts.current.label);
   }
 
   useImperativeHandle(ref, () => ({ draw, canvas: () => canvasRef.current }));
@@ -110,11 +112,46 @@ interface Drawable {
   draw: () => void;
 }
 
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 interface BubbleAnchor {
   x: number;
   y: number;
   bubble: Bubble;
+  /** preferred placement; the layout still moves the bubble off labels and other bubbles */
   side?: "up" | "right";
+  /** the speaker's own figure, kept clear when the bubble goes beside it */
+  self?: Rect;
+}
+
+interface PlaceLabel {
+  text: string;
+  note: string | null;
+  x: number;
+  /** "bottom" labels sit above their prop (y = text bottom); "top" labels hang under a system object (y = text top) */
+  y: number;
+  anchor: "bottom" | "top";
+  size: number;
+  noteSize: number;
+}
+
+/** Per-frame layout state: what is already on screen, so labels and bubbles can avoid it. */
+interface Layout {
+  obstacles: Rect[];
+  figures: Rect[];
+  bubbles: BubbleAnchor[];
+  labels: PlaceLabel[];
+}
+
+function overlap(a: Rect, b: Rect): number {
+  const w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+  const h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+  return w > 0 && h > 0 ? w * h : 0;
 }
 
 function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: StageColors, bigSubs: boolean,
@@ -128,13 +165,8 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   drawHeader(ctx, engine, c, label);
 
   const drawables: Drawable[] = [];
-  const bubbles: BubbleAnchor[] = [];
-
-  // Places (props, system objects, labels)
-  for (const place of replay.places) {
-    const f = placeToFloor(place);
-    drawables.push({ depth: f.y, draw: () => drawPlace(ctx, place, engine, c, bubbles) });
-  }
+  const layout: Layout = { obstacles: [], figures: [], bubbles: [], labels: [] };
+  const ci = lastCiResult(engine);
 
   // Who stands where (slots per place, deterministic order)
   const byPlace = new Map<string, string[]>();
@@ -148,21 +180,28 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   }
   for (const list of byPlace.values()) list.sort();
 
+  // Figures first (positions only), so place labels and bubbles know where people are before anything is drawn.
   for (const a of replay.actors) {
     const v = state.actors[a.id];
     if (!v) continue;
     if (a.actor_type === "system" && SYSTEM_PLACES.has(a.home)) continue;
     const pos = actorPosition(a.id, v, clock, placeById, byPlace);
     if (!pos) continue;
-    drawables.push({
-      depth: pos.y,
-      draw: () => drawActor(ctx, a, v, pos, clock, c, bubbles),
-    });
+    const fig = figureGeometry(pos, clock, ci);
+    layout.figures.push(fig.rect);
+    drawables.push({ depth: pos.y, draw: () => drawActor(ctx, a, v, fig, clock, ci, c, layout) });
   }
-  // System actors' bubbles sit over their object (the object registers the anchor in drawPlace).
+
+  // Places (props, system objects); their labels are collected and drawn on top
+  for (const place of replay.places) {
+    const f = placeToFloor(place);
+    drawables.push({ depth: f.y, draw: () => drawPlace(ctx, place, engine, c, layout) });
+  }
+
   drawables.sort((p, q) => p.depth - q.depth);
   for (const d of drawables) d.draw();
-  for (const b of bubbles) drawBubble(ctx, b, c);
+  for (const l of layout.labels) drawPlaceLabel(ctx, l, c, layout);
+  layoutBubbles(ctx, layout, c);
 
   const narration = narrationAt(state, clock, engine.end);
   if (narration) drawSubtitle(ctx, narration, c, bigSubs);
@@ -232,7 +271,7 @@ function actorPosition(id: string, v: ActorView, clock: number, places: Map<stri
   const list = byPlace.get(v.place) ?? [id];
   const spotTo = standingSpot(to, Math.max(0, list.indexOf(id)), list.length);
   // at a system object (the agent walking into the CI tower) stand beside it, so its lights stay visible
-  if (SYSTEM_PLACES.has(v.place)) spotTo.x -= 0.075;
+  if (SYSTEM_PLACES.has(v.place)) spotTo.x -= 0.115;
   const prog = walkProgress(v, clock);
   if (prog >= 1 || v.from === v.place) return { ...spotTo, walking: false, facing: 1 as 1 | -1 };
   const from = places.get(v.from);
@@ -248,70 +287,127 @@ function actorPosition(id: string, v: ActorView, clock: number, places: Map<stri
   };
 }
 
-function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView,
-  pos: { x: number; y: number; walking: boolean; facing: 1 | -1 }, clock: number, c: StageColors,
-  bubbles: BubbleAnchor[]) {
+
+interface Figure {
+  px: number;
+  py: number;
+  scale: number;
+  /** drawn size of the bust (CSS px) and its top-left corner */
+  w: number;
+  h: number;
+  x: number;
+  y: number;
+  gridPx: number;
+  facing: 1 | -1;
+  walking: boolean;
+  rect: Rect;
+}
+
+function figureGeometry(pos: { x: number; y: number; walking: boolean; facing: 1 | -1 }, clock: number,
+  ci: CiReaction | null): Figure {
   const { px, py, scale } = floorToPixel(pos.x, pos.y);
-  const size = 84 * scale;
-  const h = (size * PORTRAIT_H) / PORTRAIT_W;
-  const bob = pos.walking ? Math.abs(Math.sin(clock / 140)) * 3 * scale : 0;
+  // whole device pixels per grid pixel keeps the pixel art crisp at every depth
+  const k = Math.max(1, Math.round((ACTOR_W * scale * DEVICE) / PORTRAIT_W));
+  const w = (k * PORTRAIT_W) / DEVICE;
+  const h = (w * PORTRAIT_H) / PORTRAIT_W;
+  const gridPx = k / DEVICE;
+  let lift = 0;
+  if (pos.walking) lift = Math.round(Math.abs(Math.sin(clock / 140)) * 2) * gridPx;
+  else if (ci && ci.result === "pass" && clock >= ci.at && clock - ci.at < 900) {
+    // a small deterministic hop when CI turns green
+    lift = Math.round(Math.abs(Math.sin(((clock - ci.at) / 900) * Math.PI * 2)) * 3) * gridPx;
+  }
+  const x = Math.round((px - w / 2) * DEVICE) / DEVICE;
+  const y = Math.round((py - 2 - h - lift) * DEVICE) / DEVICE;
+  return {
+    px, py, scale, w, h, x, y, gridPx, facing: pos.facing, walking: pos.walking,
+    rect: { x: x + w * 0.12, y: y + h * 0.12, w: w * 0.76, h: h * 0.88 },
+  };
+}
+
+function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, fig: Figure, clock: number,
+  ci: CiReaction | null, c: StageColors, layout: Layout) {
+  const { px, py, w, h, x, y, gridPx } = fig;
+  const isAgent = a.avatar.style === "agent";
 
   // feet shadow, or the pink ring when this actor touched the gate (spec 13.2: "marked in pink")
   ctx.save();
   ctx.fillStyle = "rgba(17,24,39,0.14)";
   ctx.beginPath();
-  ctx.ellipse(px, py, size * 0.34, size * 0.1, 0, 0, Math.PI * 2);
+  ctx.ellipse(px, py, w * 0.36, w * 0.09, 0, 0, Math.PI * 2);
   ctx.fill();
   if (v.gateMark) {
     ctx.strokeStyle = FAIL;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.ellipse(px, py, size * 0.46, size * 0.15, 0, 0, Math.PI * 2);
+    ctx.ellipse(px, py, w * 0.48, w * 0.14, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
 
-  const grid = portraitGrid({ style: a.avatar.style === "agent" ? "agent" : "human", seed: a.avatar.seed });
+  const spec: AvatarSpec = {
+    style: isAgent ? "agent" : "human", seed: a.avatar.seed, role: a.role, badge: a.avatar.badge ?? null,
+  };
+  const grid = portraitGrid(spec, poseFor(a.id, v, clock, fig.walking, ci));
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.translate(px, py - h * 0.55 - bob);
-  ctx.scale(pos.facing, 1);
-  ctx.drawImage(grid, -size / 2, -h / 2, size, h);
+  if (fig.walking && fig.facing < 0) {
+    ctx.translate(x + w, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(grid, 0, 0, w, h);
+  } else {
+    ctx.drawImage(grid, x, y, w, h);
+  }
   ctx.restore();
-  const top = py - h * 0.55 - bob - h / 2;
 
-  if (a.avatar.style === "agent") drawBadge(ctx, px, py - h * 0.2 - bob, a.avatar.badge, scale, FONT);
+  let ny = py + 6;
+  if (isAgent) {
+    const bs = Math.max(fig.scale, 0.8);
+    const badgeY = y + h - 2 * gridPx;
+    drawBadge(ctx, px, badgeY, a.avatar.badge, bs, FONT);
+    ny = Math.max(ny, badgeY + Math.max(13, 15 * bs) + 3);
+  }
+  if (v.gateMark) ny = Math.max(ny, py + w * 0.14 + 3); // below the pink ring
 
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.font = `500 ${Math.round(13 * Math.max(scale, 0.9))}px ${FONT}`;
+  const nameSize = Math.round(13 * Math.max(fig.scale, 0.9));
+  ctx.font = `500 ${nameSize}px ${FONT}`;
   ctx.fillStyle = c.ink;
-  ctx.fillText(a.display_name, px, py + 6);
-  let ny = py + 6 + 16;
+  ctx.fillText(a.display_name, px, ny);
+  const nw = ctx.measureText(a.display_name).width;
+  layout.obstacles.push({ x: px - nw / 2 - 2, y: ny - 1, w: nw + 4, h: nameSize + 3 });
+  ny += nameSize + 3;
   if (a.simulated) {
-    ctx.font = `400 ${Math.round(12 * Math.max(scale, 0.9))}px ${FONT}`;
+    const s2 = Math.round(12 * Math.max(fig.scale, 0.9));
+    ctx.font = `400 ${s2}px ${FONT}`;
     ctx.fillStyle = c.ink2;
     ctx.fillText("simulated by policy", px, ny);
-    ny += 14;
+    const sw = ctx.measureText("simulated by policy").width;
+    layout.obstacles.push({ x: px - sw / 2 - 2, y: ny - 1, w: sw + 4, h: s2 + 3 });
+    ny += s2 + 2;
   }
   if (v.gateMark) {
     ctx.font = `600 11px ${FONT}`;
     const t = `Gate touched · ${v.gateMark}`;
-    const w = ctx.measureText(t).width + 10;
+    const tw = ctx.measureText(t).width + 10;
     ctx.fillStyle = FAIL;
-    ctx.fillRect(Math.round(px - w / 2), Math.round(ny), Math.round(w), 16);
+    ctx.fillRect(Math.round(px - tw / 2), Math.round(ny), Math.round(tw), 16);
     ctx.fillStyle = "#ffffff";
     ctx.textBaseline = "middle";
     ctx.fillText(t, px, ny + 8.5);
+    layout.obstacles.push({ x: px - tw / 2, y: ny, w: tw, h: 16 });
   }
   ctx.restore();
 
-  if (bubbleVisible(v, clock) && v.bubble) bubbles.push({ x: px, y: top - 6, bubble: v.bubble });
+  if (bubbleVisible(v, clock) && v.bubble) {
+    layout.bubbles.push({ x: px, y: y + 4 * gridPx, bubble: v.bubble, self: fig.rect });
+  }
 }
 
 function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: ReplayEngine, c: StageColors,
-  bubbles: BubbleAnchor[]) {
+  layout: Layout) {
   const f = placeToFloor(place);
   const { px, py, scale } = floorToPixel(f.x, f.y);
   const { state, clock, replay } = engine;
@@ -332,14 +428,20 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
     const failing = order.filter((id) => state.ci.lights[id] === "fail" || state.ci.lights[id] === "error");
     if (failing.length) {
       ctx.save();
-      ctx.font = `600 ${Math.round(12 * scale)}px ${FONT}`;
+      const fs = Math.round(12 * scale);
+      ctx.font = `600 ${fs}px ${FONT}`;
       ctx.fillStyle = FAIL;
-      ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.textAlign = "right";
-      failing.slice(0, 4).forEach((id, i) => ctx.fillText(id, px - 34 * scale, top + 40 * scale + i * 15 * scale));
+      failing.slice(0, 4).forEach((id, i) => {
+        const ly = top + 40 * scale + i * 15 * scale;
+        ctx.fillText(id, px - 34 * scale, ly);
+        const tw = ctx.measureText(id).width;
+        layout.obstacles.push({ x: px - 34 * scale - tw - 2, y: ly - fs / 2 - 1, w: tw + 4, h: fs + 2 });
+      });
       ctx.restore();
     }
+    layout.obstacles.push({ x: px - 34 * scale, y: top, w: 68 * scale, h: py - top });
     if (state.ci.attempts > 0) note = `attempt ${state.ci.attempt ?? state.ci.attempts - 1}${state.ci.running ? " · running" : ""}`;
   } else if (place.id === "staging-bench") {
     const consumers = state.staging.consumers.length ? state.staging.consumers : DEFAULT_CONSUMERS;
@@ -353,6 +455,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
     const slot = (130 * scale) / consumers.length;
     consumers.forEach((k, i) => ctx.fillText(k.split("-")[0], px - 65 * scale + slot * (i + 0.5), top - 4));
     ctx.restore();
+    layout.obstacles.push({ x: px - 65 * scale, y: top - 16 * scale, w: 130 * scale, h: py - top + 16 * scale });
     if (state.staging.state) note = `hidden from the agent · ${state.staging.state}`;
   } else if (place.id === "dispatch") {
     owner = actorFor(replay.actors, state.actors, "flow_engine");
@@ -361,31 +464,47 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
     top = drawProp(ctx, place, px, py, scale, c);
   }
 
-  ctx.save();
-  ctx.textAlign = "center";
-  ctx.fillStyle = c.ink2;
-  const labelSize = Math.round(14 * Math.max(scale, 0.9));
+  const size = Math.round(14 * Math.max(scale, 0.9));
   const noteSize = Math.round(12 * Math.max(scale, 0.9));
-  if (SYSTEM_PLACES.has(place.id)) {
-    ctx.textBaseline = "top";
-    ctx.font = `600 ${labelSize}px ${FONT}`;
-    ctx.fillText(place.label, px, py + 6);
-    if (note) {
-      ctx.font = `400 ${noteSize}px ${FONT}`;
-      ctx.fillText(note, px, py + 8 + labelSize);
-    }
-  } else {
-    ctx.textBaseline = "bottom";
-    ctx.font = `600 ${labelSize}px ${FONT}`;
-    ctx.fillText(place.label, px, top - 6);
-  }
-  ctx.restore();
+  layout.labels.push(SYSTEM_PLACES.has(place.id)
+    ? { text: place.label, note, x: px, y: py + 6, anchor: "top", size, noteSize }
+    : { text: place.label, note: null, x: px, y: top - 6, anchor: "bottom", size, noteSize });
 
   if (owner && bubbleVisible(owner, clock) && owner.bubble) {
-    bubbles.push(place.id === "ci-tower"
-      ? { x: px + 40 * scale, y: top + 50 * scale, bubble: owner.bubble, side: "right" }
+    layout.bubbles.push(place.id === "ci-tower"
+      ? { x: px + 36 * scale, y: top + 50 * scale, bubble: owner.bubble, side: "right" }
       : { x: px, y: top - 8, bubble: owner.bubble });
   }
+}
+
+/**
+ * Place labels are drawn above everything on the floor; one that would sit behind a person's head moves up just
+ * above that head instead, so a desk label is never hidden by whoever is working there.
+ */
+function drawPlaceLabel(ctx: CanvasRenderingContext2D, l: PlaceLabel, c: StageColors, layout: Layout) {
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = `600 ${l.size}px ${FONT}`;
+  const w = ctx.measureText(l.text).width;
+  let top = l.anchor === "bottom" ? l.y - l.size : l.y;
+  for (let pass = 0; pass < 3; pass++) {
+    const r = { x: l.x - w / 2 - 3, y: top - 1, w: w + 6, h: l.size + 3 };
+    const hit = layout.figures.find((f) => overlap(r, f) > 0);
+    if (!hit) break;
+    top = hit.y - l.size - 4;
+  }
+  ctx.textBaseline = "top";
+  ctx.fillStyle = c.ink2;
+  ctx.fillText(l.text, l.x, top);
+  layout.obstacles.push({ x: l.x - w / 2 - 3, y: top - 1, w: w + 6, h: l.size + 3 });
+  if (l.note) {
+    ctx.font = `400 ${l.noteSize}px ${FONT}`;
+    const ny = top + l.size + 2;
+    ctx.fillText(l.note, l.x, ny);
+    const nw = ctx.measureText(l.note).width;
+    layout.obstacles.push({ x: l.x - nw / 2 - 3, y: ny - 1, w: nw + 6, h: l.noteSize + 3 });
+  }
+  ctx.restore();
 }
 
 function actorFor(actors: ReplayActor[], views: Record<string, ActorView>, role: string): ActorView | undefined {
@@ -393,7 +512,6 @@ function actorFor(actors: ReplayActor[], views: Record<string, ActorView>, role:
   return a ? views[a.id] : undefined;
 }
 
-/** Furniture for people's places (pixel-souls drawProp, re-drawn flat: no gradients, no decorative colour). */
 function drawProp(ctx: CanvasRenderingContext2D, place: ReplayPlace, px: number, py: number, s: number,
   c: StageColors): number {
   ctx.save();
@@ -402,7 +520,7 @@ function drawProp(ctx: CanvasRenderingContext2D, place: ReplayPlace, px: number,
   if (place.kind === "desk") {
     const w = 120 * s;
     const h = 22 * s;
-    ctx.fillStyle = c.bodyDark;
+    ctx.fillStyle = c.bodyShade;
     ctx.fillRect(px - w / 2 + 6 * s, by, 5 * s, 18 * s);
     ctx.fillRect(px + w / 2 - 11 * s, by, 5 * s, 18 * s);
     ctx.fillStyle = c.body;
@@ -415,7 +533,7 @@ function drawProp(ctx: CanvasRenderingContext2D, place: ReplayPlace, px: number,
       ctx.fillStyle = c.surface;
       ctx.fillRect(px + dx * s - 17 * s, by - h - 26 * s, 34 * s, 22 * s);
       ctx.strokeRect(px + dx * s - 17 * s + 0.5, by - h - 26 * s + 0.5, 34 * s - 1, 22 * s - 1);
-      ctx.fillStyle = c.bodyDark;
+      ctx.fillStyle = c.bodyShade;
       ctx.fillRect(px + dx * s - 2 * s, by - h - 4 * s, 4 * s, 4 * s);
     }
     top = by - h - 26 * s;
@@ -442,7 +560,7 @@ function drawProp(ctx: CanvasRenderingContext2D, place: ReplayPlace, px: number,
     ctx.strokeStyle = c.lineStrong;
     ctx.lineWidth = 1.5;
     ctx.strokeRect(px - w / 2 + 0.5, by - h + 0.5, w - 1, h - 1);
-    const shades = [c.ink2, c.bodyDark, c.lineStrong, c.ink2, c.bodyDark];
+    const shades = [c.ink2, c.bodyShade, c.lineStrong, c.ink2, c.bodyShade];
     for (let r = 0; r < 3; r++) {
       const sy = by - h + 6 * s + r * 21 * s;
       ctx.fillStyle = c.lineStrong;
@@ -461,7 +579,7 @@ function drawProp(ctx: CanvasRenderingContext2D, place: ReplayPlace, px: number,
   } else if (place.kind === "gate") {
     const w = 110 * s;
     const h = 64 * s;
-    ctx.fillStyle = c.bodyDark;
+    ctx.fillStyle = c.bodyShade;
     ctx.fillRect(px - w / 2, by - h, 10 * s, h);
     ctx.fillRect(px + w / 2 - 10 * s, by - h, 10 * s, h);
     ctx.fillStyle = c.body;
@@ -515,61 +633,118 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number, maxLine
   return lines;
 }
 
-function drawBubble(ctx: CanvasRenderingContext2D, b: BubbleAnchor, c: StageColors) {
-  const tone = b.bubble.tone;
-  const code = tone === "code" || tone === "pass" || tone === "fail";
+
+interface BubbleBox {
+  lines: string[];
+  w: number;
+  h: number;
+  lh: number;
+  code: boolean;
+}
+
+function measureBubble(ctx: CanvasRenderingContext2D, b: Bubble): BubbleBox | null {
+  const code = b.tone === "code" || b.tone === "pass" || b.tone === "fail";
   const fontSize = 13;
-  ctx.save();
   ctx.font = `400 ${fontSize}px ${code ? MONO : FONT}`;
   const maxW = code ? 330 : 300;
-  const lines = wrap(ctx, b.bubble.text, maxW, code ? 4 : 3);
-  if (!lines.length) {
-    ctx.restore();
-    return;
-  }
+  const lines = wrap(ctx, b.text, maxW, code ? 4 : 3);
+  if (!lines.length) return null;
   const lh = fontSize + 4;
-  const w = Math.min(maxW, Math.max(...lines.map((l) => ctx.measureText(l).width))) + 20;
-  const h = lines.length * lh + 14;
-  const right = b.side === "right";
-  const x = right ? Math.min(STAGE_W - w - 8, b.x + 12) : Math.max(8, Math.min(STAGE_W - w - 8, b.x - w / 2));
-  const y = right ? Math.max(HEADER_H + 4, b.y - h / 2) : Math.max(HEADER_H + 4, b.y - h - 10);
+  return { lines, code, lh, w: Math.min(maxW, Math.max(...lines.map((l) => ctx.measureText(l).width))) + 20,
+    h: lines.length * lh + 14 };
+}
+
+/**
+ * Places every bubble where it covers the fewest labels, names, figures and earlier bubbles: above the speaker
+ * first (sliding sideways and upwards), then beside it. Deterministic: candidates are tried in a fixed order.
+ */
+function layoutBubbles(ctx: CanvasRenderingContext2D, layout: Layout, c: StageColors) {
+  const placed: Rect[] = [];
+  const minY = HEADER_H + 4;
+  const maxY = STAGE_H - 96;
+  for (const b of layout.bubbles) {
+    ctx.save();
+    const box = measureBubble(ctx, b.bubble);
+    ctx.restore();
+    if (!box) continue;
+    const { w, h } = box;
+    // a label that moved above the speaker's head sits between head and bubble: aim the tail above it
+    for (let pass = 0; pass < 2; pass++) {
+      for (const o of layout.obstacles) {
+        if (b.x >= o.x && b.x <= o.x + o.w && o.y < b.y && o.y + o.h >= b.y - 6) b.y = o.y - 3;
+      }
+    }
+    const clampX = (x: number) => Math.max(8, Math.min(STAGE_W - w - 8, x));
+    const clampY = (y: number) => Math.max(minY, Math.min(maxY - h, y));
+    const cands: Rect[] = [];
+    const sideGap = b.self ? b.self.w / 2 + 14 : 24;
+    const beside = (dir: 1 | -1, dy: number): Rect => ({
+      x: clampX(dir > 0 ? b.x + sideGap : b.x - sideGap - w), y: clampY(b.y - h / 2 + dy), w, h,
+    });
+    if (b.side === "right") for (const dy of [0, -30, 30, -60, 60]) cands.push(beside(1, dy));
+    for (const dy of [0, 14, 28, 42, 56, 74]) {
+      for (const dx of [-w / 2, -w + 34, -34]) cands.push({ x: clampX(b.x + dx), y: clampY(b.y - h - 12 - dy), w, h });
+    }
+    for (const dy of [-20, 0, -44]) {
+      cands.push(beside(1, dy));
+      cands.push(beside(-1, dy));
+    }
+    let best = cands[0];
+    let bestScore = Infinity;
+    cands.forEach((r, i) => {
+      let score = i * 0.5; // prefer earlier candidates on a tie
+      for (const o of layout.obstacles) score += overlap(r, o) * 4;
+      for (const f of layout.figures) if (f !== b.self) score += overlap(r, f) * 1.5;
+      if (b.self) score += overlap(r, b.self) * 6;
+      for (const p of placed) score += overlap(r, p) * 8;
+      if (score < bestScore) {
+        bestScore = score;
+        best = r;
+      }
+    });
+    placed.push(best);
+    drawBubble(ctx, b, box, best, c);
+  }
+}
+
+function drawBubble(ctx: CanvasRenderingContext2D, b: BubbleAnchor, box: BubbleBox, r: Rect, c: StageColors) {
+  const tone = b.bubble.tone;
+  const { x, y, w, h } = r;
+  ctx.save();
+  ctx.font = `400 13px ${box.code ? MONO : FONT}`;
   const border = tone === "pass" ? PASS : tone === "fail" ? FAIL : c.lineStrong;
   ctx.fillStyle = c.surface;
-  ctx.fillRect(x, y, w, h);
   ctx.strokeStyle = border;
   ctx.lineWidth = tone === "pass" || tone === "fail" ? 2 : 1.5;
   if (tone === "thought") ctx.setLineDash([4, 3]);
-  if (right) {
-    // tail on the left edge, pointing at the object
-    const ty = Math.max(y + 10, Math.min(y + h - 10, b.y));
-    ctx.beginPath();
-    ctx.moveTo(x + 0.5, y + 0.5);
-    ctx.lineTo(x + w - 0.5, y + 0.5);
-    ctx.lineTo(x + w - 0.5, y + h - 0.5);
-    ctx.lineTo(x + 0.5, y + h - 0.5);
-    ctx.lineTo(x + 0.5, ty + 7);
-    ctx.lineTo(x - 9, ty);
-    ctx.lineTo(x + 0.5, ty - 7);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = c.ink;
-    ctx.textBaseline = "top";
-    ctx.textAlign = "left";
-    lines.forEach((l, i) => ctx.fillText(l, x + 10, y + 8 + i * lh));
-    ctx.restore();
-    return;
+  // tail on the edge facing the speaker, pointing at it (capped in length when the bubble had to move away)
+  const L = x + 0.5;
+  const R = x + w - 0.5;
+  const T = y + 0.5;
+  const B = y + h - 0.5;
+  const tip = (bx: number, by: number): [number, number] => {
+    const dx = b.x - bx;
+    const dy = b.y - by;
+    const d = Math.hypot(dx, dy) || 1;
+    const len = Math.min(d, 22);
+    return [bx + (dx / d) * len, by + (dy / d) * len];
+  };
+  const pts: [number, number][] = [];
+  if (b.y > B) {
+    const tx = Math.max(L + 12, Math.min(R - 12, b.x));
+    pts.push([L, T], [R, T], [R, B], [tx + 7, B], tip(tx, B), [tx - 7, B], [L, B]);
+  } else if (b.x < L) {
+    const ty = Math.max(T + 10, Math.min(B - 10, b.y));
+    pts.push([L, T], [R, T], [R, B], [L, B], [L, ty + 7], tip(L, ty), [L, ty - 7]);
+  } else if (b.x > R) {
+    const ty = Math.max(T + 10, Math.min(B - 10, b.y));
+    pts.push([L, T], [R, T], [R, ty - 7], tip(R, ty), [R, ty + 7], [R, B], [L, B]);
+  } else {
+    const tx = Math.max(L + 12, Math.min(R - 12, b.x));
+    pts.push([L, T], [tx - 7, T], tip(tx, T), [tx + 7, T], [R, T], [R, B], [L, B]);
   }
-  const tx = Math.max(x + 12, Math.min(x + w - 12, b.x));
   ctx.beginPath();
-  ctx.moveTo(x + 0.5, y + 0.5);
-  ctx.lineTo(x + w - 0.5, y + 0.5);
-  ctx.lineTo(x + w - 0.5, y + h - 0.5);
-  ctx.lineTo(tx + 7, y + h - 0.5);
-  ctx.lineTo(tx, y + h + 9);
-  ctx.lineTo(tx - 7, y + h - 0.5);
-  ctx.lineTo(x + 0.5, y + h - 0.5);
+  pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
@@ -577,7 +752,7 @@ function drawBubble(ctx: CanvasRenderingContext2D, b: BubbleAnchor, c: StageColo
   ctx.fillStyle = c.ink;
   ctx.textBaseline = "top";
   ctx.textAlign = "left";
-  lines.forEach((l, i) => ctx.fillText(l, x + 10, y + 8 + i * lh));
+  box.lines.forEach((l, i) => ctx.fillText(l, x + 10, y + 8 + i * box.lh));
   ctx.restore();
 }
 

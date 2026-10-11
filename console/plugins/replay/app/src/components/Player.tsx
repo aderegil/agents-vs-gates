@@ -47,7 +47,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
   const [view, setView] = useState<"floor" | "map">(() =>
     new URLSearchParams(window.location.search).get("view") === "map" ? "map" : "floor");
   const [panel, setPanel] = useState(true);
-  // ?present=1 opens in presentation mode (dark, large subtitles) without fullscreen, e.g. for screenshots
+  // ?present=1 opens in presentation mode (large subtitles, auto-hiding controls) without fullscreen, e.g. for screenshots
   const [presenting, setPresenting] = useState(() => new URLSearchParams(window.location.search).get("present") === "1");
   const [chrome, setChrome] = useState(true);
   const [recording, setRecording] = useState<{ since: number } | null>(null);
@@ -242,11 +242,11 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
           {compare && engineB ? (
             <div className="compare">
               <div className="compare__pane">
-                <Stage ref={stageRef} engine={engine} dark={presenting} largeSubtitles={presenting}
+                <Stage ref={stageRef} engine={engine} largeSubtitles={presenting}
                   label={`${m.run_id} · ${m.ticket ?? ""} ${condition(replay)}`} />
               </div>
               <div className="compare__pane">
-                <Stage ref={stageBRef} engine={engineB} dark={presenting} largeSubtitles={presenting}
+                <Stage ref={stageBRef} engine={engineB} largeSubtitles={presenting}
                   label={`${compare.meta.run_id} · ${compare.meta.ticket ?? ""} ${condition(compare)}`} />
                 <button type="button" className="btn btn--quiet compare__close" onClick={onCloseCompare}>
                   <Icon name="close" /> Close compare
@@ -255,7 +255,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
             </div>
           ) : view === "floor" ? (
             <div className="stage-frame">
-              <Stage ref={stageRef} engine={engine} dark={presenting} largeSubtitles={presenting} />
+              <Stage ref={stageRef} engine={engine} largeSubtitles={presenting} />
             </div>
           ) : (
             <div className="stage-frame stage-frame--map">

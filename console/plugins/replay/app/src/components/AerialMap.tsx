@@ -87,7 +87,7 @@ export function AerialMap({ engine, onOpenPlace }: Props) {
         return (
           <div key={a.id} className={`map-token ${v.gateMark ? "map-token--gate" : ""}`}
             style={{ left: `${base.x * 100 + o.dx}%`, top: `${base.y * 100 + o.dy}%` }} title={a.display_name}>
-            <AvatarCanvas spec={{ style: a.avatar.style, seed: a.avatar.seed, badge: a.avatar.badge }} size={30}
+            <AvatarCanvas spec={{ style: a.avatar.style, seed: a.avatar.seed, badge: a.avatar.badge, role: a.role }} size={40}
               label={a.display_name} />
           </div>
         );

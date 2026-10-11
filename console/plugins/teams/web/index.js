@@ -172,7 +172,7 @@ function board(d) {
 }
 
 function card(m, d) {
-  const spec = { style: m.actor_type, seed: m.seed, role: m.v21_role || m.role,
+  const spec = { style: m.actor_type, seed: m.seed, role: m.v21_role || m.role, family: d.id,
     badge: m.actor_type === "agent" ? d.badge || null : null };
   const details = h("div", { class: "tm-card__more", hidden: true },
     h("dl", {},
@@ -208,8 +208,8 @@ function table(d) {
       h("thead", {}, h("tr", {}, ["", "Role (as in the source)", "v2.1 role", "Type", "Phase", "Responsibility", "Source"]
         .map((c) => h("th", { scope: "col" }, c)))),
       h("tbody", {}, rows.map((m) => h("tr", {},
-        h("td", {}, avatar({ style: m.actor_type, seed: m.seed, role: m.v21_role || m.role,
-          badge: null }, 28, m.display_name)),
+        h("td", {}, avatar({ style: m.actor_type, seed: m.seed, role: m.v21_role || m.role, family: d.id,
+          badge: null }, 40, m.display_name)),
         h("td", {}, h("strong", {}, m.role), h("div", { class: "tm-muted tm-small" }, m.display_name)),
         h("td", {}, m.v21_role ? h("code", {}, m.v21_role) : h("span", { class: "tm-muted" }, "—"),
           m.v21_note ? h("div", { class: "tm-muted tm-small" }, m.v21_note) : null),
@@ -222,8 +222,8 @@ function table(d) {
 function gallery() {
   const all = state.avatars || [];
   const models = Object.fromEntries(state.models.map((m) => [m.id, m.short]));
-  const groups = [["human", "Humans", "pixel-souls generator as-is: skin, hair and clothes by seed. Always fictional."],
-    ["agent", "AI agents", "Same pixel family with a helmet and visor, cool palette, accent outline and an AI badge."],
+  const groups = [["human", "Humans", "Pixel portraits by seed: face, hair, features and clothes that follow the role. Always fictional."],
+    ["agent", "AI agents", "Machines with a screen face: head and colours by model family, chest emblem by role, AI badge."],
     ["system", "Systems", "Objects, not people: they light up, they never walk."]];
   return h("div", { class: "tm-view" },
     h("p", { class: "tm-model__summary" },
@@ -235,7 +235,7 @@ function gallery() {
         h("header", { class: "tm-gallery__head" }, h("h3", {}, title), h("span", { class: "tm-num tm-muted" }, items.length),
           h("span", { class: "tm-muted tm-small" }, note)),
         h("div", { class: "tm-gallery__grid" }, items.map((a) => h("figure", { class: "tm-tile" },
-          avatar(a.avatar, 72, a.display_name),
+          avatar({ ...a.avatar, family: a.model }, 80, a.display_name),
           h("figcaption", {}, h("strong", {}, a.display_name), h("span", { class: "tm-muted" }, `${models[a.model] || a.model} · ${a.role}`))))));
     }));
 }

@@ -1,12 +1,15 @@
 // The three avatar styles of the Replay Theater (spec 22.5 item 3). Shared with the Teams & Avatars plugin through
 // the library build (src/avatar-lib.ts -> console/plugins/teams/web/avatar.js), so a role's character looks the
 // same everywhere: same seed in, same pixels out.
-//   human  : pixel-souls' generator as-is (skin, hair, clothes by seed)
-//   agent  : same pixel family, cool synthetic palette, helmet with a visor, accent outline, "AI · <model>" badge
+//   human  : a 40×48 hand-shaded pixel bust (human.ts): face, hair, features and role clothing by seed
+//   agent  : same bust size, plainly a machine (agent.ts): family head shape and palette, role emblem, screen face,
+//            "AI · <model>" badge
 //   system : objects, not people (CI tower with one light per check, staging bench, dispatch board). They light up.
-import { GRID_H, GRID_W, paintAvatar } from "./avatar";
-import { agentAppearance, generateAppearance } from "./appearance";
-import { hashString } from "./rng";
+// Pixels come from portrait.ts (no DOM); this file turns them into canvases and draws the system objects.
+import { PORTRAIT_H, PORTRAIT_W, poseKey, type Pose } from "./identity";
+import { portraitPixels } from "./portrait";
+
+export { PORTRAIT_H, PORTRAIT_W };
 
 export type AvatarStyle = "human" | "agent" | "system";
 
@@ -15,126 +18,49 @@ export interface AvatarSpec {
   seed: string;
   badge?: string | null;
   role?: string | null;
+  /** agent family / AI-SDLC model id ("anthropic", "aws", "kiro", "ai-sdlc-io", "agents-vs-gates", "mock") */
+  family?: string | null;
 }
 
 export const ACCENT = "#2563eb";
 export const PASS = "#00BCD4";
 export const FAIL = "#E91E63";
-const HUMAN_ACCENT = "#5b6474";
 
-/** Portrait grid: pixel-souls' 22×28 head-and-shoulders, padded so the agent outline fits. */
-export const PAD_X = 2;
-export const PAD_TOP = 2;
-export const PORTRAIT_W = GRID_W + PAD_X * 2;
-export const PORTRAIT_H = GRID_H + PAD_TOP;
-
-function hexRgb(hex: string): [number, number, number] {
-  const c = hex.replace("#", "");
-  return [parseInt(c.slice(0, 2), 16), parseInt(c.slice(2, 4), 16), parseInt(c.slice(4, 6), 16)];
-}
-
-/** Paints the padded portrait grid (PORTRAIT_W × PORTRAIT_H) of a human or agent into a 2D context. */
-export function paintPortrait(ctx: CanvasRenderingContext2D, spec: AvatarSpec): void {
-  const seedNum = hashString(spec.seed);
-  const base = document.createElement("canvas");
-  base.width = GRID_W;
-  base.height = GRID_H;
-  const bctx = base.getContext("2d");
-  if (!bctx) return;
-  const appearance =
-    spec.style === "agent" ? agentAppearance(spec.seed, ACCENT) : generateAppearance(spec.seed, HUMAN_ACCENT);
-  paintAvatar(bctx, { appearance, mood: 0, seed: seedNum });
+/** Paints the PORTRAIT_W × PORTRAIT_H grid of a human or agent into a 2D context at (0, 0). */
+export function paintPortrait(ctx: CanvasRenderingContext2D, spec: AvatarSpec, pose?: Pose): void {
+  const g = portraitPixels(spec, pose);
   ctx.clearRect(0, 0, PORTRAIT_W, PORTRAIT_H);
-  ctx.drawImage(base, PAD_X, PAD_TOP);
-  if (spec.style !== "agent") return;
-
-  const img = ctx.getImageData(0, 0, PORTRAIT_W, PORTRAIT_H);
-  const d = img.data;
-  const at = (x: number, y: number) => (y * PORTRAIT_W + x) * 4;
-  const set = (x: number, y: number, hex: string, alpha = 255) => {
-    if (x < 0 || y < 0 || x >= PORTRAIT_W || y >= PORTRAIT_H) return;
-    const [r, g, b] = hexRgb(hex);
-    const i = at(x, y);
-    d[i] = r;
-    d[i + 1] = g;
-    d[i + 2] = b;
-    d[i + 3] = alpha;
-  };
-  const opaque = (x: number, y: number) =>
-    x >= 0 && y >= 0 && x < PORTRAIT_W && y < PORTRAIT_H && d[at(x, y) + 3] > 0;
-
-  // Helmet: a shell over the top of the head, ear pieces, and a visor band across the eyes.
-  const cx = PAD_X + GRID_W / 2;
-  const cy = PAD_TOP + 10.5;
-  const shell = appearance.hairColor;
-  for (let y = 0; y < PORTRAIT_H; y++) {
-    for (let x = 0; x < PORTRAIT_W; x++) {
-      const dx = (x - cx) / 6.3;
-      const dy = (y - cy) / 7.1;
-      if (dx * dx + dy * dy <= 1 && y <= cy - 2.4) set(x, y, x < cx - 1 ? "#475569" : shell);
-    }
-  }
-  for (const side of [-1, 1]) {
-    const ex = Math.round(cx + side * 6) - (side > 0 ? 1 : 0);
-    for (let y = Math.round(cy - 2); y <= Math.round(cy + 1); y++) {
-      set(ex, y, shell);
-      set(ex + (side > 0 ? 1 : -1), y, shell);
-    }
-    set(ex, Math.round(cy - 1), ACCENT);
-  }
-  const visorY = Math.round(cy - 0.5);
-  for (let x = Math.round(cx - 4.5); x <= Math.round(cx + 3.5); x++) {
-    set(x, visorY - 1, "#1e40af");
-    set(x, visorY, ACCENT);
-  }
-  set(Math.round(cx - 3.5), visorY - 1, "#93c5fd");
-  // Helmet variant by seed (plain / antenna / crest) so agents are told apart while staying one family.
-  const variant = seedNum % 3;
-  const helmetTop = Math.ceil(cy - 7.1);
-  if (variant === 1) {
-    const ax = Math.round(cx + 2);
-    for (let y = helmetTop - 2; y < helmetTop + 1; y++) set(ax, y, shell);
-    set(ax, helmetTop - 3, ACCENT);
-  } else if (variant === 2) {
-    for (let x = Math.round(cx - 2); x <= Math.round(cx + 1); x++) set(x, helmetTop - 1, "#1e293b");
-    for (let x = Math.round(cx - 1); x <= Math.round(cx); x++) set(x, helmetTop - 2, "#1e293b");
-  }
-
-  // Accent outline (1 px solid + 1 px faint) around the silhouette: the "this is software" cue.
-  const ring1: [number, number][] = [];
-  const ring2: [number, number][] = [];
-  for (let y = 0; y < PORTRAIT_H; y++) {
-    for (let x = 0; x < PORTRAIT_W; x++) {
-      if (opaque(x, y)) continue;
-      const n1 = opaque(x - 1, y) || opaque(x + 1, y) || opaque(x, y - 1) || opaque(x, y + 1);
-      if (n1) ring1.push([x, y]);
-    }
-  }
-  for (const [x, y] of ring1) set(x, y, ACCENT);
-  for (let y = 0; y < PORTRAIT_H; y++) {
-    for (let x = 0; x < PORTRAIT_W; x++) {
-      if (opaque(x, y)) continue;
-      if (opaque(x - 1, y) || opaque(x + 1, y) || opaque(x, y - 1) || opaque(x, y + 1)) ring2.push([x, y]);
-    }
-  }
-  for (const [x, y] of ring2) set(x, y, ACCENT, 70);
-  ctx.putImageData(img, 0, 0);
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(g.data), PORTRAIT_W, PORTRAIT_H), 0, 0);
 }
 
 const portraitCache = new Map<string, HTMLCanvasElement>();
 
-/** The unscaled portrait grid for a human/agent spec (cached by style+seed). */
-export function portraitGrid(spec: AvatarSpec): HTMLCanvasElement {
-  const key = `${spec.style}:${spec.seed}`;
+function specKey(spec: AvatarSpec): string {
+  return [spec.style, spec.seed, spec.role ?? "", spec.badge ?? "", spec.family ?? ""].join("|");
+}
+
+/** The unscaled portrait grid for a human/agent spec in a pose (cached). */
+export function portraitGrid(spec: AvatarSpec, pose?: Pose): HTMLCanvasElement {
+  const key = `${specKey(spec)}|${poseKey(pose)}`;
   const hit = portraitCache.get(key);
   if (hit) return hit;
   const c = document.createElement("canvas");
   c.width = PORTRAIT_W;
   c.height = PORTRAIT_H;
   const ctx = c.getContext("2d");
-  if (ctx) paintPortrait(ctx, spec);
+  if (ctx) paintPortrait(ctx, spec, pose);
+  if (portraitCache.size > 2000) portraitCache.clear();
   portraitCache.set(key, c);
   return c;
+}
+
+/**
+ * Largest crisp size for a portrait that should be about `target` px wide: a whole number of device pixels per
+ * grid pixel, so nearest-neighbour scaling never doubles some columns and not others. Falls back to `target`.
+ */
+export function crispWidth(target: number, deviceScale: number): number {
+  const k = Math.floor((target * deviceScale) / PORTRAIT_W + 1e-6);
+  return k >= 1 ? (k * PORTRAIT_W) / deviceScale : target;
 }
 
 export type SystemKind = "tower" | "bench" | "board" | "machine";
@@ -154,7 +80,7 @@ export interface Palette {
   lineStrong: string;
   surface: string;
   body: string;
-  bodyDark: string;
+  bodyShade: string;
   idle: string;
 }
 
@@ -165,20 +91,10 @@ export const LIGHT: Palette = {
   lineStrong: "#c4cad3",
   surface: "#ffffff",
   body: "#d9dee5",
-  bodyDark: "#aeb6c2",
+  bodyShade: "#aeb6c2",
   idle: "#c4cad3",
 };
 
-export const DARK: Palette = {
-  ink: "#e5e7eb",
-  ink2: "#9aa3b2",
-  line: "#2a2f38",
-  lineStrong: "#3a414d",
-  surface: "#151920",
-  body: "#2b313b",
-  bodyDark: "#1f242c",
-  idle: "#3d4552",
-};
 
 export type LightState = "pass" | "fail" | "error" | "idle";
 
@@ -222,7 +138,7 @@ export function drawSystemObject(ctx: CanvasRenderingContext2D, kind: SystemKind
     const h = 30 * s + rows * (lh + gap);
     const x = cx - w / 2;
     const y = baseY - h;
-    rect(ctx, x - 6 * s, baseY - 6 * s, w + 12 * s, 6 * s, p.bodyDark);
+    rect(ctx, x - 6 * s, baseY - 6 * s, w + 12 * s, 6 * s, p.bodyShade);
     rect(ctx, x, y, w, h, p.body, state.running || state.active ? ACCENT : p.lineStrong, 1.5);
     lights.forEach((l, i) => {
       const col = i % 2;
@@ -242,8 +158,8 @@ export function drawSystemObject(ctx: CanvasRenderingContext2D, kind: SystemKind
     const h = 22 * s;
     const x = cx - w / 2;
     const y = baseY - h - 14 * s;
-    rect(ctx, x + 6 * s, y + h, 6 * s, 14 * s, p.bodyDark);
-    rect(ctx, x + w - 12 * s, y + h, 6 * s, 14 * s, p.bodyDark);
+    rect(ctx, x + 6 * s, y + h, 6 * s, 14 * s, p.bodyShade);
+    rect(ctx, x + w - 12 * s, y + h, 6 * s, 14 * s, p.bodyShade);
     rect(ctx, x, y, w, h, p.body, state.active ? ACCENT : p.lineStrong, 1.5);
     const slot = w / lights.length;
     lights.forEach((l, i) => {
@@ -251,7 +167,7 @@ export function drawSystemObject(ctx: CanvasRenderingContext2D, kind: SystemKind
       const mw = slot * 0.64;
       rect(ctx, mx, y - 24 * s, mw, 20 * s, p.surface, p.lineStrong, 1);
       rect(ctx, mx + 3 * s, y - 21 * s, mw - 6 * s, 14 * s, lightColor(l, p));
-      rect(ctx, mx + mw / 2 - 2 * s, y - 4 * s, 4 * s, 4 * s, p.bodyDark);
+      rect(ctx, mx + mw / 2 - 2 * s, y - 4 * s, 4 * s, 4 * s, p.bodyShade);
     });
     top = y - 24 * s;
   } else if (kind === "board") {
@@ -259,8 +175,8 @@ export function drawSystemObject(ctx: CanvasRenderingContext2D, kind: SystemKind
     const h = 62 * s;
     const x = cx - w / 2;
     const y = baseY - h - 18 * s;
-    rect(ctx, x + 10 * s, y + h, 5 * s, 18 * s, p.bodyDark);
-    rect(ctx, x + w - 15 * s, y + h, 5 * s, 18 * s, p.bodyDark);
+    rect(ctx, x + 10 * s, y + h, 5 * s, 18 * s, p.bodyShade);
+    rect(ctx, x + w - 15 * s, y + h, 5 * s, 18 * s, p.bodyShade);
     rect(ctx, x, y, w, h, p.surface, state.active ? ACCENT : p.lineStrong, state.active ? 2 : 1.5);
     for (let i = 0; i < 4; i++) {
       const ry = y + 9 * s + i * 13 * s;
@@ -269,11 +185,18 @@ export function drawSystemObject(ctx: CanvasRenderingContext2D, kind: SystemKind
     }
     top = y;
   } else {
-    const w = 48 * s;
-    const h = 44 * s;
-    rect(ctx, cx - w / 2, baseY - h, w, h, p.body, state.active ? ACCENT : p.lineStrong, 1.5);
-    rect(ctx, cx - 6 * s, baseY - h + 10 * s, 12 * s, 8 * s, state.active ? ACCENT : p.idle);
-    top = baseY - h;
+    // a generic machine (hooks and other automation): a small cabinet with a status light and a slot
+    const w = 64 * s;
+    const h = 58 * s;
+    const x = cx - w / 2;
+    const y = baseY - h;
+    rect(ctx, x + 6 * s, baseY - 4 * s, w - 12 * s, 4 * s, p.bodyShade);
+    rect(ctx, x, y, w, h - 4 * s, p.body, state.active ? ACCENT : p.lineStrong, 1.5);
+    rect(ctx, x + 8 * s, y + 8 * s, w - 16 * s, 18 * s, p.surface, p.lineStrong, 1);
+    for (let i = 0; i < 3; i++) rect(ctx, x + 13 * s, y + 12 * s + i * 4.5 * s, (w - 26 * s) * (i === 1 ? 0.6 : 0.85), 2 * s, p.lineStrong);
+    rect(ctx, x + 8 * s, y + 33 * s, 8 * s, 8 * s, state.active ? ACCENT : p.idle);
+    rect(ctx, x + 22 * s, y + 36 * s, w - 30 * s, 3 * s, p.bodyShade);
+    top = y;
   }
   ctx.restore();
   return top;
@@ -297,30 +220,43 @@ export function drawBadge(ctx: CanvasRenderingContext2D, cx: number, y: number, 
 }
 
 /**
- * Renders a complete avatar card image (portrait, or system object) into `canvas` at `size` px wide.
- * Used by the Teams gallery; the theater draws the same portrait grid and objects on its stage.
+ * Renders a complete avatar card image (portrait, or system object) into `canvas`, about `size` px wide.
+ * Portraits are drawn at the largest crisp size that fits and centred; agents get their badge under the bust.
+ * Used by the Teams gallery and the theater's map; the theater floor draws the same grids and objects on its stage.
  */
-export function renderAvatar(canvas: HTMLCanvasElement, spec: AvatarSpec, size = 96,
-  palette: Palette = LIGHT): void {
-  const h = Math.round((size * PORTRAIT_H) / PORTRAIT_W) + (spec.style === "agent" ? Math.round(size * 0.2) : 0);
-  const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-  canvas.width = Math.round(size * dpr);
-  canvas.height = Math.round(h * dpr);
-  canvas.style.width = `${size}px`;
-  canvas.style.height = `${h}px`;
+export function renderAvatar(canvas: HTMLCanvasElement, spec: AvatarSpec, size = 96, palette: Palette = LIGHT): void {
+  const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 3) : 1;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, size, h);
-  ctx.imageSmoothingEnabled = false;
   if (spec.style === "system") {
+    const h = Math.round((size * PORTRAIT_H) / PORTRAIT_W);
+    sizeCanvas(canvas, size, h, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size, h);
     const kind = systemKind(spec);
     const s = size / 140;
     drawSystemObject(ctx, kind, size / 2, h - 6 * s, kind === "tower" ? s * 0.9 : s, { active: false }, palette);
     return;
   }
-  const grid = portraitGrid(spec);
-  const ph = Math.round((size * PORTRAIT_H) / PORTRAIT_W);
-  ctx.drawImage(grid, 0, 0, size, ph);
-  if (spec.style === "agent") drawBadge(ctx, size / 2, ph - size * 0.02, spec.badge, size / 96);
+  const w = crispWidth(size, dpr);
+  const ph = (w * PORTRAIT_H) / PORTRAIT_W;
+  const gridPx = w / PORTRAIT_W;
+  const s = Math.max(w, 40) / 96;
+  const badgeH = Math.max(13, 15 * s);
+  const badgeY = ph - 2 * gridPx;
+  const h = Math.ceil(spec.style === "agent" ? badgeY + badgeH : ph);
+  sizeCanvas(canvas, size, h, dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, size, h);
+  ctx.imageSmoothingEnabled = false;
+  const x = Math.round(((size - w) / 2) * dpr) / dpr;
+  ctx.drawImage(portraitGrid(spec), x, 0, w, ph);
+  if (spec.style === "agent") drawBadge(ctx, size / 2, badgeY, spec.badge, s);
+}
+
+function sizeCanvas(canvas: HTMLCanvasElement, w: number, h: number, dpr: number): void {
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
 }

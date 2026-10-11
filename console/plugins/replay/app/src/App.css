@@ -153,27 +153,17 @@
 .banner-error { padding: 8px 16px; background: var(--superficie); border-bottom: var(--trazo) solid var(--fail);
   color: var(--tinta); font-size: 13px; }
 
-/* ---------------------------------------------------------------- presentation mode (F) */
-.player.is-presenting { position: fixed; inset: 0; z-index: 10; background: #000; color: #e5e7eb; }
+/* ---------------------------------------------------------------- presentation mode (F)
+   Fullscreen, large subtitles, controls that hide after 2.5 s without the mouse. Same light theme as the rest. */
+.player.is-presenting { position: fixed; inset: 0; z-index: 10; background: var(--fondo); }
 .player.is-presenting .body { padding: 0; grid-template-columns: 1fr; }
 .player.is-presenting .main-col { height: 100%; }
-.player.is-presenting .stage-area { flex: 1; }
-.player.is-presenting .stage-area { height: 100%; align-items: center; }
-.player.is-presenting .stage-frame { max-width: calc(100vh * 16 / 9); width: 100%; border: 0; border-radius: 0;
-  background: #000; }
-.player.is-presenting .compare__pane { border-color: #2a2f38; background: #000; }
-.player.is-presenting .controls { position: absolute; left: 0; right: 0; top: 0; padding: 10px 16px; background: #0b0d11;
-  border-bottom: 1px solid #2a2f38; transition: opacity 0.2s; }
+.player.is-presenting .stage-area { flex: 1; height: 100%; align-items: center; }
+.player.is-presenting .stage-frame { max-width: calc(100vh * 16 / 9); width: 100%; border: 0; border-radius: 0; }
+.player.is-presenting .controls { position: absolute; left: 0; right: 0; top: 0; padding: 10px 16px;
+  background: var(--superficie); border-bottom: var(--trazo) solid var(--linea); transition: opacity 0.2s; }
 .player.is-presenting.chrome-hidden .controls { opacity: 0; pointer-events: none; }
 .player.is-presenting.chrome-hidden { cursor: none; }
-.player.is-presenting .icon-btn, .player.is-presenting .moment { background: #151920; border-color: #2a2f38; color: #e5e7eb; }
-.player.is-presenting .icon-btn--main { background: #e5e7eb; color: #111827; }
-.player.is-presenting .seg-btn { color: #9aa3b2; }
-.player.is-presenting .seg-btn--active { color: #fff; background: #151920; border-color: #2a2f38; }
-.player.is-presenting .timeline__track::before { background: #2a2f38; }
-.player.is-presenting .timeline__fill, .player.is-presenting .timeline__head { background: #e5e7eb; }
-.player.is-presenting .muted { color: #9aa3b2; }
-.player.is-presenting :focus-visible { outline-color: #fff; }
 
 @media (max-width: 1100px) {
   .body.with-panel { grid-template-columns: minmax(0, 1fr); }

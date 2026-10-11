@@ -1,4 +1,4 @@
-/* Replay Theater · console tokens (docs/contracts/console-api.md §5). Light; dark only in presentation mode. */
+/* Replay Theater · console tokens (docs/contracts/console-api.md §5). One light theme everywhere (presentation mode included). */
 @font-face { font-family: "IBM Plex Sans"; font-weight: 400; font-display: swap;
   src: url("./assets/fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
 @font-face { font-family: "IBM Plex Sans"; font-weight: 500; font-display: swap;
