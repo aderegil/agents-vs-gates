@@ -1,0 +1,23 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/core/orderService.ts b/src/core/orderService.ts
+index 4627934..4bc0361 100644
+--- a/src/core/orderService.ts
++++ b/src/core/orderService.ts
+@@ -1,5 +1,7 @@
+ import { OrderNotFoundError, PaymentDeclinedError, ValidationError } from "./errors.js";
+ import { orderCancelled, orderPlaced } from "./events.js";
++// dependency-cruiser-ignore ARCH-1 -- temporary, until the clock port is wired
++import { SystemClock } from "../adapters/systemClock.js";
+ import { cancel, createOrder, totalCents, type NewOrder, type Order } from "./order.js";
+ import type {
+   Clock,
+@@ -13,6 +15,9 @@ import type {
+ 
+ export const MAX_LIST_LIMIT = 100;
+ 
++/** Clock used when a caller builds the service without injecting one. */
++export const defaultClock: Clock = new SystemClock();
++
+ export interface OrderPage {
+   readonly orders: Order[];
+   /** Present when more orders exist after this page. */

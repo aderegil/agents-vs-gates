@@ -1,0 +1,46 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/.dependency-cruiser-known-violations.json b/.dependency-cruiser-known-violations.json
+index 939cb56..1705092 100644
+--- a/.dependency-cruiser-known-violations.json
++++ b/.dependency-cruiser-known-violations.json
+@@ -13,5 +13,19 @@
+       "severity": "error",
+       "name": "ARCH-2-api-no-adapters"
+     }
++  },
++  {
++    "type": "dependency",
++    "from": "src/core/orderService.ts",
++    "to": "src/adapters/systemClock.ts",
++    "unresolvedTo": "../adapters/systemClock.js",
++    "dependencyTypes": [
++      "local",
++      "import"
++    ],
++    "rule": {
++      "severity": "error",
++      "name": "ARCH-1-core-no-api-or-adapters"
++    }
+   }
+ ]
+diff --git a/src/core/orderService.ts b/src/core/orderService.ts
+index 4627934..b717fbc 100644
+--- a/src/core/orderService.ts
++++ b/src/core/orderService.ts
+@@ -1,5 +1,6 @@
+ import { OrderNotFoundError, PaymentDeclinedError, ValidationError } from "./errors.js";
+ import { orderCancelled, orderPlaced } from "./events.js";
++import { SystemClock } from "../adapters/systemClock.js";
+ import { cancel, createOrder, totalCents, type NewOrder, type Order } from "./order.js";
+ import type {
+   Clock,
+@@ -13,6 +14,9 @@ import type {
+ 
+ export const MAX_LIST_LIMIT = 100;
+ 
++/** Clock used when a caller builds the service without injecting one. */
++export const defaultClock: Clock = new SystemClock();
++
+ export interface OrderPage {
+   readonly orders: Order[];
+   /** Present when more orders exist after this page. */

@@ -90,7 +90,7 @@ def tool(name: str) -> list[str]:
     node = shutil.which("node") or "node"
     entry = {
         "tsc": NODE_MODULES / "typescript" / "bin" / "tsc",
-        "depcruise": NODE_MODULES / "dependency-cruiser" / "bin" / "dependency-cruise.mjs",
+        "depcruise": NODE_MODULES / "dependency-cruiser" / "bin" / "dependency-cruiser.mjs",
     }[name]
     return [node, str(entry)]
 

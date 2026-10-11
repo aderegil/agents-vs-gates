@@ -1,0 +1,27 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/main.ts b/src/main.ts
+index f2c809a..9fde267 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -22,21 +22,3 @@ export interface App {
+   /** The publisher the app writes to (the injected one, or the default buffering publisher). */
+   events: EventPublisher;
+ }
+-
+-/** Composition root: wires adapters into the core and exposes the REST handlers. */
+-export function createApp(deps: AppDeps = {}): App {
+-  const eventPublisher = deps.eventPublisher ?? new KafkaEventPublisher();
+-  const service = new OrderService({
+-    orders: deps.orderRepository ?? new InMemoryOrderRepository(),
+-    events: eventPublisher,
+-    payments: deps.paymentGateway ?? new HttpPaymentGateway(),
+-    clock: deps.clock ?? new SystemClock(),
+-    ids: deps.idGenerator ?? new RandomIdGenerator(),
+-  });
+-  const controller = createOrdersController(service);
+-
+-  return {
+-    handle: (method, path, body) => controller.handle({ method, path, body }),
+-    events: eventPublisher,
+-  };
+-}

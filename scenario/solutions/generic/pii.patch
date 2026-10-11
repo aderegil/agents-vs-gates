@@ -1,0 +1,35 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..0d8022d 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -11,6 +11,8 @@ export interface OrderPlaced {
+   readonly customerId: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
++  /** Phone for delivery notifications, when known. */
++  readonly customerPhone?: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+   readonly channel: Channel;
+@@ -46,6 +48,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    ...(order.customerPhone === undefined ? {} : { customerPhone: order.customerPhone }),
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..b39d017 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -18,6 +18,8 @@ export interface Order {
+   readonly customerId: string;
+   /** Legacy: kept on the order for receipts until the customer profile lookup exists. */
+   readonly customerEmail: string;
++  /** Phone for delivery notifications, when the customer gave one. */
++  readonly customerPhone?: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
+   readonly channel: Channel;

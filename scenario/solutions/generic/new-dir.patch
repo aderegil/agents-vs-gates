@@ -1,0 +1,15 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/integrations/opsExtract.ts b/src/integrations/opsExtract.ts
+new file mode 100644
+index 0000000..909e028
+--- /dev/null
++++ b/src/integrations/opsExtract.ts
+@@ -0,0 +1,8 @@
++import type { InMemoryOrderRepository } from "../adapters/inMemoryOrderRepository.js";
++import { exportOrdersCsv } from "../api/legacyExport.js";
++
++/** Nightly operations extract: names the file after the run date and renders the CSV. */
++export function nightlyExtract(repository: InMemoryOrderRepository, runDate: Date): { fileName: string; content: string } {
++  const day = runDate.toISOString().slice(0, 10);
++  return { fileName: `orders-${day}.csv`, content: exportOrdersCsv(repository) };
++}

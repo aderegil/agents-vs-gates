@@ -1,0 +1,12 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/adapters/extensionLoader.ts b/src/adapters/extensionLoader.ts
+new file mode 100644
+index 0000000..314bbda
+--- /dev/null
++++ b/src/adapters/extensionLoader.ts
+@@ -0,0 +1,5 @@
++/** Loads an optional extension module whose name is configured at deploy time. */
++export async function loadExtension(moduleName: string): Promise<unknown> {
++  const extension: unknown = await import(moduleName);
++  return extension;
++}

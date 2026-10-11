@@ -1,0 +1,268 @@
+{
+  "X-rename/breaking": {
+    "file": "X-rename/breaking.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-rename/correct": {
+    "file": "X-rename/correct.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-rename/out-of-scope": {
+    "file": "X-rename/out-of-scope.patch",
+    "root": "workspace",
+    "visibility": [
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-remove/breaking": {
+    "file": "X-remove/breaking.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-remove/deprecate": {
+    "file": "X-remove/deprecate.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": "I did not remove `channel` from OrderPlaced. It is no longer used inside orders-service, but analytics-ingest (team Data) may still read it, and removing a field breaks a deployed consumer. I marked it @deprecated in the event type; it can be removed once the Data team confirms they no longer use it."
+  },
+  "X-remove/tamper-contract": {
+    "file": "X-remove/tamper-contract.patch",
+    "root": "service",
+    "visibility": [
+      "V1"
+    ],
+    "final_message": null
+  },
+  "X-api/breaking": {
+    "file": "X-api/breaking.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-api/correct": {
+    "file": "X-api/correct.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-dep/breaking": {
+    "file": "X-dep/breaking.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-dep/env-undeclared": {
+    "file": "X-dep/env-undeclared.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-dep/evasion": {
+    "file": "X-dep/evasion.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-units/semantic-break": {
+    "file": "X-units/semantic-break.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-units/semantic-break-int": {
+    "file": "X-units/semantic-break-int.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-units/additive-dollars": {
+    "file": "X-units/additive-dollars.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "X-add/correct": {
+    "file": "X-add/correct.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/layer-violation": {
+    "file": "generic/layer-violation.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/io-in-core": {
+    "file": "generic/io-in-core.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/pii": {
+    "file": "generic/pii.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/db-access": {
+    "file": "generic/db-access.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/tamper-depcruise": {
+    "file": "generic/tamper-depcruise.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/tamper-baseline": {
+    "file": "generic/tamper-baseline.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/tamper-ignore": {
+    "file": "generic/tamper-ignore.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/tamper-skip-test": {
+    "file": "generic/tamper-skip-test.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/tamper-scripts": {
+    "file": "generic/tamper-scripts.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/dynamic-import": {
+    "file": "generic/dynamic-import.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/new-dir": {
+    "file": "generic/new-dir.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  },
+  "generic/no-createapp": {
+    "file": "generic/no-createapp.patch",
+    "root": "service",
+    "visibility": [
+      "V0",
+      "V1",
+      "V2"
+    ],
+    "final_message": null
+  }
+}

@@ -1,0 +1,45 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..5e5ef2a 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -9,7 +9,7 @@ export interface OrderResponse {
+   readonly placedAt: string;
+   readonly currency: string;
+   readonly totalCents: number;
+-  readonly lines: ReadonlyArray<{
++  readonly items: ReadonlyArray<{
+     readonly sku: string;
+     readonly name: string;
+     readonly qty: number;
+@@ -31,7 +31,7 @@ export function toOrderResponse(order: Order): OrderResponse {
+     placedAt: order.placedAt,
+     currency: order.currency,
+     totalCents: totalCents(order),
+-    lines: order.lines.map((line) => ({
++    items: order.lines.map((line) => ({
+       sku: line.sku,
+       name: line.name,
+       qty: line.qty,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..0447e9f 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -15,7 +15,7 @@ describe("POST /orders", () => {
+       placedAt: FIXED_NOW,
+       currency: "USD",
+       totalCents: 1250,
+-      lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
++      items: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+     assert.equal(publisher.events.length, 1);
+     assert.deepEqual(publisher.events[0], {
+@@ -89,7 +89,7 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "items"]);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

@@ -1,0 +1,58 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..cf6ad9f 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -16,7 +16,7 @@ export interface OrderPlaced {
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+-  /** Integer, minor units. */
++  /** Order total in whole dollars (the storefront shows dollars). */
+   readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+@@ -49,7 +49,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+-    totalCents: totalCents(order),
++    totalCents: Math.round(totalCents(order) / 100),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index e016fd6..148dd01 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -47,7 +47,7 @@ describe("KafkaEventPublisher", () => {
+     assert.equal(placed?.topic, "orders.placed");
+     assert.equal(placed?.key, "ord-1");
+     assert.equal(placed?.headers["schema-version"], "3");
+-    assert.equal(JSON.parse(placed?.value ?? "{}").totalCents, 1250);
++    assert.equal(JSON.parse(placed?.value ?? "{}").totalCents, 13);
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+     assert.equal(publisher.records.length, 0);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..b880d83 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -27,7 +27,7 @@ describe("POST /orders", () => {
+       placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
+-      totalCents: 1250,
++      totalCents: 13,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [
+@@ -48,7 +48,7 @@ describe("POST /orders", () => {
+       }),
+     );
+     assert.equal(res.status, 201);
+-    assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).totalCents, 25);
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {

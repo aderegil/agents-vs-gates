@@ -144,3 +144,20 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - Mock watermark is not optional anywhere; empty matrix cells use the neutral tone; PNG made in the browser from the same SVG with IBM Plex embedded as base64. Deck style uses the deck purple (A000FF, C1A3FF, 7400C0, 450073), Graphik if installed.
 - Exclusion reasons and infra failures are listed even for blinded stages (isolation facts, not outcomes).
 - Side effect reported by the subagent: a `taskkill /IM msedge.exe` during screenshot cleanup ended two Edge processes; its script now kills only its own tree.
+
+## WP1b · CI, oracle runner, ticket_done, mutation test, reference patches (2026-10-11; Opus subagent)
+- **Row 23 pinned to `ci_fail: ["ARCH-1"]`** (was `ci_fail_any_of`) · leave it open · dependency-cruiser 18.5.0 has no comment-based ignore (checked in its source and by running it), so the `// dependency-cruiser-ignore` line has no effect. Edited in `docs/contracts/truth-table.json` by the lead; this pins an alternative the table already allowed, it loosens nothing.
+- `typecheck` = one `tsc --outDir .ci-build --noEmit false --noEmitOnError false` run reused by ARCH-4/8 · separate `--noEmit` · same diagnostics, one compile fewer. tsc, `npm test` and depcruise run in parallel (CI ≈ 20–30 s).
+- `npm test` runs with `NODE_OPTIONS=--import=<netstub>` · no stub · "no network" holds for unit tests too.
+- ARCH-1..3 count depcruise violations of severity error **or warn** · error only · lowering a rule to warn must not silence it.
+- ARCH-3 I/O scan covers all of `src/` except `src/adapters/` · core and api only · the rule says only adapters do I/O.
+- ARCH-5 also fails on `*_URL`/`*_HOST`/`*_BASE_URL` env vars mapping to no catalog API · ignore them · D8 assumes ARCH-5 covers those suffixes.
+- ARCH-6 = type scan of event/response types + runtime scan of emitted payloads; with no payloads (row 28) the type scan decides.
+- ARCH-7 flags any database connection string or driver import (orders-service owns no database in the catalog). Row 20's patch uses `billing-db.finance.svc`, so it does not also trip ARCH-5.
+- Contract checker (`ci/verify-contracts.mjs`, single source for CI, mutation test and V1 copies) injects a fake payment gateway, fixed clock/ids and selects events by `type` · publication order · the V1 copy must work without netstub; a fallback had hidden a renamed `type`. A required `x[].y` path on an empty array fails.
+- Oracle `error` only when no `main.js` is emitted or `createApp` can't load; type errors alone still run the suites (tsc emits JS anyway, as CI exercises it, §7.1).
+- Oracle builds cached by source hash under `%TEMP%\avg-oracle-cache` (newest 60 per kind); `check_ticket` reuses them.
+- ticket_done: X-units done when any exposed value is 12.5 or a money-named field holds 12 or 13 (rounded dollars, row 14); X-remove `deprecated` when `channel` is still emitted and a JSDoc `@deprecated` sits next to a `channel` declaration in `src/`; `arch9_signal` = a total/amount/price-named field with a non-integer value or a Dollars/Usd/Decimal-named field in the ticket_done captures.
+- Patches: generated from `harness.workspace.materialize` trees (canary lines already stripped); X-dep adds a `StockGateway` port with `HttpStockGateway` default and a `FakeStock` in unit-test helpers; X-remove breaking removes `channel` from event and order model (tests updated); X-units additive adds `totalDollars` to event and REST response.
+- Mutation test: mutations applied by a wrapper re-exporting `createApp` (wraps the Kafka buffer when no publisher is injected); service code untouched (§8.4). Result: 104 mutants + 1 control — CI∧oracle 78, oracle only 15 (units ×100/rounding/truncation, duplicated/reordered lines, currency), CI only 0, neither 11 (harmless to deployed consumers).
+- (Lead) Fixed `harness/paths.py` `tool("depcruise")` → `bin/dependency-cruiser.mjs` (bug reported by WP1b; CI had a fallback).

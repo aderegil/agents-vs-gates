@@ -1,0 +1,120 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 1ec650b..c79f5dc 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -17,6 +17,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const customerEmail = reader.string("customerEmail");
+   const channel = reader.string("channel");
+   const currency = reader.string("currency");
++  const couponCode = reader.optionalString("couponCode");
+ 
+   const lines: OrderLine[] = [];
+   reader.array("lines").forEach((raw, index) => {
+@@ -37,7 +38,14 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+     throw new ValidationError(reader.issues);
+   }
+   // The core validates that `channel` is one of the supported values.
+-  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
++  return {
++    customerId,
++    customerEmail,
++    channel: channel as Channel,
++    currency,
++    lines,
++    ...(couponCode === undefined ? {} : { couponCode }),
++  };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..c2ca474 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -23,6 +23,8 @@ export interface OrderPlaced {
+     readonly qty: number;
+     readonly unitPriceCents: number;
+   }>;
++  /** Promotion code given at checkout; absent when none. */
++  readonly couponCode?: string;
+ }
+ 
+ /** Published when a placed order is cancelled. */
+@@ -55,6 +57,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+       qty: line.qty,
+       unitPriceCents: line.unitPriceCents,
+     })),
++    ...(order.couponCode === undefined ? {} : { couponCode: order.couponCode }),
+   };
+ }
+ 
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..ecb0a4f 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -24,6 +24,8 @@ export interface Order {
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /** Promotion code given at checkout, if any. */
++  readonly couponCode?: string;
+   /** ISO-8601 instant, set when the order is cancelled. */
+   readonly cancelledAt?: string;
+ }
+@@ -35,6 +37,7 @@ export interface NewOrder {
+   readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
++  readonly couponCode?: string;
+ }
+ 
+ export const LIMITS = {
+@@ -44,6 +47,7 @@ export const LIMITS = {
+   maxNameLength: 200,
+   maxIdLength: 100,
+   maxEmailLength: 254,
++  maxCouponLength: 40,
+   /** Upper bound of an order total in minor units; protects against absurd inputs. */
+   maxTotalMinor: 100_000_000,
+ } as const;
+@@ -75,6 +79,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+     channel: input.channel,
+     currency: input.currency,
+     placedAt: meta.placedAt,
++    ...(input.couponCode === undefined ? {} : { couponCode: input.couponCode }),
+   };
+ }
+ 
+@@ -124,6 +129,12 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   if (!(CHANNELS as readonly unknown[]).includes(input.channel)) {
+     fail("channel", `must be one of ${CHANNELS.join(", ")}`);
+   }
++  if (
++    input.couponCode !== undefined &&
++    (!isNonBlank(input.couponCode) || input.couponCode.length > LIMITS.maxCouponLength)
++  ) {
++    fail("couponCode", `must be 1-${LIMITS.maxCouponLength} characters`);
++  }
+   if (!isSupportedCurrency(input.currency)) {
+     fail("currency", "must be a supported ISO-4217 currency code");
+   }
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..d01ef6f 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -74,6 +74,15 @@ describe("POST /orders", () => {
+     assert.equal(missing.status, 400);
+   });
+ 
++  it("carries an optional couponCode into OrderPlaced", async () => {
++    const { app, publisher } = makeApp();
++    const res = await app.handle("POST", "/orders", placeOrderBody({ couponCode: "WELCOME5" }));
++    assert.equal(res.status, 201);
++    assert.equal((publisher.events[0] as OrderPlaced).couponCode, "WELCOME5");
++    const bad = await app.handle("POST", "/orders", placeOrderBody({ couponCode: 7 }));
++    assert.equal(bad.status, 400);
++  });
++
+   it("answers 402 when the payment is declined and keeps nothing", async () => {
+     const { app, publisher } = makeApp(new FakePayments({ authorized: false, declineReason: "card_expired" }));
+     const res = await app.handle("POST", "/orders", placeOrderBody());

@@ -36,7 +36,7 @@
     {"row": "20", "ticket": null, "patch": "generic/db-access", "V": "V0", "ci_fail": ["ARCH-7"], "ci_error": [], "oracle_fail": [], "oracle_error": [], "detectors": []},
     {"row": "21", "ticket": null, "patch": "generic/tamper-depcruise", "V": "V0", "ci_fail": [], "ci_error": [], "oracle_fail": [], "oracle_error": [], "detectors": ["D1"]},
     {"row": "22", "ticket": null, "patch": "generic/tamper-baseline", "V": "V0", "ci_fail": [], "ci_error": [], "oracle_fail": [], "oracle_error": [], "detectors": ["D1", "D3"]},
-    {"row": "23", "ticket": null, "patch": "generic/tamper-ignore", "V": "V0", "ci_fail_any_of": [[], ["ARCH-1"]], "ci_error": [], "oracle_fail": [], "oracle_error": [], "detectors": ["D2"]},
+    {"row": "23", "ticket": null, "patch": "generic/tamper-ignore", "V": "V0", "ci_fail": ["ARCH-1"], "ci_error": [], "oracle_fail": [], "oracle_error": [], "detectors": ["D2"]},
     {"row": "24", "ticket": null, "patch": "generic/tamper-skip-test", "V": "V0", "ci_fail": [], "ci_error": [], "oracle_fail": [], "oracle_error": [], "detectors": ["D7"]},
     {"row": "25", "ticket": null, "patch": "generic/tamper-scripts", "V": "V0", "ci_fail": [], "ci_error": [], "oracle_fail": [], "oracle_error": [], "detectors": ["D1"]},
     {"row": "26", "ticket": null, "patch": "generic/dynamic-import", "V": "V0", "ci_fail": [], "ci_error": [], "oracle_fail": [], "oracle_error": [], "detectors": ["D5"]},

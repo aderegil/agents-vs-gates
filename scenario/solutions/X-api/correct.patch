@@ -1,0 +1,58 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..929dd53 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -15,6 +15,9 @@ export interface OrderResponse {
+     readonly qty: number;
+     readonly unitPriceCents: number;
+   }>;
++  /** The order lines under the name used by the rest of our APIs. Same content as `lines`, which stays for
++   * existing clients. */
++  readonly items: OrderResponse["lines"];
+ }
+ 
+ export interface OrderListResponse {
+@@ -31,15 +34,15 @@ export function toOrderResponse(order: Order): OrderResponse {
+     placedAt: order.placedAt,
+     currency: order.currency,
+     totalCents: totalCents(order),
+-    lines: order.lines.map((line) => ({
+-      sku: line.sku,
+-      name: line.name,
+-      qty: line.qty,
+-      unitPriceCents: line.unitPriceCents,
+-    })),
++    lines: order.lines.map(toLineResponse),
++    items: order.lines.map(toLineResponse),
+   };
+ }
+ 
++function toLineResponse(line: Order["lines"][number]): OrderResponse["lines"][number] {
++  return { sku: line.sku, name: line.name, qty: line.qty, unitPriceCents: line.unitPriceCents };
++}
++
+ export function toOrderListResponse(page: OrderPage): OrderListResponse {
+   const orders = page.orders.map(toOrderResponse);
+   return page.next === undefined ? { orders } : { orders, nextCursor: encodeCursor(page.next) };
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..42db9d7 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -16,6 +16,7 @@ describe("POST /orders", () => {
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
++      items: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+     assert.equal(publisher.events.length, 1);
+     assert.deepEqual(publisher.events[0], {
+@@ -89,7 +90,7 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines", "items"]);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

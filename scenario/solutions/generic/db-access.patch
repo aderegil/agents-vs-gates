@@ -1,0 +1,27 @@
+# CANARY-55961ae4a0bc5804
+diff --git a/src/adapters/billingInvoiceLookup.ts b/src/adapters/billingInvoiceLookup.ts
+new file mode 100644
+index 0000000..7c2e7f3
+--- /dev/null
++++ b/src/adapters/billingInvoiceLookup.ts
+@@ -0,0 +1,20 @@
++/** Runs one SQL statement against a database connection and returns the rows. */
++export type SqlQuery = (connectionString: string, sql: string, params: readonly unknown[]) => Promise<unknown[]>;
++
++const BILLING_DATABASE = "postgres://orders_reader@billing-db.finance.svc:5432/billing";
++
++/**
++ * Tells whether an order has already been invoiced, by reading the invoices table directly.
++ * Used to block cancellations of invoiced orders.
++ */
++export class BillingInvoiceLookup {
++  constructor(
++    private readonly query: SqlQuery,
++    private readonly connectionString: string = BILLING_DATABASE,
++  ) {}
++
++  async isInvoiced(orderId: string): Promise<boolean> {
++    const rows = await this.query(this.connectionString, "SELECT 1 FROM invoices WHERE order_id = $1 LIMIT 1", [orderId]);
++    return rows.length > 0;
++  }
++}
