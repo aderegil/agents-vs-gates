@@ -61,3 +61,4 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   works on any line containing `CANARY-`.
 - 2026-10-10 · Known gap: `npm test` per repo takes ~5 s of test time but `tsc` adds 14–20 s and node startup ~2.8 s
   on this machine, so the "< 10 s" target (§5.2) is not met end to end · not fixable without changing the toolchain.
+- 2026-10-11 · Oracle-suite author prompt recorded verbatim in `docs/ORACLE-AUTHOR-PROMPT.md` (§8.2) · inline here · it is long.
