@@ -2,7 +2,7 @@
 
 1. start the server on a free port (temp data dir, temp AVG_RESULTS_ROOT)
 2. /api/setup owner, login, cookie and CSRF verified
-3. load every manifest present (9 expected at integration; missing ones are SKIP lines, invalid ones FAIL)
+3. load every manifest present (9 expected at integration; a missing or invalid one is a FAIL)
 4. 8 mock runs: python -m harness.runner --unit mock --stage P1 --batch 8 (SKIP if harness.runner is missing)
 5. GET every route each plugin registers (router introspection) → no 5xx
 6. export a replay.json and validate it against docs/contracts/replay.schema.json (SKIP if the replay plugin is missing)
@@ -134,7 +134,7 @@ def run_check(keep: bool = False) -> int:
             rep.ok("plugins", f"{len(ids)} of {len(EXPECTED)} loaded: {', '.join(ids)}")
         for pid in EXPECTED:
             if pid not in ids:
-                rep.skip(f"plugin {pid}", "folder not present yet")
+                rep.fail(f"plugin {pid}", "plugin folder missing")
 
         # 4 ------------------------------------------------------------ 8 mock runs
         mock_ok = False
@@ -153,9 +153,6 @@ def run_check(keep: bool = False) -> int:
                 if p.returncode == 0 and len(done) >= 8:
                     mock_ok = True
                     rep.ok("mock runs", f"{len(done)} P1 runs in {time.time() - t0:.0f} s (workers under AVG_ROOT)")
-                elif p.returncode == 2 and "missing" in out.lower():
-                    # Guard refusal because another package is not built yet: the lead completes this at integration.
-                    rep.skip("mock runs", "harness.runner: " + out.splitlines()[-1][:300])
                 else:
                     rep.fail("mock runs", f"exit {p.returncode}, {len(done)} terminal P1 runs",
                              (p.stdout[-3000:] + "\n" + p.stderr[-3000:]).strip())
@@ -220,13 +217,30 @@ def run_check(keep: bool = False) -> int:
                 lst = owner.get("/api/replay/list?ns=mock")
                 _require(lst.status == 200, f"/api/replay/list → {lst.status}")
                 items = lst.json if isinstance(lst.json, list) else (lst.json or {}).get("runs", [])
-                rid = next((i.get("run_id") for i in items if isinstance(i, dict) and i.get("run_id")), None)
-                _require(rid, "the replay list is empty")
-                r = owner.get(f"/api/replay/run/{rid}?ns=mock")
-                _require(r.status == 200, f"/api/replay/run/{rid} → {r.status} {r.text[:200]}")
+                items = [i for i in items if isinstance(i, dict) and i.get("run_id")]
+                _require(items, "the replay list is empty")
                 schema = json.loads((paths.CONTRACTS / "replay.schema.json").read_text(encoding="utf-8"))
-                jsonschema.validate(r.json, schema)
-                rep.ok("replay.json", f"{rid} valid against replay.schema.json")
+                visible = [i["run_id"] for i in items if not i.get("blinded")]
+                blinded = [i["run_id"] for i in items if i.get("blinded")]
+                note = ""
+                if blinded:
+                    # A blinded stage's replay must be refused by the API (CI/oracle states are outcomes).
+                    r = owner.get(f"/api/replay/run/{blinded[0]}?ns=mock")
+                    _require(r.status == 403, f"/api/replay/run/{blinded[0]} (blinded) → {r.status}, expected 403")
+                    note = f"; blinded {blinded[0]} refused with 403"
+                if visible:
+                    rid = visible[0]
+                    r = owner.get(f"/api/replay/run/{rid}?ns=mock")
+                    _require(r.status == 200, f"/api/replay/run/{rid} → {r.status} {r.text[:200]}")
+                    jsonschema.validate(r.json, schema)
+                else:
+                    # Every mock run is still blinded: export directly with the same exporter the API uses.
+                    from harness.jsonio import read_jsonl
+                    from replay.export import build_replay
+                    rid = blinded[0]
+                    jsonschema.validate(build_replay(read_jsonl(results / "mock" / "runs" / rid / "events.jsonl")), schema)
+                    note = " (exported with replay.export.build_replay)" + note
+                rep.ok("replay.json", f"{rid} valid against replay.schema.json{note}")
             except Exception as e:  # noqa: BLE001
                 rep.fail("replay.json", str(e), traceback.format_exc())
 

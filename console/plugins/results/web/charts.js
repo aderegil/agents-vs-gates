@@ -117,7 +117,7 @@ export const THEMES = {
       "fail-soft": ["#f6a9c3", "#5a0a26"], n1: ["#374151", "#ffffff"], n2: ["#7b8494", "#ffffff"],
       n3: ["#b7bfcc", "#111827"], n4: ["#e3e6eb", "#111827"],
     },
-    passInk: "#00727f", failInk: "#b0124a",
+    passInk: "#00727f", failInk: "#b0124a", mockInk: "#b45309",
   },
   deck: {
     id: "deck", bg: "#000000", ink: "#ffffff", muted: "#8E8E9C", faint: "#6a6a78", line: "#2A2533", rule: "#3d3550",
@@ -127,7 +127,7 @@ export const THEMES = {
       "fail-soft": ["#8a1a47", "#ffffff"], n1: ["#E6DCFF", "#1a0030"], n2: ["#C1A3FF", "#1a0030"],
       n3: ["#7400C0", "#ffffff"], n4: ["#2A2533", "#D8D8E0"],
     },
-    passInk: "#00BCD4", failInk: "#E91E63",
+    passInk: "#00BCD4", failInk: "#E91E63", mockInk: "#f59e0b",
   },
 };
 
@@ -393,10 +393,10 @@ export function renderSlide(spec, { style = "app", fontCss = "" } = {}) {
   foot.forEach((l, i) => out.push(text(PAD, footTop + 18 + i * 26, l, { size: 20, fill: theme.muted })));
   out.push(text(PAD, 1034, truncate(spec.source || "Source: Agents vs. Gates", W - PAD * 2, 22), { size: 22, fill: theme.muted }));
   if (spec.simulated) {
-    if (!stacked) out.push(text(W - PAD, 1034, banner, { size: 22, weight: 600, fill: theme.failInk, anchor: "end" }));
-    else out.push(text(PAD, 1034 - 32, truncate(banner, W - PAD * 2, 22), { size: 22, weight: 600, fill: theme.failInk }));
+    if (!stacked) out.push(text(W - PAD, 1034, banner, { size: 22, weight: 600, fill: theme.mockInk, anchor: "end" }));
+    else out.push(text(PAD, 1034 - 32, truncate(banner, W - PAD * 2, 22), { size: 22, weight: 600, fill: theme.mockInk }));
     out.push(`<g transform="translate(${W / 2} ${H / 2 + 100}) rotate(-24)">${text(0, 0, "MOCK", { size: 380, weight: 700, fill: theme.ink, anchor: "middle", opacity: theme.id === "deck" ? 0.08 : 0.07 })}</g>`);
-    out.push(`<g>${rect(W - PAD - 118, 70, 118, 46, "none", ` stroke="${theme.failInk}" stroke-width="3" rx="6"`)}${text(W - PAD - 59, 104, "MOCK", { size: 30, weight: 700, fill: theme.failInk, anchor: "middle", spacing: 3 })}</g>`);
+    out.push(`<g>${rect(W - PAD - 118, 70, 118, 46, "none", ` stroke="${theme.mockInk}" stroke-width="3" rx="6"`)}${text(W - PAD - 59, 104, "MOCK", { size: 30, weight: 700, fill: theme.mockInk, anchor: "middle", spacing: 3 })}</g>`);
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(describe(spec))}"` +
     ` font-family="${esc(theme.font)}" style="font-variant-numeric:tabular-nums">` +
