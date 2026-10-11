@@ -504,6 +504,16 @@
       }
     },
     "ticket_done": {
+      "description": "ticket_done on the final state of the PR (the last CI ref); equals ticket_done_gen when there were no repairs",
+      "enum": [
+        "done",
+        "not_done",
+        "deprecated",
+        null
+      ]
+    },
+    "ticket_done_gen": {
+      "description": "ticket_done on gen (the first attempt); additive",
       "enum": [
         "done",
         "not_done",

@@ -287,7 +287,9 @@ def build(rec: dict, transcript: list[dict]) -> list[dict]:
     outcome = rec["outcome"]
     n_rep = rec.get("repair_attempts", 0)
     summary = f"{outcome}" + (f" after {n_rep} repair{'s' if n_rep != 1 else ''}" if n_rep else "") + \
-              f"; ticket {rec.get('ticket_done') or 'n/a'}"
+              f"; ticket {rec.get('ticket_done') or 'n/a'}" + \
+              (f" (gen: {rec['ticket_done_gen']})" if rec.get("ticket_done_gen") not in (None, rec.get("ticket_done"))
+               else "")
     narr = END_NARRATION[outcome]
     if outcome == "infra_failure" and infra:
         narr = f"Run aborted: infrastructure failure ({infra.get('kind')})."

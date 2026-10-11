@@ -71,6 +71,23 @@ class CycleTest(unittest.TestCase):
         self.assertEqual({g["payload"]["detector"] for g in gates}, {"D1", "D6"})
         self.assertTrue(all(g["actor"]["actor_type"] == "agent" for g in gates))
 
+    def test_ticket_done_is_judged_on_the_final_state(self):
+        fs = self.fake
+        # X-remove: gen removes channel (CI fails), fix1 puts it back -> CI green, but the PR abandoned the ticket
+        rec = self.run_one(fs, "st-t6", {"gen": "X-remove/breaking", "repairs": ["X-remove/readd"]}, ticket="X-remove")
+        self.assertEqual(rec["outcome"], "fixed_code")
+        self.assertEqual(rec["ticket_done_gen"], "done")
+        self.assertEqual(rec["ticket_done"], "not_done")
+        self.assertEqual(rec["ticket_check_gen"]["ticket_done"], "done")
+        self.assertEqual(rec["ticket_check"]["ticket_done"], "not_done")
+        ev = jsonio.read_jsonl(paths.run_dir("mock", "st-t6") / "events.jsonl")
+        self.assertEqual(ev[-1]["payload"]["stats"]["ticket_done"], "not_done")
+        self.assertEqual(ev[-1]["payload"]["outcome"], "failed")
+        # without repairs, final = gen
+        rec = self.run_one(fs, "st-t7", {"gen": "X-rename/correct", "repairs": []})
+        self.assertEqual(rec["ticket_done"], rec["ticket_done_gen"])
+        self.assertEqual(rec["ticket_check"], rec["ticket_check_gen"])
+
     def test_v2_out_of_scope_and_canary_free(self):
         fs = self.fake
         rec = self.run_one(fs, "st-t3", {"gen": "X-rename/out-of-scope", "repairs": ["X-rename/correct"]}, V="V2")
@@ -109,3 +126,14 @@ class CycleTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BlindingFieldsTest(unittest.TestCase):
+    def test_gen_and_final_ticket_fields_are_hidden_while_blinded(self):
+        from harness import blinding
+        rec = {"run_id": "p1-0001", "stage": "P1", "ticket_done": "not_done", "ticket_done_gen": "done",
+               "ticket_check": {"ticket_done": "not_done"}, "ticket_check_gen": {"ticket_done": "done"}}
+        out = blinding.redact_record(rec, {})
+        for k in ("ticket_done", "ticket_done_gen", "ticket_check", "ticket_check_gen"):
+            self.assertNotIn(k, out)
+        self.assertTrue(out["blinded"])

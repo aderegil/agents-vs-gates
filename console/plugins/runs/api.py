@@ -238,7 +238,8 @@ def register(router, ctx):
         need_visible(visible)
         o = rec.get("oracle") or {}
         return {"run_id": rid, "gen": o.get("gen"), "final": o.get("final"), "ticket_done": rec.get("ticket_done"),
-                "ticket_check": rec.get("ticket_check")}
+                "ticket_check": rec.get("ticket_check"), "ticket_done_gen": rec.get("ticket_done_gen"),
+                "ticket_check_gen": rec.get("ticket_check_gen")}
 
     def get_detectors(req):
         ns, rid, d, rec, state, visible = load(req)

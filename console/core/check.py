@@ -252,7 +252,8 @@ def run_check(keep: bool = False) -> int:
             if (st.get("unblinded") or {}).get("P1"):
                 rep.fail("blinding", "P1 is unblinded in a fresh temp namespace")
             else:
-                hidden = {"outcome", "ticket_done", "metrics", "oracle", "final_message"}
+                hidden = {"outcome", "ticket_done", "ticket_done_gen", "ticket_check", "ticket_check_gen", "metrics", "oracle",
+                          "final_message"}
                 leaks = []
                 for t, body in bodies:
                     for where, d in _walk(body):

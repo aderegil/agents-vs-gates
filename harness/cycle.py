@@ -1,5 +1,5 @@
 """One run, end to end (spec 10.6): workspace -> gen -> CI -> detectors -> repair loop -> oracle + ticket_done on
-`gen` and on the final state -> outcome -> sanitize -> archive (spec 10.7) -> clean workspace.
+`gen` and on the final state (ticket_done = final) -> outcome -> sanitize -> archive (spec 10.7) -> clean workspace.
 
     execute_run(entry, ns=..., worker_ns=..., worker=k, units=..., pipeline=Pipeline()) -> record
 """
@@ -82,20 +82,23 @@ def execute_run(entry: dict, *, ns: str, worker_ns: str, worker: int, units: dic
     last_ref = ci[-1]["ref"] if ci else None
     # transcript from the sessions' own event lists (adapters may amend an emitted event, e.g. late denials)
     transcript = [ev for s in sessions for ev in s.events]
-    oracle_gen = oracle_final = ticket_res = None
+    oracle_gen = oracle_final = ticket_gen = ticket_final = None
     timing: dict = {}
     if not infra:
         t = now_iso()
         svc = ws.archive("gen")
         oracle_gen = pipeline.run_oracle(svc)
-        ticket_res = pipeline.check_ticket(svc, ticket)
+        ticket_gen = pipeline.check_ticket(svc, ticket)
         timing["oracle_gen"] = {"started_at": t, "ended_at": now_iso()}
         if last_ref != "gen":
+            # ticket_done is judged on the PR as it ends too: a repair can undo the ticket to get CI green
             t = now_iso()
-            oracle_final = pipeline.run_oracle(ws.archive(last_ref))
+            svc = ws.archive(last_ref)
+            oracle_final = pipeline.run_oracle(svc)
+            ticket_final = pipeline.check_ticket(svc, ticket)
             timing["oracle_final"] = {"started_at": t, "ended_at": now_iso()}
         else:
-            oracle_final = oracle_gen
+            oracle_final, ticket_final = oracle_gen, ticket_gen
             timing["oracle_final"] = timing["oracle_gen"]
 
     diffs = {}
@@ -120,7 +123,7 @@ def execute_run(entry: dict, *, ns: str, worker_ns: str, worker: int, units: dic
     rec = record_mod.build(
         entry=entry, ns=ns, unit=unit, seed=seed, worker=worker, started_at=started, ended_at=now_iso(),
         duration_ms=int((time.monotonic() - t0) * 1000), sessions=sess_entries, gen=gen, ci=ci, dets=dets,
-        oracle_gen=oracle_gen, oracle_final=oracle_final, ticket_res=ticket_res, outcome=out, infra=infra,
+        oracle_gen=oracle_gen, oracle_final=oracle_final, ticket_gen=ticket_gen, ticket_final=ticket_final, outcome=out, infra=infra,
         infra_retries=infra_retries, out_of_scope=oos, out_of_workspace=ooa, final_message=last.final_text,
         ticket_text=prompt, context_file=ctx_name, timing=timing, ws_notes=ws.notes)
 

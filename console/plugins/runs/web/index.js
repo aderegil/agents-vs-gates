@@ -276,9 +276,13 @@ export async function mount(el, shell) {
           { key: "status", label: "Result", render: (c) => badge(c.status, c.status === "pass" ? "pass" : c.status === "fail" ? "fail" : "warn") },
           { key: "message", label: "Message", render: (c) => c.message ? h("span", { class: "mono small" }, c.message) : "—" }],
           rows: Object.entries(v.consumers || {}).map(([name, c]) => ({ name, ...c })) }) : empty("No oracle result (infrastructure failure or not reached)."));
+      const done = (label, v, chk) => v ? h("div", { class: "small" }, h("span", { class: "muted" }, `${label} `), badge(v.replace("_", " "), ticketDoneTone(v)),
+        chk && chk.detail ? h("span", { class: "muted" }, ` ${chk.detail}`) : null) : null;
+      // ticket_done is judged on the final PR; gen is shown beside it only when a repair changed it
+      const genDiffers = res.ticket_done_gen && res.ticket_done_gen !== res.ticket_done;
       return h("div", { class: "stack" }, one("After generation (gen)", res.gen), one("Final", res.final),
-        res.ticket_done ? h("div", { class: "small" }, h("span", { class: "muted" }, "ticket_done "), badge(res.ticket_done.replace("_", " "), ticketDoneTone(res.ticket_done)),
-          res.ticket_check && res.ticket_check.detail ? h("span", { class: "muted" }, ` ${res.ticket_check.detail}`) : null) : null);
+        done(genDiffers ? "ticket_done (final)" : "ticket_done", res.ticket_done, res.ticket_check),
+        genDiffers ? done("ticket_done (gen)", res.ticket_done_gen, res.ticket_check_gen) : null);
     },
 
     // ------------------------------------------------------------ detectors

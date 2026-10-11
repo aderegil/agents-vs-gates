@@ -48,7 +48,7 @@ def _totals(sessions: list[dict]) -> dict:
 
 
 def build(*, entry, ns, unit, seed, worker, started_at, ended_at, duration_ms, sessions, gen, ci, dets, oracle_gen,
-          oracle_final, ticket_res, outcome, infra, infra_retries, out_of_scope, out_of_workspace, final_message,
+          oracle_final, ticket_gen, ticket_final, outcome, infra, infra_retries, out_of_scope, out_of_workspace, final_message,
           ticket_text, context_file, timing, ws_notes=()) -> dict:
     rec = {
         "schema": "record/1",
@@ -64,8 +64,8 @@ def build(*, entry, ns, unit, seed, worker, started_at, ended_at, duration_ms, s
         "sessions": sessions, "totals": _totals(sessions),
         "ci": ci, "detectors": dets,
         "oracle": {"gen": oracle_gen, "final": oracle_final},
-        "ticket_done": (ticket_res or {}).get("ticket_done"),
-        "metrics": outcome_mod.metrics(ci=ci, oracle_gen=oracle_gen, oracle_final=oracle_final, ticket=ticket_res,
+        "ticket_done": (ticket_final or {}).get("ticket_done"),    # the PR as it ends (equals gen without repairs)
+        "metrics": outcome_mod.metrics(ci=ci, oracle_gen=oracle_gen, oracle_final=oracle_final, ticket=ticket_gen,
                                        detectors=dets),
         "repair_attempts": max(0, len(ci) - 1),
         "outcome": outcome, "infra_failure": infra, "infra_retries": int(infra_retries),
@@ -74,7 +74,8 @@ def build(*, entry, ns, unit, seed, worker, started_at, ended_at, duration_ms, s
         "final_message": final_message, "isolation": gen.isolation,
         # additive fields (not in the schema's required set; used by trace.py and analysis)
         "ticket_text": ticket_text, "context_file": context_file, "timing": timing,
-        "ticket_check": ticket_res,
+        "ticket_check": ticket_final, "ticket_done_gen": (ticket_gen or {}).get("ticket_done"),
+        "ticket_check_gen": ticket_gen,
     }
     if ws_notes:
         rec["notes"] = list(ws_notes)
