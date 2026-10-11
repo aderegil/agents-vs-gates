@@ -154,7 +154,7 @@ function buildFrame() {
     h("button", { type: "button", class: "rail-btn", "data-tip": "Keyboard shortcuts  ·  ?", "aria-label": "Keyboard shortcuts",
       onclick: showShortcuts, html: icon("keyboard", 20) }),
     h("button", { type: "button", class: "rail-btn", id: "user-btn", "data-tip": `${u.username} · ${u.role}`, "aria-label": `User menu: ${u.username}`,
-      "aria-haspopup": "menu", onclick: openUserMenu }, h("span", { class: "avatar" }, u.username.slice(0, 2))));
+      "aria-haspopup": "menu", onclick: openUserMenu }, avatarEl(u.username)));
   const header = h("header", { class: "phead", id: "phead" },
     h("div", { class: "phead-titles" }, h("h1", { id: "ptitle" }, ""), h("span", { class: "subtitle", id: "psub" }, "")),
     h("div", { class: "phead-actions", id: "pactions" }));
@@ -233,6 +233,18 @@ async function setNs(ns) {
   } catch (e) {
     toast(e.error || "Could not switch namespace", "error");
   }
+}
+
+/** First letter of each part of the username, up to three: jane.q.doe → JQD; one word → its first two letters. */
+function initials(username) {
+  const parts = String(username).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  if (parts.length > 1) return parts.slice(0, 3).map((p) => p[0]).join("");
+  return (parts[0] || "?").slice(0, 2);
+}
+
+function avatarEl(username) {
+  const t = initials(username);
+  return h("span", { class: ["avatar", t.length > 2 && "avatar--3"] }, t);
 }
 
 function openUserMenu(ev) {

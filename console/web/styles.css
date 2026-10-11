@@ -71,6 +71,7 @@ p { margin: 0; }
 .rail-btn[data-tip]:hover::after, .rail-btn[data-tip]:focus-visible::after { opacity: 1; }
 .avatar { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: var(--trazo) solid var(--linea-fuerte);
   font-size: 12px; font-weight: 600; color: var(--tinta); background: var(--suave); text-transform: uppercase; }
+.avatar--3 { font-size: 10px; letter-spacing: -0.02em; }
 
 .main { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; height: 100vh; }
 .phead { position: relative; display: flex; align-items: center; gap: 16px; min-height: 64px; padding: 14px 32px 12px;
