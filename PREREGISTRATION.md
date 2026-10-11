@@ -126,6 +126,16 @@ cell of the stage), frozen with this document.
 | P4 breadth | X-units, X-api, X-dep × {V0·S0, V0·S2} × 5; X-add V0·S0 × 5; X-rename/X-remove V2·S0 × 5; V0·S1 × 5; + 3 concurrent V0·S0 controls per ticket (X-rename, X-remove) | 61 |
 | P5 optional | `cc-opus` on P1 and P2 cells; RQ5 (X-rename V0·S0·W2 × 10) | 50 + 10 |
 
+### Pilot X1 (exploratory, run before the freeze; results disclosed, not part of the confirmatory analysis)
+X-rename and X-remove × {V0·S0, V2·S0}, W1 base text, × 10 per unit: `cc-sonnet` (runs `x1-0001..0040`) and,
+after it, `codex` (`x1c-0001..0040`). Randomized in blocks of 4 (each block holds one run of each cell, shuffled with
+its own seed 20261012), so V0 and V2 run interleaved under the same machine conditions. Not in the frozen manifest
+(computed by `harness.manifest`), visible while it runs like P0, exempt from the lock. Reported in full
+(`results/real/x1-summary.md`): per ticket × V, "first attempt broke a consumer" (oracle on `gen`), outcomes,
+final `ticket_done`, out-of-scope edits, medians of turns, tokens and minutes, and an uncorrected Fisher exact test
+V0 vs V2 marked as exploratory. Its numbers never enter H2 or any confirmatory claim; if it changes the design of
+P4 (V2), the change is written here before the freeze.
+
 **Stopping rule:** a stage is run to completion unless quota or time runs out; if it stops after k complete rounds,
 every cell has k replicates and is reported as such. Outcomes stay **blind** until a stage is complete (the runner
 refuses to show them; forcing it is recorded with its date). Stages are never stopped because the numbers look good.

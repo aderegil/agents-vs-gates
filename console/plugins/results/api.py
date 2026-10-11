@@ -79,7 +79,7 @@ def render_svg(spec: dict, style: str) -> str:
 
 def register(router, ctx):
     def index(req):
-        return {"ns": req.ns, "routes": ["rq", "mutation", "reviewer", "excluded", "export"], "styles": list(STYLES),
+        return {"ns": req.ns, "routes": ["rq", "mutation", "reviewer", "excluded", "pilot", "export"], "styles": list(STYLES),
                 "charts": list(CHART_IDS)}
 
     def rq(req):
@@ -93,6 +93,11 @@ def register(router, ctx):
 
     def excluded(req):
         return payload.excluded_payload(req.ns)
+
+    def pilot(req):
+        """Pilot X1 (exploratory, always visible like P0): analysis.pilot_x1, computed on request."""
+        from analysis import pilot_x1
+        return pilot_x1.summarize(req.ns)
 
     def export(req):
         chart = (req.query.get("chart") or "").strip()
@@ -126,4 +131,5 @@ def register(router, ctx):
     router.get("/reviewer", reviewer)
     router.get("/mutation", mutation)
     router.get("/excluded", excluded)
+    router.get("/pilot", pilot)
     router.get("/export", export)

@@ -1,6 +1,6 @@
 // Results (spec §22.3): one section per research question, the instrument checks (mutation matrix, CI ↔ oracle),
 // excluded runs, and slide export (SVG and PNG 1920×1080, App and Deck styles).
-// Data: GET /api/results/{rq,reviewer,mutation,excluded}?ns=… ; drawing: ./charts.js (pure SVG, no libraries).
+// Data: GET /api/results/{rq,reviewer,mutation,excluded,pilot}?ns=… ; drawing: ./charts.js (pure SVG, no libraries).
 // A stage that is not unblinded arrives without numbers; this page only shows "Blinded until stage complete".
 import { h, table, badge, empty, panel, notice, iconEl, button, tabs, fmtInt } from "/web/lib/ui.js";
 import { markdownViewer, mdViewSwitch } from "/web/lib/markdown.js";
@@ -127,11 +127,12 @@ export async function mount(el, shell) {
 
   async function load() {
     try {
-      const [rq, reviewer, mutation, excluded] = await Promise.all([
+      const [rq, reviewer, mutation, excluded, pilot] = await Promise.all([
         shell.api.get("results/rq"), shell.api.get("results/reviewer"),
         shell.api.get("results/mutation"), shell.api.get("results/excluded"),
+        shell.api.get("results/pilot").catch(() => null),
       ]);
-      S.data = { rq, reviewer, mutation, excluded };
+      S.data = { rq, reviewer, mutation, excluded, pilot };
       if (alive) draw();
     } catch (e) {
       if (alive) body.replaceChildren(h("div", { class: "notice fail" }, iconEl("circle-alert", 16), e.error || String(e)));
@@ -317,10 +318,44 @@ export async function mount(el, shell) {
     return out;
   }
 
+  // ---- pilot X1 (exploratory; outside the confirmatory analysis)
+  function pilotSection(p) {
+    const ci = (d) => d && d.n ? `${fmtXofN(d.x, d.n)} ${fmtCI(d.ci)}` : "—";
+    const counts = (c) => Object.entries(c || {}).map(([k, v]) => `${k.replace(/_/g, " ")} ${v}`).join(", ") || "—";
+    const num = (v) => v == null ? "—" : String(v);
+    const pv = (v) => v == null ? "—" : v.toPrecision(3);
+    const out = [notice(p.note, "", "info")];
+    for (const [unit, tickets] of Object.entries(p.units)) {
+      for (const [ticket, g] of Object.entries(tickets)) {
+        const a = g.V0, b = g.V2;
+        const rows = [
+          { m: "Runs", v0: num(a.n), v2: num(b.n) },
+          { m: "First attempt broke a consumer (oracle on gen)", v0: ci(a.staging_break_gen), v2: ci(b.staging_break_gen), key: true },
+          { m: "Passed the first CI", v0: ci(a.passed_first_ci), v2: ci(b.passed_first_ci) },
+          { m: "Outcomes", v0: counts(a.outcomes), v2: counts(b.outcomes) },
+          { m: "ticket_done (final PR)", v0: counts(a.ticket_done), v2: counts(b.ticket_done) },
+          { m: "Out-of-scope edits", v0: num(a.out_of_scope), v2: num(b.out_of_scope) },
+          { m: "Median turns", v0: num(a.median_turns), v2: num(b.median_turns) },
+          { m: "Median tokens (in + out)", v0: num(a.median_tokens), v2: num(b.median_tokens) },
+          { m: "Median minutes", v0: num(a.median_minutes), v2: num(b.median_minutes) },
+        ];
+        out.push(panel({ title: `${ticket} · V0 vs V2 · ${unit} · S0 · W1 base text`,
+          body: h("div", { class: "stack" },
+            table({ keyboard: false, caption: `${ticket} ${unit}`, columns: [
+              { key: "m", label: "Measure", render: (r) => r.key ? h("strong", {}, r.m) : r.m },
+              { key: "v0", label: "V0 (orders-service only)" }, { key: "v2", label: "V2 (all four repos)" }], rows }),
+            h("p", { class: "small muted" }, `Fisher exact V0 vs V2, two-sided, uncorrected (exploratory): first attempt broke a consumer p = ${pv(g.fisher_staging_break)}; passed the first CI p = ${pv(g.fisher_passed_first_ci)}.`)) }));
+      }
+    }
+    if (p.excluded.length) out.push(notice(`Excluded: ${p.excluded.map((e) => `${e.run_id} (${e.reasons.join(", ")})`).join("; ")}`, "", "info"));
+    if (p.infra.length) out.push(notice(`Infrastructure failures: ${p.infra.map((e) => `${e.run_id} (${e.kind})`).join("; ")}`, "", "info"));
+    return out;
+  }
+
   // ---- page
   function toolbar() {
     const st = S.data.rq.stages;
-    const chips = st.length ? st.map((s) => badge(`${s.stage} · ${s.visible ? (["P0", "selftest"].includes(s.stage) ? "always visible" : "unblinded") : BLINDED}`, s.visible ? "accent" : "neutral"))
+    const chips = st.length ? st.map((s) => badge(`${s.stage} · ${s.visible ? (["P0", "X1", "selftest"].includes(s.stage) ? "always visible" : "unblinded") : BLINDED}`, s.visible ? "accent" : "neutral"))
       : [h("span", { class: "small muted" }, "No stage has runs in this namespace yet.")];
     const seg = h("div", { class: "res-seg", role: "group", "aria-label": "Export style" },
       ["app", "deck"].map((id) => h("button", { type: "button", "aria-pressed": String(S.style === id), title: id === "app" ? "App: the console's light style" : "Deck: black, deck purple, cyan = pass, pink = fail",
@@ -337,6 +372,7 @@ export async function mount(el, shell) {
     items.push({ id: "rq4", label: "RQ4", render: () => h("div", { class: "stack" }, reviewerSection()) });
     if (secs.rq5) items.push({ id: "rq5", label: "RQ5", render: () => h("div", { class: "stack" }, sectionBody(secs.rq5)) });
     items.push({ id: "instrument", label: "CI vs. oracle", render: () => h("div", { class: "stack" }, instrumentSection()) });
+    if (d.pilot && d.pilot.runs) items.push({ id: "pilot", label: "Pilot X1 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot)) });
     items.push({ id: "excluded", label: "Excluded", count: d.excluded.excluded.length || null, render: () => h("div", { class: "stack" }, excludedSection()) });
     if (!items.some((i) => i.id === S.tab)) S.tab = "rq1";
     const t = tabs({ items, active: S.tab, onChange: (id) => { S.tab = id; store.set("tab", id); } });

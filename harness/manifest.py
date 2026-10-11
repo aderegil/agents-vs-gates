@@ -20,6 +20,10 @@ Stages (unit cc-sonnet unless stated; in the mock namespace every unit is `mock`
 Within a stage, rounds: round r holds one replicate of every cell that still needs one, shuffled with
 random.Random(f"{seed}:{stage}:{r}"). If a stage is cut after k rounds, every cell has k replicates.
 Run ids are p<stage digit>-<4-digit position in the stage> (p1-0007).
+Pilot X1 (exploratory, not in manifest.json): X-rename/X-remove × V0/V2 · S0 · W1 base text × 10 per unit, in
+blocks of 4 (each block = the 4 cells, shuffled with random.Random(f"{X1_SEED}:X1:{block}")). Ids x1-0001..0040
+(cc-sonnet) and x1c-0001..0040 (codex); in the mock namespace only x1-* (unit mock). `load(ns)` = manifest.json plus
+these runs, computed here, so manifest.json and its hash (state.manifest_sha256, the pre-registration) never change.
 Paraphrases (spec 6.1): X-rename, X-remove and X-api cells with N = 10 at W1 use slots p1..p5 × 2 if all five
 scenario/tasks/<t>.p*.md are written by a person (no `TODO(human)`); otherwise the base text ×10, recorded under
 "paraphrases" in the manifest. P0 and W2 always use the base text.
@@ -38,6 +42,9 @@ from harness import jsonio, paths, scenario_io
 
 SEED = 20261011
 STAGES = ("P0", "P1", "P2", "P4", "P5", "P6")
+PILOTS = ("X1",)
+X1_SEED = 20261012
+X1_UNITS = {"cc-sonnet": "x1", "codex": "x1c"}     # unit -> run-id prefix
 
 
 def _cell(ticket, V, S, n, unit="cc-sonnet", W="W1", control=False):
@@ -109,6 +116,42 @@ def generate(seed: int = SEED, ns: str = "real", with_p6: bool = False) -> dict:
     }
 
 
+def pilot_cells(stage: str) -> list[dict]:
+    if stage == "X1":
+        return [_cell(t, V, "S0", 10) for t in ("X-rename", "X-remove") for V in ("V0", "V2")]
+    raise ValueError(stage)
+
+
+def pilot_runs(ns: str) -> list[dict]:
+    """X1: one block of the 4 cells per replicate, shuffled per block; base ticket text (no paraphrases)."""
+    units = {"mock": "x1"} if ns == "mock" else X1_UNITS
+    runs = []
+    for unit, prefix in units.items():
+        cells = [dict(c, unit=unit) for c in pilot_cells("X1")]
+        pos = 0
+        for b in range(1, 11):
+            block = list(cells)
+            random.Random(f"{X1_SEED}:X1:{b}").shuffle(block)
+            for c in block:
+                pos += 1
+                runs.append({"run_id": f"{prefix}-{pos:04d}", "stage": "X1", "unit": unit, "ticket": c["ticket"],
+                             "wording": "W1", "paraphrase": None, "visibility": c["visibility"], "spec": c["spec"],
+                             "replicate": b, "round": b, "cell": cell_key(c), "pilot": True})
+    return runs
+
+
+def with_pilots(m: dict, ns: str) -> dict:
+    known = {r["run_id"] for r in m.get("runs", [])}
+    extra = [r for r in pilot_runs(ns) if r["run_id"] not in known]
+    return dict(m, runs=list(m.get("runs", [])) + extra, pilots={"X1": {"seed": X1_SEED, "runs": len(extra)}})
+
+
+def load(ns: str) -> dict | None:
+    """results/<ns>/manifest.json plus the pilot runs (X1). None when there is no manifest.json."""
+    m = jsonio.read_json(paths.manifest_path(ns))
+    return with_pilots(m, ns) if m is not None else None
+
+
 def validate(manifest: dict) -> list[str]:
     import jsonschema
     schema = json.loads((paths.CONTRACTS / "manifest.schema.json").read_text(encoding="utf-8"))
@@ -123,12 +166,12 @@ def sha256(path) -> str | None:
 
 
 def ensure(ns: str, seed: int = SEED) -> dict:
-    """Load results/<ns>/manifest.json; the mock namespace generates it on first use."""
+    """Load results/<ns>/manifest.json (plus the pilot runs); the mock namespace generates it on first use."""
     m = jsonio.read_json(paths.manifest_path(ns))
     if m is None and ns == "mock":
         m = generate(seed, "mock")
         jsonio.write_json_atomic(paths.manifest_path(ns), m)
-    return m
+    return with_pilots(m, ns) if m is not None else None
 
 
 def main(argv=None) -> int:

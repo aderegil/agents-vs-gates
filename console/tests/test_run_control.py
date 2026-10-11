@@ -67,13 +67,15 @@ class StagesTest(unittest.TestCase):
         with ConsoleFixture(copy_real=PLUGINS) as fx:
             seed(fx.results)
             d = fx.owner.get("/api/run-control/stages?ns=mock").json
-            self.assertEqual([c["stage"] for c in d["stages"]], ["P0", "P1", "P2", "P3", "P4", "P5", "P6"])
+            self.assertEqual([c["stage"] for c in d["stages"]], ["P0", "X1", "P1", "P2", "P3", "P4", "P5", "P6"])
             by = {c["stage"]: c for c in d["stages"]}
             self.assertEqual((by["P0"]["done"], by["P0"]["total"], by["P0"]["status"], by["P0"]["blinding"]), (5, 5, "complete", "visible"))
             self.assertEqual((by["P1"]["done"], by["P1"]["total"], by["P1"]["status"], by["P1"]["blinding"]), (3, 40, "in_progress", "blinded"))
             self.assertEqual(by["P2"]["status"], "pending")
             self.assertEqual(by["P3"]["status"], "not_in_manifest")
             self.assertFalse(by["P3"]["runnable"])
+            self.assertEqual((by["X1"]["total"], by["X1"]["blinding"], by["X1"]["runnable"], by["X1"]["name"]),
+                             (40, "visible", True, "Pilot X1 · exploratory"))
             self.assertEqual((by["P0"]["minutes"], by["P1"]["tokens"]), (4.5, 13200))
             self.assertEqual(len(by["P1"]["cells"]), 4)
             self.assertEqual(sum(c["done"] for c in by["P1"]["cells"]), 3)

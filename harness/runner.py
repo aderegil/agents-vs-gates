@@ -7,6 +7,8 @@
   python -X utf8 -m harness.runner --stage P1 --unit mock         the whole cycle with the simulated agent
   python -X utf8 -m harness.runner --calibrate                    run P0 and print the P1–P5 projection
   python -X utf8 -m harness.runner --unblind P1 [--force-unblind]
+  python -X utf8 -m harness.runner --stage X1 --unit cc-sonnet --workers 3 --max-runs 3   pilot X1 (visible, exploratory;
+                                                                  real needs --unit; writes results/<ns>/x1-summary.md)
 Options: --workers 1..3, --max-runs N (alias of --batch; the smaller wins), --ns real|mock, --unit U.
 Exit codes: 0 ok, 2 usage/guard refusal (lock missing, smoke not passed, model drift), 3 rate-limited, 4 isolation
 breach. While running: state.json rewritten atomically at least every second, PID in state.runner.pid,
@@ -32,7 +34,8 @@ from harness import manifest as manifest_mod
 
 EXIT_OK, EXIT_GUARD, EXIT_RATE, EXIT_BREACH = 0, 2, 3, 4
 MAX_INFRA_RETRIES = 2
-STAGES = ("P0", "P1", "P2", "P4", "P5", "P6")
+STAGES = ("P0", "P1", "P2", "P4", "P5", "P6") + manifest_mod.PILOTS
+EXPLORATORY = ("P0",) + manifest_mod.PILOTS      # exempt from the pre-registration lock (calibration, pilots)
 
 
 def now() -> str:
@@ -108,7 +111,7 @@ def guard_errors(ns: str, stage: str, units_used: set[str]) -> list[str]:
     smoke = jsonio.read_json(paths.results_root() / "smoke.json")
     if not (smoke and smoke.get("ok")):
         errs.append("live smoke test not passed (results/smoke.json); run `python -m harness.smoke` with authorization")
-    if stage != "P0":
+    if stage not in EXPLORATORY:
         from harness import prereg
         ok, problems = prereg.verify()
         if not ok:
@@ -386,7 +389,7 @@ def _records(ns: str, ids) -> dict:
 
 
 def status(ns: str) -> dict:
-    manifest = jsonio.read_json(paths.manifest_path(ns)) or {"runs": []}
+    manifest = manifest_mod.load(ns) or {"runs": []}
     state = jsonio.read_json(paths.state_path(ns)) or new_state(ns)
     out = {"ns": ns, "runner": state.get("runner"), "usage": state.get("usage", {}), "stages": {}}
     by_stage = defaultdict(list)
@@ -529,6 +532,10 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
     runs = [r for r in manifest["runs"] if r["stage"] == stage]
     if ns == "real" and a.unit:
         runs = [r for r in runs if r["unit"] == a.unit]
+    elif ns == "real" and stage in manifest_mod.PILOTS and len({r["unit"] for r in runs}) > 1:
+        print(f"{stage} has runs for several units ({', '.join(sorted({r['unit'] for r in runs}))}); pass --unit "
+              "(they run one after the other, not mixed)", file=sys.stderr)
+        return EXIT_GUARD
     todo = [r for r in runs if st.run(r["run_id"]).get("status", "pending") in ("pending", "infra_failure")]
     limit = min(x for x in (a.batch, a.max_runs) if x is not None) if (a.batch or a.max_runs) else None
 
@@ -561,6 +568,14 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
                   unit_label=a.unit or ("mock" if ns == "mock" else None), pipeline=pipeline,
                   mock_scripts=mock_scripts, quiet=a.quiet)
     code = batch.run()
+    if stage == "X1":
+        try:
+            from analysis import pilot_x1
+            pilot_x1.write(ns)
+            if not a.quiet:
+                print(f"pilot summary: {paths.ns_dir(ns) / 'x1-summary.md'}", flush=True)
+        except Exception as e:  # noqa: BLE001 - a summary problem never changes the batch's exit code
+            print(f"pilot summary not written: {type(e).__name__}: {e}", file=sys.stderr)
     if a.calibrate and code == EXIT_OK:
         p = projection(ns)
         print(json.dumps(p, indent=2)) if a.json else print_projection(p)

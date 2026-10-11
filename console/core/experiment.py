@@ -14,9 +14,9 @@ from pathlib import Path
 from harness import blinding, paths
 from harness.jsonio import read_json, read_jsonl
 
-STAGES = ["P0", "P1", "P2", "P3", "P4", "P5", "P6"]
+STAGES = ["P0", "X1", "P1", "P2", "P3", "P4", "P5", "P6"]
 STAGE_NAMES = {
-    "P0": "Calibration", "P1": "Core", "P2": "Pressure", "P3": "Reviewers (RQ4)",
+    "P0": "Calibration", "X1": "Pilot X1 · exploratory", "P1": "Core", "P2": "Pressure", "P3": "Reviewers (RQ4)",
     "P4": "Breadth", "P5": "Optional: Opus, RQ5", "P6": "Later: Codex",
 }
 MAIN_STAGES = ["P1", "P2", "P4"]  # what "data collection" means before the optional stages
@@ -44,7 +44,12 @@ def utc_now() -> str:
 
 
 def load(ns: str) -> tuple[dict, dict]:
-    m = read_json(paths.manifest_path(ns), default=None)
+    """The manifest includes the pilot runs (X1), which are computed, not stored in manifest.json."""
+    from harness import manifest as manifest_mod
+    try:
+        m = manifest_mod.load(ns)
+    except (OSError, ValueError, AttributeError, TypeError):
+        m = None
     s = read_json(paths.state_path(ns), default=None)
     return (m if isinstance(m, dict) else {}), (s if isinstance(s, dict) else {})
 
@@ -52,6 +57,8 @@ def load(ns: str) -> tuple[dict, dict]:
 def stage_of_run(run_id: str) -> str | None:
     if run_id.startswith("st-"):
         return "selftest"
+    if run_id.startswith(("x1-", "x1c-")):
+        return "X1"
     if len(run_id) > 2 and run_id[0] == "p" and run_id[1].isdigit():
         return "P" + run_id[1]
     return None
