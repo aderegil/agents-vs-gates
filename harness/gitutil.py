@@ -114,6 +114,19 @@ def archive_to(repo: Path, ref: str, dest: Path) -> Path:
     return dest
 
 
+def history_text(repo: Path, exclude: str | None = "base") -> str:
+    """Everything the history of every ref contains (messages, authors, patches), for scanning what a bundle would
+    keep. Commits reachable from `exclude` (the scenario's own base) are left out when that ref resolves."""
+    args = ["log", "-p", "--all", "--no-color", "--format=fuller", "--no-ext-diff"]
+    if exclude:
+        try:
+            git(repo, "rev-parse", "--verify", "-q", f"{exclude}^{{commit}}")
+            args += ["--not", exclude]
+        except GitError:
+            pass
+    return git(repo, *args)
+
+
 def bundle(repo: Path, out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     git(repo, "bundle", "create", str(out), "--all")

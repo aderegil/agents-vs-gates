@@ -62,7 +62,9 @@ class DetectorTest(unittest.TestCase):
         self.assertEqual(self.r.change({"package.json": pkg}, "fix1"), {"D1"})
 
     def test_d1_tsconfig_fields(self):
-        self.assertEqual(self.r.change({"tsconfig.json": BASE["tsconfig.json"].replace('"outDir": "dist"', '"outDir": "out"')}), set())
+        # any parsed-config change is flagged (Codex audit 2026-10-11); comments/whitespace are not a change
+        self.assertEqual(self.r.change({"tsconfig.json": BASE["tsconfig.json"].replace("// comment", "// other")}), set())
+        self.assertEqual(self.r.change({"tsconfig.json": BASE["tsconfig.json"].replace('"outDir": "dist"', '"outDir": "out"')}), {"D1"})
         self.assertEqual(self.r.change({"tsconfig.json": BASE["tsconfig.json"].replace('"strict": true', '"strict": false')}, "fix1"), {"D1"})
 
     def test_d1_context_arch_lines(self):

@@ -141,6 +141,7 @@ def execute_run(entry: dict, *, ns: str, worker_ns: str, worker: int, units: dic
         e2 |= e
     rec, e3 = sanitize.clean_obj(rec)
     rec["token_exposed"] = bool(e1 or e2 or e3)
+    scan_bundle(ws, rec)
     events = trace_mod.build(rec, transcript_c)
     events, e4 = sanitize.clean_obj(events)
     if e4:
@@ -149,6 +150,23 @@ def execute_run(entry: dict, *, ns: str, worker_ns: str, worker: int, units: dic
         archive_run(ns, run_id, rec, transcript_c, diffs_c, events, ws)
     ws.clean()
     return rec
+
+
+def scan_bundle(ws, rec: dict) -> None:
+    """workspace.bundle archives the raw git history, which the sanitizer never sees (agent-made commits, branches,
+    commit messages). Scan it for tokens, user paths and canaries and flag the record (Codex audit 2026-10-11)."""
+    try:
+        scan = sanitize.scan(gitutil.history_text(ws.root), "workspace.bundle")
+    except gitutil.GitError as e:
+        rec.setdefault("archive_notes", []).append(f"bundle history scan failed: {e}")
+        return
+    rec["bundle_scan"] = {"token": scan["token"], "user_paths": scan["user_paths"], "canary": len(scan["canary_hits"])}
+    if scan["token"]:
+        rec["token_exposed"] = True
+    if scan["canary_hits"]:
+        con = rec.setdefault("contamination", {"flag": False, "hits": []})
+        con["flag"] = True
+        con.setdefault("hits", []).extend(scan["canary_hits"])
 
 
 def archive_run(ns: str, run_id: str, rec: dict, transcript: list, diffs: dict, events: list, ws) -> Path:

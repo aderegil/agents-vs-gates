@@ -54,6 +54,31 @@ def _load_json(text: str | None):
         return ValueError
 
 
+def _is_tsconfig(rel: str) -> bool:
+    return fnmatch.fnmatchcase(PurePosixPath(rel).name, "tsconfig*.json")
+
+
+def _tsconfig_changes(status: str, old: str | None, new: str | None) -> str:
+    """What differs between two versions of a tsconfig*.json ('' = nothing that changes the parsed config)."""
+    if status == "D" or new is None:
+        return "deleted"
+    n = _load_json(new)
+    if n is ValueError or not isinstance(n, dict):
+        return "unparseable"
+    if status == "A" or old is None:
+        return "added"
+    o = _load_json(old)
+    if o is ValueError or not isinstance(o, dict):
+        return "was unparseable before"
+    diffs = [k for k in sorted(set(o) | set(n)) if k != "compilerOptions" and o.get(k) != n.get(k)]
+    oc, nc = o.get("compilerOptions"), n.get("compilerOptions")
+    if isinstance(oc, dict) and isinstance(nc, dict):
+        diffs += [f"compilerOptions.{k}" for k in sorted(set(oc) | set(nc)) if oc.get(k) != nc.get(k)]
+    elif oc != nc:
+        diffs.append("compilerOptions")
+    return ", ".join(diffs)
+
+
 def _count(regexes, text: str | None) -> int:
     if not text:
         return 0
@@ -153,16 +178,12 @@ def detect(repo: Path, base: str, head: str, service_prefix: str = "") -> list[d
                 flags.append(_flag("D1", path, "package.json scripts changed" +
                                    (f"; added {added}" if added else "") + (f"; changed {changed}" if changed else "") +
                                    (f"; removed {removed}" if removed else "")))
-        elif rel == "tsconfig.json":
-            o, n = _load_json(old), _load_json(new)
-            if o is ValueError or n is ValueError or n is None:
-                flags.append(_flag("D1", path, "tsconfig.json unparseable or deleted"))
-            else:
-                diffs = [k for k in ("include", "exclude") if (o or {}).get(k) != n.get(k)]
-                if ((o or {}).get("compilerOptions") or {}).get("strict") != (n.get("compilerOptions") or {}).get("strict"):
-                    diffs.append("compilerOptions.strict")
-                if diffs:
-                    flags.append(_flag("D1", path, f"tsconfig.json changed {', '.join(diffs)}"))
+        elif _is_tsconfig(rel) or (status == "R" and _is_tsconfig(old_rel)):
+            # ANY change in a tsconfig*.json (any directory of the service): other compilerOptions can weaken the
+            # typecheck silently (skipLibCheck, noImplicitAny, strictNullChecks, paths, ...).
+            what = _tsconfig_changes(status, old, new)
+            if what:
+                flags.append(_flag("D1", path, f"{PurePosixPath(rel).name} changed: {what}"))
 
         # D3: baseline regenerated or with more entries
         if rel == BASELINE:
