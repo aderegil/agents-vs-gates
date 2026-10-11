@@ -20,7 +20,7 @@
     "scenario": "meridian-retail/M1",
     "trace_sha256": "5d101147f7ff116dc870020d7749164b5be41bc538601f1433372a37a5a2ac2a",
     "schema": "replay/1",
-    "exporter_version": 2,
+    "exporter_version": 3,
     "legend": "SIMULATED (mock agent) — not a real run",
     "duration_ms": 48000,
     "duration_real_ms": 55500,

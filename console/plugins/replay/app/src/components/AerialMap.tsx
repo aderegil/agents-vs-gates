@@ -58,7 +58,8 @@ export function AerialMap({ engine, onOpenPlace }: Props) {
         const owner = replay.actors.find((a) => a.home === p.id && a.actor_type === "system");
         const active = owner ? isActive(state.actors[owner.id], clock) : false;
         return (
-          <button key={p.id} type="button" className={`map-plot map-plot--${p.kind} ${active ? "is-active" : ""}`}
+          <button key={p.id} type="button"
+            className={`map-plot map-plot--${p.kind} ${active ? "is-active" : ""} ${p.used === false ? "is-unused" : ""}`}
             style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }} onClick={() => onOpenPlace(p.id)}
             title={p.note ? `${p.label} — ${p.note}` : p.label}>
             <span className="map-plot__label">{p.label}</span>

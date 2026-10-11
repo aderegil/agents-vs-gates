@@ -18,6 +18,8 @@ export interface ReplayPlace {
   x: number;
   y: number;
   note?: string;
+  /** exporter 2: false when nobody uses the place in this run (drawn dimmed) */
+  used?: boolean;
 }
 
 export interface ReplayActor {
@@ -42,6 +44,8 @@ export interface ReplayStep {
   key?: string | null;
   check?: { id?: string; status?: CheckStatus; rule?: string | null };
   narration?: string | null;
+  /** exporter 2: plain-language subtitle (a template over trace fields), used when there is no narration */
+  caption?: string | null;
   detail?: Record<string, unknown> | null;
 }
 
@@ -69,12 +73,56 @@ export interface ReplayMeta {
   [key: string]: unknown;
 }
 
+/** A moment of the run: the trace seq it comes from and its time on the replay clock. */
+export interface SceneMoment {
+  seq: number;
+  t_ms: number;
+}
+
+export interface SceneConsumer {
+  id: string;
+  desk: string;
+  /** the contract the consumer holds, as the CI contract checks name it ("OrderPlaced", "GET /orders/{id}") */
+  contract?: string | null;
+  oracle: Record<string, { status: CheckStatus } & SceneMoment>;
+  reads: ({ tool?: string; path: string } & SceneMoment)[];
+  edits: { path: string; seq: number | null; t_ms: number }[];
+  /** a fictional code owner for the desk (M1 traces have no consumer people) */
+  owner?: { name: string; title: string; seed: string; fictional: true };
+  /** or the run's own code-owner actor */
+  owner_actor?: string;
+}
+
+export interface DiffCard extends SceneMoment {
+  session: string;
+  file: string;
+  added: number;
+  removed: number;
+  lines: { op: "+" | "-"; text: string }[];
+  more: number;
+  source: string;
+}
+
+/** exporter 2: the run facts staged around the trace (record, diffs, transcript). */
+export interface Scene {
+  layout: "pr-tray" | "review";
+  visibility?: string | null;
+  spec?: string | null;
+  agent?: string | null;
+  context?: ({ file?: string | null; summary?: string | null } & SceneMoment) | null;
+  fitness_functions: string[];
+  consumers: SceneConsumer[];
+  diff_cards: DiffCard[];
+  sources: string[];
+}
+
 export interface Replay {
   meta: ReplayMeta;
   places: ReplayPlace[];
   actors: ReplayActor[];
   steps: ReplayStep[];
   markers: ReplayMarker[];
+  scene?: Scene;
 }
 
 export type BubbleTone = "neutral" | "thought" | "code" | "pass" | "fail";
@@ -169,6 +217,16 @@ function toneFor(step: ReplayStep): BubbleTone {
   return "neutral";
 }
 
+/**
+ * Steps that speak through the stage instead of a speech bubble, so a CI verdict is said once: the CI tower's lights
+ * and failing-rule labels carry check and CI results, the staging bench and the other teams' desks carry oracle
+ * results, and the CI output sent back to the agent travels as an envelope (its text stays in the events panel).
+ */
+export function quietStep(step: ReplayStep): boolean {
+  if (step.action === "check" || step.action === "ci_result" || step.action === "oracle") return true;
+  return step.action === "speak" && (step.detail ?? {})["feedback"] === "ci_output";
+}
+
 /** Applies one step to the scene (mutates `s`). Steps must be applied in order. */
 export function applyStep(s: SceneState, step: ReplayStep, index: number): void {
   const a = ensureActor(s, step.actor);
@@ -221,10 +279,11 @@ export function applyStep(s: SceneState, step: ReplayStep, index: number): void 
     default:
       break;
   }
-  if (step.text && step.action !== "move") {
+  if (step.text && step.action !== "move" && !quietStep(step)) {
     a.bubble = { text: step.text, at: t, seq: step.seq, tone: toneFor(step) };
   }
-  if (step.narration) s.narration = { text: step.narration, at: t };
+  const sub = step.narration || step.caption;
+  if (sub) s.narration = { text: sub, at: t };
   s.applied = index + 1;
   s.lastStep = index;
 }

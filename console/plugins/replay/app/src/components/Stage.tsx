@@ -5,14 +5,18 @@
 // canvas so recorded clips carry them too. One light palette (no dark variant, also in presentation mode).
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import {
-  FAIL, LIGHT, PASS, PORTRAIT_H, PORTRAIT_W, drawBadge, drawSystemObject, portraitGrid,
+  ACCENT, FAIL, LIGHT, PASS, PORTRAIT_H, PORTRAIT_W, drawBadge, drawSystemObject, portraitGrid,
   type AvatarSpec, type LightState, type Palette,
 } from "../engine/avatarStyles";
 import { lastCiResult, poseFor, type CiReaction } from "../engine/motion";
 import {
   bubbleVisible, isActive, narrationAt, walkProgress,
-  type ActorView, type Bubble, type ReplayActor, type ReplayEngine, type ReplayPlace,
+  type ActorView, type Bubble, type ReplayActor, type ReplayEngine, type ReplayPlace, type SceneConsumer,
 } from "../engine/replay";
+import {
+  cardAt, editsAt, glassFor, isDimmed, ownerView, readsAt, restingSheets, travels, travelsAt, trayCount,
+  type Travel, type TravelFrame,
+} from "../engine/scene";
 import { placeToFloor, projectFloorPoint, standingSpot } from "../engine/spatial";
 
 export const STAGE_W = 1280;
@@ -42,16 +46,38 @@ interface StageColors extends Palette {
 
 const STAGE_COLORS: StageColors = { ...LIGHT, wall: "#eceff3", floor: "#f6f7f9", grid: "#e3e6eb",
   subtitleBg: "#111827", subtitleInk: "#ffffff" };
+/** Floor zones: neutral tints only (cyan and pink are reserved for pass/fail). Warm = before, cool grey = after. */
+const ZONE_BEFORE = "#f1eee8";
+const ZONE_AFTER = "#e8ecf1";
+/** Aerial x of the seam between "before generation" and "after generation", and the aerial y where the back rows end. */
+const ZONE_SPLIT_X = 0.5;
+const ZONE_END_Y = 0.7;
+/** The glass wall between the agent's area and the other teams' desks (aerial coordinates). */
+const GLASS_Y = 0.735;
+const GLASS_X0 = 0.0;
+const GLASS_X1 = 0.53;
+const DIM_ALPHA = 0.32;
+/** Code owners sit beside their desk (floor x offset). */
+const OWNER_DX = 0.062;
+const DIFF_ADD_BG = "#e0e7ff";
+const DIFF_DEL_BG = "#eef0f3";
 
 export interface StageHandle {
   draw: () => void;
   canvas: () => HTMLCanvasElement | null;
 }
 
+/** A caption painted top-center into the frame (the director's cut montage, a presenter slide title). */
+export interface StageOverlay {
+  title: string;
+  lines?: string[];
+}
+
 interface Props {
   engine: ReplayEngine;
   largeSubtitles: boolean;
   label?: string;
+  overlay?: StageOverlay | null;
 }
 
 function floorToPixel(x: number, y: number) {
@@ -69,10 +95,10 @@ function fmtClock(ms: number): string {
   return `${String(m).padStart(2, "0")}:${(s - m * 60).toFixed(1).padStart(4, "0")}`;
 }
 
-export const Stage = forwardRef<StageHandle, Props>(function Stage({ engine, largeSubtitles, label }, ref) {
+export const Stage = forwardRef<StageHandle, Props>(function Stage({ engine, largeSubtitles, label, overlay }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const opts = useRef({ largeSubtitles, label });
-  opts.current = { largeSubtitles, label };
+  const opts = useRef({ largeSubtitles, label, overlay });
+  opts.current = { largeSubtitles, label, overlay };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -86,7 +112,7 @@ export const Stage = forwardRef<StageHandle, Props>(function Stage({ engine, lar
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     ctx.setTransform(DEVICE, 0, 0, DEVICE, 0, 0);
-    renderFrame(ctx, engine, STAGE_COLORS, opts.current.largeSubtitles, opts.current.label);
+    renderFrame(ctx, engine, STAGE_COLORS, opts.current.largeSubtitles, opts.current.label, opts.current.overlay);
   }
 
   useImperativeHandle(ref, () => ({ draw, canvas: () => canvasRef.current }));
@@ -138,6 +164,8 @@ interface PlaceLabel {
   anchor: "bottom" | "top";
   size: number;
   noteSize: number;
+  /** nobody uses the place in this run */
+  dim?: boolean;
 }
 
 /** Per-frame layout state: what is already on screen, so labels and bubbles can avoid it. */
@@ -154,19 +182,50 @@ function overlap(a: Rect, b: Rect): number {
   return w > 0 && h > 0 ? w * h : 0;
 }
 
+const travelCache = new WeakMap<object, Travel[]>();
+
+function travelsOf(replay: ReplayEngine["replay"]): Travel[] {
+  let t = travelCache.get(replay);
+  if (!t) {
+    t = travels(replay);
+    travelCache.set(replay, t);
+  }
+  return t;
+}
+
 function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: StageColors, bigSubs: boolean,
-  label?: string) {
+  label?: string, overlay?: StageOverlay | null) {
   const { replay, state, clock } = engine;
   const placeById = new Map(replay.places.map((p) => [p.id, p]));
   ctx.clearRect(0, 0, STAGE_W, STAGE_H);
   ctx.fillStyle = c.wall;
   ctx.fillRect(0, 0, STAGE_W, STAGE_H);
   drawFloor(ctx, c);
+  const zoneTags = replay.scene ? drawZones(ctx, c) : [];
   drawHeader(ctx, engine, c, label);
 
   const drawables: Drawable[] = [];
-  const layout: Layout = { obstacles: [], figures: [], bubbles: [], labels: [] };
+  const layout: Layout = { obstacles: [...zoneTags], figures: [], bubbles: [], labels: [] };
   const ci = lastCiResult(engine);
+  const glass = glassFor(replay);
+  const consumers = replay.scene?.consumers ?? [];
+  // the other teams' desks: behind glass from the agent's desk (M1 only: a scene with a visibility)
+  if (replay.scene && glass.v && consumers.some((k) => placeById.has(k.desk))) {
+    const gy = placeToFloor({ x: 0, y: GLASS_Y }).y;
+    drawables.push({ depth: gy, draw: () => drawGlass(ctx, glass.clear, glass.v as string, c, layout) });
+  }
+  // fictional code owners seated at the other teams' desks (only where the run has nobody of its own)
+  for (const k of consumers) {
+    const desk = placeById.get(k.desk);
+    if (!k.owner || !desk || isDimmed(replay, k.desk)) continue;
+    // seated beside their desk (not in front of it), so the desk and its monitors stay visible
+    const spot = standingSpot(desk, 0, 1);
+    spot.x += OWNER_DX;
+    spot.y -= 0.03;
+    const fig = figureGeometry({ ...spot, walking: false, facing: 1 }, clock, null);
+    layout.figures.push(fig.rect);
+    drawables.push({ depth: spot.y, draw: () => drawOwner(ctx, engine, k, fig, c, layout) });
+  }
 
   // Who stands where (slots per place, deterministic order)
   const byPlace = new Map<string, string[]>();
@@ -200,12 +259,517 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
 
   drawables.sort((p, q) => p.depth - q.depth);
   for (const d of drawables) d.draw();
+
+  // what the scene adds on top of the floor: reads and edits in another team's folder, sheets and packets
+  const agentPos = agentScreenPos(engine, placeById, byPlace);
+  for (const k of consumers) drawConsumerMarks(ctx, engine, k, agentPos, placeById, c, layout);
+  drawResting(ctx, engine, placeById, c, layout);
+  for (const f of travelsAt(travelsOf(replay), clock)) drawTravel(ctx, f, placeById, c);
+
   for (const l of layout.labels) drawPlaceLabel(ctx, l, c, layout);
+  const card = cardAt(replay, clock);
+  if (card) drawDiffCard(ctx, engine, card, placeById, c, layout);
   layoutBubbles(ctx, layout, c);
 
+  if (overlay) drawOverlay(ctx, overlay, c);
   const narration = narrationAt(state, clock, engine.end);
   if (narration) drawSubtitle(ctx, narration, c, bigSubs);
   drawWatermark(ctx, replay.meta, c);
+}
+
+/** Pixel position (front of the prop, top of the prop) of a place on the floor. */
+function placePixel(p: ReplayPlace) {
+  const f = placeToFloor(p);
+  return floorToPixel(f.x, f.y);
+}
+
+function aerialToPixel(x: number, y: number) {
+  return floorToPixel(x, placeToFloor({ x, y }).y);
+}
+
+/** Two floor zones (back rows): before generation (spec, context, the agent's desk) and after it (CI, merge gate). */
+function drawZones(ctx: CanvasRenderingContext2D, c: StageColors): Rect[] {
+  const rects: Rect[] = [];
+  const quad = (x0: number, x1: number, y0: number, y1: number, fill: string) => {
+    const a = aerialToPixel(x0, y0);
+    const b = aerialToPixel(x1, y0);
+    const d = aerialToPixel(x1, y1);
+    const e = aerialToPixel(x0, y1);
+    ctx.beginPath();
+    ctx.moveTo(a.px, a.py);
+    ctx.lineTo(b.px, b.py);
+    ctx.lineTo(d.px, d.py);
+    ctx.lineTo(e.px, e.py);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+  };
+  ctx.save();
+  quad(0, ZONE_SPLIT_X, 0.1, ZONE_END_Y, ZONE_BEFORE);
+  quad(ZONE_SPLIT_X, 1, 0.1, ZONE_END_Y, ZONE_AFTER);
+  // the seam
+  const s0 = aerialToPixel(ZONE_SPLIT_X, 0.1);
+  const s1 = aerialToPixel(ZONE_SPLIT_X, ZONE_END_Y);
+  ctx.strokeStyle = c.lineStrong;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  ctx.moveTo(s0.px, s0.py);
+  ctx.lineTo(s1.px, s1.py);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // labels on the back wall, above each zone
+  ctx.textBaseline = "middle";
+  const y = FLOOR_TOP + 14;
+  const tag = (x: number, align: CanvasTextAlign, title: string, sub: string, fill: string) => {
+    ctx.font = `600 12px ${FONT}`;
+    const tw = ctx.measureText(title.toUpperCase()).width;
+    ctx.font = `400 12px ${FONT}`;
+    const sw = ctx.measureText(` · ${sub}`).width;
+    const w = 14 + tw + sw;
+    const x0 = align === "left" ? x : x - w;
+    ctx.fillStyle = fill;
+    ctx.fillRect(x0, y - 5, 10, 10);
+    ctx.strokeStyle = c.lineStrong;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x0 + 0.5, y - 4.5, 9, 9);
+    ctx.textAlign = "left";
+    ctx.fillStyle = c.ink2;
+    ctx.font = `600 12px ${FONT}`;
+    ctx.fillText(title.toUpperCase(), x0 + 14, y + 0.5);
+    ctx.font = `400 12px ${FONT}`;
+    ctx.fillText(` · ${sub}`, x0 + 14 + tw, y + 0.5);
+    rects.push({ x: x0 - 2, y: y - 8, w: w + 4, h: 16 });
+  };
+  tag(aerialToPixel(0, 0.1).px, "left", "Before generation", "probabilistic: spec, context, the agent's desk",
+    ZONE_BEFORE);
+  tag(aerialToPixel(1, 0.1).px, "right", "After generation", "deterministic: CI, merge gate", ZONE_AFTER);
+  ctx.restore();
+  return rects;
+}
+
+/** The glass between the agent's area and the other teams' desks: frosted in V0/V1, clear in V2. */
+function drawGlass(ctx: CanvasRenderingContext2D, clear: boolean, v: string, c: StageColors, layout: Layout) {
+  const a = aerialToPixel(GLASS_X0 + 0.01, GLASS_Y);
+  const b = aerialToPixel(GLASS_X1, GLASS_Y);
+  const h = 50 * a.scale;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(a.px, a.py - h, b.px - a.px, h);
+  ctx.fillStyle = clear ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.7)";
+  ctx.fill();
+  ctx.clip();
+  if (!clear) {
+    // frost: fine diagonal hatching
+    ctx.strokeStyle = "rgba(17,24,39,0.07)";
+    ctx.lineWidth = 1;
+    for (let x = a.px - h; x < b.px; x += 5) {
+      ctx.beginPath();
+      ctx.moveTo(x, a.py);
+      ctx.lineTo(x + h, a.py - h);
+      ctx.stroke();
+    }
+  } else {
+    // clear glass: a few glints
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.lineWidth = 3;
+    for (const f of [0.18, 0.21, 0.62]) {
+      const x = a.px + (b.px - a.px) * f;
+      ctx.beginPath();
+      ctx.moveTo(x, a.py - 6);
+      ctx.lineTo(x + h * 0.5, a.py - h + 4);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.strokeStyle = clear ? c.ink2 : c.lineStrong;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(a.px + 0.5, a.py - h + 0.5, b.px - a.px - 1, h - 1);
+  // posts
+  ctx.fillStyle = c.bodyShade;
+  for (const f of [0, 1 / 3, 2 / 3, 1]) ctx.fillRect(a.px + (b.px - a.px) * f - 2, a.py - h, 4, h);
+  ctx.font = `500 12px ${FONT}`;
+  ctx.fillStyle = c.ink2;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  // the caption sits on the free floor just past the glass's end (the desks' own labels sit on the glass)
+  const lines = clear
+    ? [`Clear glass (${v})`, "the other teams' repos are in", "the agent's workspace"]
+    : [`Frosted glass (${v})`, "the other teams' repos are not", "in the agent's workspace"];
+  const tx = b.px + 14;
+  const ty = a.py - h + 2;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  let tw = 0;
+  lines.forEach((l, i) => {
+    ctx.font = i === 0 ? `600 12px ${FONT}` : `400 12px ${FONT}`;
+    ctx.fillStyle = i === 0 ? c.ink : c.ink2;
+    ctx.fillText(l, tx, ty + i * 15);
+    tw = Math.max(tw, ctx.measureText(l).width);
+  });
+  ctx.strokeStyle = clear ? c.ink2 : c.lineStrong;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(b.px + 6, ty + 2);
+  ctx.lineTo(b.px + 6, ty + lines.length * 15 - 2);
+  ctx.stroke();
+  layout.obstacles.push({ x: tx - 4, y: ty - 2, w: tw + 8, h: lines.length * 15 + 4 });
+  ctx.restore();
+}
+
+/** The agent's current on-screen anchor (head height), for lines from its desk to another team's desk. */
+function agentScreenPos(engine: ReplayEngine, places: Map<string, ReplayPlace>, byPlace: Map<string, string[]>) {
+  const { replay, state, clock } = engine;
+  const id = replay.scene?.agent ?? replay.actors.find((a) => a.role === "code_agent")?.id;
+  const v = id ? state.actors[id] : undefined;
+  if (!id || !v) return null;
+  const pos = actorPosition(id, v, clock, places, byPlace);
+  if (!pos) return null;
+  const fig = figureGeometry(pos, clock, null);
+  return { x: fig.px, y: fig.y + fig.h * 0.35 };
+}
+
+function shortPath(p: string): string {
+  const parts = p.replace(/\\/g, "/").split("/");
+  return parts[parts.length - 1] || p;
+}
+
+function pill(ctx: CanvasRenderingContext2D, cx: number, y: number, text: string, fill: string, ink: string,
+  layout: Layout, size = 11): Rect {
+  ctx.save();
+  ctx.font = `600 ${size}px ${FONT}`;
+  const w = ctx.measureText(text).width + 12;
+  const h = size + 7;
+  const x = Math.round(cx - w / 2);
+  ctx.fillStyle = fill;
+  ctx.fillRect(x, Math.round(y), Math.round(w), h);
+  ctx.fillStyle = ink;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, cx, y + h / 2 + 0.5);
+  ctx.restore();
+  const r = { x, y, w, h };
+  layout.obstacles.push(r);
+  return r;
+}
+
+/** A dotted line agent → desk while it reads that team's code (V2); a pink mark when it edits it. */
+function drawConsumerMarks(ctx: CanvasRenderingContext2D, engine: ReplayEngine, k: SceneConsumer,
+  agent: { x: number; y: number } | null, places: Map<string, ReplayPlace>, _c: StageColors, layout: Layout) {
+  const desk = places.get(k.desk);
+  if (!desk) return;
+  const { px, py, scale } = placePixel(desk);
+  const top = py - 4 * scale - 22 * scale - 26 * scale;
+  const reads = readsAt(k, engine.clock);
+  if (reads.count && agent) {
+    ctx.save();
+    ctx.strokeStyle = ACCENT;
+    ctx.lineWidth = reads.flash ? 2.5 : 1.5;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.moveTo(agent.x, agent.y);
+    ctx.lineTo(px, top);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    const label = `read ${shortPath(reads.last ?? "")}${reads.count > 1 ? ` +${reads.count - 1}` : ""}`;
+    pill(ctx, (agent.x + px) / 2, (agent.y + top) / 2 - 9, label, "#ffffff", ACCENT, layout);
+  }
+  const edits = editsAt(k, engine.clock);
+  if (edits.length) {
+    ctx.save();
+    ctx.strokeStyle = FAIL;
+    ctx.lineWidth = 3;
+    const w = 140 * scale;
+    ctx.strokeRect(px - w / 2, top - 6 * scale, w, py - top + 4 * scale);
+    ctx.restore();
+    const text = `edited by the agent: ${shortPath(edits[0])}${edits.length > 1 ? ` +${edits.length - 1}` : ""}`;
+    pill(ctx, px, py + 2, text, FAIL, "#ffffff", layout);
+  }
+}
+
+/** Maya's sheets after they land: the spec rules on the agent's desk, the fitness functions on the CI tower. */
+function drawResting(ctx: CanvasRenderingContext2D, engine: ReplayEngine, places: Map<string, ReplayPlace>,
+  c: StageColors, layout: Layout) {
+  for (const s of restingSheets(engine.replay, engine.clock)) {
+    const p = places.get(s.to);
+    if (!p) continue;
+    const { px, py, scale } = placePixel(p);
+    const x = s.to === "ci-tower" ? px + 30 * scale : px - 58 * scale;
+    const y = s.to === "ci-tower" ? py - 26 * scale : py - 52 * scale;
+    drawSheetIcon(ctx, x, y, 0.8 * scale, c);
+    ctx.save();
+    ctx.font = `500 ${Math.round(10 * Math.max(scale, 0.9))}px ${FONT}`;
+    ctx.fillStyle = c.ink2;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    const text = s.to === "ci-tower" ? s.label.split(" · ")[0] : s.label.split(" · ").slice(-1)[0];
+    ctx.fillText(text, x + 12 * scale, y + 2);
+    const tw = ctx.measureText(text).width;
+    layout.obstacles.push({ x: x - 8, y: y - 10, w: tw + 24 * scale, h: 22 });
+    ctx.restore();
+  }
+}
+
+function drawSheetIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number, c: StageColors) {
+  const w = 16 * s;
+  const h = 20 * s;
+  ctx.save();
+  ctx.fillStyle = c.surface;
+  ctx.strokeStyle = c.ink2;
+  ctx.lineWidth = 1.2;
+  ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+  ctx.strokeRect(cx - w / 2 + 0.5, cy - h / 2 + 0.5, w - 1, h - 1);
+  ctx.fillStyle = c.bodyShade;
+  for (let i = 0; i < 4; i++) ctx.fillRect(cx - w / 2 + 3 * s, cy - h / 2 + (4 + i * 4) * s, w - 6 * s - (i % 2) * 3 * s, 1.5 * s);
+  ctx.restore();
+}
+
+function drawEnvelopeIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number, c: StageColors) {
+  const w = 24 * s;
+  const h = 16 * s;
+  ctx.save();
+  ctx.fillStyle = c.surface;
+  ctx.strokeStyle = c.ink;
+  ctx.lineWidth = 1.4;
+  ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+  ctx.strokeRect(cx - w / 2 + 0.5, cy - h / 2 + 0.5, w - 1, h - 1);
+  ctx.beginPath();
+  ctx.moveTo(cx - w / 2 + 1, cy - h / 2 + 1);
+  ctx.lineTo(cx, cy + 1);
+  ctx.lineTo(cx + w / 2 - 1, cy - h / 2 + 1);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** Sheets, the PR pickup, the CI output envelope and the event packets, flying in an arc between two places. */
+function drawTravel(ctx: CanvasRenderingContext2D, f: TravelFrame, places: Map<string, ReplayPlace>, c: StageColors) {
+  const { travel: tr, progress } = f;
+  const a = places.get(tr.from);
+  const b = places.get(tr.to);
+  if (!a || !b) return;
+  const pa = placePixel(a);
+  const pb = placePixel(b);
+  const ax = pa.px;
+  // sheets leave from the front of the library's shelves; everything else from the top of its prop
+  const ay = pa.py - (tr.kind === "sheet" ? 20 : 50) * pa.scale;
+  const bx = pb.px;
+  const by = pb.py - 50 * pb.scale;
+  const along = (p: number) => {
+    const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+    const lift = Math.sin(Math.PI * p) * Math.min(90, 30 + Math.hypot(bx - ax, by - ay) * 0.18);
+    return { x: ax + (bx - ax) * e, y: Math.max(HEADER_H + 24, ay + (by - ay) * e - lift) };
+  };
+  const fail = tr.kind === "packet" && tr.status !== "pass";
+  let pos;
+  let alpha = 1;
+  if (progress <= 1) {
+    pos = along(progress);
+  } else {
+    // bounce back from where it broke: back along the path, damped, fading out
+    const q = progress - 1;
+    const back = Math.abs(Math.sin(q * Math.PI * 1.5)) * (1 - q) * 0.22;
+    pos = along(1 - back);
+    alpha = Math.max(0, 1 - q * 0.9);
+  }
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const s = 1;
+  if (tr.kind === "sheet" || tr.kind === "pickup") {
+    drawSheetIcon(ctx, pos.x, pos.y, s, c);
+    if (tr.kind === "sheet") {
+      ctx.font = `500 11px ${FONT}`;
+      ctx.fillStyle = c.ink;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(tr.label, pos.x + 12, pos.y);
+    }
+  } else if (tr.kind === "envelope") {
+    drawEnvelopeIcon(ctx, pos.x, pos.y, s, c);
+    ctx.font = `500 11px ${FONT}`;
+    ctx.fillStyle = c.ink;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(tr.label, pos.x + 16, pos.y);
+  } else {
+    // the event (or request) the consumer receives; it turns pink where it breaks, cyan where it is accepted
+    const arrived = progress >= 0.85;
+    ctx.font = `600 11px ${MONO}`;
+    const text = tr.label;
+    const w = ctx.measureText(text).width + 14;
+    const h = 18;
+    const fill = arrived ? (fail ? FAIL : c.surface) : c.surface;
+    const stroke = arrived ? (fail ? FAIL : PASS) : c.ink;
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = arrived ? 2 : 1.4;
+    ctx.beginPath();
+    ctx.roundRect(pos.x - w / 2, pos.y - h / 2, w, h, 9);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = arrived && fail ? "#ffffff" : c.ink;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, pos.x, pos.y + 0.5);
+  }
+  ctx.restore();
+}
+
+/** A fictional code owner at their desk, reacting to the oracle's verdict for their service. */
+function drawOwner(ctx: CanvasRenderingContext2D, engine: ReplayEngine, k: SceneConsumer, fig: Figure,
+  c: StageColors, layout: Layout) {
+  const owner = k.owner;
+  if (!owner) return;
+  const { clock, replay } = engine;
+  const view = ownerView(replay, k, clock);
+  const idle: ActorView = { place: k.desk, from: k.desk, movedAt: -Infinity, bubble: null, activeAt: -Infinity,
+    gateMark: null };
+  const pose = poseFor(owner.seed, idle, clock, false, null);
+  if (view.mood === "worried") {
+    pose.expression = "worried";
+    pose.blink = false;
+  } else if (view.mood === "relieved") {
+    pose.expression = "happy";
+  }
+  const { px, py, w, h, x, y } = fig;
+  ctx.save();
+  ctx.fillStyle = "rgba(17,24,39,0.14)";
+  ctx.beginPath();
+  ctx.ellipse(px, py, w * 0.36, w * 0.09, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.imageSmoothingEnabled = false;
+  const grid = portraitGrid({ style: "human", seed: owner.seed, role: "code_owner", badge: null }, pose);
+  ctx.drawImage(grid, x, y, w, h);
+  ctx.restore();
+
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  const nameSize = Math.round(13 * Math.max(fig.scale, 0.9));
+  ctx.font = `500 ${nameSize}px ${FONT}`;
+  ctx.fillStyle = c.ink;
+  const name = `${owner.name} · ${owner.title}`;
+  ctx.fillText(name, px, py + 6);
+  const nw = ctx.measureText(name).width;
+  layout.obstacles.push({ x: px - nw / 2 - 2, y: py + 5, w: nw + 4, h: nameSize + 3 });
+  const s2 = Math.round(11 * Math.max(fig.scale, 0.9));
+  ctx.font = `400 ${s2}px ${FONT}`;
+  ctx.fillStyle = c.ink2;
+  ctx.fillText("fictional", px, py + 8 + nameSize);
+  ctx.restore();
+
+  if (view.alert) {
+    const pass = view.alert.status === "pass";
+    const version = view.alert.state === "gen" ? "first PR" : "final PR";
+    const text = `${pass ? "✓" : "!"} ${version}: ${view.alert.text || (pass ? "pass" : "fail")}`;
+    pill(ctx, px, y - 22, text, pass ? "#ffffff" : FAIL, pass ? "#0e7490" : "#ffffff", layout, 11);
+    if (pass) {
+      ctx.save();
+      ctx.font = `600 11px ${FONT}`;
+      const tw = ctx.measureText(text).width + 12;
+      ctx.strokeStyle = PASS;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(Math.round(px - tw / 2) + 0.5, Math.round(y - 22) + 0.5, Math.round(tw) - 1, 17);
+      ctx.restore();
+    }
+  }
+}
+
+/** The diff card of the key file, beside the agent's desk, from the run's own diff (diffs/<session>.diff). */
+function drawDiffCard(ctx: CanvasRenderingContext2D, engine: ReplayEngine, card: NonNullable<ReturnType<typeof cardAt>>,
+  places: Map<string, ReplayPlace>, c: StageColors, layout: Layout) {
+  const desk = places.get(engine.replay.actors.find((a) => a.id === engine.replay.scene?.agent)?.home ?? "desk-orders");
+  if (!desk) return;
+  const { px, py, scale } = placePixel(desk);
+  ctx.save();
+  const lh = 17;
+  ctx.font = `400 12px ${MONO}`;
+  const lineW = Math.min(420, Math.max(...card.lines.map((l) => ctx.measureText(`${l.op} ${l.text}`).width)) + 20);
+  ctx.font = `600 12px ${FONT}`;
+  const title = `${card.file} · ${card.session}`;
+  const stat = `+${card.added} −${card.removed}`;
+  const w = Math.max(lineW, ctx.measureText(title).width + ctx.measureText(stat).width + 36);
+  const h = 30 + card.lines.length * lh + (card.more ? lh : 0) + 6;
+  // a fixed spot in the back-left corner (product desk and planning room, unused in M1 runs), clear of the lanes the
+  // agent walks; a thin leader line points at the agent's desk
+  const corner = aerialToPixel(0.015, 0.17);
+  const x = Math.max(12, corner.px - 30);
+  const y = HEADER_H + 34;
+  ctx.strokeStyle = c.ink2;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 3]);
+  ctx.beginPath();
+  ctx.moveTo(x + Math.min(w - 20, Math.max(20, px - x)), y + h);
+  ctx.lineTo(px, py - 52 * scale);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = c.surface;
+  ctx.strokeStyle = c.ink;
+  ctx.lineWidth = 1.5;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  ctx.fillStyle = c.ink;
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.fillText(title, x + 10, y + 14);
+  ctx.textAlign = "right";
+  ctx.font = `500 12px ${FONT}`;
+  ctx.fillStyle = c.ink2;
+  ctx.fillText(stat, x + w - 10, y + 14);
+  ctx.fillStyle = c.line;
+  ctx.fillRect(x + 1, y + 27, w - 2, 1);
+  ctx.textAlign = "left";
+  ctx.font = `400 12px ${MONO}`;
+  card.lines.forEach((l, i) => {
+    const ly = y + 30 + i * lh;
+    ctx.fillStyle = l.op === "+" ? DIFF_ADD_BG : DIFF_DEL_BG;
+    ctx.fillRect(x + 1, ly, w - 2, lh - 1);
+    ctx.fillStyle = l.op === "+" ? c.ink : c.ink2;
+    let text = `${l.op} ${l.text}`;
+    while (text.length > 4 && ctx.measureText(text).width > w - 20) text = `${text.slice(0, -2)}…`;
+    ctx.fillText(text, x + 10, ly + lh / 2);
+    if (l.op === "-") {
+      const tw = ctx.measureText(text).width;
+      ctx.fillRect(x + 22, ly + lh / 2, tw - 12, 1);
+    }
+  });
+  if (card.more) {
+    ctx.font = `400 11px ${FONT}`;
+    ctx.fillStyle = c.ink2;
+    ctx.fillText(`+${card.more} more changed line${card.more > 1 ? "s" : ""} · ${card.source}`, x + 10,
+      y + 30 + card.lines.length * lh + lh / 2);
+  }
+  ctx.restore();
+  layout.obstacles.push({ x, y, w, h });
+}
+
+function drawOverlay(ctx: CanvasRenderingContext2D, o: StageOverlay, c: StageColors) {
+  ctx.save();
+  ctx.font = `600 16px ${FONT}`;
+  const lines = (o.lines ?? []).slice(0, 3);
+  const tw = Math.max(ctx.measureText(o.title).width, ...lines.map((l) => {
+    ctx.font = `400 13px ${FONT}`;
+    return ctx.measureText(l).width;
+  }));
+  const w = Math.min(STAGE_W - 80, tw + 32);
+  const h = 30 + lines.length * 19;
+  const x = (STAGE_W - w) / 2;
+  const y = HEADER_H + 6;
+  ctx.fillStyle = c.surface;
+  ctx.strokeStyle = c.ink;
+  ctx.lineWidth = 1.5;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  ctx.fillStyle = c.ink;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `600 16px ${FONT}`;
+  ctx.fillText(o.title, STAGE_W / 2, y + 16);
+  ctx.font = `400 13px ${FONT}`;
+  ctx.fillStyle = c.ink2;
+  lines.forEach((l, i) => ctx.fillText(l, STAGE_W / 2, y + 34 + i * 19));
+  ctx.restore();
 }
 
 function drawFloor(ctx: CanvasRenderingContext2D, c: StageColors) {
@@ -271,7 +835,10 @@ function actorPosition(id: string, v: ActorView, clock: number, places: Map<stri
   const list = byPlace.get(v.place) ?? [id];
   const spotTo = standingSpot(to, Math.max(0, list.indexOf(id)), list.length);
   // at a system object (the agent walking into the CI tower) stand beside it, so its lights stay visible
-  if (SYSTEM_PLACES.has(v.place)) spotTo.x -= 0.115;
+  // (with a PR tray on the tower's left, step to the tower's right instead)
+  if (SYSTEM_PLACES.has(v.place)) spotTo.x += v.place === "ci-tower" && places.has("pr-tray") ? 0.1 : -0.115;
+  // at the PR tray stand beside it, so the tray and its label stay visible
+  if (v.place === "pr-tray") spotTo.x -= 0.07;
   const prog = walkProgress(v, clock);
   if (prog >= 1 || v.from === v.place) return { ...spotTo, walking: false, facing: 1 as 1 | -1 };
   const from = places.get(v.from);
@@ -414,8 +981,14 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
   let top = py - 40 * scale;
   let owner: ActorView | undefined;
   let note = place.note && place.kind === "stage" ? place.note : null;
+  const dim = isDimmed(replay, place.id);
+  ctx.save();
+  if (dim) ctx.globalAlpha = DIM_ALPHA;
 
-  if (place.id === "ci-tower") {
+  if (place.id === "pr-tray") {
+    top = drawTray(ctx, px, py, scale, trayCount(replay, clock), c);
+    note = place.note ?? null;
+  } else if (place.id === "ci-tower") {
     const order = state.ci.order;
     const n = Math.max(order.length, DEFAULT_CHECKS);
     const lights: LightState[] = [];
@@ -462,13 +1035,28 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
     top = drawSystemObject(ctx, "board", px, py, scale, { active: owner ? isActive(owner, clock) : false }, c);
   } else {
     top = drawProp(ctx, place, px, py, scale, c);
+    const agentHome = replay.actors.find((a) => a.id === replay.scene?.agent)?.home;
+    if (place.id === agentHome && glassFor(replay).contracts) {
+      // V1: the consumers' contracts were copied into the agent's repo; a stack of sheets on its desk
+      const sx = px + 46 * scale;
+      const sy = py - 30 * scale;
+      for (let i = 2; i >= 0; i--) drawSheetIcon(ctx, sx + i * 3, sy - i * 3, 0.85 * scale, c);
+      ctx.font = `500 ${Math.round(10 * Math.max(scale, 0.9))}px ${FONT}`;
+      ctx.fillStyle = c.ink2;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText("consumer contracts (V1)", sx + 14, sy + 14 * scale);
+      layout.obstacles.push({ x: sx - 8, y: sy - 18, w: 150, h: 36 });
+    }
   }
+  ctx.restore();
 
   const size = Math.round(14 * Math.max(scale, 0.9));
   const noteSize = Math.round(12 * Math.max(scale, 0.9));
-  layout.labels.push(SYSTEM_PLACES.has(place.id)
-    ? { text: place.label, note, x: px, y: py + 6, anchor: "top", size, noteSize }
-    : { text: place.label, note: null, x: px, y: top - 6, anchor: "bottom", size, noteSize });
+  const anchored = SYSTEM_PLACES.has(place.id) || place.id === "pr-tray";
+  layout.labels.push(anchored
+    ? { text: place.label, note, x: px, y: py + 6, anchor: "top", size, noteSize, dim }
+    : { text: place.label, note: null, x: px, y: top - 6, anchor: "bottom", size, noteSize, dim });
 
   if (owner && bubbleVisible(owner, clock) && owner.bubble) {
     layout.bubbles.push(place.id === "ci-tower"
@@ -495,6 +1083,7 @@ function drawPlaceLabel(ctx: CanvasRenderingContext2D, l: PlaceLabel, c: StageCo
   }
   ctx.textBaseline = "top";
   ctx.fillStyle = c.ink2;
+  if (l.dim) ctx.globalAlpha = 0.5;
   ctx.fillText(l.text, l.x, top);
   layout.obstacles.push({ x: l.x - w / 2 - 3, y: top - 1, w: w + 6, h: l.size + 3 });
   if (l.note) {
@@ -510,6 +1099,42 @@ function drawPlaceLabel(ctx: CanvasRenderingContext2D, l: PlaceLabel, c: StageCo
 function actorFor(actors: ReplayActor[], views: Record<string, ActorView>, role: string): ActorView | undefined {
   const a = actors.find((x) => x.role === role);
   return a ? views[a.id] : undefined;
+}
+
+/** The PR tray beside the CI tower (no reviewer in the run): a stand with one sheet per PR version pushed. */
+function drawTray(ctx: CanvasRenderingContext2D, px: number, py: number, s: number, count: number,
+  c: StageColors): number {
+  ctx.save();
+  const by = py - 4 * s;
+  ctx.fillStyle = c.bodyShade;
+  ctx.fillRect(px - 3 * s, by - 34 * s, 6 * s, 34 * s);
+  ctx.fillRect(px - 16 * s, by - 3 * s, 32 * s, 3 * s);
+  const tw = 54 * s;
+  const ty = by - 40 * s;
+  ctx.fillStyle = c.body;
+  ctx.strokeStyle = c.lineStrong;
+  ctx.lineWidth = 1.5;
+  ctx.fillRect(px - tw / 2, ty, tw, 8 * s);
+  ctx.strokeRect(px - tw / 2 + 0.5, ty + 0.5, tw - 1, 8 * s - 1);
+  const n = Math.min(count, 4);
+  for (let i = 0; i < n; i++) {
+    const x = px - 16 * s + i * 3 * s;
+    const y = ty - 4 * s - i * 3 * s;
+    ctx.fillStyle = c.surface;
+    ctx.strokeStyle = c.ink2;
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, 30 * s, 6 * s);
+    ctx.strokeRect(x + 0.5, y + 0.5, 30 * s - 1, 6 * s - 1);
+  }
+  if (count > 0) {
+    ctx.font = `600 ${Math.round(11 * Math.max(s, 0.9))}px ${FONT}`;
+    ctx.fillStyle = c.ink;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(count === 1 ? "PR" : `PR v${count}`, px + 20 * s, ty - 8 * s);
+  }
+  ctx.restore();
+  return ty - 4 * s - n * 3 * s;
 }
 
 function drawProp(ctx: CanvasRenderingContext2D, place: ReplayPlace, px: number, py: number, s: number,

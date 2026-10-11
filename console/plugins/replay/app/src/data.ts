@@ -13,8 +13,14 @@ export interface Hello {
   params?: Record<string, string>;
 }
 
+export type Ns = "real" | "mock";
+
 export interface RunEntry {
   run_id: string;
+  /** namespace the run lives in (shell mode lists both: real runs and the mock selftest) */
+  ns?: Ns;
+  finished?: boolean;
+  cached?: boolean;
   stage?: string | null;
   ticket?: string | null;
   condition?: { V?: string; S?: string; W?: string } | null;
@@ -63,12 +69,12 @@ export function waitHello(ms: number): Promise<Hello | null> {
   });
 }
 
-function nsQuery(h: Hello): string {
-  return h.ns ? `?ns=${encodeURIComponent(h.ns)}` : "";
+function nsQuery(ns: string | undefined): string {
+  return ns ? `?ns=${encodeURIComponent(ns)}` : "";
 }
 
-export function runUrl(h: Hello, runId: string): string {
-  return `${h.apiBase}/replay/run/${encodeURIComponent(runId)}${nsQuery(h)}`;
+export function runUrl(h: Hello, runId: string, ns?: Ns): string {
+  return `${h.apiBase}/replay/run/${encodeURIComponent(runId)}${nsQuery(ns ?? h.ns)}`;
 }
 
 async function getJson<T>(url: string): Promise<T> {
@@ -86,9 +92,57 @@ async function getJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+const NAMESPACES: Ns[] = ["real", "mock"];
+
+/** Runs with a trace in both namespaces: real runs first (REAL), then the mock selftest (SIMULATED). */
 export async function listRuns(h: Hello): Promise<RunEntry[]> {
-  const body = await getJson<{ runs: Omit<RunEntry, "url">[] }>(`${h.apiBase}/replay/list${nsQuery(h)}`);
-  return (body.runs ?? []).map((r) => ({ ...r, url: runUrl(h, r.run_id) }));
+  const lists = await Promise.all(NAMESPACES.map(async (ns) => {
+    try {
+      const body = await getJson<{ runs: Omit<RunEntry, "url">[] }>(`${h.apiBase}/replay/list${nsQuery(ns)}`);
+      return (body.runs ?? []).map((r) => ({ ...r, ns, url: runUrl(h, r.run_id, ns) }));
+    } catch (e) {
+      if (ns === (h.ns ?? "mock")) throw e;
+      return [];
+    }
+  }));
+  return lists.flat();
+}
+
+export interface ExportResult {
+  ns: Ns;
+  exported: string[];
+  fresh: string[];
+  skipped_blinded: number;
+  unfinished: string[];
+  errors: Record<string, string>;
+}
+
+/** "Export new runs": replay.json for every finished run of a visible stage that has none yet, in both namespaces. */
+export async function exportRuns(h: Hello): Promise<ExportResult[]> {
+  const out: ExportResult[] = [];
+  for (const ns of NAMESPACES) {
+    const res = await fetch(`${h.apiBase}/replay/export${nsQuery(ns)}`, {
+      method: "POST", credentials: "same-origin",
+      headers: { Accept: "application/json", "Content-Type": "application/json", "X-CSRF-Token": h.csrf ?? "" },
+      body: "{}",
+    });
+    if (!res.ok) {
+      let msg = `${res.status} ${res.statusText}`;
+      try {
+        const body = (await res.json()) as { error?: string };
+        if (body.error) msg = body.error;
+      } catch {
+        /* not JSON */
+      }
+      throw new Error(msg);
+    }
+    out.push((await res.json()) as ExportResult);
+  }
+  return out;
+}
+
+export function canExport(h: Hello | null | undefined): boolean {
+  return !!h?.user && ["owner", "operator", "presenter"].includes(h.user.role);
 }
 
 export async function listDemos(): Promise<RunEntry[]> {
@@ -106,9 +160,12 @@ export function navigateShell(plugin: string, params: Record<string, string>): v
   }
 }
 
+/** "REAL · p0-0002 · X-rename V0·S0·W1 · P0" or "SIMULATED · st-0014 · …": source, run, its cell, stage. */
 export function runLabel(r: RunEntry): string {
   if (r.label) return r.label;
   const c = r.condition ?? {};
   const cond = [c.V, c.S, c.W].filter(Boolean).join("·");
-  return [r.run_id, r.ticket, cond, r.stage].filter(Boolean).join(" · ");
+  const cell = [r.ticket, cond].filter(Boolean).join(" ");
+  const src = r.source === "mock" ? "SIMULATED" : "REAL";
+  return [src, r.run_id, cell, r.stage].filter(Boolean).join(" · ");
 }

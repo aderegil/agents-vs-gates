@@ -11,6 +11,7 @@
 .meta strong { color: var(--tinta); font-weight: 600; }
 .chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border: var(--trazo) solid var(--linea);
   border-radius: var(--radio); color: var(--tinta); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.chip--real { border-color: var(--tinta); font-weight: 600; }
 .chip--sim { border-color: var(--tinta); background: var(--tinta); color: #fff;
   border-bottom: 3px solid var(--warn); }
 
@@ -126,6 +127,8 @@
   border-radius: var(--radio); background: var(--superficie); cursor: pointer; }
 .map-plot:hover { border-color: var(--tinta); }
 .map-plot.is-active { border-color: var(--acento); }
+/* places nobody uses in this run (exporter 2 `used: false`) */
+.map-plot.is-unused { opacity: 0.38; }
 .map-plot--system, .map-plot--stage { border-style: dashed; }
 .map-plot__label { font-weight: 600; font-size: 12px; white-space: nowrap; }
 .map-plot__note { font-size: 11px; color: var(--tinta-2); }
@@ -152,6 +155,9 @@
 .error { color: var(--fail); }
 .banner-error { padding: 8px 16px; background: var(--superficie); border-bottom: var(--trazo) solid var(--fail);
   color: var(--tinta); font-size: 13px; }
+.banner-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px;
+  background: var(--superficie); border-bottom: var(--trazo) solid var(--linea); color: var(--tinta); font-size: 13px; }
+.banner-note__close { border: 0; background: none; color: var(--tinta-2); font-size: 16px; cursor: pointer; }
 
 /* ---------------------------------------------------------------- presentation mode (F)
    Fullscreen, large subtitles, controls that hide after 2.5 s without the mouse. Same light theme as the rest. */

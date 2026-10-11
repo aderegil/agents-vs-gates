@@ -124,7 +124,8 @@ test("step application: moves, CI lights, results, bubbles, narration", () => {
   assert.equal(s.ci.result, "fail");
   assert.equal(s.ci.running, false);
   assert.equal(s.narration?.text, "CI failed: ARCH-4");
-  assert.equal(s.actors.ci.bubble?.tone, "fail");
+  // CI speaks once, through its lights and the subtitle: no speech bubble on the tower (quietStep)
+  assert.equal(s.actors.ci.bubble, null);
   assert.equal(s.actors.a.bubble?.text, "PR t-1");
   assert.ok(bubbleVisible(s.actors.a, 1500));
   assert.ok(!bubbleVisible(s.actors.a, 60_000));
@@ -157,7 +158,9 @@ test("exported demos: time compression (gaps > 3 s became 1.5 s) and 40–90 s a
   for (const name of demos) {
     const r = load(name);
     const d = duration(r);
-    assert.ok(d >= 40_000 && d <= 90_000, `${name}: ${d}`);
+    // hand-made fixture stories last 40–90 s; snapshots of mock harness runs (with record.json) run faster
+    const fromRun = (r.scene?.sources ?? []).includes("record.json");
+    assert.ok(fromRun ? d >= 10_000 && d <= 90_000 : d >= 40_000 && d <= 90_000, `${name}: ${d}`);
     for (let i = 1; i < r.steps.length; i++) {
       const gap = r.steps[i].t_ms - r.steps[i - 1].t_ms;
       const real = r.steps[i].t_real_ms - r.steps[i - 1].t_real_ms;

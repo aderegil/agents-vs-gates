@@ -20,7 +20,7 @@
     "scenario": "meridian-retail/M1",
     "trace_sha256": "70900c2919a92bb277f6f743373e317b9314a512d7df3af2c734bae9e74de19d",
     "schema": "replay/1",
-    "exporter_version": 2,
+    "exporter_version": 3,
     "legend": "SIMULATED (mock agent) — not a real run",
     "duration_ms": 73500,
     "duration_real_ms": 87000,
@@ -861,7 +861,7 @@
       "text": "CI failed: ARCH-4 — analytics-ingest needs channel.",
       "key": "ci_fail",
       "narration": "CI failed: ARCH-4 — analytics-ingest needs channel.",
-      "caption": "CI blocks the pull request: ARCH-4 failed (1 of 10 checks).",
+      "caption": "CI blocks the pull request: ARCH-4 failed (1 of 10 checks). Its output goes back to Code Agent · orders-service.",
       "check": {
         "id": "attempt-0",
         "status": "fail",
@@ -889,7 +889,6 @@
       "text": "CI failed on your change. Output:\n\n```\nARCH-4 FAIL analytics-ingest: OrderPlaced.channel missing (required string)\n```\n\nFix it so CI passes.",
       "key": null,
       "narration": null,
-      "caption": "The CI output goes back to Code Agent · orders-service.",
       "detail": {
         "event_type": "MESSAGE_EXCHANGED",
         "event_id": "evt-0030",

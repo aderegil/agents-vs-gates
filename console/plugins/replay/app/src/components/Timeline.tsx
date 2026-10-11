@@ -1,4 +1,5 @@
-// Time bar with clickable key-moment markers (spec 22.5 item 5).
+// Time bar with clickable key-moment markers (spec 22.5 item 5). The key moment reached is highlighted; with the
+// director's cut on, the stretches it plays at 1× (key moments) and as montages are shaded on the track.
 import { useRef } from "react";
 import { markerTone, type Replay } from "../engine/replay";
 
@@ -7,6 +8,8 @@ interface Props {
   clock: number;
   end: number;
   onSeek: (t: number) => void;
+  /** replay ranges to shade on the track (director's cut: key moments at 1×, montages) */
+  bands?: { from: number; to: number; kind: "key" | "montage"; title?: string }[];
 }
 
 export function fmt(ms: number): string {
@@ -15,10 +18,14 @@ export function fmt(ms: number): string {
   return `${String(m).padStart(2, "0")}:${(s - m * 60).toFixed(1).padStart(4, "0")}`;
 }
 
-export function Timeline({ replay, clock, end, onSeek }: Props) {
+export function Timeline({ replay, clock, end, onSeek, bands }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const pct = (t: number) => `${end > 0 ? (Math.min(t, end) / end) * 100 : 0}%`;
+  let current = -1;
+  replay.markers.forEach((m, i) => {
+    if (m.t_ms <= clock + 1) current = i;
+  });
 
   function seekFromEvent(clientX: number) {
     const el = trackRef.current;
@@ -55,6 +62,10 @@ export function Timeline({ replay, clock, end, onSeek }: Props) {
           if (e.key === "End") onSeek(end);
         }}
       >
+        {bands?.map((b, i) => (
+          <div key={`band-${i}`} className={`timeline__band timeline__band--${b.kind}`} title={b.title}
+            style={{ left: pct(b.from), width: `calc(${pct(b.to)} - ${pct(b.from)})` }} />
+        ))}
         <div className="timeline__fill" style={{ width: pct(clock) }} />
         {replay.markers.map((m, i) => (
           <button
@@ -75,7 +86,8 @@ export function Timeline({ replay, clock, end, onSeek }: Props) {
           <button
             key={i}
             type="button"
-            className={`moment tone-${markerTone(m)} ${clock >= m.t_ms ? "is-past" : ""}`}
+            className={`moment tone-${markerTone(m)} ${clock >= m.t_ms ? "is-past" : ""} ${i === current ? "is-current" : ""}`}
+            aria-current={i === current ? "step" : undefined}
             onClick={() => onSeek(m.t_ms)}
           >
             <span className="moment__dot" />

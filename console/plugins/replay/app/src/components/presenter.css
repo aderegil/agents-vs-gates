@@ -1,0 +1,54 @@
+/* Presenter slides, director's cut and synchronized compare (imported by Player.tsx). Same light theme and tokens
+   as App.css; cyan/pink only for pass/fail. */
+
+/* toggles in the top bar (Director's cut, Presenter) */
+.btn--on { border-color: var(--tinta); color: var(--tinta); background: var(--suave); font-weight: 600; }
+
+/* presenter: the stage is the clicker target */
+.player.is-slides .stage-area .stage-canvas { cursor: pointer; }
+.player.is-slides.is-presenting.chrome-hidden .stage-area .stage-canvas { cursor: none; }
+
+/* slide counter "3 / 8 · CI failed: ARCH-4" */
+.slide-counter { display: inline-flex; align-items: center; gap: 8px; height: 30px; max-width: min(560px, 100%);
+  min-width: 0; padding: 0 10px; border: var(--trazo) solid var(--tinta); border-radius: var(--radio);
+  background: var(--superficie); color: var(--tinta); font-size: 13px; font-weight: 500; }
+.slide-counter__dot { flex: none; width: 8px; height: 8px; border-radius: 2px; background: var(--tinta-2); }
+.slide-counter.tone-pass .slide-counter__dot { background: var(--pass); }
+.slide-counter.tone-fail .slide-counter__dot { background: var(--fail); }
+.slide-counter__sep { color: var(--tinta-2); }
+.slide-counter__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* director's cut clock */
+.cut-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; margin-left: 4px;
+  border: var(--trazo) solid var(--linea-fuerte); border-radius: var(--radio); color: var(--tinta); font-size: 12px;
+  font-weight: 500; white-space: nowrap; }
+
+/* timeline: current key moment and the director's cut bands */
+.moment.is-current { border-color: var(--tinta); color: var(--tinta); font-weight: 500; }
+.timeline__band { position: absolute; top: 7px; height: 8px; border-radius: 2px; pointer-events: auto; }
+.timeline__band--key { background: var(--linea-fuerte); }
+.timeline__band--montage { background: repeating-linear-gradient(135deg, var(--linea-fuerte) 0 3px, transparent 3px 6px); }
+
+/* compare: header strip above the two panes */
+.compare-wrap { width: 100%; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.compare-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
+  gap: 12px; padding: 6px 10px; background: var(--superficie); border: var(--trazo) solid var(--linea);
+  border-radius: var(--radio); font-size: 13px; }
+.compare-head__side { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--tinta-2); }
+.compare-head__side--b { justify-content: flex-end; }
+.compare-head__tag { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px;
+  border-radius: var(--radio); background: var(--tinta); color: #fff; font-weight: 600; font-size: 12px; }
+.compare-head__parts { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compare-head__parts .is-diff { color: var(--tinta); font-weight: 600; text-decoration: underline;
+  text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.compare-head__sep { color: var(--linea-fuerte); }
+.compare-head__moment { max-width: 52vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--tinta); font-weight: 500; text-align: center; }
+
+.player.is-presenting .compare-wrap { max-width: calc((100vh - 60px) * 32 / 9); }
+
+@media (max-width: 1100px) {
+  .compare-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .compare-head__moment { grid-column: 1 / -1; grid-row: 2; max-width: none; }
+  .slide-counter { max-width: 100%; }
+}

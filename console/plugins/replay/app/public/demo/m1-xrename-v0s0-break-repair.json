@@ -20,7 +20,7 @@
     "scenario": "meridian-retail/M1",
     "trace_sha256": "6055a7c082160bef5ab20fbc4c4baf81ac90d384cd01b268d60aa8f224638b86",
     "schema": "replay/1",
-    "exporter_version": 2,
+    "exporter_version": 3,
     "legend": "SIMULATED (mock agent) — not a real run",
     "duration_ms": 59500,
     "duration_real_ms": 75000,
@@ -779,7 +779,7 @@
       "text": "CI failed: ARCH-4 — billing-service needs totalCents.",
       "key": "ci_fail",
       "narration": "CI failed: ARCH-4 — billing-service needs totalCents.",
-      "caption": "CI blocks the pull request: ARCH-4 failed (1 of 10 checks).",
+      "caption": "CI blocks the pull request: ARCH-4 failed (1 of 10 checks). Its output goes back to Code Agent · orders-service.",
       "check": {
         "id": "attempt-0",
         "status": "fail",
@@ -807,7 +807,6 @@
       "text": "CI failed on your change. Output:\n\n```\nARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)\nARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)\n```\n\nFix it so CI passes.",
       "key": null,
       "narration": null,
-      "caption": "The CI output goes back to Code Agent · orders-service.",
       "detail": {
         "event_type": "MESSAGE_EXCHANGED",
         "event_id": "evt-0026",
