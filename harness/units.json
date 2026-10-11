@@ -1,0 +1,7 @@
+{
+  "cc-sonnet": { "adapter": "claude_code", "model": "sonnet", "effort": "medium" },
+  "cc-opus":   { "adapter": "claude_code", "model": "opus",   "effort": "medium" },
+  "codex":     { "adapter": "codex",       "model": null,     "effort": null },
+  "gemini":    { "adapter": "gemini",      "model": null,     "effort": null },
+  "mock":      { "adapter": "mock" }
+}

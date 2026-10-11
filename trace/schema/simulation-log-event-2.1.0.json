@@ -1,0 +1,1063 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/aisdlc-trace/2.1.0/simulation-log-event.json",
+  "title": "SimulationLogEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "seq",
+    "session_id",
+    "timestamp",
+    "event_type",
+    "phase",
+    "actor",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^2\\.1\\.\\d+$"
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timing": {
+      "$ref": "#/definitions/Timing"
+    },
+    "event_type": {
+      "$ref": "#/definitions/EventType"
+    },
+    "phase": {
+      "$ref": "#/definitions/Phase"
+    },
+    "actor": {
+      "$ref": "#/definitions/Actor"
+    },
+    "actor_state": {
+      "$ref": "#/definitions/ActorState"
+    },
+    "interaction": {
+      "$ref": "#/definitions/Interaction"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "artifact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "parent_event_id": {
+      "type": "string"
+    },
+    "correlation_id": {
+      "type": "string"
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "visual": {
+      "$ref": "#/definitions/Visual"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "enum": [
+              "MESSAGE_EXCHANGED",
+              "TASK_ASSIGNED",
+              "APPROVAL_REQUESTED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "interaction"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "TASK_ASSIGNED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "task_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "enum": [
+              "TOOL_CALL_STARTED",
+              "TOOL_CALL_COMPLETED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "correlation_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "SESSION_STARTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "title",
+              "scenario",
+              "initial_phase",
+              "roster"
+            ],
+            "properties": {
+              "roster": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/RosterEntry"
+                }
+              },
+              "initial_phase": {
+                "$ref": "#/definitions/Phase"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "SESSION_ENDED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "outcome",
+              "summary"
+            ],
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "success",
+                  "failed",
+                  "aborted"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "PHASE_CHANGED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "from_phase",
+              "to_phase",
+              "reason"
+            ],
+            "properties": {
+              "from_phase": {
+                "$ref": "#/definitions/Phase"
+              },
+              "to_phase": {
+                "$ref": "#/definitions/Phase"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "ACTOR_JOINED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "display_name"
+            ],
+            "properties": {}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "ACTOR_STATE_CHANGED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "to_state"
+            ],
+            "properties": {
+              "to_state": {
+                "$ref": "#/definitions/ActorState"
+              },
+              "thought_summary": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "MESSAGE_EXCHANGED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "content"
+            ],
+            "properties": {}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "TASK_ASSIGNED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "title",
+              "assignee_id"
+            ],
+            "properties": {}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "TOOL_CALL_STARTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "tool_name",
+              "protocol"
+            ],
+            "properties": {}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "TOOL_CALL_COMPLETED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "tool_name",
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "$ref": "#/definitions/ToolStatus"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "ARTIFACT_CREATED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "artifact_id",
+              "artifact_type",
+              "path"
+            ],
+            "properties": {
+              "artifact_type": {
+                "$ref": "#/definitions/ArtifactType"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "ARTIFACT_READ"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "artifact_id",
+              "path"
+            ],
+            "properties": {}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "ARTIFACT_UPDATED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "artifact_id",
+              "path",
+              "version",
+              "change_summary"
+            ],
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 2
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "REVIEW_SUBMITTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "subject_artifact_id",
+              "decision",
+              "summary"
+            ],
+            "properties": {
+              "decision": {
+                "$ref": "#/definitions/Decision"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "APPROVAL_REQUESTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "request_id",
+              "gate",
+              "question"
+            ],
+            "properties": {}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "APPROVAL_DECIDED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "request_id",
+              "decision"
+            ],
+            "properties": {
+              "decision": {
+                "$ref": "#/definitions/Decision"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "ERROR_RAISED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "error_code",
+              "message",
+              "recoverable"
+            ],
+            "properties": {
+              "recoverable": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "CI_RUN_STARTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "run_attempt",
+              "subject_artifact_id"
+            ],
+            "properties": {
+              "run_attempt": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "CHECK_COMPLETED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "check_id",
+              "category",
+              "status"
+            ],
+            "properties": {
+              "category": {
+                "$ref": "#/definitions/CheckCategory"
+              },
+              "status": {
+                "$ref": "#/definitions/CheckStatus"
+              },
+              "rule_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^ARCH-[0-9]+$"
+              },
+              "output_excerpt": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "duration_ms": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "CI_RUN_COMPLETED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "run_attempt",
+              "ok",
+              "failed_checks"
+            ],
+            "properties": {
+              "run_attempt": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "ok": {
+                "type": "boolean"
+              },
+              "failed_checks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "GATE_TOUCHED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "detector",
+              "path"
+            ],
+            "properties": {
+              "detector": {
+                "$ref": "#/definitions/Detector"
+              },
+              "path": {
+                "type": "string"
+              },
+              "change_summary": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "ORACLE_RESULT"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": [
+              "consumer",
+              "ok",
+              "state"
+            ],
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "state": {
+                "enum": [
+                  "gen",
+                  "final"
+                ]
+              },
+              "consumer": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "Actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor_id",
+        "actor_type",
+        "role"
+      ],
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor_type": {
+          "$ref": "#/definitions/ActorType"
+        },
+        "role": {
+          "$ref": "#/definitions/Role"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "$ref": "#/definitions/HumanRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "actor_type": {
+                "const": "human"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "$ref": "#/definitions/AgentRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "actor_type": {
+                "const": "agent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "$ref": "#/definitions/SystemRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "actor_type": {
+                "const": "system"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_actor_id",
+        "target_actor_id",
+        "interaction_type"
+      ],
+      "properties": {
+        "source_actor_id": {
+          "type": "string"
+        },
+        "target_actor_id": {
+          "type": "string",
+          "description": "actor_id o 'broadcast'"
+        },
+        "target_actor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "interaction_type": {
+          "$ref": "#/definitions/InteractionType"
+        }
+      }
+    },
+    "Timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ended_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estimated_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "narration": {
+          "type": "string",
+          "maxLength": 280
+        },
+        "camera_focus": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "emphasis": {
+          "enum": [
+            "low",
+            "normal",
+            "high"
+          ]
+        },
+        "hold_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ActorType": {
+      "enum": [
+        "agent",
+        "human",
+        "system"
+      ]
+    },
+    "HumanRole": {
+      "enum": [
+        "originator",
+        "product_owner",
+        "tech_lead",
+        "engineer",
+        "policy_owner",
+        "code_owner",
+        "release_manager",
+        "architect"
+      ]
+    },
+    "AgentRole": {
+      "enum": [
+        "supervisor",
+        "researcher",
+        "requirements_agent",
+        "task_planner",
+        "code_agent",
+        "code_simplifier",
+        "review_agent",
+        "verifier",
+        "devops_agent",
+        "monitoring_agent"
+      ]
+    },
+    "Role": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/HumanRole"
+        },
+        {
+          "$ref": "#/definitions/AgentRole"
+        },
+        {
+          "$ref": "#/definitions/SystemRole"
+        }
+      ]
+    },
+    "ActorState": {
+      "enum": [
+        "idle",
+        "thinking",
+        "executing_tool",
+        "waiting_input",
+        "sending_message",
+        "completed",
+        "failed"
+      ]
+    },
+    "Phase": {
+      "enum": [
+        "discovery",
+        "planning",
+        "implementation",
+        "review",
+        "testing",
+        "deployment",
+        "maintenance"
+      ]
+    },
+    "InteractionType": {
+      "enum": [
+        "task_assignment",
+        "code_handoff",
+        "feedback_request",
+        "review_approval",
+        "human_intervention",
+        "tool_call",
+        "report",
+        "escalation"
+      ]
+    },
+    "EventType": {
+      "enum": [
+        "SESSION_STARTED",
+        "SESSION_ENDED",
+        "PHASE_CHANGED",
+        "ACTOR_JOINED",
+        "ACTOR_STATE_CHANGED",
+        "MESSAGE_EXCHANGED",
+        "TASK_ASSIGNED",
+        "TOOL_CALL_STARTED",
+        "TOOL_CALL_COMPLETED",
+        "ARTIFACT_CREATED",
+        "ARTIFACT_READ",
+        "ARTIFACT_UPDATED",
+        "REVIEW_SUBMITTED",
+        "APPROVAL_REQUESTED",
+        "APPROVAL_DECIDED",
+        "ERROR_RAISED",
+        "CI_RUN_STARTED",
+        "CHECK_COMPLETED",
+        "CI_RUN_COMPLETED",
+        "GATE_TOUCHED",
+        "ORACLE_RESULT"
+      ]
+    },
+    "ArtifactType": {
+      "enum": [
+        "intent",
+        "spec",
+        "plan",
+        "task_list",
+        "review_guidelines",
+        "context_file",
+        "source_code",
+        "test_suite",
+        "test_results",
+        "pull_request",
+        "review_report",
+        "release",
+        "incident_record",
+        "other",
+        "architecture_rules",
+        "catalog",
+        "contract",
+        "ci_config",
+        "baseline"
+      ]
+    },
+    "Decision": {
+      "enum": [
+        "approved",
+        "changes_requested",
+        "rejected",
+        "commented",
+        "escalated"
+      ]
+    },
+    "Severity": {
+      "enum": [
+        "info",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "ToolStatus": {
+      "enum": [
+        "success",
+        "error",
+        "timeout",
+        "denied"
+      ]
+    },
+    "SystemRole": {
+      "enum": [
+        "ci",
+        "staging",
+        "flow_engine"
+      ]
+    },
+    "CheckCategory": {
+      "enum": [
+        "build",
+        "test",
+        "gate",
+        "contract"
+      ]
+    },
+    "CheckStatus": {
+      "enum": [
+        "pass",
+        "fail",
+        "error"
+      ]
+    },
+    "Detector": {
+      "enum": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6",
+        "D7",
+        "D8"
+      ]
+    },
+    "RosterEntry": {
+      "type": "object",
+      "required": [
+        "actor_id",
+        "actor_type",
+        "role",
+        "display_name"
+      ],
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor_type": {
+          "$ref": "#/definitions/ActorType"
+        },
+        "role": {
+          "$ref": "#/definitions/Role"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "simulated": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "description": "AISDLC-Trace 2.1.0 = spec-logs 2.0.0 + the additive extensions of construccion-experimento.md 13.2 (architect, system actors ci/staging/flow_engine, CI/gate/oracle events, new artifact types) + per-event required payload fields from spec-logs section 4."
+}

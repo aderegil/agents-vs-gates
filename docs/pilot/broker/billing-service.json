@@ -1,0 +1,10 @@
+{
+  "consumer": "billing-service",
+  "version": "4f1c2a",
+  "event": "OrderPlaced",
+  "requires": {
+    "orderId": "string",
+    "customerEmail": "string",
+    "totalCents": "number"
+  }
+}

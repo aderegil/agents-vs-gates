@@ -1,0 +1,67 @@
+{
+  "type": "object",
+  "required": [
+    "ok",
+    "checks",
+    "feedback_text"
+  ],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "rule",
+          "category",
+          "status",
+          "duration_ms",
+          "output"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rule": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "enum": [
+              "build",
+              "test",
+              "gate",
+              "contract"
+            ]
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "error"
+            ]
+          },
+          "duration_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "output": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "feedback_text": {
+      "type": "string",
+      "maxLength": 6000
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CIVerdict",
+  "description": "python -m ci.run (spec 7.4)"
+}

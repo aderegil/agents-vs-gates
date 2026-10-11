@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ConsolePlugin",
+  "description": "console/plugins/<id>/plugin.json (spec 21.2)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "icon",
+    "order",
+    "description",
+    "roles",
+    "kind",
+    "entry"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Lucide icon name"
+    },
+    "order": {
+      "type": "integer"
+    },
+    "description": {
+      "type": "string"
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "owner",
+          "operator",
+          "presenter",
+          "viewer"
+        ]
+      }
+    },
+    "kind": {
+      "enum": [
+        "module",
+        "iframe"
+      ]
+    },
+    "entry": {
+      "type": "string"
+    },
+    "api": {
+      "type": "string"
+    },
+    "readonly_roles": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "owner",
+          "operator",
+          "presenter",
+          "viewer"
+        ]
+      },
+      "description": "roles that see the plugin read-only"
+    }
+  }
+}

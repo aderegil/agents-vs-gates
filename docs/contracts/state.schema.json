@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RunnerState",
+  "description": "results/<ns>/state.json, written atomically by harness/runner.py; read by the console every second.",
+  "type": "object",
+  "required": [
+    "schema",
+    "namespace",
+    "runs",
+    "runner",
+    "workers",
+    "unblinded",
+    "usage",
+    "updated_at"
+  ],
+  "properties": {
+    "schema": {
+      "const": "state/1"
+    },
+    "namespace": {
+      "enum": [
+        "real",
+        "mock"
+      ]
+    },
+    "manifest_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "runs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "pending",
+              "running",
+              "done",
+              "infra_failure",
+              "infra_failure_final"
+            ]
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "infra_failures": {
+            "type": "integer"
+          },
+          "worker": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ended_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "runner": {
+      "type": "object",
+      "required": [
+        "pid",
+        "status"
+      ],
+      "properties": {
+        "pid": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "idle",
+            "running",
+            "stopping",
+            "stopped",
+            "rate_limited",
+            "error"
+          ]
+        },
+        "started_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workers": {
+          "type": "integer"
+        },
+        "batch": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "max_runs": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "max_minutes": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "done": {
+              "type": "integer"
+            },
+            "planned": {
+              "type": "integer"
+            }
+          }
+        },
+        "rate_limited_until": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sleep_prevented": {
+          "type": "boolean"
+        },
+        "heartbeat_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "workers": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "type": "object",
+            "required": [
+              "run_id"
+            ],
+            "properties": {
+              "run_id": {
+                "type": "string"
+              },
+              "ticket": {
+                "type": "string"
+              },
+              "cell": {
+                "type": "string"
+              },
+              "attempt": {
+                "type": "string"
+              },
+              "started_at": {
+                "type": "string"
+              },
+              "turns": {
+                "type": "integer"
+              },
+              "tokens": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "unblinded": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "at",
+          "forced"
+        ],
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "forced": {
+            "type": "boolean"
+          },
+          "by": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "runs": {
+            "type": "number"
+          },
+          "input_tokens": {
+            "type": "number"
+          },
+          "output_tokens": {
+            "type": "number"
+          },
+          "cache_read_tokens": {
+            "type": "number"
+          },
+          "cache_creation_tokens": {
+            "type": "number"
+          },
+          "minutes": {
+            "type": "number"
+          },
+          "cost_usd_nominal": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "resume_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "set by the console Resume-at button; the console launches the runner at that time"
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  }
+}

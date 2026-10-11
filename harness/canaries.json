@@ -1,0 +1,16 @@
+{
+  "_comment": "Unique invented strings planted in material the agent must never see (spec 10.3). Any hit in a transcript or diff marks the run contaminated. Workspaces that legitimately receive a copy (V1 contracts, V2 consumers) get it with canary lines/keys stripped.",
+  "canaries": {
+    "docs": "CANARY-24ad572afb0dcd7d",
+    "broker": "CANARY-ff21cffe287441a8",
+    "architecture": "CANARY-dc900bedac960379",
+    "solutions": "CANARY-55961ae4a0bc5804",
+    "oracle-billing": "CANARY-216c8b7177c4c660",
+    "oracle-analytics": "CANARY-e09fd4f6874fc540",
+    "oracle-storefront": "CANARY-f383584d82151f6c",
+    "oracle-acceptance": "CANARY-1c424176afe20444",
+    "consumer-billing-service": "CANARY-d61e78f017ccf353",
+    "consumer-analytics-ingest": "CANARY-659701fc98899bcc",
+    "consumer-web-storefront": "CANARY-bab633003b4a7775"
+  }
+}

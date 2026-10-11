@@ -1,0 +1,13 @@
+node_modules/
+.venv/
+dist/
+.ci-build/
+.env
+__pycache__/
+*.pyc
+.claude/settings.local.json
+results/*
+!results/.gitkeep
+!results/summary.md
+console/data/
+console/plugins/replay/app/node_modules/

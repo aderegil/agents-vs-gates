@@ -1,0 +1,10 @@
+{
+  "name": "agents-vs-gates-workspace",
+  "private": true,
+  "description": "Shared devDependencies for the Meridian Retail scenario repos and the experiment CI. Installed once per worker.",
+  "devDependencies": {
+    "@types/node": "24.13.2",
+    "dependency-cruiser": "18.5.0",
+    "typescript": "6.0.3"
+  }
+}

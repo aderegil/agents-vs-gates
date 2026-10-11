@@ -1,0 +1,342 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Replay",
+  "description": "replay.json (spec 22.5.1), produced by replay/export.py from an AISDLC-Trace 2.1 file only.",
+  "type": "object",
+  "required": [
+    "meta",
+    "places",
+    "actors",
+    "steps",
+    "markers"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "source",
+        "unit",
+        "date",
+        "ticket",
+        "condition",
+        "outcome",
+        "ticket_done",
+        "trace_sha256",
+        "schema",
+        "legend"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "real",
+            "mock"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "date": {
+          "type": "string"
+        },
+        "ticket": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "condition": {
+          "type": "object",
+          "properties": {
+            "V": {
+              "type": "string"
+            },
+            "S": {
+              "type": "string"
+            },
+            "W": {
+              "type": "string"
+            }
+          }
+        },
+        "outcome": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ticket_done": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trace_sha256": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "replay/1"
+        },
+        "legend": {
+          "type": "string",
+          "description": "replay of a real run | SIMULATED (mock agent) — not a real run"
+        },
+        "duration_ms": {
+          "type": "integer"
+        },
+        "duration_real_ms": {
+          "type": "integer"
+        }
+      }
+    },
+    "places": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "kind",
+          "x",
+          "y"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "desk",
+              "room",
+              "system",
+              "library",
+              "gate",
+              "stage"
+            ]
+          },
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "actors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "actor_type",
+          "display_name",
+          "avatar",
+          "home"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "actor_type": {
+            "enum": [
+              "agent",
+              "human",
+              "system"
+            ]
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "object",
+            "required": [
+              "style",
+              "seed"
+            ],
+            "properties": {
+              "style": {
+                "enum": [
+                  "human",
+                  "agent",
+                  "system"
+                ]
+              },
+              "seed": {
+                "type": "string"
+              },
+              "badge": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "home": {
+            "type": "string"
+          },
+          "simulated": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "t_ms",
+          "t_real_ms",
+          "actor",
+          "action",
+          "seq"
+        ],
+        "properties": {
+          "t_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "t_real_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "seq": {
+            "type": "integer",
+            "description": "trace seq this step comes from"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "action": {
+            "enum": [
+              "move",
+              "work",
+              "speak",
+              "assign",
+              "handoff",
+              "check",
+              "ci_result",
+              "gate_touch",
+              "oracle",
+              "phase"
+            ]
+          },
+          "target": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "place": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "check": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "error"
+                ]
+              },
+              "rule": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "narration": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "detail": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "expandable payload for the side panel (diff stats, CI output excerpt)"
+          }
+        }
+      }
+    },
+    "markers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "t_ms",
+          "label",
+          "kind"
+        ],
+        "properties": {
+          "t_ms": {
+            "type": "integer"
+          },
+          "label": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "task_assigned",
+              "pr_opened",
+              "ci_fail",
+              "ci_pass",
+              "gate_touched",
+              "repair",
+              "oracle",
+              "session_end"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

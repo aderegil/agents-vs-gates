@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Manifest",
+  "description": "results/<ns>/manifest.json (spec 11.3). Generated once with a seed; frozen with the pre-registration (real ns).",
+  "type": "object",
+  "required": [
+    "schema",
+    "seed",
+    "namespace",
+    "generated_at",
+    "runs"
+  ],
+  "properties": {
+    "schema": {
+      "const": "manifest/1"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "namespace": {
+      "enum": [
+        "real",
+        "mock"
+      ]
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "stage",
+          "unit",
+          "ticket",
+          "wording",
+          "visibility",
+          "spec",
+          "replicate",
+          "round",
+          "cell"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "pattern": "^p[0-6]-[0-9]{4}$"
+          },
+          "stage": {
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P4",
+              "P5",
+              "P6"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "ticket": {
+            "type": "string"
+          },
+          "wording": {
+            "enum": [
+              "W1",
+              "W2"
+            ]
+          },
+          "paraphrase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "visibility": {
+            "enum": [
+              "V0",
+              "V1",
+              "V2"
+            ]
+          },
+          "spec": {
+            "enum": [
+              "S0",
+              "S1",
+              "S2"
+            ]
+          },
+          "replicate": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "round": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cell": {
+            "type": "string",
+            "description": "<ticket>|<V>|<S>|<W>|<unit>"
+          },
+          "control": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "consumer": "analytics-service",
+  "version": "9b20e7",
+  "event": "OrderPlaced",
+  "requires": {
+    "orderId": "string",
+    "totalCents": "number",
+    "placedAt": "string"
+  }
+}

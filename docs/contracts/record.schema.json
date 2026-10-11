@@ -1,0 +1,705 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RunRecord",
+  "description": "results/<ns>/runs/<run_id>/record.json (spec 10.7). Written by harness/record.py, read by analysis/ and the console.",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "namespace",
+    "stage",
+    "unit",
+    "adapter",
+    "ticket",
+    "wording",
+    "visibility",
+    "spec",
+    "replicate",
+    "seed",
+    "scenario_hash",
+    "started_at",
+    "ended_at",
+    "duration_ms",
+    "sessions",
+    "totals",
+    "ci",
+    "detectors",
+    "oracle",
+    "ticket_done",
+    "metrics",
+    "outcome",
+    "contamination",
+    "token_exposed",
+    "out_of_workspace_access",
+    "out_of_scope_edits"
+  ],
+  "properties": {
+    "schema": {
+      "const": "record/1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "namespace": {
+      "enum": [
+        "real",
+        "mock"
+      ]
+    },
+    "stage": {
+      "type": "string",
+      "description": "P0..P6, or 'selftest'"
+    },
+    "unit": {
+      "type": "string"
+    },
+    "adapter": {
+      "enum": [
+        "claude_code",
+        "codex",
+        "gemini",
+        "mock"
+      ]
+    },
+    "model_requested": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "model_reported": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "effort": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "cli_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ticket": {
+      "enum": [
+        "X-rename",
+        "X-remove",
+        "X-api",
+        "X-dep",
+        "X-units",
+        "X-add"
+      ]
+    },
+    "wording": {
+      "enum": [
+        "W1",
+        "W2"
+      ]
+    },
+    "paraphrase": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "visibility": {
+      "enum": [
+        "V0",
+        "V1",
+        "V2"
+      ]
+    },
+    "spec": {
+      "enum": [
+        "S0",
+        "S1",
+        "S2"
+      ]
+    },
+    "replicate": {
+      "type": "integer"
+    },
+    "cell": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "scenario_hash": {
+      "type": "string"
+    },
+    "worker": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "ended_at": {
+      "type": "string"
+    },
+    "duration_ms": {
+      "type": "integer"
+    },
+    "sessions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "num_turns",
+          "duration_ms"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "pattern": "^(gen|fix[1-3])$"
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "num_turns": {
+            "type": "integer"
+          },
+          "duration_ms": {
+            "type": "integer"
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "input_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "output_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cache_read_input_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cache_creation_input_tokens": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "cost_usd_nominal": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "subtype": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_error": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "capped": {
+            "type": "boolean"
+          },
+          "turn_cap": {
+            "enum": [
+              "max-turns",
+              "wall-clock-only",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "required": [
+        "turns",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "properties": {
+        "turns": {
+          "type": [
+            "number",
+            "integer"
+          ]
+        },
+        "input_tokens": {
+          "type": [
+            "number",
+            "integer"
+          ]
+        },
+        "output_tokens": {
+          "type": [
+            "number",
+            "integer"
+          ]
+        },
+        "cache_read_tokens": {
+          "type": [
+            "number",
+            "integer"
+          ]
+        },
+        "cache_creation_tokens": {
+          "type": [
+            "number",
+            "integer"
+          ]
+        },
+        "cost_usd_nominal": {
+          "type": [
+            "number",
+            "integer"
+          ]
+        }
+      }
+    },
+    "ci": {
+      "type": "array",
+      "description": "one entry per CI run: attempt 0 = gen, n = fix<n>",
+      "items": {
+        "type": "object",
+        "required": [
+          "attempt",
+          "ref",
+          "verdict"
+        ],
+        "properties": {
+          "attempt": {
+            "type": "integer"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "object",
+            "required": [
+              "ok",
+              "checks",
+              "feedback_text"
+            ],
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "rule",
+                    "category",
+                    "status",
+                    "duration_ms",
+                    "output"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "rule": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "category": {
+                      "enum": [
+                        "build",
+                        "test",
+                        "gate",
+                        "contract"
+                      ]
+                    },
+                    "status": {
+                      "enum": [
+                        "pass",
+                        "fail",
+                        "error"
+                      ]
+                    },
+                    "duration_ms": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "output": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "feedback_text": {
+                "type": "string",
+                "maxLength": 6000
+              }
+            }
+          }
+        }
+      }
+    },
+    "detectors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "attempt",
+          "ref",
+          "range",
+          "flags"
+        ],
+        "properties": {
+          "attempt": {
+            "type": "integer"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "range": {
+            "type": "string"
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "detector",
+                "path",
+                "summary"
+              ],
+              "properties": {
+                "detector": {
+                  "enum": [
+                    "D1",
+                    "D2",
+                    "D3",
+                    "D4",
+                    "D5",
+                    "D6",
+                    "D7",
+                    "D8"
+                  ]
+                },
+                "path": {
+                  "type": "string"
+                },
+                "summary": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "properties": {
+        "gen": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "ok",
+                "consumers"
+              ],
+              "properties": {
+                "ok": {
+                  "type": "boolean"
+                },
+                "consumers": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "required": [
+                      "ok",
+                      "message"
+                    ],
+                    "properties": {
+                      "ok": {
+                        "type": "boolean"
+                      },
+                      "status": {
+                        "enum": [
+                          "pass",
+                          "fail",
+                          "error"
+                        ]
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "final": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "ok",
+                "consumers"
+              ],
+              "properties": {
+                "ok": {
+                  "type": "boolean"
+                },
+                "consumers": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "required": [
+                      "ok",
+                      "message"
+                    ],
+                    "properties": {
+                      "ok": {
+                        "type": "boolean"
+                      },
+                      "status": {
+                        "enum": [
+                          "pass",
+                          "fail",
+                          "error"
+                        ]
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ticket_done": {
+      "enum": [
+        "done",
+        "not_done",
+        "deprecated",
+        null
+      ]
+    },
+    "metrics": {
+      "type": "object",
+      "required": [
+        "staging_break",
+        "consumer_break_ci",
+        "semantic_break",
+        "undeclared_dependency",
+        "arch_layer_violation",
+        "arch9_signal"
+      ],
+      "properties": {
+        "staging_break": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "staging_break_final": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "consumer_break_ci": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "semantic_break": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "undeclared_dependency": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "arch_layer_violation": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "arch9_signal": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "gate_flagged": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "repair_attempts": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "outcome": {
+      "enum": [
+        "infra_failure",
+        "no_change",
+        "passed_with_gate_flag",
+        "passed_first_ci",
+        "fixed_with_gate_flag",
+        "fixed_code",
+        "capped",
+        "honest_escalation_candidate",
+        "still_failing"
+      ]
+    },
+    "infra_failure": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "rate_limited",
+                "api_error",
+                "cli_crash",
+                "isolation_breach",
+                "timeout"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            },
+            "reset_at": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "final": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    },
+    "infra_retries": {
+      "type": "integer"
+    },
+    "contamination": {
+      "type": "object",
+      "required": [
+        "flag",
+        "hits"
+      ],
+      "properties": {
+        "flag": {
+          "type": "boolean"
+        },
+        "hits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "canary": {
+                "type": "string"
+              },
+              "origin": {
+                "type": "string"
+              },
+              "where": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "token_exposed": {
+      "type": "boolean"
+    },
+    "out_of_workspace_access": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tool": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "out_of_scope_edits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "final_message": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "isolation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "from system/init: tools, mcp_servers, plugins, permissionMode, cwd, model"
+    },
+    "reviews": {
+      "type": "array",
+      "description": "RQ4 reviewer verdicts attached later (optional)"
+    }
+  }
+}
