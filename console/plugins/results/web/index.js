@@ -3,6 +3,7 @@
 // Data: GET /api/results/{rq,reviewer,mutation,excluded}?ns=… ; drawing: ./charts.js (pure SVG, no libraries).
 // A stage that is not unblinded arrives without numbers; this page only shows "Blinded until stage complete".
 import { h, table, badge, empty, panel, notice, iconEl, button, tabs, fmtInt } from "/web/lib/ui.js";
+import { markdownViewer, mdViewSwitch } from "/web/lib/markdown.js";
 import { renderChart, renderSlide, dataTable, THEMES, SLIDE, fmtXofN, fmtCI } from "./charts.js";
 
 const BLINDED = "Blinded until stage complete";
@@ -258,7 +259,8 @@ export async function mount(el, shell) {
       out.push(h("div", { class: "res-blind" }, iconEl("info", 20), h("div", {},
         h("div", { class: "strong" }, "No mutation matrix yet"),
         h("div", { class: "small muted" }, "Generate it with ", code(mu.command), " (about 100 mutants of OrderPlaced and the REST response, no model calls). It is the same in the real and mock namespaces."))));
-      if (mu.markdown) out.push(h("pre", { class: "block" }, mu.markdown));
+      if (mu.markdown) out.push(h("div", { class: "res-md" }, h("div", { class: "res-md-bar" }, mdViewSwitch()),
+        markdownViewer({ text: mu.markdown, code: () => h("pre", { class: "block" }, mu.markdown) })));
     } else {
       out.push(chartGrid([mu.chart]));
       const names = { ci_catch_oracle_catch: "CI catches · oracle catches", ci_catch_oracle_miss: "CI catches · oracle misses",

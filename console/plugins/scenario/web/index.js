@@ -1,6 +1,7 @@
 // Scenario (spec 22.7): the spec that carries rules. Read-only view of the committed scenario/ folder:
 // repos with a code viewer, ARCH rules, catalog graph, tickets, S0/S1/S2 contexts and the consumer contracts.
 import { h, table, tabs, badge, facts, panel, empty, notice, button, fmtInt, iconEl } from "/web/lib/ui.js";
+import { markdownViewer, mdViewSwitch, renderMarkdown } from "/web/lib/markdown.js";
 import { tokenize } from "./highlight.js";
 import { layoutGraph, edgePath } from "./graph.js";
 
@@ -209,13 +210,23 @@ async function renderRepos() {
     panel({ title: "File", flush: true, body: viewer }));
 }
 
+// Fenced blocks in the Markdown preview reuse the code viewer's tokenizer.
+const FENCE_LANG = { ts: "ts", tsx: "ts", typescript: "ts", js: "ts", javascript: "ts", mjs: "ts", cjs: "ts", json: "json", yaml: "yaml", yml: "yaml" };
+const tokSpans = (toks) => toks.map(([t, s]) => (t ? h("span", { class: `sc-t-${t}` }, s) : s));
+function fenceHighlight(lang, text) {
+  const l = FENCE_LANG[lang];
+  return l ? tokenize(l, text).map((toks, i) => [i ? "\n" : "", tokSpans(toks)]) : null;
+}
+
 function viewFile(f) {
-  const lines = tokenize(f.lang, f.content);
-  const code = h("pre", { class: "sc-pre", tabindex: "0", "aria-label": `Contents of ${f.path}` },
-    h("code", {}, lines.map((toks) => h("span", { class: "sc-line" }, toks.map(([t, s]) => (t ? h("span", { class: `sc-t-${t}` }, s) : s))))));
+  const isMd = f.lang === "md";
+  const codeView = () => h("pre", { class: "sc-pre", tabindex: "0", "aria-label": `Contents of ${f.path}` },
+    h("code", {}, tokenize(f.lang, f.content).map((toks) => h("span", { class: "sc-line" }, tokSpans(toks)))));
+  const code = isMd ? h("div", { class: "sc-md" }, markdownViewer({ text: f.content, code: codeView, highlight: fenceHighlight })) : codeView();
   return [
     h("div", { class: "sc-vhead" }, mono(f.path),
       h("span", { class: "sc-vmeta" },
+        isMd ? mdViewSwitch() : null,
         badge(f.lang === "text" ? "text" : f.lang, "neutral"),
         h("span", { class: "small muted num" }, `${fmtInt(f.lines)} lines · ${kb(f.size)}`),
         f.canary_lines ? h("span", { class: "small muted", title: "Canary lines mark files that must never reach an agent workspace" }, `${f.canary_lines} canary line${f.canary_lines > 1 ? "s" : ""}`) : null)),
@@ -446,11 +457,22 @@ async function renderContexts() {
     let showShared = false;
     const code = h("pre", { class: "sc-pre sc-ctx", tabindex: "0", "aria-label": `${c.id} text` });
     const toggle = collapsible ? h("button", { type: "button", class: "sc-link small", "aria-expanded": "false", onclick: () => { showShared = !showShared; draw(); } }) : null;
+    const textLines = c.text.split("\n");
+    const box = h("div", {});
     function draw() {
       const from = collapsible && !showShared ? firstAdded : 0;
       code.style.counterReset = `ln ${from}`;
       code.replaceChildren(h("code", {}, lines.slice(from).map((toks, i) =>
         h("span", { class: ["sc-line", firstAdded >= 0 && i + from >= firstAdded && "is-added"] }, toks.map(([t, s]) => (t ? h("span", { class: `sc-t-${t}` }, s) : s))))));
+      // Preview: the same split, with the part this condition adds over S0 marked like the added lines
+      const shared = firstAdded >= 0 ? textLines.slice(0, firstAdded).join("\n") : c.text;
+      const added = firstAdded >= 0 ? textLines.slice(firstAdded).join("\n") : "";
+      box.replaceChildren(markdownViewer({
+        code: () => code,
+        preview: () => h("div", { class: "sc-ctx-md" },
+          from ? null : renderMarkdown(shared, { highlight: fenceHighlight }),
+          added ? h("div", { class: "is-added" }, renderMarkdown(added, { highlight: fenceHighlight })) : null),
+      }));
       if (toggle) {
         toggle.textContent = showShared ? `Hide the ${firstAdded} lines shared with S0` : `Show the ${firstAdded} lines shared with S0`;
         toggle.setAttribute("aria-expanded", String(showShared));
@@ -468,11 +490,12 @@ async function renderContexts() {
           h("div", {}, h("span", { class: "num strong" }, fmtInt(c.lines)), h("span", { class: "small muted" }, " lines"))),
         h("div", { class: "sc-ids small" }, c.arch_ids.length ? [h("span", { class: "muted" }, "Rule IDs named: "), c.arch_ids.map((x) => h("span", { class: "mono" }, x))] : h("span", { class: "muted" }, "No rule IDs")),
         c.id !== "S0" && !c.extends_s0 ? notice("This file does not start with the S0 text, so the added part is a line diff.", "warn", "triangle-alert") : null,
-        toggle, code),
+        toggle, box),
     });
   });
   return [
     panel({ title: "Fairness of the added sections", body: fair || notice("S1 and S2 are both needed to evaluate the rule.", "warn", "triangle-alert") }),
+    h("div", { class: "sc-ctx-bar" }, h("span", { class: "small muted" }, "Show the context files as"), mdViewSwitch()),
     h("div", { class: "grid-3 sc-ctx-grid" }, cols),
     h("p", { class: "small muted" }, "Word counts split on whitespace and skip any line that carries a canary. The tinted lines are what S1 and S2 add; the agent receives exactly one of the three files."),
   ];

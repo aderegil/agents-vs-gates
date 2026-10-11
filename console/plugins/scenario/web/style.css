@@ -115,3 +115,12 @@
   .sc-fair { grid-template-columns: auto 1fr; }
   .sc-fair-bars { grid-column: 1 / -1; }
 }
+/* Markdown preview (shared viewer in /web/lib/markdown.js) */
+.sc-md .md { max-height: calc(100vh - 290px); overflow: auto; max-width: none; }
+.sc-md .md > * { max-width: 860px; }
+.sc-ctx-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.sc-ctx-md { border: 1px solid var(--linea); border-radius: var(--radio); }
+.sc-ctx-md .md { padding: 10px 14px 4px; font-size: 13px; }
+.sc-ctx-md .md h1 { font-size: 16px; }
+.sc-ctx-md .md h2 { font-size: 14.5px; }
+.sc-ctx-md .is-added { background: var(--acento-suave); box-shadow: inset 2px 0 0 var(--acento); }
