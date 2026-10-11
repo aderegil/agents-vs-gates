@@ -2,9 +2,11 @@
 
     from replay.service import list_replayable, load_run_replay
 
-Reads only `results/<ns>/runs/<run_id>/{events.jsonl,record.json}` (via harness.paths) and `state.json` for
-blinding. A run whose stage is still blinded is listed without its outcome and is not replayed: a replay shows CI
-verdicts and oracle results, which are outcomes (spec 11.4, 21.5, 22.3).
+Reads only `results/<ns>/runs/<run_id>/{events.jsonl,record.json,diffs/*.diff,transcript.jsonl}` (via harness.paths)
+and `state.json` for blinding, and writes only `replay.json` next to them (through replay.export.build_replay). A
+run whose stage is still blinded is listed without its outcome and is never exported or replayed: a replay shows CI
+verdicts and oracle results, which are outcomes (spec 11.4, 21.5, 22.3). Which stages are visible is decided by
+harness.blinding.is_visible only (P0, the X1 pilot and the mock selftest always; others once unblinded).
 """
 from __future__ import annotations
 
@@ -14,7 +16,7 @@ from pathlib import Path
 
 from harness import blinding, paths
 from harness.jsonio import read_json, read_jsonl, write_json_atomic
-from replay.export import EXPORTER_VERSION, build_replay, trace_sha256
+from replay.export import EXPORTER_VERSION, build_replay, extras_sha256, load_extras, trace_sha256
 
 RUN_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
@@ -88,15 +90,46 @@ def list_replayable(ns: str) -> list[dict]:
             m["outcome"] = None
         m["blinded"] = not visible
         m["cached"] = (d / "replay.json").is_file()
+        m["finished"] = (d / "record.json").is_file()
         out.append(m)
     return out
 
 
-def load_run_replay(ns: str, run_id: str, *, cache: bool = True) -> dict:
-    """The run's replay.json, built from its trace with build_replay and cached in the run folder.
+def _cache_ok(cached: dict | None, sha: str, extras_sha: str) -> bool:
+    meta = (cached or {}).get("meta") or {}
+    return bool(cached) and meta.get("trace_sha256") == sha and meta.get("exporter_version") == EXPORTER_VERSION         and meta.get("extras_sha256") == extras_sha
 
-    The cache is valid while its meta.trace_sha256 and meta.exporter_version match the current trace and exporter.
-    Raises ReplayNotFound (no such run / no trace), ReplayBlinded (stage still blinded), ValueError (bad trace).
+
+def export_pending(ns: str, *, force: bool = False) -> dict:
+    """Exports replay.json for every finished run (record.json written) of a visible stage whose replay.json is
+    missing or stale (other trace, record, diffs or exporter version). Blinded runs are skipped and never touched.
+    Returns {"ns", "exported": [run_id], "fresh": [run_id], "skipped_blinded": n, "unfinished": [run_id],
+    "errors": {run_id: message}}."""
+    ns = check_ns(ns)
+    out = {"ns": ns, "exported": [], "fresh": [], "skipped_blinded": 0, "unfinished": [], "errors": {}}
+    for m in list_replayable(ns):
+        if m["blinded"]:
+            out["skipped_blinded"] += 1
+            continue
+        if not m["finished"]:
+            out["unfinished"].append(m["run_id"])
+            continue
+        try:
+            built = load_run_replay(ns, m["run_id"], rebuild=force, report=True)
+        except (ReplayNotFound, ReplayBlinded, ValueError, OSError) as exc:
+            out["errors"][m["run_id"]] = str(exc)
+            continue
+        (out["exported"] if built else out["fresh"]).append(m["run_id"])
+    return out
+
+
+def load_run_replay(ns: str, run_id: str, *, cache: bool = True, rebuild: bool = False, report: bool = False):
+    """The run's replay.json, built with build_replay from its trace plus its record, diffs and transcript, and cached
+    in the run folder.
+
+    The cache is valid while its meta.trace_sha256, meta.extras_sha256 and meta.exporter_version match the current
+    files and exporter. Raises ReplayNotFound (no such run / no trace), ReplayBlinded (stage still blinded),
+    ValueError (bad trace). With report=True returns whether it (re)built the file instead of the replay.
     """
     ns = check_ns(ns)
     if not RUN_ID.match(run_id or ""):
@@ -112,16 +145,17 @@ def load_run_replay(ns: str, run_id: str, *, cache: bool = True) -> dict:
     state = read_json(paths.state_path(ns)) or {}
     if not blinding.is_visible(state, stage):
         raise ReplayBlinded(f"stage {stage} is blinded; its replays open after it is unblinded")
+    extras = load_extras(run_dir)
     sha = trace_sha256(events)
+    esha = extras_sha256(extras)
     target = run_dir / "replay.json"
-    cached = read_json(target) if cache else None
-    meta = (cached or {}).get("meta") or {}
-    if cached and meta.get("trace_sha256") == sha and meta.get("exporter_version") == EXPORTER_VERSION:
-        return cached
-    replay = build_replay(events)
+    cached = read_json(target) if cache and not rebuild else None
+    if _cache_ok(cached, sha, esha):
+        return False if report else cached
+    replay = build_replay(events, extras)
     if cache:
         try:
             write_json_atomic(target, replay)
         except OSError:
             pass  # read-only results folder: serve without caching
-    return replay
+    return True if report else replay

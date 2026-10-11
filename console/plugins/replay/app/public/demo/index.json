@@ -59,6 +59,36 @@
       "outcome": "passed_first_ci",
       "label": "st-0004 · X-units · V0·S0 · CI cyan, oracle pink (SIMULATED)",
       "url": "m1-xunits-v0s0-oracle.json"
+    },
+    {
+      "run_id": "st-0014",
+      "stage": "selftest",
+      "ticket": "X-rename",
+      "condition": {
+        "V": "V2",
+        "S": "S0",
+        "W": "W1"
+      },
+      "source": "mock",
+      "date": "2026-10-11",
+      "outcome": "fixed_code",
+      "label": "st-0014 · X-rename · V2·S0 · reads and edits billing-service's code (SIMULATED)",
+      "url": "m1-xrename-v2-scope.json"
+    },
+    {
+      "run_id": "st-demo-1",
+      "stage": "selftest",
+      "ticket": "X-rename",
+      "condition": {
+        "V": "V0",
+        "S": "S0",
+        "W": "W1"
+      },
+      "source": "mock",
+      "date": "2026-10-11",
+      "outcome": "fixed_code",
+      "label": "st-demo-1 · X-rename · V0·S0 · diff cards: rename, then @deprecated aliases (SIMULATED)",
+      "url": "m1-xrename-v0s0-diffs.json"
     }
   ]
 }

@@ -20,108 +20,121 @@
     "scenario": "meridian-retail/M1",
     "trace_sha256": "aa81c4179f9cd775c0902bc71788bc0873d41404314fd2b65d7c6e0c47cb1495",
     "schema": "replay/1",
-    "exporter_version": 1,
+    "exporter_version": 2,
     "legend": "SIMULATED (mock agent) — not a real run",
     "duration_ms": 43500,
     "duration_real_ms": 50500,
-    "event_count": 35
+    "event_count": 35,
+    "extras_sha256": "9df133529e3dfe710529db48f000891a5e4c5366fc695b53574330530d5ae475"
   },
   "places": [
     {
       "id": "product-desk",
       "label": "Product desk",
       "kind": "desk",
-      "x": 0.1,
-      "y": 0.2,
-      "note": "discovery"
+      "x": 0.07,
+      "y": 0.17,
+      "note": "discovery",
+      "used": false
     },
     {
       "id": "planning-room",
       "label": "Planning room",
       "kind": "room",
-      "x": 0.3,
-      "y": 0.2,
-      "note": "planning"
+      "x": 0.23,
+      "y": 0.17,
+      "note": "planning",
+      "used": false
     },
     {
       "id": "architecture-library",
       "label": "Architecture library",
       "kind": "library",
-      "x": 0.52,
-      "y": 0.18,
-      "note": "ARCH-n rules, catalog, ADRs"
+      "x": 0.4,
+      "y": 0.15,
+      "note": "ARCH-n rules, catalog, ADRs",
+      "used": true
     },
     {
       "id": "dispatch",
       "label": "Dispatch board",
       "kind": "system",
-      "x": 0.8,
-      "y": 0.18,
-      "note": "flow engine"
+      "x": 0.62,
+      "y": 0.15,
+      "note": "flow engine",
+      "used": true
     },
     {
       "id": "desk-orders",
       "label": "Checkout · orders",
       "kind": "desk",
-      "x": 0.1,
-      "y": 0.55,
-      "note": "orders-service"
+      "x": 0.16,
+      "y": 0.5,
+      "note": "orders-service",
+      "used": true
     },
     {
       "id": "desk-billing",
       "label": "Finance · billing",
       "kind": "desk",
-      "x": 0.1,
-      "y": 0.84,
-      "note": "billing-service"
+      "x": 0.08,
+      "y": 0.86,
+      "note": "billing-service",
+      "used": true
     },
     {
       "id": "desk-analytics",
       "label": "Data · analytics",
       "kind": "desk",
-      "x": 0.3,
-      "y": 0.84,
-      "note": "analytics-ingest"
+      "x": 0.26,
+      "y": 0.86,
+      "note": "analytics-ingest",
+      "used": true
     },
     {
       "id": "desk-storefront",
       "label": "Digital · storefront",
       "kind": "desk",
-      "x": 0.5,
-      "y": 0.84,
-      "note": "web-storefront"
+      "x": 0.44,
+      "y": 0.86,
+      "note": "web-storefront",
+      "used": true
     },
     {
-      "id": "review-table",
-      "label": "Review table",
-      "kind": "room",
-      "x": 0.36,
-      "y": 0.53,
-      "note": "pull request"
+      "id": "pr-tray",
+      "label": "PR tray",
+      "kind": "system",
+      "x": 0.555,
+      "y": 0.5,
+      "note": "CI is the only reviewer",
+      "used": true
     },
     {
       "id": "ci-tower",
       "label": "CI Tower",
       "kind": "system",
-      "x": 0.6,
-      "y": 0.5,
-      "note": "one light per check"
+      "x": 0.69,
+      "y": 0.48,
+      "note": "one light per check",
+      "used": true
     },
     {
       "id": "merge-gate",
       "label": "Merge gate",
       "kind": "gate",
-      "x": 0.84,
+      "x": 0.89,
       "y": 0.5,
-      "note": "merge"
+      "note": "merge",
+      "used": false
     },
     {
       "id": "staging-bench",
       "label": "Staging bench",
       "kind": "stage",
       "x": 0.8,
-      "y": 0.84,
-      "note": "hidden from the agent"
+      "y": 0.86,
+      "note": "hidden from the agent",
+      "used": true
     }
   ],
   "actors": [
@@ -238,6 +251,7 @@
       "text": "The new storefront shows order totals in dollars. Make the order total available in dollars (for example 12.5 for $12.50) in what the orders service exposes, so the storefront doesn't have to convert.",
       "key": "task_assigned",
       "narration": "Ticket X-units assigned to the code agent (V0·S0).",
+      "caption": "Code Agent · orders-service gets ticket X-units: “The new storefront shows order totals in dollars. Make the order total available in dollars (for example 12.5 for $12.50) in what the orders service …",
       "detail": {
         "event_type": "TASK_ASSIGNED",
         "event_id": "evt-0002",
@@ -453,7 +467,7 @@
       "actor": "code-orders",
       "action": "move",
       "target": null,
-      "place": "review-table",
+      "place": "pr-tray",
       "text": null,
       "key": null,
       "narration": null,
@@ -469,11 +483,12 @@
       "seq": 13,
       "actor": "code-orders",
       "action": "handoff",
-      "target": "review-table",
-      "place": "review-table",
+      "target": "pr-tray",
+      "place": "pr-tray",
       "text": "PR st-0004 · 2 files changed, +4 -4",
       "key": "pr_opened",
       "narration": null,
+      "caption": "Code Agent · orders-service opens a pull request (2 files changed, +4 -4) and leaves it on the PR tray: CI is its only reviewer.",
       "detail": {
         "event_type": "ARTIFACT_CREATED",
         "event_id": "evt-0013",
@@ -493,7 +508,7 @@
       "actor": "code-orders",
       "action": "speak",
       "target": "flow-engine",
-      "place": "review-table",
+      "place": "pr-tray",
       "text": "The order total is now exposed in dollars (total: 12.5 for $12.50) in GET /orders/{id} and OrderPlaced. Tests pass.",
       "key": null,
       "narration": null,
@@ -535,6 +550,7 @@
       "text": null,
       "key": null,
       "narration": null,
+      "caption": "CI picks up the pull request and runs 10 deterministic checks.",
       "detail": {
         "event_type": "CI_RUN_STARTED",
         "event_id": "evt-0016",
@@ -804,6 +820,7 @@
       "text": "CI passed: all checks green.",
       "key": "ci_pass",
       "narration": "CI passed: all checks green.",
+      "caption": "CI passes: all 10 checks pass.",
       "check": {
         "id": "attempt-0",
         "status": "pass",
@@ -829,6 +846,7 @@
       "text": "billing-service (gen): invoice amount: expected 1250, got 12.5",
       "key": "oracle",
       "narration": "Oracle: billing-service fails while CI passed — invoice amount expected 1250, got 12.5.",
+      "caption": "Staging oracle, hidden from the agent: the other teams run their own tests on the first pull request. 2 of 3 break.",
       "check": {
         "id": "billing-service",
         "status": "fail",
@@ -913,6 +931,7 @@
       "text": "billing-service (final): invoice amount: expected 1250, got 12.5",
       "key": "oracle",
       "narration": null,
+      "caption": "Staging oracle, hidden from the agent: the other teams run their own tests on the final pull request. 2 of 3 break.",
       "check": {
         "id": "billing-service",
         "status": "fail",
@@ -997,6 +1016,7 @@
       "text": "passed_first_ci; ticket done",
       "key": "session_end",
       "narration": "Run finished: CI green, staging oracle red — a semantic break CI cannot see.",
+      "caption": "End: passed first ci · ticket done.",
       "detail": {
         "event_type": "SESSION_ENDED",
         "event_id": "evt-0034",
@@ -1044,5 +1064,108 @@
       "label": "End: passed_first_ci · ticket done",
       "kind": "session_end"
     }
-  ]
+  ],
+  "scene": {
+    "layout": "pr-tray",
+    "visibility": "V0",
+    "spec": "S0",
+    "agent": "code-orders",
+    "context": {
+      "file": "CLAUDE.md",
+      "summary": "Context S0",
+      "seq": 1,
+      "t_ms": 500
+    },
+    "fitness_functions": [
+      "ARCH-1",
+      "ARCH-2",
+      "ARCH-3",
+      "ARCH-4",
+      "ARCH-5",
+      "ARCH-6",
+      "ARCH-7",
+      "ARCH-8"
+    ],
+    "consumers": [
+      {
+        "id": "billing-service",
+        "desk": "desk-billing",
+        "contract": null,
+        "oracle": {
+          "gen": {
+            "status": "fail",
+            "seq": 28,
+            "t_ms": 32500
+          },
+          "final": {
+            "status": "fail",
+            "seq": 31,
+            "t_ms": 37000
+          }
+        },
+        "reads": [],
+        "edits": [],
+        "owner": {
+          "name": "Noor",
+          "title": "billing owner",
+          "seed": "cast:noor:billing",
+          "fictional": true
+        }
+      },
+      {
+        "id": "analytics-ingest",
+        "desk": "desk-analytics",
+        "contract": null,
+        "oracle": {
+          "gen": {
+            "status": "fail",
+            "seq": 29,
+            "t_ms": 34000
+          },
+          "final": {
+            "status": "fail",
+            "seq": 32,
+            "t_ms": 38500
+          }
+        },
+        "reads": [],
+        "edits": [],
+        "owner": {
+          "name": "Kenji",
+          "title": "analytics owner",
+          "seed": "cast:kenji:analytics",
+          "fictional": true
+        }
+      },
+      {
+        "id": "web-storefront",
+        "desk": "desk-storefront",
+        "contract": null,
+        "oracle": {
+          "gen": {
+            "status": "pass",
+            "seq": 30,
+            "t_ms": 35500
+          },
+          "final": {
+            "status": "pass",
+            "seq": 33,
+            "t_ms": 40000
+          }
+        },
+        "reads": [],
+        "edits": [],
+        "owner": {
+          "name": "Lucía",
+          "title": "storefront owner",
+          "seed": "cast:lucia:storefront",
+          "fictional": true
+        }
+      }
+    ],
+    "diff_cards": [],
+    "sources": [
+      "events.jsonl"
+    ]
+  }
 }

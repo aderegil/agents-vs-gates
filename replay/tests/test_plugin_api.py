@@ -93,7 +93,7 @@ class PluginApi(unittest.TestCase):
         return self.router.routes[("GET", path)](FakeRequest(**kw))
 
     def test_routes_registered(self):
-        self.assertEqual(set(self.router.routes), {("GET", "/list"), ("GET", "/run/{run_id}")})
+        self.assertEqual(set(self.router.routes), {("GET", "/list"), ("GET", "/run/{run_id}"), ("POST", "/export")})
 
     def test_list_respects_blinding(self):
         body = self.call("/list")
@@ -141,6 +141,48 @@ class PluginApi(unittest.TestCase):
         with self.assertRaises(self.api.ApiError) as cm:
             self.call("/list", ns="prod")
         self.assertEqual(cm.exception.status, 400)
+
+    def _finish(self, run_id: str, stage: str, ns: str = "mock", fixture: str = "m1-xrename-v0s2-additive.jsonl"):
+        d = self.tmp / ns / "runs" / run_id
+        retag(FIXTURES / fixture, d / "events.jsonl", run_id, stage, source="mock" if ns == "mock" else "real")
+        record = {"run_id": run_id, "stage": stage, "namespace": ns, "ticket": "X-rename", "visibility": "V0",
+                  "spec": "S2", "wording": "W1", "out_of_scope_edits": []}
+        (d / "record.json").write_text(json.dumps(record), encoding="utf-8")
+        return d
+
+    def test_export_new_runs_writes_only_visible_finished_runs(self):
+        # st-0001 has no record.json (not finished); p1-0001 is blinded; x1-0001 (pilot, visible) is finished
+        x1 = self._finish("x1-0001", "X1")
+        p1 = self.tmp / "mock" / "runs" / "p1-0001"
+        res = self.router.routes[("POST", "/export")](FakeRequest())
+        self.assertEqual(res["exported"], ["x1-0001"])
+        self.assertEqual(res["unfinished"], ["st-0001"])
+        self.assertEqual(res["skipped_blinded"], 1)
+        self.assertEqual(res["errors"], {})
+        self.assertTrue((x1 / "replay.json").is_file())
+        self.assertFalse((p1 / "replay.json").exists(), "a blinded run is never exported")
+        replay = json.loads((x1 / "replay.json").read_text(encoding="utf-8"))
+        jsonschema.validate(replay, SCHEMA)
+        self.assertEqual(replay["scene"]["spec"], "S2")
+        # second call: nothing new; a record change makes it stale and it is re-exported
+        res = self.router.routes[("POST", "/export")](FakeRequest())
+        self.assertEqual((res["exported"], res["fresh"]), ([], ["x1-0001"]))
+        rec = json.loads((x1 / "record.json").read_text(encoding="utf-8"))
+        rec["visibility"] = "V2"
+        (x1 / "record.json").write_text(json.dumps(rec), encoding="utf-8")
+        res = self.router.routes[("POST", "/export")](FakeRequest())
+        self.assertEqual(res["exported"], ["x1-0001"])
+        self.assertEqual(json.loads((x1 / "replay.json").read_text(encoding="utf-8"))["scene"]["visibility"], "V2")
+
+    def test_export_real_namespace_and_listing_flags(self):
+        self._finish("p0-0001", "P0", ns="real")
+        lst = {r["run_id"]: r for r in self.call("/list", ns="real")["runs"]}
+        self.assertEqual(lst["p0-0001"]["source"], "real")
+        self.assertTrue(lst["p0-0001"]["finished"])
+        self.assertFalse(lst["p0-0001"]["cached"])
+        res = self.router.routes[("POST", "/export")](FakeRequest(ns="real"))
+        self.assertEqual(res["exported"], ["p0-0001"])
+        self.assertTrue({r["run_id"]: r for r in self.call("/list", ns="real")["runs"]}["p0-0001"]["cached"])
 
     def test_real_namespace_is_separate(self):
         self.assertEqual(self.call("/list", ns="real")["runs"], [])

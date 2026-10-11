@@ -99,8 +99,11 @@ class BuildReplay(unittest.TestCase):
         self.assertTrue(a["architect"]["simulated"])
         places = {p["id"]: p for p in r["places"]}
         for pid in ("product-desk", "planning-room", "desk-orders", "desk-billing", "desk-analytics", "desk-storefront",
-                    "review-table", "ci-tower", "merge-gate", "staging-bench", "architecture-library"):
+                    "pr-tray", "ci-tower", "merge-gate", "staging-bench", "architecture-library"):
             self.assertIn(pid, places)
+        # M1 has no reviewer: no review table, the PR goes to the tray beside the CI tower
+        self.assertNotIn("review-table", places)
+        self.assertNotIn("review-desk", places)
         self.assertEqual(places["staging-bench"]["note"], "hidden from the agent")
         self.assertEqual(places["desk-orders"]["label"], "Checkout · orders")
 
@@ -194,6 +197,130 @@ class Cli(unittest.TestCase):
         proc = subprocess.run([sys.executable, "-m", "replay.export", "nope.jsonl", "--out", "x"], cwd=REPO,
                               capture_output=True, text=True)
         self.assertEqual(proc.returncode, 2)
+
+
+class SceneV2(unittest.TestCase):
+    """Exporter 2: the scene block from record, diffs and transcript (all optional, still pure)."""
+
+    def _extras(self, **kw):
+        return {"record": kw.get("record"), "diffs": kw.get("diffs", {}), "transcript": kw.get("transcript", [])}
+
+    def test_layout_and_used_places(self):
+        r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"))
+        self.assertEqual(r["scene"]["layout"], "pr-tray")
+        pr = next(s for s in r["steps"] if s.get("key") == "pr_opened")
+        self.assertEqual(pr["target"], "pr-tray")
+        mv = [s for s in r["steps"] if s["action"] == "move" and s["place"] == "pr-tray"]
+        self.assertTrue(mv, "the agent walks to the PR tray")
+        used = {p["id"]: p["used"] for p in r["places"]}
+        self.assertTrue(used["ci-tower"] and used["pr-tray"] and used["desk-orders"] and used["staging-bench"])
+        self.assertFalse(used["product-desk"] or used["planning-room"] or used["merge-gate"])
+
+    def test_reviewer_runs_keep_the_review_table(self):
+        events = ex.read_trace(REPO / "flow" / "examples" / "sprint-mock-F1.jsonl")
+        r = ex.build_replay(events)
+        jsonschema.validate(r, SCHEMA)
+        places = {p["id"] for p in r["places"]}
+        self.assertIn("review-table", places)
+        self.assertIn("review-desk", places)
+        self.assertNotIn("pr-tray", places)
+        self.assertEqual(r["scene"]["layout"], "review")
+        homes = {a["id"]: a["home"] for a in r["actors"]}
+        self.assertEqual(homes["review-agent"], "review-desk")
+
+    def test_visibility_spec_context_and_fitness_functions(self):
+        r = ex.build_replay(load("m1-xrename-v0s2-additive.jsonl"))
+        sc = r["scene"]
+        self.assertEqual((sc["visibility"], sc["spec"]), ("V0", "S2"))
+        self.assertTrue(sc["context"]["file"])
+        self.assertIn("ARCH-4", sc["fitness_functions"])
+        rec = {"visibility": "V2", "spec": "S1", "out_of_scope_edits": []}
+        sc = ex.build_replay(load("m1-xrename-v0s2-additive.jsonl"), self._extras(record=rec))["scene"]
+        self.assertEqual((sc["visibility"], sc["spec"]), ("V2", "S1"), "the record wins over the trace metadata")
+
+    def test_consumers_oracle_contract_and_fictional_owners(self):
+        r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"))
+        cons = {c["id"]: c for c in r["scene"]["consumers"]}
+        self.assertEqual(set(cons), {"billing-service", "analytics-ingest", "web-storefront"})
+        self.assertEqual(cons["billing-service"]["oracle"]["gen"]["status"], "fail")
+        self.assertEqual(cons["billing-service"]["oracle"]["final"]["status"], "pass")
+        self.assertEqual(cons["billing-service"]["contract"], "OrderPlaced")
+        for c in cons.values():
+            self.assertTrue(c["owner"]["fictional"])
+            self.assertEqual(c["desk"], {"billing-service": "desk-billing", "analytics-ingest": "desk-analytics",
+                                         "web-storefront": "desk-storefront"}[c["id"]])
+            self.assertEqual((c["reads"], c["edits"]), ([], []))
+
+    def test_reads_and_out_of_scope_edits_from_transcript_and_record(self):
+        events = load("m1-xrename-v0s0-break-repair.jsonl")
+        tool = next(e for e in events if e["event_type"] == "TOOL_CALL_STARTED")
+        tool["correlation_id"] = "toolu_x1"
+        tool["payload"]["tool_name"] = "Read"
+        tool["payload"]["input_summary"] = "billing-service/src/core/orderPlacedEvent.ts"
+        tr = [{"kind": "tool_call", "id": "toolu_x1", "name": "Read",
+               "input": {"file_path": "C:\\avg\\w1\\r\\billing-service\\src\\core\\orderPlacedEvent.ts"}},
+              {"kind": "tool_call", "id": "toolu_zz", "name": "Read", "input": {"file_path": "orders-service/x.ts"}}]
+        rec = {"visibility": "V2", "out_of_scope_edits": ["billing-service/src/core/orderPlacedEvent.ts"]}
+        sc = ex.build_replay(events, self._extras(record=rec, transcript=tr))["scene"]
+        cons = {c["id"]: c for c in sc["consumers"]}
+        self.assertEqual([x["path"] for x in cons["billing-service"]["reads"]],
+                         ["billing-service/src/core/orderPlacedEvent.ts"])
+        self.assertEqual(cons["billing-service"]["reads"][0]["seq"], tool["seq"])
+        self.assertEqual(cons["analytics-ingest"]["reads"], [])
+        self.assertEqual([x["path"] for x in cons["billing-service"]["edits"]], rec["out_of_scope_edits"])
+        # without a transcript the trace's tool input summary is the fallback
+        sc2 = ex.build_replay(events, self._extras(record=rec))["scene"]
+        self.assertEqual(len({c["id"]: c for c in sc2["consumers"]}["billing-service"]["reads"]), 1)
+
+    def test_diff_cards_from_the_real_diff(self):
+        diff = ("diff --git a/src/core/events.ts b/src/core/events.ts\n--- a/src/core/events.ts\n"
+                "+++ b/src/core/events.ts\n@@ -1,3 +1,3 @@\n-  readonly totalCents: number;\n"
+                "+  readonly amountCents: number;\n"
+                "diff --git a/test/app.test.ts b/test/app.test.ts\n--- a/test/app.test.ts\n+++ b/test/app.test.ts\n"
+                "@@ -1 +1 @@\n-a\n+b\n-c\n+d\n")
+        fix = ("diff --git a/src/core/events.ts b/src/core/events.ts\n@@ -1 +1,2 @@\n"
+               "+  /** @deprecated Use amountCents. */\n+  readonly totalCents: number;\n")
+        r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"),
+                            self._extras(diffs={"gen": diff, "fix1": fix}))
+        cards = r["scene"]["diff_cards"]
+        self.assertEqual([c["session"] for c in cards], ["gen", "fix1"])
+        self.assertEqual(cards[0]["file"], "src/core/events.ts", "the key file is the source file, not the test")
+        self.assertEqual(cards[0]["lines"], [{"op": "-", "text": "readonly totalCents: number;"},
+                                             {"op": "+", "text": "readonly amountCents: number;"}])
+        self.assertEqual(cards[1]["lines"][0], {"op": "+", "text": "/** @deprecated Use amountCents. */"})
+        pr = [s for s in r["steps"] if s.get("key") in ("pr_opened", "repair")]
+        self.assertLessEqual(cards[0]["seq"], pr[0]["seq"])
+        self.assertTrue(pr[0]["seq"] < cards[1]["seq"] <= pr[1]["seq"])
+        for c in cards:
+            self.assertEqual(c["source"], f"diffs/{c['session']}.diff")
+
+    def test_captions_are_templates_over_trace_fields(self):
+        r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"))
+        caps = {s.get("key"): s.get("caption") for s in r["steps"] if s.get("caption") and s.get("key")}
+        self.assertEqual(caps["ci_fail"], "CI blocks the pull request: ARCH-4 failed (1 of 10 checks).")
+        self.assertEqual(caps["ci_pass"], "CI passes: all 10 checks pass.")
+        oracle = [s["caption"] for s in r["steps"] if s["action"] == "oracle" and s.get("caption")]
+        self.assertIn("first pull request. 2 of 3 break.", oracle[0])
+        self.assertIn("final pull request. All 3 pass.", oracle[1])
+
+    def test_extras_change_the_cache_key(self):
+        events = load("m1-xrename-v0s0-break-repair.jsonl")
+        a = ex.build_replay(events)["meta"]["extras_sha256"]
+        b = ex.build_replay(events, self._extras(record={"visibility": "V0"}))["meta"]["extras_sha256"]
+        self.assertNotEqual(a, b)
+        self.assertEqual(ex.build_replay(events)["meta"]["exporter_version"], 2)
+
+    def test_real_p0_runs_export_when_present(self):
+        root = REPO / "results" / "real" / "runs"
+        runs = sorted(d for d in root.glob("p0-*") if (d / "events.jsonl").is_file()) if root.is_dir() else []
+        if not runs:
+            self.skipTest("no real P0 runs in this checkout")
+        for d in runs:
+            with self.subTest(run=d.name):
+                r = ex.build_replay(ex.read_trace(d / "events.jsonl"), ex.load_extras(d))
+                jsonschema.validate(r, SCHEMA)
+                self.assertEqual(r["meta"]["source"], "real")
+                self.assertTrue(r["scene"]["diff_cards"], "every P0 run edited the event file")
 
 
 if __name__ == "__main__":

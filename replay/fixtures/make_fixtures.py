@@ -267,13 +267,42 @@ DEMO_LABELS = {
 }
 
 
+# Whole mock run folders (trace + record + diffs + transcript, no workspace bundle) snapshotted from a mock selftest,
+# so the demos also show what exporter 2 adds from the run files: diff cards, V1/V2 visibility, reads and edits in
+# another team's folder. All mock, all SIMULATED. Snapshots live in replay/fixtures/runs/<run_id>/.
+RUN_DEMOS = {
+    "m1-xrename-v2-scope": ("st-0014", "X-rename · V2·S0 · reads and edits billing-service's code"),
+    "m1-xrename-v0s0-diffs": ("st-demo-1", "X-rename · V0·S0 · diff cards: rename, then @deprecated aliases"),
+}
+RUN_FILES = ("events.jsonl", "record.json", "transcript.jsonl")
+
+
+def snapshot_run(run_id: str) -> Path:
+    """Copies a mock run folder from results/mock/runs into fixtures/runs once (kept as is afterwards)."""
+    dst = HERE / "runs" / run_id
+    if (dst / "events.jsonl").is_file():
+        return dst
+    src = REPO / "results" / "mock" / "runs" / run_id
+    (dst / "diffs").mkdir(parents=True, exist_ok=True)
+    for name in RUN_FILES:
+        if (src / name).is_file():
+            shutil.copyfile(src / name, dst / name)
+    for d in sorted((src / "diffs").glob("*.diff")):
+        shutil.copyfile(d, dst / "diffs" / d.name)
+    return dst
+
+
 def write_demo() -> None:
     """Exports every fixture to the theater's bundled demo set (public/demo/*.json + index.json)."""
-    from replay.export import build_replay, read_trace
+    from replay.export import build_replay, load_extras, read_trace
     DEMO_DIR.mkdir(parents=True, exist_ok=True)
     runs = []
-    for stem, label in DEMO_LABELS.items():
-        r = build_replay(read_trace(HERE / f"{stem}.jsonl"))
+    items = [(stem, label, HERE / f"{stem}.jsonl", None) for stem, label in DEMO_LABELS.items()]
+    for stem, (run_id, label) in RUN_DEMOS.items():
+        d = snapshot_run(run_id)
+        items.append((stem, label, d / "events.jsonl", d))
+    for stem, label, trace, run_dir in items:
+        r = build_replay(read_trace(trace), load_extras(run_dir) if run_dir else None)
         with open(DEMO_DIR / f"{stem}.json", "w", encoding="utf-8", newline="\n") as f:
             json.dump(r, f, indent=2, ensure_ascii=False)
             f.write("\n")
