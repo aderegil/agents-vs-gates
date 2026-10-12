@@ -151,6 +151,10 @@ _RATE = re.compile(r"(usage[ _-]?limit|rate[ _-]?limit|\b429\b|too many requests
 _SANDBOX = re.compile(r"(restricted-token sandbox cannot|refusing to run unsandboxed|requires the elevated Windows "
                       r"sandbox|sandbox (?:setup|provisioning) (?:required|failed|incomplete))", re.I)
 _TRANSIENT = re.compile(r"^\s*(reconnecting|retrying)\b", re.I)
+# the Windows sandbox launcher (MXC) failing to create a command's process before the command runs: the shell is dead
+# for that session through no act of the agent (P6, 2026-10-12: 13 runs on all three workers, 16:11-16:21 UTC,
+# HRESULT 0x80070020). An infrastructure failure, re-queued (PREREGISTRATION §5), never an agent outcome.
+_SANDBOX_DEAD = re.compile(r"(CreateProcessSecurityEnvironment failed|MXC launcher: failed to create)", re.I)
 
 
 def parse_reset_codex(text: str, now=None) -> str | None:
@@ -185,6 +189,8 @@ class JsonlParser:
         self.model: str | None = None       # model id, when the stream reports one
         self.notices: list[str] = []        # transient stream errors (reconnecting...), not failures
         self.sandbox_error: str | None = None
+        self.sandbox_dead: str | None = None    # the launcher could not start a command (_SANDBOX_DEAD)
+        self.first_failure: str | None = None   # "breach" or "sandbox_dead", whichever the stream showed first
         self.events: list[dict] = []
         self.thread_id: str | None = None
         self.usage = {"input_tokens": 0, "output_tokens": 0, "cache_read_input_tokens": 0,
@@ -205,6 +211,7 @@ class JsonlParser:
         if it == "mcp_tool_call":
             name = f"mcp:{item.get('server')}/{item.get('tool')}"
             self.breach = self.breach or f"mcp tool call {name}"
+            self.first_failure = self.first_failure or "breach"
             inp = {"arguments": item.get("arguments")}
         elif it == "command_execution":
             name, inp = "Bash", {"command": item.get("command", "")}
@@ -259,6 +266,9 @@ class JsonlParser:
             said = (out if isinstance(out, str) else "") + " " + json.dumps(item.get("error") or "")
             if status == "error" and _SANDBOX.search(said):
                 self.sandbox_error = self.sandbox_error or said.strip()[:300]
+            if status == "error" and it == "command_execution" and _SANDBOX_DEAD.search(said):
+                self.sandbox_dead = self.sandbox_dead or said.strip()[:300]
+                self.first_failure = self.first_failure or "sandbox_dead"
             if out is None:
                 out = item.get("result") if it == "mcp_tool_call" else \
                     ", ".join(f"{c.get('kind')} {c.get('path')}" for c in item.get("changes") or []) or ""
@@ -288,6 +298,13 @@ def parse_jsonl(lines, session: str) -> JsonlParser:
 
 def classify(parser: JsonlParser, rc: int | None, stderr: str, timed_out: bool) -> dict:
     out = {"subtype": "success", "is_error": False, "capped": False, "turn_cap": "max-turns", "infra": None}
+    # a dead sandbox is an infrastructure failure (re-queued); it wins over a breach only when it came first, since an
+    # agent with no shell may go looking for other tools (p6-0062/0063: list_mcp_resources after the shell died)
+    if parser.sandbox_dead and (not parser.breach or parser.first_failure == "sandbox_dead"):
+        out.update(subtype="error", is_error=True, infra={"kind": "sandbox_unavailable", "reset_at": None,
+                                                          "detail": "sandbox could not start a command: "
+                                                                    + parser.sandbox_dead})
+        return out
     if parser.breach:
         out.update(subtype="error", is_error=True, infra={"kind": "isolation_breach", "detail": parser.breach, "reset_at": None})
         return out
@@ -324,7 +341,7 @@ def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limit
 
     def on_line(line, ts):
         parser.feed(line, ts)
-        if parser.breach or parser.capped or parser.sandbox_error:
+        if parser.breach or parser.capped or parser.sandbox_error or parser.sandbox_dead:
             return "kill"
 
     CALLS += 1

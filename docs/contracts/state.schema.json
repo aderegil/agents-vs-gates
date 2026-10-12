@@ -75,6 +75,21 @@
               "string",
               "null"
             ]
+          },
+          "reclassified": {
+            "description": "harness.reclassify_infra: archived attempts re-marked as infrastructure failures and re-queued",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["at", "from_outcome", "kind", "attempt", "archive"],
+              "properties": {
+                "at": {"type": "string"},
+                "from_outcome": {"type": ["string", "null"]},
+                "kind": {"type": "string"},
+                "attempt": {"type": "integer"},
+                "archive": {"type": "string"}
+              }
+            }
           }
         }
       }

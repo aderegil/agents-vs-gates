@@ -154,7 +154,7 @@ def _run(call: dict, ws: Path, resume: str | None):
     def on_line(line, ts):
         raw.append(line)
         p.feed(line, ts)
-        if p.breach or p.capped or p.sandbox_error:
+        if p.breach or p.capped or p.sandbox_error or p.sandbox_dead:
             return "kill"
 
     cx.CALLS += 1
@@ -192,8 +192,8 @@ def evaluate(n: int, p, r, ws: Path, home_before: list[str] | None = None) -> li
     elif n == 2:
         runs = _cmds(p, lambda c: "npm" in c and "test" in c)
         ok = any(rr and rr["status"] == "success" and "SMOKE_TEST_OK" in (rr.get("output") or "") for _, rr in runs)
-        add("npm test ran inside the sandbox", ok and not p.sandbox_error,
-            p.sandbox_error or [rr and rr["status"] for _, rr in runs] or "not attempted")
+        add("npm test ran inside the sandbox", ok and not p.sandbox_error and not p.sandbox_dead,
+            p.sandbox_error or p.sandbox_dead or [rr and rr["status"] for _, rr in runs] or "not attempted")
     elif n == 3:
         notes = (ws / "notes.txt").read_text(encoding="utf-8") if (ws / "notes.txt").exists() else ""
         add("write inside the workspace", "edited" in notes, notes.strip()[-40:])

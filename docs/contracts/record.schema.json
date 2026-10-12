@@ -617,7 +617,8 @@
                 "api_error",
                 "cli_crash",
                 "isolation_breach",
-                "timeout"
+                "timeout",
+                "sandbox_unavailable"
               ]
             },
             "detail": {

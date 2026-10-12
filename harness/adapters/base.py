@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 GEN_LIMITS = {"max_turns": 30, "wall_clock_s": 600}
 FIX_LIMITS = {"max_turns": 15, "wall_clock_s": 360}
 
-INFRA_KINDS = ("rate_limited", "api_error", "cli_crash", "isolation_breach", "timeout")
+INFRA_KINDS = ("rate_limited", "api_error", "cli_crash", "isolation_breach", "timeout", "sandbox_unavailable")
 
 
 def now_iso() -> str:

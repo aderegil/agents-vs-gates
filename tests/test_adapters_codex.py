@@ -137,6 +137,33 @@ class CodexParse(unittest.TestCase):
             "exit_code": 1, "status": "failed"}})], "gen")
         self.assertIsNone(codex.classify(p, 0, "", False)["infra"])
 
+    def test_dead_sandbox_launcher_is_sandbox_unavailable(self):
+        dead = "MXC launcher: failed to create the process security environment: CreateProcessSecurityEnvironment " \
+               "failed (HRESULT = 0x80070020)\n"
+
+        def cmd(i, out, rc, status):
+            return json.dumps({"type": "item.completed", "item": {
+                "id": f"c{i}", "type": "command_execution", "command": "rg -n channel", "aggregated_output": out,
+                "exit_code": rc, "status": status}})
+        mcp = json.dumps({"type": "item.completed", "item": {"id": "m1", "type": "mcp_tool_call", "server": "codex",
+                                                              "tool": "list_mcp_resources", "status": "completed"}})
+        # dead from the first command (p6-0056..0066), and after a command that worked (p6-0053, 0055)
+        for lines in ([cmd(1, dead, -1, "failed")], [cmd(1, "src/a.ts", 0, "completed"), cmd(2, dead, -1, "failed")]):
+            p = codex.parse_jsonl(lines, "gen")
+            c = codex.classify(p, 0, "", False)
+            self.assertEqual(c["infra"]["kind"], "sandbox_unavailable")
+            self.assertIn("0x80070020", c["infra"]["detail"])
+        # the agent with no shell then lists MCP resources (p6-0062/0063): still the sandbox, not a breach
+        p = codex.parse_jsonl([cmd(1, dead, -1, "failed"), mcp], "gen")
+        self.assertEqual(codex.classify(p, 0, "", False)["infra"]["kind"], "sandbox_unavailable")
+        # a breach that came first stays a breach
+        p = codex.parse_jsonl([mcp, cmd(1, dead, -1, "failed")], "gen")
+        self.assertEqual(codex.classify(p, 0, "", False)["infra"]["kind"], "isolation_breach")
+        # the signature in a successful command's output (e.g. grepping a log) is not a dead sandbox
+        p = codex.parse_jsonl([cmd(1, dead, 0, "completed")], "gen")
+        self.assertIsNone(codex.classify(p, 0, "", False)["infra"])
+        self.assertIsNone(p.sandbox_dead)
+
     def test_usage_limits_are_rate_limited_with_reset(self):
         from datetime import datetime
         now = datetime(2026, 10, 11, 12, 0).astimezone()

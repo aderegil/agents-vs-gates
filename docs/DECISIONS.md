@@ -450,3 +450,61 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - `test_analysis_tools` and `test_p6_sidecar`: 31 OK.
   - `console.tests.test_results`: 12 OK.
   - On the worktree's mock P6 P1 part (60 runs, force-unblinded in the mock namespace only), the section renders: X-rename and X-remove 10 of 10 vs 0 of 10 (Holm 2.2e-5); V2 10 of 10 vs 10 of 10. These are mock values: the mock agent always breaks without S2.
+
+## Post-freeze infrastructure-classification fix: a dead Codex sandbox is `sandbox_unavailable`, not an agent outcome (2026-10-12, branch sandbox-infra; not a design change)
+- **What happened in P6.** 13 Codex runs started between 16:11 and 16:21 UTC, on all three workers: p6-0053, 0055, 0056, 0057, 0058, 0059, 0060, 0061, 0062, 0063, 0064, 0065 and 0066.
+  - In them, the Windows sandbox launcher failed to start the agent's commands: `MXC launcher: failed to create the process security environment: CreateProcessSecurityEnvironment failed (HRESULT = 0x80070020)`.
+  - 11 of the 13 never had a command run. p6-0053 and p6-0055 had 2 and 1 commands work, then the launcher failed on the next one.
+  - With no shell, the agent changed nothing, and the 13 were scored `no_change`.
+  - No other Codex run in X1 or P6 shows the signature (a scan of every archived transcript), and Claude runs don't use this launcher.
+- **Why it is an infrastructure failure.** The failure happens before the agent's command exists as a process; no act of the agent can cause it.
+  - PREREGISTRATION §5: "Infrastructure failures don't count as agent results: re-queued with the same id at most twice, then `infra_failure_final`, all reported."
+  - The adapter only knew the earlier sandbox refusals (`_SANDBOX`, which are treated as an isolation breach). This launcher error was unknown to it, so the run fell through to an agent outcome.
+  - The fix classifies the case as the rule already says. It changes no hypothesis, cell, metric or test.
+- **Detection** (`harness/adapters/codex.py`):
+  - `_SANDBOX_DEAD` matches a `command_execution` that failed with the launcher error.
+  - Threshold: the first such failure. The session is killed at once and the run becomes `infra_failure` of kind `sandbox_unavailable`. The runner re-queues it like any non-breach kind (at most 2 retries, then final).
+  - Why the first failure is enough: healthy runs show 0 of these errors, and a session that lost its shell mid-run (p6-0053, p6-0055) is no fair agent result either.
+  - The signature in a *successful* command's output (for example grepping a log) does not count.
+- **Interaction with the MCP breach.**
+  - If the shell died first, the run is `sandbox_unavailable` even if the agent then calls an MCP tool.
+  - If the breach came first, it stays `isolation_breach`.
+  - p6-0062 and p6-0063, re-queued after their `list_mcp_resources` breaches, are both sandbox-dead in their archived second attempts: every command failed (3 of 3 and 4 of 4).
+  - The breached first attempts were overwritten by those re-runs, so their transcripts are gone. Their timing (16:16 and 16:20) puts them inside the window.
+- **The 13 archived runs.** `harness.reclassify_infra` re-marks exactly these runs.
+  - It accepts a run only if it is `done` and its own transcript shows the signature.
+  - Each run's directory is moved unchanged to `results/real/attempts/<id>/attempt-<n>/`, with a `reclassified.json` beside it.
+  - In `state.json` the run becomes `pending` with `infra_failures` 1 and a `reclassified` entry. `runner.log.jsonl` gets one `reclassified` event per run.
+  - Nothing else is touched: the manifests, `coding/` and the summary stay as they are.
+  - Dry run by default. `--apply` needs an explicit `--runs` list and refuses while a runner is alive.
+  - Applying it, and re-running the 13 with the same ids, is for after the running Claude P2 batch and with Alfredo's approval.
+- **Contracts:** `sandbox_unavailable` is added to `record.schema.json` (`infra_failure.kind`) and to `adapters/base.INFRA_KINDS`; `state.schema.json` gets the optional `reclassified` list.
+- **Also affected:**
+  - P6 cells whose counts change after the re-runs:
+    - P1: one run each in the six cells, except X-remove V2·S0 with two.
+    - P4: one each in X-add V0·S0, X-api V0·S0, X-api V0·S2, X-dep V0·S2, X-remove V0·S1 and X-units V0·S0.
+    - P2 (X-remove V1·S0): none.
+  - The blind-coding rows exported for these 13 runs become stale. They are `no_change` rows and must be dropped or redone after the re-runs.
+- Evidence (light tests only, while Claude P2 runs in real):
+  - `tests.test_reclassify_infra`, `test_adapters_codex`, `test_summarize` and `test_smoke_codex`: all OK.
+  - Dry run on `results/real`: 13 runs to re-queue, 0 refused. The full output is in the hand-off message.
+  - `tests.test_runner` (state schema) still to run once nothing real is running.
+
+## Proposal, not adopted: Codex's built-in MCP-resource listing logged, not counted as a breach (2026-10-12, for Alfredo; no code)
+- **What happened in P6.** Codex 0.162.1 always registers three built-in tools, `list_mcp_resources`, `list_mcp_resource_templates` and `read_mcp_resource` (server `codex`). They are there even with an empty CODEX_HOME and no MCP servers configured.
+  - The adapter reports every `mcp_tool_call` as an isolation breach.
+  - In P6, p6-0062, p6-0063 and p6-0068 stopped the batch with `mcp tool call mcp:codex/list_mcp_resources` (16:16, 16:20 and 16:31 UTC; all paraphrase p4). X1: 0 of 40.
+  - Alfredo chose to resume P6 as is, relaunching up to 3 times on this signature only. All three runs then completed.
+  - The calls came during or right after the dead-sandbox window (previous entry). The agent most likely went looking for tools because its shell was dead.
+- **No configuration switch.**
+  - `codex features list` (0.162.1, empty CODEX_HOME, offline) has no flag for the resource tools. The MCP-related flags are `apps_mcp_path_override` (removed), `codex_apps_mcp_2026_07_28`, `enable_mcp_apps`, `mcp_2026_07_28`, `mcp_oauth_refresh_coordination` and `non_prefixed_mcp_tool_names` (all under development, off); `skill_mcp_dependency_install` and `tool_call_mcp_elicitation` (stable, on); and `tool_search_always_defer_mcp_tools` (removed).
+  - Registering the tools (`add_mcp_resource_tools`) looks unconditional. `orchestrator.mcp.enabled` only disables configured servers.
+- **Proposal, for future units only.** In the Codex parser, an `mcp_tool_call` to server `codex`, tool `list_mcp_resources` or `list_mcp_resource_templates`, with an empty result, would not be a breach.
+  - It would be logged instead: an isolation note in the record and a count in the infra table.
+  - Any other server, any `read_mcp_resource`, or a non-empty result stays a breach.
+  - With no servers, the call brings nothing into the session, so it cannot contaminate; counting it as a breach only costs relaunches.
+- **Why not now.** It changes the isolation detector. A stage keeps the rule it started under, so this applies only to a unit or stage that has not started, as a declared change.
+- **Effect on P6, descriptive.**
+  - One breach attempt each in P1 X-rename V0·S2, P1 X-remove V0·S0 and P2 X-remove V1·S0 (1 of 11 attempts per cell; 0 elsewhere).
+  - No bunching by arm: in H2, X-rename's is in the S2 arm and X-remove's in the S0 arm (which is also the HS-V2 control). Every cell ended with n = 10.
+  - Paraphrase p4 and the time window are confounded (round 4 ran then), so neither can be singled out.
