@@ -1,11 +1,13 @@
 // Run Control (spec §22.2): stage cards, launch / stop / workers / dry run, live view of the runner.
 // Data: GET /api/run-control/{stages,status,log}; actions POST …/{dry-run,start,stop,workers,resume-at,unblind}.
 // Live: shell.subscribe("runner.progress" | "runner.run_started" | "runner.run_finished" | "runner.stopped" | "runner.rate_limited").
-import { h, table, badge, bar, button, panel, notice, empty, field, fmtInt, fmtDuration, fmtTime, fmtDate, iconEl } from "/web/lib/ui.js";
+import { h, table, badge, bar, button, panel, notice, empty, field, fmtInt, fmtDuration, fmtTime, fmtDate, iconEl, unitTag, unitSeg } from "/web/lib/ui.js";
 import {
-  fmtElapsed, fmtCompact, cellLabel, cellKeyLabel, stageBadges, outcomeEntries, launchBody, validAmount, reasonFor, launchSignature, hhmm,
+  fmtElapsed, fmtCompact, cellLabel, cellKeyLabel, cellUnit, stageBadges, outcomeEntries, launchBody, validAmount, reasonFor, launchSignature, hhmm,
 } from "./model.js";
 import { outputPanel } from "./output.js";
+
+const unitCell = (cell) => (cellUnit(cell) ? unitTag(cellUnit(cell), { compact: true }) : "—");
 
 let alive = false;
 let timers = [];
@@ -318,13 +320,13 @@ export async function mount(el, shell) {
       h("option", { value: "runs", selected: S.form.mode === "runs" }, "runs"), h("option", { value: "minutes", selected: S.form.mode === "minutes" }, "minutes"));
     const workerSel = h("select", { class: "select", "aria-label": "Workers", style: { minWidth: "70px" }, disabled: !canWrite, onchange: (e) => setWorkers(Number(e.target.value)) },
       [1, 2, 3].map((n) => h("option", { value: n, selected: Number(S.form.workers) === n }, String(n))));
-    const unitSel = shell.ns === "real" ? h("select", { class: "select", "aria-label": "Unit", onchange: (e) => { S.form.unit = e.target.value; S.dry = null; } },
-      h("option", { value: "", selected: !S.form.unit }, "All units of the stage"), d.units.map((u) => h("option", { value: u, selected: S.form.unit === u }, u))) : null;
+    const unitSel = shell.ns === "real" ? unitSeg({ units: d.units, value: S.form.unit, allLabel: "All units of the stage",
+      onChange: (v) => { S.form.unit = v; S.dry = null; S.launchSig = null; paintLaunch(); } }) : null;
 
     const reasonLine = (r) => r ? h("div", { class: "small rc-reason" }, iconEl("lock", 13), r) : null;
     const body = h("div", { class: "stack" },
       h("div", { class: "rc-form" },
-        field("Stage", stageSel), field("Limit", h("span", { class: "row" }, amount, modeSel)), field("Workers", workerSel), unitSel ? field("Unit", unitSel) : null),
+        field("Stage", stageSel), field("Limit", h("span", { class: "row" }, amount, modeSel)), field("Workers", workerSel), unitSel ? h("div", { class: "field" }, h("span", {}, "Unit"), unitSel) : null),
       h("div", { class: "small muted rc-workers-note" }, iconEl("info", 13), d.workers_notice, ". The count applies to the next batch."),
       h("div", { class: "row" },
         button({ label: "Dry run", icon: "list-checks", disabled: !!rDry, reason: rDry, onClick: runDry }),
@@ -347,7 +349,7 @@ export async function mount(el, shell) {
       table({ caption: "Runs a batch would start", keyboard: false, empty: "Nothing would run.",
         columns: [{ key: "run_id", label: "Run", mono: true }, { key: "ticket", label: "Ticket" },
           { key: "cond", label: "V·S·W", render: (r) => `${r.visibility}·${r.spec}·${r.wording}${r.control ? " control" : ""}` },
-          { key: "unit", label: "Unit" }, ...(p.runs.some((r) => r.paraphrase) ? [{ key: "paraphrase", label: "Paraphrase" }] : [])],
+          { key: "unit", label: "Unit", render: (r) => unitTag(r.unit, { compact: true }) }, ...(p.runs.some((r) => r.paraphrase) ? [{ key: "paraphrase", label: "Paraphrase" }] : [])],
         rows: p.runs.slice(0, 12) }),
       p.count > 12 ? h("div", { class: "small muted" }, `and ${p.count - 12} more`) : null);
   }
@@ -363,13 +365,15 @@ export async function mount(el, shell) {
     liveEls = { cols: colsEl };
     liveBuilt = true;
     const queue = table({ caption: "Next queued runs", keyboard: false, empty: s.alive ? "The queue is empty." : "No batch is running.",
-      columns: [{ key: "run_id", label: "Run", mono: true }, { key: "ticket", label: "Ticket" }, { key: "cell", label: "Cell", render: (r) => cellKeyLabel(r.cell) }],
+      columns: [{ key: "run_id", label: "Run", mono: true }, { key: "ticket", label: "Ticket" }, { key: "cell", label: "Cell", render: (r) => cellKeyLabel(r.cell, { unit: false }) },
+        { key: "unit", label: "Unit", render: (r) => unitCell(r.cell) }],
       rows: s.queue });
     const fin = table({ caption: "Finished runs", keyboard: true, empty: "No finished runs yet.",
       onRowClick: (r) => shell.navigate("runs", { run: r.run_id, ns: shell.ns }),
       columns: [
         { key: "run_id", label: "Run", mono: true },
-        { key: "cell", label: "Cell", render: (r) => cellKeyLabel(r.cell) },
+        { key: "cell", label: "Cell", render: (r) => cellKeyLabel(r.cell, { unit: false }) },
+        { key: "unit", label: "Unit", render: (r) => unitCell(r.cell) },
         { key: "turns", label: "Turns", num: true },
         { key: "duration_ms", label: "Duration", num: true, render: (r) => r.duration_ms == null ? "—" : fmtDuration(r.duration_ms) },
         { key: "tokens", label: "Tokens", num: true, render: (r) => r.tokens == null ? "—" : fmtInt(r.tokens) },
@@ -392,7 +396,8 @@ export async function mount(el, shell) {
       h("dl", { class: "kv" },
         h("dt", {}, "Run"), h("dd", { class: "mono" }, r.run_id),
         h("dt", {}, "Ticket"), h("dd", {}, r.ticket || "—"),
-        h("dt", {}, "Cell"), h("dd", {}, cellKeyLabel(r.cell)),
+        h("dt", {}, "Cell"), h("dd", {}, cellKeyLabel(r.cell, { unit: false })),
+        h("dt", {}, "Unit"), h("dd", {}, unitCell(r.cell)),
         h("dt", {}, "Attempt"), h("dd", {}, r.attempt || "hidden while the stage is blinded"),
         h("dt", {}, "Elapsed"), h("dd", { class: "num" }, h("span", { "data-since": r.started_at || "" }, fmtElapsed(r.started_at ? (Date.now() - Date.parse(r.started_at)) / 1000 : null))),
         h("dt", {}, "Turns"), h("dd", { class: "num" }, fmtInt(r.turns)),

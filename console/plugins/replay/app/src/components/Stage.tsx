@@ -20,6 +20,7 @@ import {
 } from "../engine/scene";
 import { lifecycleLabel, recastCitation } from "../engine/recast";
 import { placeToFloor, projectFloorPoint, standingSpot } from "../engine/spatial";
+import { unitText } from "./UnitTag";
 
 export const STAGE_W = 1280;
 export const STAGE_H = 720;
@@ -1629,10 +1630,10 @@ function drawWatermark(ctx: CanvasRenderingContext2D, meta: ReplayEngine["replay
     ctx.fillText(legend, x + stripe + 10, y + h / 2 + 0.5);
     ctx.font = `500 12px ${FONT}`;
     ctx.fillStyle = c.ink2;
-    ctx.fillText(`${meta.run_id} · ${meta.unit} · ${meta.date}`, x + w + 10, y + h / 2 + 0.5);
+    ctx.fillText(`${meta.run_id} · ${unitText(meta.unit)} · ${meta.date}`, x + w + 10, y + h / 2 + 0.5);
   } else {
     ctx.font = `500 13px ${FONT}`;
-    const text = `Replay of a real run · ${meta.run_id} · ${meta.unit} · ${meta.date}`;
+    const text = `Replay of a real run · ${meta.run_id} · ${unitText(meta.unit)} · ${meta.date}`;
     const w = ctx.measureText(text).width + 20;
     ctx.fillStyle = c.surface;
     ctx.fillRect(x, y + 3, w, h - 6);

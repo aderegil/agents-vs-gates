@@ -258,7 +258,7 @@ class Build:
             h2_chart = self.interval("rq2.h2", "H2: does naming the consumers (S2) prevent the break?",
                                      "staging_break, V0·S0 vs. V0·S2 · one pre-registered contrast per ticket · "
                                      "Fisher exact two-sided, Holm over the two tickets", rows, hcells, tone="fail")
-            h2_info = {"stage": h2["stage"], "note": h2.get("note"), "tickets": tickets}
+            h2_info = {"stage": h2["stage"], "note": h2.get("note"), "tickets": tickets, "unit": unit}
         # descriptive comparisons: every W1 cell with S1/S2 or V2, next to the V0·S0 cell of the same ticket
         allc = [c for c in self.cells() if c.get("W") == "W1" and c.get("V") in ("V0", "V2")]
         contrast = [c for c in allc if c.get("S") in ("S1", "S2") or c.get("V") == "V2"]
@@ -271,13 +271,75 @@ class Build:
         boxes = self.stacked("rq2.boxes", "Did the ticket, and did it break anything? (S and V contrasts)",
                              "Runs per box · bars show each cell's share, numbers are runs",
                              BOX_SERIES, self.box_rows(cells, BOX_SERIES), cells)
-        note = ("Only the H2 contrast carries p-values (pre-registered, Holm-corrected). Everything else here is "
-                "descriptive. \"Differs between units\" is claimed only with p < 0.05 on a pre-registered test.")
-        sec = self.section("rq2", descriptive=False, note=note, charts=[h2_chart, brk, boxes], h2=h2_info)
+        note = ("Only pre-registered tests carry p-values: H2 (Holm-corrected) and the secondary HS-V2 (uncorrected, "
+                "outside the Holm family), on the primary unit and again on the replication unit. Everything else here "
+                "is descriptive. \"Differs between units\" is claimed only with p < 0.05 on a pre-registered test.")
+        sec = self.section("rq2", descriptive=False, note=note, charts=[h2_chart, brk, boxes], h2=h2_info,
+                           secondary_v2=self.secondary_v2(), replication=self.replication())
         if h2.get("blinded") and sec["status"] == "empty":
             sec["status"] = "blinded"
             sec["blinded_stages"] = sorted(set(sec["blinded_stages"]) | {h2["stage"]}, key=_stage_key)
         return sec
+
+    @staticmethod
+    def _v2_rows(tickets: dict) -> list[dict]:
+        return [{"ticket": t, "v0": v["v0"], "v2": v["v2"], "p": v["p"]} for t, v in tickets.items()]
+
+    @staticmethod
+    def _h2_rows(tickets: dict) -> list[dict]:
+        return [{"ticket": t, "s0": v["s0"], "s2": v["s2"], "p": v["p"], "p_holm": v["p_holm"]} for t, v in tickets.items()]
+
+    def secondary_v2(self) -> dict | None:
+        """HS-V2 on the primary unit (pre-registered secondary, uncorrected), straight from `aggregate`."""
+        s = self.agg["rq2"].get("secondary_v2") or {}
+        if not s or s.get("blinded") or not self.visible(s.get("stage")):
+            return None
+        return {"label": s["label"], "stage": s["stage"], "unit": common.PRIMARY_UNIT[self.ns], "note": s.get("note"),
+                "available": bool(s.get("available")), "tickets": self._v2_rows(s.get("tickets") or {})}
+
+    def replication(self) -> dict | None:
+        """H2 and HS-V2 again on the replication unit (P6's P1 part, its own Holm family), never pooled: from
+        `aggregate`. A blinded P6 carries no numbers; no P6 in the manifest → None."""
+        r = self.agg["rq2"].get("replication") or {}
+        if not r or r.get("stage") not in self.agg["stages"]:
+            return None
+        out = {k: r.get(k) for k in ("label", "unit", "stage", "part", "blinded", "note", "available")}
+        visible = not r.get("blinded") and self.visible(r.get("stage"))
+        out["blinded"] = not visible
+        out["h2"] = self._h2_rows(r.get("h2") or {}) if visible else []
+        out["secondary_v2"] = self._v2_rows(r.get("secondary_v2") or {}) if visible else []
+        return out
+
+    V1_METRICS = (("staging_break", "Oracle breaks a consumer (gen)"), ("staging_break_final", "Oracle breaks a consumer (final PR)"),
+                  ("consumer_break_ci", "First CI breaks a consumer"), ("semantic_break", "Semantic break (oracle fails, CI passes)"),
+                  ("gate_flagged", "Gate touched (detector flag)"))
+
+    def v1_units(self) -> dict | None:
+        """X-remove V1·S0 for every unit that ran it (P2 on the primary unit, P6's P2 part on the replication unit),
+        side by side. Descriptive: counts and intervals, no test, nothing pooled."""
+        cells = sorted([c for c in self.cells() if (c.get("ticket"), c.get("V"), c.get("S"), c.get("W")) ==
+                        ("X-remove", "V1", "S0", "W1")], key=lambda c: (_stage_key(c["stage"]), c.get("unit", "")))
+        if len(cells) < 2:
+            return None
+        outs = {(o["stage"], o["cell"]): o["counts"] for o in self.agg["rq3"]["outcomes"] if self.visible(o["stage"])}
+        cols = [{"key": f"c{i}", "stage": c["stage"], "unit": c.get("unit"), "n": c["n"]} for i, c in enumerate(cells)]
+        rows = []
+        for key, label in self.V1_METRICS:
+            row = {"measure": label}
+            for col, c in zip(cols, cells):
+                m = (c.get("metrics") or {}).get(key)
+                row[col["key"]] = m if m and m.get("n") else None
+            rows.append(row)
+        for s in OUTCOME_SERIES:
+            vals = [outs.get((c["stage"], c["cell"]), {}).get(s["key"], 0) for c in cells]
+            if any(vals):
+                rows.append({"measure": f"Outcome: {s['label']}", "count": True,
+                             **{col["key"]: {"x": v, "n": col["n"]} for col, v in zip(cols, vals)}})
+        return {"id": "rq3.v1_units", "title": "X-remove V1·S0 on each unit, side by side",
+                "note": "Descriptive: the same cell run on each unit (P2 on the primary unit, P6's P2 part on the "
+                        "replication unit). Counts and 95% intervals, no test, nothing pooled.",
+                "columns": cols, "rows": rows,
+                "source": self.source([(c["stage"], c.get("unit", "?")) for c in cells], sum(c["n"] for c in cells))}
 
     def rq3(self) -> dict:
         out = {o["cell"] + "|" + o["stage"]: o for o in self.agg["rq3"]["outcomes"] if self.visible(o["stage"])}
@@ -323,7 +385,8 @@ class Build:
         any_flag = sum(cd.values()) > 0
         return self.section("rq3", note="Descriptive. Cells where every run passed the first CI are left out: there was "
                             "nothing to repair. V1 is the arm in which the agent has the same information as CI.",
-                            charts=[gate, outcomes, v1chart], tables=[coding if any_flag else None])
+                            charts=[gate, outcomes, v1chart], tables=[coding if any_flag else None],
+                            v1_units=self.v1_units())
 
     def rq5(self) -> dict | None:
         cells = self.cells()

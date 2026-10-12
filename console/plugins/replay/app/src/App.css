@@ -9,6 +9,8 @@
 .meta { display: flex; align-items: center; gap: 10px; color: var(--tinta-2); font-size: 13px; min-width: 0;
   flex-wrap: wrap; }
 .meta strong { color: var(--tinta); font-weight: 600; }
+/* unit glyph + label (components/UnitTag.tsx): same stroke and ink as the icons, never the glyph alone */
+.unit-tag { display: inline-flex; align-items: center; gap: 6px; color: var(--tinta); white-space: nowrap; }
 .chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border: var(--trazo) solid var(--linea);
   border-radius: var(--radio); color: var(--tinta); font-size: 12px; font-weight: 500; white-space: nowrap; }
 .chip--real { border-color: var(--tinta); font-weight: 600; }

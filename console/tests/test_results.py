@@ -259,7 +259,7 @@ class Numbers(unittest.TestCase):
         rm = next(r for r in box2["rows"] if r["label"] == "X-remove" and r["sub"] == "V0·S2")
         self.assertEqual({s["key"]: s["value"] for s in rm["segments"]}["deprecated"], 5)
 
-    def test_h2_is_the_only_place_with_p_values(self):
+    def test_p_values_only_on_pre_registered_tests(self):
         h2 = self.rq["sections"]["rq2"]["h2"]
         t = {x["ticket"]: x for x in h2["tickets"]}
         self.assertEqual((t["X-rename"]["s0"]["x"], t["X-rename"]["s2"]["x"]), (7, 1))
@@ -267,10 +267,12 @@ class Numbers(unittest.TestCase):
         self.assertAlmostEqual(t["X-rename"]["p"], p, places=9)
         self.assertGreaterEqual(t["X-rename"]["p_holm"], t["X-rename"]["p"])
         self.assertLessEqual(t["X-rename"]["p_holm"], 1.0)
-        # p keys appear under rq2.h2 only
+        # p keys appear only under the pre-registered tests: H2, the secondary HS-V2 and their replication
         for path, _ in walk(self.rq["sections"]):
             if path and path[-1] in ("p", "p_holm"):
-                self.assertEqual(path[:2], ("rq2", "h2"), path)
+                self.assertIn(path[:2], (("rq2", "h2"), ("rq2", "secondary_v2"), ("rq2", "replication")), path)
+                if path[-1] == "p_holm":
+                    self.assertNotEqual(path[:2], ("rq2", "secondary_v2"), path)   # HS-V2 is outside the Holm family
         # the H2 chart names the Holm p in a group header; descriptive charts do not mention p
         h2c = self.chart("rq2", "rq2.h2")
         self.assertTrue(all("Holm-adjusted p = " in r["group"] for r in h2c["rows"]))

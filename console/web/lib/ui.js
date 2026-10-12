@@ -11,13 +11,15 @@
 // badge(text, tone)   tone: neutral | accent | pass | fail | warn
 // empty(msg), bar(k, n, {running}), button({label, icon, primary, subtle, small, disabled, reason, onClick, title}),
 // panel({title, actions, body, flush}), facts([{label, value, sub}]), field(label, control), notice(msg, tone, icon),
-// iconEl(name, size)
+// iconEl(name, size), unitTag(unit, {model, compact}) (glyph + label, see ./units.js), unitInfo(unit), unitText(unit),
+// unitSeg({units, value, onChange, allLabel, label}) (segmented unit filter)
 // modal(build(close) → {title, body, footer, focus, cancelValue}, {wide}) → Promise (focus-trapped dialog)
 // formDialog({title, fields: [{name, label, type, options, value, hint}], submitLabel, validate, intro}) → Promise<values|null>
 // (shell.confirm({title, message, confirmLabel, requireText}) is built on modal.)
 import { iconEl } from "../icons.js";
+import { unitInfo, unitGlyph, unitText } from "./units.js";
 
-export { iconEl };
+export { iconEl, unitInfo, unitGlyph, unitText };
 
 const PROPS = new Set(["value", "checked", "disabled", "selected", "indeterminate", "readOnly", "multiple"]);
 
@@ -326,4 +328,21 @@ export function formDialog({ title, fields, submitLabel = "Save", validate, intr
         h("button", { type: "button", class: "btn btn-primary", onclick: submit }, submitLabel)],
     };
   });
+}
+
+/** A unit's glyph and its label, always together ("CC" glyph + "Claude Code · Sonnet"). The unit id is the tooltip.
+ *  model: shown after the product when the unit has no model of its own (Codex: the reported model id). */
+export function unitTag(unit, { model, compact = false } = {}) {
+  const i = unitInfo(unit);
+  const label = !i.model && model ? `${i.product} · ${model}` : i.label;
+  return h("span", { class: ["unit-tag", i.mock ? "is-mock" : "", compact ? "compact" : ""], title: i.unit || null,
+    "data-unit": i.unit }, h("span", { class: "unit-glyph-box", html: unitGlyph(unit, compact ? 14 : 16) }), h("span", { class: "unit-label" }, label));
+}
+
+/** Segmented unit picker ("All" + one button per unit, glyph and label): a <select> option cannot hold the glyph. */
+export function unitSeg({ units, value = "", onChange, allLabel = "All", label = "Unit" } = {}) {
+  const btn = (v, content, title) => h("button", { type: "button", "aria-pressed": String(value === v), title: title || null,
+    onclick: () => { if (value !== v) onChange?.(v); } }, content);
+  return h("div", { class: "unit-seg", role: "group", "aria-label": label },
+    btn("", allLabel), (units || []).map((u) => btn(u, unitTag(u, { compact: true }), u)));
 }

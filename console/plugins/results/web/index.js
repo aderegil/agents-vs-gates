@@ -2,7 +2,7 @@
 // excluded runs, and slide export (SVG and PNG 1920×1080, App and Deck styles).
 // Data: GET /api/results/{rq,reviewer,mutation,excluded,pilot}?ns=… ; drawing: ./charts.js (pure SVG, no libraries).
 // A stage that is not unblinded arrives without numbers; this page only shows "Blinded until stage complete".
-import { h, table, badge, empty, panel, notice, iconEl, button, tabs, fmtInt } from "/web/lib/ui.js";
+import { h, table, badge, empty, panel, notice, iconEl, button, tabs, fmtInt, unitTag } from "/web/lib/ui.js";
 import { markdownViewer, mdViewSwitch } from "/web/lib/markdown.js";
 import { renderChart, renderSlide, dataTable, THEMES, SLIDE, fmtXofN, fmtCI } from "./charts.js";
 
@@ -121,7 +121,7 @@ export async function mount(el, shell) {
 
   shell.setHeader({
     title: "Results",
-    subtitle: "One section per research question · counts with 95% intervals · only H2 carries p-values",
+    subtitle: "One section per research question · counts with 95% intervals · p-values only for pre-registered tests",
     actions: [{ id: "refresh", label: "Refresh", icon: "refresh-cw", onClick: () => load() }],
   });
 
@@ -212,9 +212,12 @@ export async function mount(el, shell) {
     if (sec.h2) {
       out.push(h2Panel(sec));
       if (h2Chart) out.push(chartGrid([h2Chart]));
-      if (others.length) out.push(h("h3", { class: "res-sub" }, "Descriptive comparisons (no p-values)"));
     }
+    if (sec.secondary_v2) out.push(v2Panel(sec.secondary_v2));
+    if (sec.replication) out.push(replicationPanel(sec.replication));
+    if ((sec.h2 || sec.secondary_v2 || sec.replication) && others.length) out.push(h("h3", { class: "res-sub" }, "Descriptive comparisons (no p-values)"));
     if (others.length) out.push(chartGrid(others));
+    if (sec.v1_units) out.push(v1UnitsPanel(sec.v1_units));
     for (const t of sec.tables || []) out.push(panel({ title: t.title, flush: true, body: genericTable(t) }));
     if (sec.id === "rq4" && sec.tables?.[0]?.footer?.ci_mean_duration_ms != null) {
       out.push(h("p", { class: "small muted" }, `CI, first run on the same PRs: mean ${fmtSec(sec.tables[0].footer.ci_mean_duration_ms)}.`));
@@ -224,9 +227,23 @@ export async function mount(el, shell) {
 
   function h2Panel(sec) {
     const h2 = sec.h2;
-    const rows = h2.tickets.map((t) => ({ ticket: t.ticket, s0: t.s0, s2: t.s2, p: t.p, p_holm: t.p_holm }));
-    const tbl = table({
-      caption: "H2 confirmatory contrast", keyboard: false, empty: "No visible runs in the H2 cells yet.",
+    const tbl = h2Table(h2.tickets, "H2 confirmatory contrast");
+    return panel({
+      title: titleWithUnit(`H2 · confirmatory contrast · ${h2.stage}`, h2.unit),
+      actions: badge("Pre-registered", "accent"),
+      flush: true,
+      body: h("div", {}, tbl,
+        h("p", { class: "small muted res-pad" }, "staging_break in V0·S0 vs. V0·S2, Fisher exact two-sided per ticket, Holm correction over the two tickets. " +
+          "p-values appear only for pre-registered tests: H2 and HS-V2, on the primary unit and on the replication unit."),
+        h2.note ? h("p", { class: "small res-pad" }, iconEl("info", 14), " ", h2.note) : null),
+    });
+  }
+
+  const titleWithUnit = (text, unit) => h("div", { class: "res-unit-title" }, h("h2", {}, text), unit ? unitTag(unit) : null);
+
+  function h2Table(rows, caption) {
+    return table({
+      caption, keyboard: false, empty: "No visible runs in the H2 cells yet.",
       columns: [
         { key: "ticket", label: "Ticket", render: (r) => h("span", { class: "strong" }, r.ticket) },
         { key: "s0", label: "V0·S0 (consumers not named)", num: true, render: (r) => cellText(r.s0) },
@@ -236,15 +253,63 @@ export async function mount(el, shell) {
       ],
       rows,
     });
-    return panel({
-      title: `H2 · confirmatory contrast · ${h2.stage}`,
-      actions: badge("Pre-registered", "accent"),
-      flush: true,
-      body: h("div", {}, tbl,
-        h("p", { class: "small muted res-pad" }, "staging_break in V0·S0 vs. V0·S2, Fisher exact two-sided per ticket, Holm correction over the two tickets. " +
-          "The only place in this console that shows p-values."),
-        h2.note ? h("p", { class: "small res-pad" }, iconEl("info", 14), " ", h2.note) : null),
+  }
+
+  function v2Table(rows, caption) {
+    return table({
+      caption, keyboard: false, empty: "No V2·S0 runs yet.",
+      columns: [
+        { key: "ticket", label: "Ticket", render: (r) => h("span", { class: "strong" }, r.ticket) },
+        { key: "v0", label: "V0·S0 (orders-service only)", num: true, render: (r) => cellText(r.v0) },
+        { key: "v2", label: "V2·S0 (all four repos)", num: true, render: (r) => cellText(r.v2) },
+        { key: "p", label: "Fisher exact p (uncorrected)", num: true, render: (r) => fmtP(r.p) },
+      ],
+      rows,
     });
+  }
+
+  // HS-V2 on the primary unit: pre-registered secondary, outside the Holm family
+  function v2Panel(v) {
+    return panel({
+      title: titleWithUnit(`HS-V2 · secondary contrast · ${v.stage}`, v.unit),
+      actions: badge("Pre-registered · secondary", "neutral"),
+      flush: true,
+      body: h("div", {}, v.available ? v2Table(v.tickets, "HS-V2 secondary contrast") : h("p", { class: "small muted res-pad" }, v.note || "No V2·S0 runs yet."),
+        h("p", { class: "small muted res-pad" }, "staging_break (gen) in V2·S0 vs. V0·S0: does seeing the consumers' code prevent the break? " +
+          "Fisher exact two-sided per ticket, uncorrected, outside the Holm family.")),
+    });
+  }
+
+  // the same two tests on the replication unit (P6's P1 part): its own Holm family, never pooled with the primary unit
+  function replicationPanel(r) {
+    const head = titleWithUnit(`Replication · H2 and HS-V2 · ${r.stage}, ${r.part} part`, r.unit);
+    const actions = h("span", { class: "row" }, badge("Replication · not pooled", "accent"));
+    let body;
+    if (r.blinded) body = h("div", { class: "res-pad" }, blindedBlock([r.stage]));
+    else if (!r.available) body = h("p", { class: "small muted res-pad" }, r.note || "No visible runs yet.");
+    else {
+      body = h("div", {},
+        h("h3", { class: "res-sub res-pad" }, "H2 · V0·S0 vs. V0·S2"), h2Table(r.h2, "H2 on the replication unit"),
+        h("h3", { class: "res-sub res-pad" }, "HS-V2 · V2·S0 vs. V0·S0"), v2Table(r.secondary_v2, "HS-V2 on the replication unit"));
+    }
+    return panel({ title: head, actions, flush: true, body: h("div", {}, body,
+      h("p", { class: "small muted res-pad" }, "The same pre-registered tests, run again on a second agent: Holm over its own two tickets for H2, " +
+        "HS-V2 uncorrected. Never pooled with the primary unit, and no claim that the units differ."),
+      r.note && !r.blinded && r.available ? h("p", { class: "small res-pad" }, iconEl("info", 14), " ", r.note) : null) });
+  }
+
+  // X-remove V1·S0 on each unit (P2 next to P6's P2 part): descriptive, no test
+  function v1UnitsPanel(v) {
+    const fmt = (m, count) => (m == null ? "—" : count ? `${m.x} of ${m.n}` : cellText(m));
+    const tbl = table({
+      caption: v.title, keyboard: false,
+      columns: [{ key: "measure", label: "Measure" },
+        ...v.columns.map((c) => ({ key: c.key, num: true, render: (r) => fmt(r[c.key], r.count),
+          label: h("span", { class: "res-unit-col" }, unitTag(c.unit, { compact: true }), h("span", { class: "muted small" }, `${c.stage} · N = ${c.n}`)) }))],
+      rows: v.rows,
+    });
+    return panel({ title: v.title, actions: badge("Descriptive", "neutral"), flush: true,
+      body: h("div", {}, tbl, h("p", { class: "small muted res-pad" }, v.note), h("p", { class: "small muted res-pad" }, v.source)) });
   }
 
   function reviewerSection() {

@@ -14,6 +14,7 @@ import "./presenter.css";
 import { SpeedControl } from "./SpeedControl";
 import { Stage, type StageHandle } from "./Stage";
 import { Timeline, fmt } from "./Timeline";
+import { UnitTag } from "./UnitTag";
 
 interface Props {
   replay: Replay;
@@ -476,7 +477,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
             <div className="meta" aria-label="Run">
               <strong>{m.ticket ?? m.run_id}</strong>
               {condition(replay) && <span>{condition(replay)}</span>}
-              <span>{m.unit}</span>
+              <UnitTag unit={m.unit} />
               {m.model && m.model !== m.unit && <span>{m.model}</span>}
               <span className="num">{m.date}</span>
               {m.outcome && <span className="chip">{m.outcome.replace(/_/g, " ")}</span>}

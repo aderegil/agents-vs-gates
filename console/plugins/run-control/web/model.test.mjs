@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fmtElapsed, fmtCompact, cellLabel, cellKeyLabel, stageBadges, outcomeEntries, launchBody, validAmount, reasonFor, hhmm } from "./model.js";
+import { fmtElapsed, fmtCompact, cellLabel, cellKeyLabel, cellUnit, stageBadges, outcomeEntries, launchBody, validAmount, reasonFor, hhmm } from "./model.js";
 
 test("fmtElapsed", () => {
   assert.equal(fmtElapsed(0), "0:00");
@@ -22,6 +22,9 @@ test("cell labels", () => {
   assert.equal(cellLabel({ ticket: "X-rename", visibility: "V0", spec: "S0", wording: "W1", control: true }), "X-rename V0·S0·W1 control");
   assert.equal(cellKeyLabel("X-remove|V1|S0|W1|cc-sonnet"), "X-remove V1·S0·W1 cc-sonnet");
   assert.equal(cellKeyLabel(null), "—");
+  assert.equal(cellKeyLabel("X-remove|V1|S0|W1|codex", { unit: false }), "X-remove V1·S0·W1");
+  assert.equal(cellUnit("X-remove|V1|S0|W1|codex"), "codex");
+  assert.equal(cellUnit("X-remove"), null);
 });
 
 test("stage badges", () => {

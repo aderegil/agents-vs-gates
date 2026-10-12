@@ -25,11 +25,18 @@ export function cellLabel(c) {
   return `${c.ticket} ${cond}${c.control ? " control" : ""}`;
 }
 
-/** Splits "X-rename|V0|S0|W1|mock" into a readable "X-rename V0·S0·W1 mock". */
-export function cellKeyLabel(cell) {
+/** Splits "X-rename|V0|S0|W1|mock" into a readable "X-rename V0·S0·W1 mock" (unit: false leaves the unit out, for
+ *  tables that show it in its own column with its glyph). */
+export function cellKeyLabel(cell, { unit = true } = {}) {
   if (!cell) return "—";
   const [t, v, s, w, u] = String(cell).split("|");
-  return v ? `${t} ${v}·${s}·${w}${u ? ` ${u}` : ""}` : String(cell);
+  return v ? `${t} ${v}·${s}·${w}${u && unit ? ` ${u}` : ""}` : String(cell);
+}
+
+/** The unit id at the end of a cell key ("X-rename|V0|S0|W1|codex" → "codex"), or null. */
+export function cellUnit(cell) {
+  const parts = String(cell || "").split("|");
+  return parts.length >= 5 && parts[4] ? parts[4] : null;
 }
 
 /** [text, tone] pairs for the status badges of a stage card. */

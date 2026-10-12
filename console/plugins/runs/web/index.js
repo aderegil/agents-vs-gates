@@ -2,7 +2,7 @@
 // Transcript and Trace tabs. Data: GET /api/runs and /api/runs/{id}/{diff,ci,oracle,detectors,transcript,trace}.
 // While a stage is blinded the server answers 403 "Blinded until stage complete" for the outcome-bearing tabs; this UI
 // never asks for them (and shows the same message) so nothing flashes.
-import { h, table, tabs, badge, button, panel, facts, notice, empty, fmtInt, fmtDuration, fmtDate, fmtTime, iconEl } from "/web/lib/ui.js";
+import { h, table, tabs, badge, button, panel, facts, notice, empty, fmtInt, fmtDuration, fmtDate, fmtTime, iconEl, unitTag, unitSeg, unitInfo } from "/web/lib/ui.js";
 import {
   parseDiff, diffStats, sideBySide, splitArch, isArch, groupTranscript, outcomeTone, ticketDoneTone, statusTone, flagChips,
   filtersToQuery, conditionLabel, fmtBytes,
@@ -65,7 +65,8 @@ export async function mount(el, shell) {
       oninput: (e) => { S.filters.q = e.target.value; clearTimeout(timer); timer = setTimeout(loadList, 250); } });
     const active = Object.values(S.filters).some(Boolean);
     filterBar.replaceChildren(sel("stage", "Stage", f.stages), sel("ticket", "Ticket", f.tickets), sel("V", "V", f.V), sel("S", "S", f.S), sel("W", "W", f.W),
-      sel("unit", "Unit", f.units), sel("status", "Status", f.statuses), h("label", { class: "rx-f" }, h("span", {}, "Search"), search),
+      h("div", { class: "rx-f" }, h("span", {}, "Unit"), unitSeg({ units: f.units, value: S.filters.unit, onChange: (v) => { S.filters.unit = v; loadList(); } })),
+      sel("status", "Status", f.statuses), h("label", { class: "rx-f" }, h("span", {}, "Search"), search),
       ...(active ? [button({ label: "Clear", small: true, subtle: true, onClick: () => { Object.keys(S.filters).forEach((k) => { S.filters[k] = ""; }); loadList(); } })] : []));
   }
 
@@ -79,7 +80,7 @@ export async function mount(el, shell) {
       columns: [
         { key: "run_id", label: "ID", sort: true, render: (r) => h("span", { class: "mono strong", "data-run": r.run_id }, r.run_id) },
         { key: "cell", label: "Cell", sort: (r) => r.cell, render: (r) => h("span", { title: r.cell }, conditionLabel(r)) },
-        { key: "unit", label: "Unit", sort: true },
+        { key: "unit", label: "Unit", sort: (r) => unitInfo(r.unit).label, render: (r) => unitTag(r.unit, { compact: true }) },
         { key: "turns", label: "Turns", num: true, sort: true, render: (r) => fmtInt(r.turns) },
         { key: "duration_ms", label: "Duration", num: true, sort: true, render: (r) => r.duration_ms == null ? "—" : fmtDuration(r.duration_ms) },
         { key: "tokens", label: "Tokens", num: true, sort: true, render: (r) => fmtInt(r.tokens) },
@@ -124,7 +125,7 @@ export async function mount(el, shell) {
       h("div", { class: "rx-head-main" },
         h("span", { class: "mono strong rx-id" }, d.run_id),
         h("span", { class: "muted" }, conditionLabel(r)),
-        h("span", { class: "muted" }, `${r.unit}${r.model_reported ? ` · ${r.model_reported}` : ""}`),
+        unitTag(r.unit, { model: r.model_reported }),
         d.blinded ? badge("Blinded", "neutral") : (r.outcome ? badge(r.outcome, outcomeTone(r.outcome)) : null),
         d.status && d.status !== "done" ? badge(d.status, statusTone(d.status)) : null,
         d.ns === "mock" ? h("span", { class: "rx-sim", title: "SIMULATED (mock agent) — not a real run" }, "SIMULATED (mock agent) — not a real run") : null),
@@ -191,7 +192,7 @@ export async function mount(el, shell) {
       if (d.coding_label) flags.push(badge(`Coded ${d.coding_label}`, "accent"));
       const body = [kv([
         ["Run", h("span", { class: "mono" }, d.run_id)],
-        ["Stage / unit", [`${d.stage} · ${r.unit} (${r.adapter || "—"})`, /^X[0-9]$/.test(d.stage || "") ? [" ", badge(`Pilot ${d.stage} · exploratory`, "neutral")] : null]],
+        ["Stage / unit", [`${d.stage} · `, unitTag(r.unit), h("span", { class: "muted" }, ` ${r.unit} (${r.adapter || "—"})`), /^X[0-9]$/.test(d.stage || "") ? [" ", badge(`Pilot ${d.stage} · exploratory`, "neutral")] : null]],
         ["Model", [r.model_requested, r.model_reported].filter(Boolean).join(" → ") || "—"],
         ["Effort", r.effort || "—"],
         ["Context file", r.context_file || "—"],

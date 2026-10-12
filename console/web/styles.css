@@ -209,6 +209,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .badge.tone-fail { border-color: var(--fail); color: var(--fail-tinta); }
 .badge.tone-fail::before { display: block; background: var(--fail); }
 .badge.tone-warn { border-color: var(--warn); color: var(--warn-tinta); background: var(--warn-suave); }
+/* unit tag: monogram glyph (lib/units.js, same stroke as the icons, no color) + its label, never the glyph alone */
+.unit-tag { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--tinta); }
+.unit-tag .unit-glyph-box { display: inline-flex; color: var(--tinta); }
+.unit-tag .unit-label { color: inherit; }
+.unit-tag.compact { gap: 5px; font-size: 12.5px; }
+.unit-tag.is-mock .unit-glyph-box { color: var(--tinta-2); }
+.unit-seg { display: inline-flex; border: var(--trazo) solid var(--linea-fuerte); border-radius: var(--radio); overflow: hidden; height: 28px; }
+.unit-seg button { display: inline-flex; align-items: center; gap: 5px; padding: 0 9px; border: 0; background: var(--superficie);
+  font-size: 12.5px; color: var(--tinta-2); cursor: pointer; white-space: nowrap; }
+.unit-seg button + button { border-left: var(--trazo) solid var(--linea-fuerte); }
+.unit-seg button:hover { background: var(--suave); color: var(--tinta); }
+.unit-seg button[aria-pressed="true"] { background: var(--acento-suave); color: var(--tinta); box-shadow: inset 0 -2px 0 var(--acento); }
+.unit-seg .unit-tag { color: inherit; }
+.unit-seg .unit-tag .unit-glyph-box { color: inherit; }
 .bar { position: relative; height: 6px; min-width: 60px; background: var(--linea); border-radius: 3px; overflow: hidden; }
 .bar > span { position: absolute; inset: 0 auto 0 0; background: var(--acento); }
 .bar > span.running { background: var(--linea-fuerte); }
