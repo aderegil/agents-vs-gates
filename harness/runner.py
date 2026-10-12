@@ -11,7 +11,9 @@
                                                                   real needs --unit; writes results/<ns>/x1-summary.md)
   python -X utf8 -m harness.runner --stage X2 --workers 1          pilot X2 (X-remove V0/V2, cc-sonnet only; visible,
                                                                   exploratory; writes results/<ns>/x2-summary.md)
-Options: --workers 1..3, --max-runs N (alias of --batch; the smaller wins), --ns real|mock, --unit U.
+  python -X utf8 -m harness.runner --stage P6 --part P1 --workers 3   the P1 part of P6 (codex; needs the sidecar
+                                                                  results/<ns>/manifest-p6.json, harness.manifest --p6-sidecar)
+Options: --workers 1..3, --max-runs N (alias of --batch; the smaller wins), --ns real|mock, --unit U, --part P1|P2|P4.
 Exit codes: 0 ok, 2 usage/guard refusal (lock missing, smoke not passed, model drift), 3 rate-limited, 4 isolation
 breach. While running: state.json rewritten atomically at least every second, PID in state.runner.pid,
 runner.log.jsonl events (run_finished never carries the outcome), control.json polled between runs,
@@ -63,6 +65,9 @@ def load_state(ns: str, manifest: dict | None) -> dict:
             r["status"] = "pending"
             r["last_error"] = "interrupted (runner restarted)"
     st["manifest_sha256"] = manifest_mod.sha256(paths.manifest_path(ns))
+    p6_sha = manifest_mod.sha256(manifest_mod.p6_path(ns))
+    if p6_sha:
+        st["p6_manifest_sha256"] = p6_sha
     return st
 
 
@@ -512,6 +517,7 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
     ap.add_argument("--max-minutes", type=float)
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--unit")
+    ap.add_argument("--part", choices=manifest_mod.P6_PARTS, help="with --stage P6: only that part's runs")
     ap.add_argument("--ns", choices=["real", "mock"])
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--status", action="store_true")
@@ -552,6 +558,11 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
     if not stage:
         ap.error("--stage (or --calibrate, --status, --unblind) is required")
     runs = [r for r in manifest["runs"] if r["stage"] == stage]
+    if a.part:
+        if stage != "P6":
+            print("--part applies only to --stage P6 (the P1, P2 or P4 part of the Codex replication)", file=sys.stderr)
+            return EXIT_GUARD
+        runs = [r for r in runs if r.get("part") == a.part]
     if ns == "real" and a.unit:
         runs = [r for r in runs if r["unit"] == a.unit]
     elif ns == "real" and stage in manifest_mod.PILOTS and len({r["unit"] for r in runs}) > 1:

@@ -3,6 +3,7 @@ import json
 import os
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
+from unittest import mock
 
 from harness import jsonio, manifest, paths, runner
 from tests._fake_scenario import FakeScenario
@@ -134,7 +135,8 @@ class RunnerTest(unittest.TestCase):
         code, _, err = run(["--stage", "P1"], self.fs)
         self.assertEqual(code, 2)
         self.assertIn("no manifest", err)
-        with redirect_stdout(io.StringIO()):
+        # the repo's own PREREGISTRATION.lock (frozen 2026-10-12) would refuse this temp real manifest
+        with redirect_stdout(io.StringIO()), mock.patch.object(paths, "PREREG_LOCK", paths.REPO / "no-such.lock"):
             self.assertEqual(manifest.main(["--ns", "real"]), 0)
         code, _, err = run(["--stage", "P1"], self.fs)
         self.assertEqual(code, 2)

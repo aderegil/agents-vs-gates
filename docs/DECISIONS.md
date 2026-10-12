@@ -413,3 +413,23 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - The coders saw only the sheet and the rubric, so they were blind to cell and condition as designed.
   - Alfredo can spot-check any row at any time against `key.json` and the transcripts.
 - **Reporting.** These outcomes are described as "blind-coded by two independent AI coders (Claude Opus and Claude Sonnet, 51/51 agreement)", never as "human-coded".
+
+## P6 as a sidecar beside the frozen manifest (2026-10-12, branch p6-sidecar; not merged, nothing real run)
+- **Why.** P6 (Codex on P1, P2 and P4 = 121 runs, PREREGISTRATION §6) was only ever generated with `--with-p6`. The real `manifest.json` was frozen without it (sha256 `118d4a9c…`, hashed by `PREREGISTRATION.lock`), so P6 cannot be added there without breaking `prereg --verify`.
+- **How.**
+  - `python -m harness.manifest --p6-sidecar` writes `results/<ns>/manifest-p6.json` once. It holds exactly the P6 runs that `--with-p6` would have made: seed 20261011, rounds shuffled with `random.Random("20261011:P6:<round>")`, ids `p6-0001..0121`, and paraphrase slot p((round−1) mod 5 + 1) on the W1 N = 10 cells, the same slots per (cell, replicate) as P1.
+  - A test pins this: the sha256 of the P6 runs from main's generator before this change, in both the real and mock namespaces.
+  - The only addition is a `part` field on each P6 run (P1 60, P2 10, P4 51; schema updated).
+  - `harness.manifest.load()` / `ensure()` merge the sidecar like the pilots. The runner records its sha in `state.p6_manifest_sha256`.
+  - Writing is refused if the sidecar exists (unless `--force` and no P6 run has started), if `manifest.json` already holds P6, or if the seed differs.
+  - The sidecar is not a frozen file: `PREREGISTRATION.lock` and `prereg --verify` are unaffected. Its sha256 is to be recorded here when the real one is written.
+- **Running one part.** `harness.runner --stage P6 --part P1|P2|P4` runs only that part's runs, in P6 order. Within the P1 part every round holds one replicate of each of the 6 cells, so a cut after k rounds leaves k replicates per cell. `--part` is refused for any other stage. Run Control in the console still launches the whole of P6; there is no part selector there.
+- **Unit.** `codex` as in main (`harness/units.json`, which is frozen). The adapter, smoke and units files are identical to tag `x1c-codex-harness`, where the Codex X1 runs ran. The guard needs `results/smoke-codex.json` ok (18/18, 2026-10-12T04:38:17Z). P6 runs on the current scenario (`sha256:b02008da…`, like Claude's P1), not the X1 one (6463b05d…).
+- **Blinding.** P6 is a formal stage and stays blinded. Unblinding is per stage (`--unblind P6`), so unblinding after the P1 part also shows the P2 and P4 parts as they run. Whether to wait for all 121 is for Alfredo to decide.
+- **Analysis.** `analysis.summarize` computes H2 and HS-V2 on `PRIMARY_UNIT` (`cc-sonnet`) only. The Codex replication of those tests is not computed yet and will need a small addition before P6 results are read.
+- Also fixed: `tests/test_runner.py` test_5 had been failing since the freeze, because the repo's own `PREREGISTRATION.lock` made `manifest.main(--ns real)` refuse to write into the test's temp results root. The lock path is now patched for that one call.
+- Evidence on the branch (worktree, mock only):
+  - `python -m unittest`: 455 tests OK (skipped=8), including `tests/test_p6_sidecar.py`.
+  - `harness.manifest --ns mock --p6-sidecar` wrote 121 runs (P1 60, P2 10, P4 51).
+  - `runner --ns mock --stage P6 --part P1 --workers 2`: 60 of 60 done in 16 min, 0 infrastructure failures. The 6 P1 cells × 10, paraphrases p1..p5 × 12. The P2 and P4 parts stayed pending, and P6 stayed blinded in `--status`.
+  - `state.p6_manifest_sha256` was recorded and `manifest.json` was untouched.

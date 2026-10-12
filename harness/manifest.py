@@ -29,6 +29,9 @@ Stages (unit cc-sonnet unless stated; in the mock namespace every unit is `mock`
       + RQ5 X-rename V0·S0·W2 × 10 (cc-sonnet) = 60. Unchanged by the V2·S0 move.
   P6  only with --with-p6: unit `codex` on the cells of P1, P2 and P4 as they are now (P1 6×10 with V2·S0, P2,
       P4 without V2·S0) = 60 + 10 + 51 = 121: Codex replicates the formal design as it stands (decision 2026-10-11).
+      Each P6 run records its `part` (P1, P2 or P4). The real manifest.json was frozen without P6, so P6 lives in
+      the sidecar results/<ns>/manifest-p6.json (`--p6-sidecar`): the same runs --with-p6 would have made, written
+      once; `load(ns)` merges it. `runner --stage P6 --part P1` runs one part.
 Within a stage, rounds: round r holds one replicate of every cell that still needs one, shuffled with
 random.Random(f"{seed}:{stage}:{r}"). If a stage is cut after k rounds, every cell has k replicates.
 Run ids are p<stage digit>-<4-digit position in the stage> (p1-0007).
@@ -68,6 +71,9 @@ PILOT_SPEC = {   # stage -> (seed, real units -> prefix, mock prefix, replicates
     "X1": (X1_SEED, X1_UNITS, "x1", 10),
     "X2": (X2_SEED, X2_UNITS, "x2", 5),
 }
+
+P6_PARTS = ("P1", "P2", "P4")      # the stages P6 replicates with unit codex; each P6 run records its `part`
+P6_NAME = "manifest-p6.json"       # P6 sidecar beside the frozen manifest.json (written once, its sha in state)
 
 # The single switch for the confirmatory H2 tickets (P1 and the stages derived from it; analysis.summarize reads it).
 P1_VARIANTS = {"xremove": ("X-rename", "X-remove"), "xapi": ("X-rename", "X-api")}
@@ -118,7 +124,7 @@ def stage_cells(stage: str, h2: tuple | None = None) -> list[dict]:
         return ([dict(c, unit="cc-opus") for c in _p1_core(h2) + stage_cells("P2", h2)]
                 + [_cell("X-rename", "V0", "S0", 10, W="W2")])
     if stage == "P6":       # Codex replicates P1, P2 and P4 as they are now (decision 2026-10-11, docs/DECISIONS.md)
-        return [dict(c, unit="codex") for s in ("P1", "P2", "P4") for c in stage_cells(s, h2)]
+        return [dict(c, unit="codex", part=s) for s in P6_PARTS for c in stage_cells(s, h2)]
     raise ValueError(stage)
 
 
@@ -154,6 +160,8 @@ def generate(seed: int = SEED, ns: str = "real", with_p6: bool = False, h2: tupl
                        "replicate": r, "round": r, "cell": cell_key(c)}
                 if c["control"]:
                     run["control"] = True
+                if c.get("part"):
+                    run["part"] = c["part"]
                 runs.append(run)
     return {
         "schema": "manifest/1", "seed": seed, "namespace": ns,
@@ -202,10 +210,60 @@ def with_pilots(m: dict, ns: str) -> dict:
                         for st in PILOTS})
 
 
+def p6_path(ns: str) -> Path:
+    return paths.manifest_path(ns).with_name(P6_NAME)
+
+
+def generate_p6(seed: int = SEED, ns: str = "real", h2: tuple | None = None) -> dict:
+    """The P6 runs exactly as `generate(..., with_p6=True)` makes them (same seed, rounds, paraphrase slots and ids
+    p6-0001..), as a sidecar: the real manifest.json was frozen without P6, so P6 cannot be added to it."""
+    full = generate(seed, ns, with_p6=True, h2=h2)
+    runs = [r for r in full["runs"] if r["stage"] == "P6"]
+    return {"schema": "manifest/1", "seed": seed, "namespace": ns, "generated_at": full["generated_at"],
+            "sidecar_of": "manifest.json", "paraphrases": full["paraphrases"], "stage_counts": {"P6": len(runs)},
+            "parts": {p: sum(1 for r in runs if r["part"] == p) for p in P6_PARTS}, "runs": runs}
+
+
+def write_p6(ns: str, seed: int = SEED, force: bool = False) -> tuple[Path, dict]:
+    """Write results/<ns>/manifest-p6.json once. Refused if it exists (unless force and no P6 run has started) or if
+    manifest.json already holds P6 runs."""
+    out = p6_path(ns)
+    base = jsonio.read_json(paths.manifest_path(ns))
+    if base is None:
+        raise RuntimeError(f"no {paths.manifest_path(ns)}: generate the manifest first")
+    if any(r["stage"] == "P6" for r in base.get("runs", [])):
+        raise RuntimeError("manifest.json already holds the P6 runs (generated with --with-p6); no sidecar needed")
+    if out.exists():
+        state = jsonio.read_json(paths.state_path(ns)) or {}
+        started = [rid for rid, r in state.get("runs", {}).items()
+                   if rid.startswith("p6-") and r.get("status", "pending") != "pending"]
+        if not force or started:
+            raise RuntimeError(f"{out} exists" + (f" and {len(started)} P6 run(s) have started" if started
+                                                  else "; pass --force to overwrite"))
+    if seed != base.get("seed"):
+        raise RuntimeError(f"seed {seed} differs from manifest.json's seed {base.get('seed')}")
+    m = generate_p6(seed, ns)
+    errs = validate(m)
+    if errs:
+        raise RuntimeError(f"P6 sidecar does not match the contract schema: {errs[:3]}")
+    jsonio.write_json_atomic(out, m)
+    return out, m
+
+
+def with_p6(m: dict, ns: str) -> dict:
+    """manifest.json plus the P6 sidecar's runs (when the sidecar exists and manifest.json has no P6 runs)."""
+    side = jsonio.read_json(p6_path(ns))
+    known = {r["run_id"] for r in m.get("runs", [])}
+    if side is None or any(rid.startswith("p6-") for rid in known):
+        return m
+    return dict(m, runs=list(m.get("runs", [])) + [r for r in side["runs"] if r["run_id"] not in known],
+                p6_sidecar={"file": P6_NAME, "sha256": sha256(p6_path(ns)), "runs": len(side["runs"])})
+
+
 def load(ns: str) -> dict | None:
-    """results/<ns>/manifest.json plus the pilot runs (X1, X2). None when there is no manifest.json."""
+    """results/<ns>/manifest.json plus the P6 sidecar (if any) and the pilot runs (X1, X2). None without a manifest."""
     m = jsonio.read_json(paths.manifest_path(ns))
-    return with_pilots(m, ns) if m is not None else None
+    return with_pilots(with_p6(m, ns), ns) if m is not None else None
 
 
 def validate(manifest: dict) -> list[str]:
@@ -227,7 +285,7 @@ def ensure(ns: str, seed: int = SEED) -> dict:
     if m is None and ns == "mock":
         m = generate(seed, "mock")
         jsonio.write_json_atomic(paths.manifest_path(ns), m)
-    return with_pilots(m, ns) if m is not None else None
+    return with_pilots(with_p6(m, ns), ns) if m is not None else None
 
 
 def main(argv=None) -> int:
@@ -240,7 +298,22 @@ def main(argv=None) -> int:
     ap.add_argument("--p1-variant", choices=sorted(P1_VARIANTS),
                     help="H2 tickets for P1: xremove = X-rename + X-remove, xapi = X-rename + X-api (with --print; "
                          "writing needs H2_TICKETS in harness/manifest.py set to the same variant)")
+    ap.add_argument("--p6-sidecar", action="store_true",
+                    help=f"write results/<ns>/{P6_NAME}: the P6 runs beside a manifest.json that has none (with --print: "
+                         "counts only)")
     a = ap.parse_args(argv)
+    if a.p6_sidecar:
+        if a.print:
+            m = generate_p6(a.seed, a.ns)
+            print(json.dumps({"stage_counts": m["stage_counts"], "parts": m["parts"]}))
+            return 0
+        try:
+            out, m = write_p6(a.ns, a.seed, force=a.force)
+        except RuntimeError as e:
+            print(str(e), file=sys.stderr)
+            return 2
+        print(f"wrote {out}: {m['parts']} = {m['stage_counts']['P6']} runs  sha256 {sha256(out)}")
+        return 0
     h2 = P1_VARIANTS[a.p1_variant] if a.p1_variant else None
     m = generate(a.seed, a.ns, a.with_p6, h2=h2)
     errs = validate(m)
