@@ -434,3 +434,19 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - `runner --ns mock --stage P6 --part P1 --workers 2`: 60 of 60 done in 16 min, 0 infrastructure failures. The 6 P1 cells × 10, paraphrases p1..p5 × 12. The P2 and P4 parts stayed pending, and P6 stayed blinded in `--status`.
   - `state.p6_manifest_sha256` was recorded and `manifest.json` was untouched.
 - **Real sidecar written (2026-10-12, 08:49 local).** Alfredo approved P6 in full (all 121 runs, "Lanza Codex completo"). `harness.manifest --p6-sidecar` (seed 20261011) wrote `results/real/manifest-p6.json`: P1 60, P2 10, P4 51 = 121 runs, sha256 `d38a061bfea7b0f643fc872321e6ff71e5c08e54d30c2e507d766967ada0e086`. `prereg --verify` OK after writing it. Launched as `runner --ns real --stage P6 --workers 3` (all parts, P6 order) on scenario `b02008da…`.
+
+## Codex replication of H2 and HS-V2 in the summary (2026-10-12, branch p6-analysis; not merged)
+- `analysis.summarize.aggregate()["rq2"]["replication"]` computes the same two tests as for `cc-sonnet` on unit `codex` (`common.REPLICATION_UNIT`; `mock` in the mock namespace), on **P6's P1 part only**.
+  - The part comes from the manifest's `part` field. The P4 concurrent controls share the V0·S0 cells and are left out.
+  - H2: V0·S0 vs V0·S2, Fisher two-sided, Holm over its own family of the two H2 tickets.
+  - HS-V2: V2·S0 vs V0·S0, uncorrected.
+  - Intervals are Clopper-Pearson, as for the primary unit.
+- It is blinded with P6, like the other stages.
+- It is reported next to the primary unit, in its own section of `summary.md` ("RQ2 — replication (P6, Codex)…") and in `tables/h2_replication.csv` and `tables/secondary_v2_replication.csv`. It is never pooled with `cc-sonnet`, and the primary H2 and HS-V2 numbers do not change.
+- `common.load_manifest()` now merges the P6 sidecar, so `summary.md`'s stage table shows P6's 121 runs in total. `select_poll_pr` uses the same loader; it only looks at P1.
+- **For Alfredo:** PREREGISTRATION §7 keeps "units" descriptive, and claims "differs between units" only with a pre-registered test. The replication makes no between-unit comparison; it repeats the pre-registered within-unit tests on Codex, as P6 "replicates the formal design" (§6). Its p-values are labelled as replication, not as part of the confirmatory family. Whether the talk presents them as a confirmatory replication or as descriptive is Alfredo's call.
+- Evidence (branch worktree; light tests only, while P6 runs on main):
+  - `tests.test_summarize` and `test_summarize_audit`: 15 OK, including 4 new replication tests: blinded, counts with the P4 control left out, primary unaffected, tables written, no-P6 note.
+  - `test_analysis_tools` and `test_p6_sidecar`: 31 OK.
+  - `console.tests.test_results`: 12 OK.
+  - On the worktree's mock P6 P1 part (60 runs, force-unblinded in the mock namespace only), the section renders: X-rename and X-remove 10 of 10 vs 0 of 10 (Holm 2.2e-5); V2 10 of 10 vs 10 of 10. These are mock values: the mock agent always breaks without S2.

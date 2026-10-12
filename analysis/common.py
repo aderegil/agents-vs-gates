@@ -4,11 +4,13 @@ from __future__ import annotations
 from pathlib import Path
 
 from harness import blinding, paths
+from harness import manifest as manifest_mod
 from harness.jsonio import read_json, read_jsonl
 
 MAIN_STAGES = ("P1", "P2", "P4", "P5", "P6", "selftest")
 CALIBRATION = "P0"
 PRIMARY_UNIT = {"real": "cc-sonnet", "mock": "mock"}
+REPLICATION_UNIT = {"real": "codex", "mock": "mock"}   # P6's P1 part: H2 and HS-V2 again, never pooled with PRIMARY
 SIM_BANNER = "SIMULATED (mock agent) — not a real run"
 
 
@@ -26,7 +28,9 @@ def load_records(ns: str) -> list[dict]:
 
 
 def load_manifest(ns: str) -> dict | None:
-    return read_json(paths.manifest_path(ns))
+    """manifest.json plus the P6 sidecar's runs (manifest-p6.json), if any; not the pilots."""
+    m = read_json(paths.manifest_path(ns))
+    return manifest_mod.with_p6(m, ns) if m is not None else None
 
 
 def load_state(ns: str) -> dict | None:

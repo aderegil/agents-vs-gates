@@ -17,7 +17,10 @@
                                                                           "p": float|None, "p_holm": float|None}}},
              "secondary_v2": {"label": "secondary (pre-registered)", "stage", "blinded", "note", "available": bool,
                               "tickets": {ticket: {"v0": {x,n,ci}, "v2": {x,n,ci}, "p": float|None}}},  # outside Holm
-             "descriptive": [{"stage", "cell", "x", "n", "ci"}]},              # staging_break, every other S/V cell
+             "descriptive": [{"stage", "cell", "x", "n", "ci"}],               # staging_break, every other S/V cell
+             "replication": {"label", "unit", "stage": "P6", "part": "P1", "blinded", "note", "available",
+                             "h2": {ticket: {"s0", "s2", "p", "p_holm"}},    # own Holm family; codex, never pooled
+                             "secondary_v2": {ticket: {"v0", "v2", "p"}}}},
      "rq3": {"outcomes": [{"stage", "cell", "n", "counts": {outcome: k}}],
              "v1_vs_v0s2": [{"stage", "cell", "consumer_break_ci": {x,n,ci}, "staging_break": {x,n,ci}}],
              "human_confirmation": {outcome: {"n", "pending", "labels": {label: k}, "confirmed"}},   # blind coding (10.6)
@@ -37,7 +40,8 @@
 
 Blinded stages contribute only to "stages" (progress), "excluded" and "infra"; never to outcomes or metrics.
 Percentages are never printed for N < 20 (only "x of N [CI]"). Only H2 (Holm, fixed family of 2) and the
-pre-registered secondary V2·S0 vs V0·S0 contrast (no correction) carry p-values.
+pre-registered secondary V2·S0 vs V0·S0 contrast (no correction) carry p-values, plus the same two tests repeated on
+the replication unit (P6's P1 part, codex): its own Holm family, reported next to the primary unit, never pooled.
 """
 from __future__ import annotations
 
@@ -60,6 +64,7 @@ OUTCOMES = ("no_change", "passed_with_gate_flag", "passed_first_ci", "fixed_with
             "capped", "honest_escalation_candidate", "still_failing")
 H2_TICKETS = manifest_mod.H2_TICKETS   # the single switch (harness/manifest.py): H2 family and secondary HS-V2
 SECONDARY_LABEL = "secondary (pre-registered)"
+REPLICATION_LABEL = "replication (P6, Codex): the same tests on the replication unit, not pooled"
 CONFIRMED_BY_CODING = ("no_change", "honest_escalation_candidate", "passed_with_gate_flag", "fixed_with_gate_flag")
 BY_CONSTRUCTION = ("X-rename", "X-remove", "X-api")
 CONCORDANCE_NOTE = ("Pre-registered note: for X-rename, X-remove and X-api, CI↔oracle concordance is high by "
@@ -148,10 +153,14 @@ def _sel(main, stage, ticket, unit, V):
 
 
 def _h2(ns, main, stages) -> dict:
-    unit = common.PRIMARY_UNIT[ns]
     stage, note, blinded = _primary_stage(ns, main, stages)
     if blinded:
         return {"stage": stage, "blinded": True, "note": "Blinded until stage complete", "tickets": {}}
+    return {"stage": stage, "blinded": False, "note": note, "tickets": _h2_tickets(main, stage, common.PRIMARY_UNIT[ns])}
+
+
+def _h2_tickets(main, stage, unit) -> dict:
+    """H2 per ticket on `unit`'s runs of `stage` in `main`: staging_break V0·S0 vs V0·S2, Fisher, Holm over 2."""
     tickets, raw = {}, {}
     for t in H2_TICKETS:
         sel = _sel(main, stage, t, unit, "V0")
@@ -168,27 +177,54 @@ def _h2(ns, main, stages) -> dict:
         for t, pa in holm({t: raw.get(t, 1.0) for t in H2_TICKETS}).items():
             if t in raw:
                 tickets[t]["p_holm"] = pa
-    return {"stage": stage, "blinded": False, "note": note, "tickets": tickets}
+    return tickets
 
 
 def _secondary_v2(ns, main, stages) -> dict:
     """Secondary (pre-registered), outside the Holm family: P1, per ticket, staging_break (gen) V2·S0 vs V0·S0,
     Fisher two-sided, Clopper-Pearson per cell. Blinded exactly like H2."""
-    unit = common.PRIMARY_UNIT[ns]
     stage, note, blinded = _primary_stage(ns, main, stages)
     out = {"label": SECONDARY_LABEL, "stage": stage, "blinded": blinded, "note": note, "available": False,
            "tickets": {}}
     if blinded:
         out["note"] = "Blinded until stage complete"
         return out
+    out["tickets"] = _v2_tickets(main, stage, common.PRIMARY_UNIT[ns])
+    out["available"] = any(v["v2"]["n"] for v in out["tickets"].values())
+    if not out["available"]:
+        out["note"] = f"no V2·S0 runs in {stage}"
+    return out
+
+
+def _v2_tickets(main, stage, unit) -> dict:
+    out = {}
     for t in H2_TICKETS:
         v0 = _count([r for r in _sel(main, stage, t, unit, "V0") if r.get("spec") == "S0"], _metric("staging_break"))
         v2 = _count([r for r in _sel(main, stage, t, unit, "V2") if r.get("spec") == "S0"], _metric("staging_break"))
         p = fisher_exact(v0["x"], v0["n"] - v0["x"], v2["x"], v2["n"] - v2["x"]) if v0["n"] and v2["n"] else None
-        out["tickets"][t] = {"v0": v0, "v2": v2, "p": p}
-    out["available"] = any(v["v2"]["n"] for v in out["tickets"].values())
+        out[t] = {"v0": v0, "v2": v2, "p": p}
+    return out
+
+
+def _replication(ns, main, stages, manifest) -> dict:
+    """H2 and HS-V2 again on the replication unit (codex): P6's P1 part only (the P4 controls share the V0·S0 cells
+    and are left out by `part`). Its own Holm family of 2; never pooled with the primary unit. Blinded with P6."""
+    unit, stage, part = common.REPLICATION_UNIT[ns], "P6", "P1"
+    out = {"label": REPLICATION_LABEL, "unit": unit, "stage": stage, "part": part, "blinded": False, "note": None,
+           "available": False, "h2": {}, "secondary_v2": {}}
+    if stage not in stages:
+        out["note"] = "no P6 runs in the manifest (harness.manifest --p6-sidecar)"
+        return out
+    if not stages[stage]["visible"]:
+        out.update(blinded=True, note="Blinded until stage complete")
+        return out
+    part_of = {r["run_id"]: r.get("part") for r in (manifest or {}).get("runs", []) if r["stage"] == stage}
+    pool = [r for r in main if r["stage"] == stage and part_of.get(r["run_id"]) == part]
+    out["h2"] = _h2_tickets(pool, stage, unit)
+    out["secondary_v2"] = _v2_tickets(pool, stage, unit)
+    out["available"] = any(v["s0"]["n"] or v["s2"]["n"] for v in out["h2"].values())
     if not out["available"]:
-        out["note"] = f"no V2·S0 runs in {stage}"
+        out["note"] = f"no visible {unit} runs in the {part} part of {stage}"
     return out
 
 
@@ -349,7 +385,8 @@ def aggregate(ns: str) -> dict:
         "ns": ns, "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "simulated": ns == "mock", "banner": common.SIM_BANNER if ns == "mock" else None,
         "stages": stages, "cells": cells, "three_box": three_box, "three_box_final": three_box_final, "rq1": rq1,
-        "rq2": {"h2": _h2(ns, main, stages), "secondary_v2": _secondary_v2(ns, main, stages), "descriptive": desc},
+        "rq2": {"h2": _h2(ns, main, stages), "secondary_v2": _secondary_v2(ns, main, stages), "descriptive": desc,
+                "replication": _replication(ns, main, stages, manifest)},
         "rq3": {"outcomes": outcomes, "v1_vs_v0s2": v1rows,
                 "human_confirmation": _human_confirmation(main, gate_labels),
                 "coding": {k: coding.get(k, 0) for k in ("T1", "T2", "T3", "honest_escalation", "none", "uncoded")}},
@@ -389,12 +426,33 @@ def _secondary_md(sec: dict | None) -> list[str]:
                           for t, v in sec["tickets"].items()])
 
 
+def _replication_md(rep: dict | None) -> list[str]:
+    if not rep:
+        return []
+    L = [f"### RQ2 — {rep['label']}", "",
+         f"Unit `{rep['unit']}`, stage {rep['stage']} ({rep['part']} part only). H2: V0·S0 vs V0·S2, Fisher two-sided, "
+         "Holm over its own 2 tickets. HS-V2: V2·S0 vs V0·S0, uncorrected. Reported next to the primary unit, "
+         "never pooled with it; it is not a test of a difference between units.", ""]
+    if rep.get("blinded"):
+        return L + [f"Stage {rep['stage']}: Blinded until stage complete.", ""]
+    if rep.get("note"):
+        L += [f"_{rep['note']}_", ""]
+    if not rep.get("available"):
+        return L
+    L += _md_table(["Ticket", "V0·S0", "V0·S2", "p", "p (Holm)"],
+                   [[t, _fmt(v["s0"]), _fmt(v["s2"]), "—" if v["p"] is None else f"{v['p']:.4g}",
+                     "—" if v["p_holm"] is None else f"{v['p_holm']:.4g}"] for t, v in rep["h2"].items()])
+    return L + _md_table(["Ticket", "V0·S0", "V2·S0", "p (uncorrected)"],
+                         [[t, _fmt(v["v0"]), _fmt(v["v2"]), "—" if v["p"] is None else f"{v['p']:.4g}"]
+                          for t, v in rep["secondary_v2"].items()])
+
+
 def render_md(agg: dict) -> str:
     L = [f"# Agents vs. Gates — summary ({agg['ns']})", ""]
     if agg["banner"]:
         L += [f"> **{agg['banner']}**", ""]
     L += [f"Generated {agg['generated_at']}. Counts are \"x of N [95% Clopper-Pearson]\"; percentages only when "
-          "N ≥ 20. Only the pre-registered H2 contrast (Holm) and the pre-registered secondary V2·S0 contrast carry p-values; everything else is descriptive.", ""]
+          "N ≥ 20. Only the pre-registered H2 contrast (Holm) and the pre-registered secondary V2·S0 contrast carry p-values (and the same two tests repeated on the Codex replication, P6); everything else is descriptive.", ""]
     L += ["## Stages", ""]
     L += _md_table(["Stage", "Progress", "Outcomes"],
                    [[s, f"{v['runs_done']} of {v['runs_total']}" if v["runs_total"] is not None else f"{v['runs_done']} runs",
@@ -416,6 +474,7 @@ def render_md(agg: dict) -> str:
                        [[t, _fmt(v["s0"]), _fmt(v["s2"]), "—" if v["p"] is None else f"{v['p']:.4g}",
                          "—" if v["p_holm"] is None else f"{v['p_holm']:.4g}"] for t, v in h2["tickets"].items()])
     L += _secondary_md(agg["rq2"].get("secondary_v2"))
+    L += _replication_md(agg["rq2"].get("replication"))
     if agg["rq2"]["descriptive"]:
         L += ["Descriptive (no p-values):", ""]
         L += _md_table(["Stage", "Cell", "staging_break"], [[r["stage"], r["cell"], _fmt(r)] for r in agg["rq2"]["descriptive"]])
@@ -545,6 +604,15 @@ def write_tables(agg: dict, tdir: Path):
     _write_csv(tdir / "secondary_v2.csv", ["label", "stage", "ticket", "v0s0_x", "v0s0_n", "v2s0_x", "v2s0_n", "p"],
                [[sec.get("label"), sec.get("stage"), t, v["v0"]["x"], v["v0"]["n"], v["v2"]["x"], v["v2"]["n"], v["p"]]
                 for t, v in sec.get("tickets", {}).items()])
+    rep = agg["rq2"].get("replication") or {}
+    _write_csv(tdir / "h2_replication.csv", ["unit", "stage", "part", "ticket", "s0_x", "s0_n", "s2_x", "s2_n", "p",
+                                             "p_holm"],
+               [[rep.get("unit"), rep.get("stage"), rep.get("part"), t, v["s0"]["x"], v["s0"]["n"], v["s2"]["x"],
+                 v["s2"]["n"], v["p"], v["p_holm"]] for t, v in rep.get("h2", {}).items()])
+    _write_csv(tdir / "secondary_v2_replication.csv", ["unit", "stage", "part", "ticket", "v0s0_x", "v0s0_n", "v2s0_x",
+                                                       "v2s0_n", "p"],
+               [[rep.get("unit"), rep.get("stage"), rep.get("part"), t, v["v0"]["x"], v["v0"]["n"], v["v2"]["x"],
+                 v["v2"]["n"], v["p"]] for t, v in rep.get("secondary_v2", {}).items()])
     _write_csv(tdir / "repair_outcomes.csv", ["stage", "cell", "n"] + list(OUTCOMES),
                [[r["stage"], r["cell"], r["n"]] + [r["counts"].get(o, 0) for o in OUTCOMES] for r in agg["rq3"]["outcomes"]])
     _write_csv(tdir / "concordance.csv", ["ticket", "ci_break_oracle_break", "ci_break_oracle_ok", "ci_ok_oracle_break",
