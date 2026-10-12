@@ -13,14 +13,15 @@ FIX = Path(__file__).parent / "fixtures" / "codex_exec.jsonl"
 
 
 OFF = [a for f in codex.FEATURES_OFF for a in ("-c", f"features.{f}=false")]
-POLICY = ["-c", 'approval_policy="never"', "-c", 'web_search="disabled"'] + OFF
+POLICY = ["-c", 'approval_policy="never"', "-c", 'web_search="disabled"', "-c", "skills.include_instructions=false"] + OFF
 
 
 class CodexArgv(unittest.TestCase):
     UNIT = {"model": "gpt-x", "effort": "medium", "windows_sandbox": "mxc"}
 
     def test_parity_features_off(self):
-        for f in ("code_mode_host", "unified_exec_tty", "apps", "plugins", "remote_plugin", "browser_use",
+        self.assertNotIn("features.code_mode_host=false", codex.build_argv(self.UNIT, "W"))   # the model needs it
+        for f in ("unified_exec_tty", "apps", "plugins", "remote_plugin", "browser_use",
                   "computer_use", "image_generation", "multi_agent", "skill_search", "tool_suggest", "hooks", "goals"):
             self.assertIn(f"features.{f}=false", codex.build_argv(self.UNIT, "W"))
             self.assertIn(f"features.{f}=false", codex.build_argv(self.UNIT, "W", resume="th"))

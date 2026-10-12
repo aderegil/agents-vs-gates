@@ -64,17 +64,19 @@ def _toml(v) -> str:
 
 
 # Codex 0.162.1 turns on, by default and even with an empty CODEX_HOME, capabilities the Claude unit does not have
-# (remote plugins with skills, ChatGPT apps, browser/computer use, image generation, sub-agents, hooks, goals...) and
-# "code mode" (the model writes JS that can run several commands in one tool call, through a TTY). Parity with the
-# Claude unit (Read/Edit/Write/Glob/Grep/Bash) and the turn cap need them off: one shell command per tool call, no TTY.
+# (remote plugins with skills, ChatGPT apps, browser/computer use, image generation, sub-agents, hooks, goals...); off.
+# Code mode stays ON: gpt-5.6-terra only runs commands through its `exec` (code-mode) tool — with code_mode_host off it
+# answered "command execution is unavailable" (smoke 3, 2026-10-11). The TTY is off (npm test hung under it, smoke 1).
+# The turn cap still counts one turn per command: the --json stream emits one command_execution item per command, even
+# when a single `exec` script runs several. Skills instructions are dropped from the prompt (skills.include_instructions).
 # Verified offline with `codex -c features.<f>=false features list` (DECISIONS, smoke diagnosis 2026-10-11).
-FEATURES_OFF = ("code_mode_host", "unified_exec_tty", "apps", "plugins", "remote_plugin", "plugin_sharing",
+FEATURES_OFF = ("unified_exec_tty", "apps", "plugins", "remote_plugin", "plugin_sharing",
                 "browser_use", "browser_use_external", "computer_use", "image_generation", "multi_agent",
                 "skill_search", "skill_mcp_dependency_install", "tool_suggest", "goals", "hooks", "in_app_browser")
 
 
 def _config_args(unit: dict) -> list[str]:
-    out = ["-c", 'approval_policy="never"', "-c", 'web_search="disabled"']
+    out = ["-c", 'approval_policy="never"', "-c", 'web_search="disabled"', "-c", "skills.include_instructions=false"]
     for f in FEATURES_OFF:
         out += ["-c", f"features.{f}=false"]
     if unit.get("effort"):
