@@ -25,7 +25,7 @@ from harness import blinding, paths
 from harness.jsonio import read_json
 
 BLINDED_MSG = "Blinded until stage complete"
-RUN_ID = re.compile(r"^(p[0-6]-[0-9]{4}|st-[a-z0-9]{1,16}(-[a-z0-9]{1,16}){0,3})$")
+RUN_ID = re.compile(r"^((p[0-6]|x1c?|x2)-[0-9]{4}|st-[a-z0-9]{1,16}(-[a-z0-9]{1,16}){0,3})$")
 DIFF_FILE = re.compile(r"^(gen|fix[0-9]{1,2})\.diff$")
 MAX_DIFF_CHARS = 300_000
 MAX_STR = 12_000

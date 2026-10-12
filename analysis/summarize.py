@@ -52,12 +52,13 @@ from pathlib import Path
 from analysis import common
 from analysis.stats import clopper_pearson, fisher_exact, holm, x_of_n
 from harness import blinding, paths
+from harness import manifest as manifest_mod
 
 METRICS = ("staging_break", "staging_break_final", "consumer_break_ci", "semantic_break",
            "undeclared_dependency", "arch_layer_violation", "arch9_signal", "gate_flagged")
 OUTCOMES = ("no_change", "passed_with_gate_flag", "passed_first_ci", "fixed_with_gate_flag", "fixed_code",
             "capped", "honest_escalation_candidate", "still_failing")
-H2_TICKETS = ("X-rename", "X-remove")
+H2_TICKETS = manifest_mod.H2_TICKETS   # the single switch (harness/manifest.py): H2 family and secondary HS-V2
 SECONDARY_LABEL = "secondary (pre-registered)"
 CONFIRMED_BY_CODING = ("no_change", "honest_escalation_candidate", "passed_with_gate_flag", "fixed_with_gate_flag")
 BY_CONSTRUCTION = ("X-rename", "X-remove", "X-api")

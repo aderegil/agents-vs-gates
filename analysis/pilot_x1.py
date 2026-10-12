@@ -1,6 +1,10 @@
-"""Pilot X1 summary (exploratory; outside the confirmatory analysis; run before the freeze).
+"""Pilot X1 / X2 summaries (exploratory; outside the confirmatory analysis; run before the freeze).
 
-  python -X utf8 -m analysis.pilot_x1 [--ns real|mock] [--json]   -> results/<ns>/x1-summary.md (+ .json)
+  python -X utf8 -m analysis.pilot_x1 [--ns real|mock] [--stage X1|X2] [--json]
+      -> results/<ns>/x1-summary.md (+ .json), or x2-summary.md (+ .json) for --stage X2
+
+X2 (X-remove V0 vs V2, after the scenario fix) also prints the pre-registered decision rule (analysis.xremove_rule):
+how many X-remove V0·S0 runs attempted to remove `channel` in gen, and what that means for H2.
 
 Per unit × ticket × V (V0 vs V2, S0, W1 base text):
   - first attempt broke a consumer (oracle on gen: metrics.staging_break) — the key metric — with Clopper-Pearson CI;
@@ -24,10 +28,32 @@ from analysis import common, stats
 from harness import jsonio, paths
 
 STAGE = "X1"
-TICKETS = ("X-rename", "X-remove")
+STAGE_TICKETS = {"X1": ("X-rename", "X-remove"), "X2": ("X-remove",)}
+TICKETS = STAGE_TICKETS["X1"]
 VIS = ("V0", "V2")
-NOTE = ("Pilot X1 · exploratory — run before the freeze; results disclosed, not part of the confirmatory analysis. "
-        "Fisher p-values are uncorrected.")
+DESIGN = {
+    "X1": ("X-rename and X-remove × V0 (orders-service only) vs V2 (the four repos in one workspace), S0, W1 base "
+           "text, 10 runs per cell and unit, blocks of 4 (one run of each cell per block, shuffled)."),
+    "X2": ("X-remove × V0 (orders-service only) vs V2 (the four repos in one workspace), S0, W1 base text, 5 runs per "
+           "cell, cc-sonnet, blocks of 2 (one V0 and one V2 per block, shuffled). Run after the scenario fix that took "
+           "`channel` out of orders-service's CSV export (X1's X-remove runs had the defective scenario)."),
+}
+
+
+def label(stage: str) -> str:
+    return f"Pilot {stage} · exploratory"
+
+
+def note(stage: str) -> str:
+    return (f"{label(stage)} — run before the freeze; results disclosed, not part of the confirmatory analysis. "
+            "Fisher p-values are uncorrected.")
+
+
+def summary_name(stage: str = STAGE) -> str:
+    return f"{stage.lower()}-summary.md"
+
+
+NOTE = note("X1")
 
 
 def covariates_of(rec: dict) -> dict:
@@ -74,13 +100,15 @@ def _fisher(a: dict, b: dict, key: str) -> float | None:
     return stats.fisher_exact(x0, a["n"] - x0, x2, b["n"] - x2)
 
 
-def summarize(ns: str) -> dict:
-    recs = [r for r in common.load_records(ns) if r.get("stage") == STAGE]
+def summarize(ns: str, stage: str = STAGE) -> dict:
+    if stage not in STAGE_TICKETS:
+        raise ValueError(f"unknown pilot stage {stage!r}")
+    recs = [r for r in common.load_records(ns) if r.get("stage") == stage]
     units = {}
     excluded, infra = [], []
     for unit in sorted({r.get("unit") for r in recs}):
         tickets = {}
-        for t in TICKETS:
+        for t in STAGE_TICKETS[stage]:
             g = {}
             for V in VIS:
                 sel = [r for r in recs if r.get("unit") == unit and r.get("ticket") == t and r.get("visibility") == V]
@@ -95,8 +123,12 @@ def summarize(ns: str) -> dict:
             excluded.append({"run_id": r["run_id"], "reasons": common.exclusion_reasons(r)})
         elif common.is_infra(r):
             infra.append({"run_id": r["run_id"], "kind": (r.get("infra_failure") or {}).get("kind")})
-    return {"stage": STAGE, "ns": ns, "label": "Pilot X1 · exploratory", "note": NOTE, "runs": len(recs),
-            "units": units, "excluded": excluded, "infra": infra}
+    out = {"stage": stage, "ns": ns, "label": label(stage), "note": note(stage), "runs": len(recs),
+           "units": units, "excluded": excluded, "infra": infra}
+    if stage == "X2":
+        from analysis import xremove_rule
+        out["rule"] = xremove_rule.evaluate(ns, stage)
+    return out
 
 
 def _ci(d: dict) -> str:
@@ -112,15 +144,26 @@ def _p(p) -> str:
 
 
 def markdown(s: dict) -> str:
-    L = [f"# Pilot X1 · exploratory ({s['ns']})", ""]
+    stage = s.get("stage", STAGE)
+    L = [f"# {label(stage)} ({s['ns']})", ""]
     if s["ns"] == "mock":
         L += [f"**{common.SIM_BANNER}**", ""]
     L += [f"_{s['note']}_", "",
-          "Design: X-rename and X-remove × V0 (orders-service only) vs V2 (the four repos in one workspace), S0, W1 base "
-          "text, 10 runs per cell and unit, blocks of 4 (one run of each cell per block, shuffled).", "",
+          f"Design: {DESIGN[stage]}", "",
           f"Runs with a record: {s['runs']}. Excluded: {len(s['excluded'])}. Infrastructure failures: {len(s['infra'])}.", ""]
+    rule = s.get("rule")
+    if rule:
+        L += ["## Pre-registered decision rule (X-remove V0·S0)", "",
+              "Attempted to remove `channel` in gen (a removed `channel` declaration in src/core/events.ts or "
+              "src/core/order.ts, net of re-added ones; `analysis.xremove_rule`): "
+              f"**{rule['attempts']} of {rule['n']}** counted runs.", "",
+              f"Reading: {rule['text']}", ""]
+        if rule["runs"]:
+            L += ["| Run | Counted | Attempted removal | Outcome |", "|---|---|---|---|"]
+            L += [f"| {r['run_id']} | {'yes' if r['counted'] else 'no'} | {'yes' if r['attempt'] else 'no'} | "
+                  f"{r['outcome']} |" for r in rule["runs"]] + [""]
     if not s["units"]:
-        L += ["No X1 runs yet.", ""]
+        L += [f"No {stage} runs yet.", ""]
     for unit, tickets in s["units"].items():
         L += [f"## Unit {unit}", ""]
         for t, g in tickets.items():
@@ -149,22 +192,25 @@ def markdown(s: dict) -> str:
     return "\n".join(L)
 
 
-def write(ns: str) -> dict:
-    s = summarize(ns)
+def write(ns: str, stage: str = STAGE) -> dict:
+    s = summarize(ns, stage)
     d = paths.ns_dir(ns)
     d.mkdir(parents=True, exist_ok=True)
-    (d / "x1-summary.md").write_text(markdown(s), encoding="utf-8", newline="\n")
-    jsonio.write_json_atomic(d / "x1-summary.json", s)
+    md = d / summary_name(stage)
+    md.write_text(markdown(s), encoding="utf-8", newline="\n")
+    jsonio.write_json_atomic(md.with_suffix(".json"), s)
     return s
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m analysis.pilot_x1")
     ap.add_argument("--ns", choices=["real", "mock"], default="real")
+    ap.add_argument("--stage", choices=sorted(STAGE_TICKETS), default=STAGE)
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
-    s = write(a.ns)
-    print(json.dumps(s, indent=2) if a.json else f"wrote {paths.ns_dir(a.ns) / 'x1-summary.md'} ({s['runs']} X1 runs)")
+    s = write(a.ns, a.stage)
+    print(json.dumps(s, indent=2) if a.json
+          else f"wrote {paths.ns_dir(a.ns) / summary_name(a.stage)} ({s['runs']} {a.stage} runs)")
     return 0
 
 

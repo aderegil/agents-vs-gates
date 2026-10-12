@@ -9,6 +9,8 @@
   python -X utf8 -m harness.runner --unblind P1 [--force-unblind]
   python -X utf8 -m harness.runner --stage X1 --unit cc-sonnet --workers 3 --max-runs 3   pilot X1 (visible, exploratory;
                                                                   real needs --unit; writes results/<ns>/x1-summary.md)
+  python -X utf8 -m harness.runner --stage X2 --workers 1          pilot X2 (X-remove V0/V2, cc-sonnet only; visible,
+                                                                  exploratory; writes results/<ns>/x2-summary.md)
 Options: --workers 1..3, --max-runs N (alias of --batch; the smaller wins), --ns real|mock, --unit U.
 Exit codes: 0 ok, 2 usage/guard refusal (lock missing, smoke not passed, model drift), 3 rate-limited, 4 isolation
 breach. While running: state.json rewritten atomically at least every second, PID in state.runner.pid,
@@ -588,12 +590,12 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
                   unit_label=a.unit or ("mock" if ns == "mock" else None), pipeline=pipeline,
                   mock_scripts=mock_scripts, quiet=a.quiet)
     code = batch.run()
-    if stage == "X1":
+    if stage in manifest_mod.PILOTS:
         try:
             from analysis import pilot_x1
-            pilot_x1.write(ns)
+            pilot_x1.write(ns, stage)
             if not a.quiet:
-                print(f"pilot summary: {paths.ns_dir(ns) / 'x1-summary.md'}", flush=True)
+                print(f"pilot summary: {paths.ns_dir(ns) / pilot_x1.summary_name(stage)}", flush=True)
         except Exception as e:  # noqa: BLE001 - a summary problem never changes the batch's exit code
             print(f"pilot summary not written: {type(e).__name__}: {e}", file=sys.stderr)
     if a.calibrate and code == EXIT_OK:

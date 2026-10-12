@@ -1,6 +1,15 @@
 """Run manifest with block randomization by rounds (spec 11.2, 11.3).
 
     python -m harness.manifest --seed 20261011 [--ns real|mock] [--with-p6] [--force]
+    python -m harness.manifest --p1-variant xremove|xapi --print [--with-p6]   stage counts of a P1 variant (no write)
+
+H2 tickets (the single switch, H2_TICKETS below; the design session sets it after Pilot X2, DECISIONS):
+  variant "xremove" (i):  H2 = X-rename + X-remove  -> the stages below, as they are.
+  variant "xapi"    (ii): H2 = X-rename + X-api     -> P1 = {X-rename, X-api} × {V0·S0, V0·S2, V2·S0} × 10 (= 60,
+        X-api paraphrased p1..p5 ×2); P4 drops X-api {V0·S0, V0·S2} × 5 (now P1 cells with N = 10) -> 41; X-remove
+        keeps P2 (V1·S0 × 10) and its P4 cells (V0·S1 × 5, controls V0·S0 × 3) and is reported as descriptive;
+        P5 = cc-opus on the H2 cells {X-rename, X-api} × {V0·S0, V0·S2} + P2 + RQ5 = 60; P6 = codex on P1 + P2 + P4
+        = 111. P0 and the pilots never change.
 
 Stages (unit cc-sonnet unless stated; in the mock namespace every unit is `mock`):
   P0  calibration: X-rename V0·S0 ×3, V0·S2 ×2                                              =  5
@@ -27,6 +36,9 @@ Pilot X1 (exploratory, not in manifest.json): X-rename/X-remove × V0/V2 · S0 �
 blocks of 4 (each block = the 4 cells, shuffled with random.Random(f"{X1_SEED}:X1:{block}")). Ids x1-0001..0040
 (cc-sonnet) and x1c-0001..0040 (codex); in the mock namespace only x1-* (unit mock). `load(ns)` = manifest.json plus
 these runs, computed here, so manifest.json and its hash (state.manifest_sha256, the pre-registration) never change.
+Pilot X2 (exploratory, same mechanism, after the X-remove scenario fix): X-remove × V0/V2 · S0 · W1 base text × 5,
+cc-sonnet only, blocks of 2 (each block = one V0 and one V2, shuffled with random.Random(f"{X2_SEED}:X2:{block}")).
+Ids x2-0001..0010; in the mock namespace x2-* with unit mock. It decides H2_TICKETS (rule in PREREGISTRATION §6).
 Paraphrases (spec 6.1): X-rename, X-remove and X-api cells with N = 10 at W1 use slots p1..p5 × 2 if all five
 scenario/tasks/<t>.p*.md are written (no `TODO(human)`); otherwise the base text ×10, recorded under
 "paraphrases" in the manifest. P0 and W2 always use the base text. In round r every paraphrased cell uses slot
@@ -47,44 +59,66 @@ from harness import jsonio, paths, scenario_io
 
 SEED = 20261011
 STAGES = ("P0", "P1", "P2", "P4", "P5", "P6")
-PILOTS = ("X1",)
+PILOTS = ("X1", "X2")
 X1_SEED = 20261012
 X1_UNITS = {"cc-sonnet": "x1", "codex": "x1c"}     # unit -> run-id prefix
+X2_SEED = 20261013
+X2_UNITS = {"cc-sonnet": "x2"}
+PILOT_SPEC = {   # stage -> (seed, real units -> prefix, mock prefix, replicates per cell)
+    "X1": (X1_SEED, X1_UNITS, "x1", 10),
+    "X2": (X2_SEED, X2_UNITS, "x2", 5),
+}
+
+# The single switch for the confirmatory H2 tickets (P1 and the stages derived from it; analysis.summarize reads it).
+P1_VARIANTS = {"xremove": ("X-rename", "X-remove"), "xapi": ("X-rename", "X-api")}
+H2_TICKETS = P1_VARIANTS["xremove"]
 
 
 def _cell(ticket, V, S, n, unit="cc-sonnet", W="W1", control=False):
     return {"ticket": ticket, "visibility": V, "spec": S, "wording": W, "unit": unit, "n": n, "control": control}
 
 
-def _p1_core() -> list[dict]:
-    """H2 cells: {X-rename, X-remove} × {V0·S0, V0·S2} × 10 (the P1 of the original design)."""
-    return [_cell(t, "V0", S, 10) for t in ("X-rename", "X-remove") for S in ("S0", "S2")]
+def _h2(h2: tuple | None) -> tuple:
+    h2 = tuple(h2 or H2_TICKETS)
+    if h2 not in P1_VARIANTS.values():
+        raise ValueError(f"H2 tickets must be one of {sorted(P1_VARIANTS.values())}, not {h2}")
+    return h2
 
 
-def _p4_cells(with_v2: bool) -> list[dict]:
-    """The §11.2 P4 row; with_v2=False drops {X-rename, X-remove} V2·S0 × 5 (moved to P1 as × 10)."""
+def _p1_core(h2: tuple | None = None) -> list[dict]:
+    """H2 cells: {H2 tickets} × {V0·S0, V0·S2} × 10 (the P1 of the original design, with X-rename + X-remove)."""
+    return [_cell(t, "V0", S, 10) for t in _h2(h2) for S in ("S0", "S2")]
+
+
+def _p4_cells(with_v2: bool, h2: tuple | None = None) -> list[dict]:
+    """The §11.2 P4 row; with_v2=False drops {X-rename, X-remove} V2·S0 × 5 (moved to P1 as × 10).
+    With H2 = X-rename + X-api (variant xapi), X-api {V0·S0, V0·S2} × 5 leave P4 (they are P1 cells with N = 10);
+    X-remove's V0·S1 and control cells stay (decision in docs/DECISIONS.md)."""
+    h2 = _h2(h2)
     return ([_cell("X-units", "V0", S, 5) for S in ("S0", "S2")] + [_cell("X-add", "V0", "S0", 5)]
-            + [_cell("X-api", "V0", S, 5) for S in ("S0", "S2")]
+            + ([_cell("X-api", "V0", S, 5) for S in ("S0", "S2")] if "X-api" not in h2 else [])
             + [_cell("X-dep", "V0", S, 5) for S in ("S0", "S2")]
             + ([_cell(t, "V2", "S0", 5) for t in ("X-rename", "X-remove")] if with_v2 else [])
             + [_cell(t, "V0", "S1", 5) for t in ("X-rename", "X-remove")]
             + [_cell(t, "V0", "S0", 3, control=True) for t in ("X-rename", "X-remove")])
 
 
-def stage_cells(stage: str) -> list[dict]:
+def stage_cells(stage: str, h2: tuple | None = None) -> list[dict]:
+    """Cells of a stage. h2 = the H2 tickets (default H2_TICKETS, the switch); only P1 and what derives from it
+    (P4 drops X-api's cells under variant xapi, P5, P6) depend on it."""
     if stage == "P0":
         return [_cell("X-rename", "V0", "S0", 3), _cell("X-rename", "V0", "S2", 2)]
     if stage == "P1":
-        return _p1_core() + [_cell(t, "V2", "S0", 10) for t in ("X-rename", "X-remove")]
+        return _p1_core(h2) + [_cell(t, "V2", "S0", 10) for t in _h2(h2)]
     if stage == "P2":
         return [_cell("X-remove", "V1", "S0", 10)]
     if stage == "P4":
-        return _p4_cells(with_v2=False)
+        return _p4_cells(with_v2=False, h2=h2)
     if stage == "P5":       # kept as before the V2·S0 move: the core P1 cells only
-        return ([dict(c, unit="cc-opus") for c in _p1_core() + stage_cells("P2")]
+        return ([dict(c, unit="cc-opus") for c in _p1_core(h2) + stage_cells("P2", h2)]
                 + [_cell("X-rename", "V0", "S0", 10, W="W2")])
     if stage == "P6":       # Codex replicates P1, P2 and P4 as they are now (decision 2026-10-11, docs/DECISIONS.md)
-        return [dict(c, unit="codex") for s in ("P1", "P2", "P4") for c in stage_cells(s)]
+        return [dict(c, unit="codex") for s in ("P1", "P2", "P4") for c in stage_cells(s, h2)]
     raise ValueError(stage)
 
 
@@ -96,13 +130,13 @@ def paraphrase_status() -> dict:
     return {t: scenario_io.paraphrases_ready(t) if paths.TASKS.exists() else False for t in scenario_io.PARAPHRASED}
 
 
-def generate(seed: int = SEED, ns: str = "real", with_p6: bool = False) -> dict:
+def generate(seed: int = SEED, ns: str = "real", with_p6: bool = False, h2: tuple | None = None) -> dict:
     para = paraphrase_status()
     runs = []
     for stage in STAGES:
         if stage == "P6" and not with_p6:
             continue
-        cells = stage_cells(stage)
+        cells = stage_cells(stage, h2)
         if ns == "mock":
             cells = [dict(c, unit="mock") for c in cells]
         pos = 0
@@ -134,35 +168,42 @@ def generate(seed: int = SEED, ns: str = "real", with_p6: bool = False) -> dict:
 def pilot_cells(stage: str) -> list[dict]:
     if stage == "X1":
         return [_cell(t, V, "S0", 10) for t in ("X-rename", "X-remove") for V in ("V0", "V2")]
+    if stage == "X2":
+        return [_cell("X-remove", V, "S0", 5) for V in ("V0", "V2")]
     raise ValueError(stage)
 
 
-def pilot_runs(ns: str) -> list[dict]:
-    """X1: one block of the 4 cells per replicate, shuffled per block; base ticket text (no paraphrases)."""
-    units = {"mock": "x1"} if ns == "mock" else X1_UNITS
+def pilot_runs(ns: str, stage: str | None = None) -> list[dict]:
+    """The pilots (X1, then X2; or only `stage`): one block of the stage's cells per replicate, shuffled per block
+    with random.Random(f"{seed}:{stage}:{block}"); base ticket text (no paraphrases). Units run one after the other."""
     runs = []
-    for unit, prefix in units.items():
-        cells = [dict(c, unit=unit) for c in pilot_cells("X1")]
-        pos = 0
-        for b in range(1, 11):
-            block = list(cells)
-            random.Random(f"{X1_SEED}:X1:{b}").shuffle(block)
-            for c in block:
-                pos += 1
-                runs.append({"run_id": f"{prefix}-{pos:04d}", "stage": "X1", "unit": unit, "ticket": c["ticket"],
-                             "wording": "W1", "paraphrase": None, "visibility": c["visibility"], "spec": c["spec"],
-                             "replicate": b, "round": b, "cell": cell_key(c), "pilot": True})
+    for st in ((stage,) if stage else PILOTS):
+        seed, real_units, mock_prefix, reps = PILOT_SPEC[st]
+        units = {"mock": mock_prefix} if ns == "mock" else real_units
+        for unit, prefix in units.items():
+            cells = [dict(c, unit=unit) for c in pilot_cells(st)]
+            pos = 0
+            for b in range(1, reps + 1):
+                block = list(cells)
+                random.Random(f"{seed}:{st}:{b}").shuffle(block)
+                for c in block:
+                    pos += 1
+                    runs.append({"run_id": f"{prefix}-{pos:04d}", "stage": st, "unit": unit, "ticket": c["ticket"],
+                                 "wording": "W1", "paraphrase": None, "visibility": c["visibility"],
+                                 "spec": c["spec"], "replicate": b, "round": b, "cell": cell_key(c), "pilot": True})
     return runs
 
 
 def with_pilots(m: dict, ns: str) -> dict:
     known = {r["run_id"] for r in m.get("runs", [])}
     extra = [r for r in pilot_runs(ns) if r["run_id"] not in known]
-    return dict(m, runs=list(m.get("runs", [])) + extra, pilots={"X1": {"seed": X1_SEED, "runs": len(extra)}})
+    return dict(m, runs=list(m.get("runs", [])) + extra,
+                pilots={st: {"seed": PILOT_SPEC[st][0], "runs": sum(1 for r in extra if r["stage"] == st)}
+                        for st in PILOTS})
 
 
 def load(ns: str) -> dict | None:
-    """results/<ns>/manifest.json plus the pilot runs (X1). None when there is no manifest.json."""
+    """results/<ns>/manifest.json plus the pilot runs (X1, X2). None when there is no manifest.json."""
     m = jsonio.read_json(paths.manifest_path(ns))
     return with_pilots(m, ns) if m is not None else None
 
@@ -196,15 +237,29 @@ def main(argv=None) -> int:
     ap.add_argument("--with-p6", action="store_true", help="also generate the P6 (codex) copies")
     ap.add_argument("--force", action="store_true", help="overwrite an existing manifest (never after the freeze)")
     ap.add_argument("--print", action="store_true", help="print the stage counts and do not write")
+    ap.add_argument("--p1-variant", choices=sorted(P1_VARIANTS),
+                    help="H2 tickets for P1: xremove = X-rename + X-remove, xapi = X-rename + X-api (with --print; "
+                         "writing needs H2_TICKETS in harness/manifest.py set to the same variant)")
     a = ap.parse_args(argv)
-    m = generate(a.seed, a.ns, a.with_p6)
+    h2 = P1_VARIANTS[a.p1_variant] if a.p1_variant else None
+    m = generate(a.seed, a.ns, a.with_p6, h2=h2)
     errs = validate(m)
     if errs:
         print("manifest does not match the contract schema:", errs[:3], file=sys.stderr)
         return 1
+    if a.print and a.p1_variant:
+        p1 = sorted({r["cell"] for r in m["runs"] if r["stage"] == "P1"})
+        print(json.dumps({"variant": a.p1_variant, "h2_tickets": list(h2), "current_switch": list(H2_TICKETS),
+                          "stage_counts": m["stage_counts"], "p1_cells": p1,
+                          "pilots": {st: len(pilot_runs(a.ns, st)) for st in PILOTS}}, indent=2))
+        return 0
     if a.print:
         print(json.dumps(m["stage_counts"]))
         return 0
+    if h2 is not None and h2 != H2_TICKETS:
+        print(f"--p1-variant {a.p1_variant} differs from H2_TICKETS {H2_TICKETS} (harness/manifest.py); set the switch "
+              "first so the manifest and the analysis agree", file=sys.stderr)
+        return 2
     out = paths.manifest_path(a.ns)
     if out.exists() and not a.force:
         print(f"{out} exists; pass --force to overwrite (the real manifest is frozen with the pre-registration)",

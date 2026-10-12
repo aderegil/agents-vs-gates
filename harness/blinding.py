@@ -1,7 +1,7 @@
 """Blinding rules shared by the runner and the console (spec 11.4, 21.5, 22.3).
 
 A stage's outcomes are visible only if:
-  - the stage is in ALWAYS_VISIBLE (P0 calibration, the X1 pilot, the mock selftest), or
+  - the stage is in ALWAYS_VISIBLE (P0 calibration, the X1/X2 pilots, the mock selftest), or
   - state["unblinded"][stage] exists (set by `runner --unblind`, which requires the stage to be
     complete unless --force-unblind is passed).
 """
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-ALWAYS_VISIBLE = {"P0", "X1", "selftest"}   # X1: exploratory pilot, watched live (DECISIONS)
+ALWAYS_VISIBLE = {"P0", "X1", "X2", "selftest"}   # X1, X2: exploratory pilots, watched live (DECISIONS)
 TERMINAL = {"done", "infra_failure_final"}
 
 
