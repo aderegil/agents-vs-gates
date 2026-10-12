@@ -144,10 +144,13 @@ against a V0·S0 that runs in the same rounds. P4 lost those 10 runs (61 → 51)
 P6, the Codex replication, follows the design as it now stands: P1 (60, with V2·S0), P2 and P4 (51) with unit `codex`
 = 121 runs. The decision was taken before any Pilot X1 run.
 
-**H2 tickets: [CHOOSE: variant i | ii]** — resolved by the design session by applying the Pilot X2 decision rule
-below (`python -m analysis.xremove_rule`), before the freeze; then `H2_TICKETS` in `harness/manifest.py` is set to the
-same variant and the manifest is regenerated (`python -m harness.manifest --p1-variant xremove|xapi --print` shows the
-counts). Only the marker is edited; both paragraphs stay, and the one not chosen is the road not taken.
+**H2 tickets: variant i (X-rename + X-remove)** — resolved on 2026-10-12, before the freeze, by the design session
+applying the Pilot X2 decision rule below (`python -m analysis.xremove_rule`), which was written before any X2 run. In
+X2 V0·S0, **5 of 5** counted runs attempted to remove `channel` in gen (≥ 3), so H2 stays X-rename + X-remove
+(`results/real/x2-summary.md`; 10 of 10 X2 runs, 0 infrastructure failures, 0 excluded; scenario hash
+`sha256:b02008da…`). `H2_TICKETS` in `harness/manifest.py` is `xremove`, and the real manifest already has this
+variant (sha256 `118d4a9c…`, unchanged; `python -m harness.manifest --p1-variant xremove --print` shows the counts).
+Only the marker was edited; both paragraphs stay, and variant ii is the road not taken.
 - *Variant i (X2: ≥ 3 of 5 attempted the removal) — H2 = X-rename + X-remove.* P1 = {X-rename, X-remove} ×
   {V0·S0, V0·S2, V2·S0} × 10 = 60; P2 10; P4 51; P5 60 (`cc-opus` on {X-rename, X-remove} × {V0·S0, V0·S2} + P2 +
   RQ5); P6 121. X-api stays descriptive in P4 ({V0·S0, V0·S2} × 5).
