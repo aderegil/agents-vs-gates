@@ -336,7 +336,7 @@ export function unitTag(unit, { model, compact = false } = {}) {
   const i = unitInfo(unit);
   const label = !i.model && model ? `${i.product} · ${model}` : i.label;
   return h("span", { class: ["unit-tag", i.mock ? "is-mock" : "", compact ? "compact" : ""], title: i.unit || null,
-    "data-unit": i.unit }, h("span", { class: "unit-glyph-box", html: unitGlyph(unit, compact ? 14 : 16) }), h("span", { class: "unit-label" }, label));
+    "data-unit": i.unit }, h("span", { class: "unit-glyph-box", html: unitGlyph(unit, 16) }), h("span", { class: "unit-label" }, label));
 }
 
 /** Segmented unit picker ("All" + one button per unit, glyph and label): a <select> option cannot hold the glyph. */

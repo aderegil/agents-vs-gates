@@ -72,8 +72,12 @@ def _sub(c: dict) -> str:
     return s if c.get("W", "W1") == "W1" else f"{s}·{c['W']}"
 
 
+def _unit(u) -> str:
+    return UNIT_LABEL.get(u, u or "?")
+
+
 def _group(c: dict) -> str:
-    return f"{c['stage']} · {c.get('unit', '?')}"
+    return f"{c['stage']} · {_unit(c.get('unit'))}"
 
 
 def _fmt_p(p) -> str:
@@ -228,7 +232,7 @@ class Build:
                              BOX_SERIES, self.box_rows(cells, BOX_SERIES), cells)
         sec_rows = []
         for c in cells:
-            row = {"cell": f"{c['stage']} · {c['ticket']} {_sub(c)} · {c['unit']}"}
+            row = {"cell": f"{c['stage']} · {c['ticket']} {_sub(c)} · {_unit(c['unit'])}"}
             for key, _ in SECONDARY:
                 m = c["metrics"].get(key)
                 row[key] = f"{m['x']} of {m['n']}" if m and m["n"] else "—"
@@ -370,7 +374,7 @@ class Build:
                                    ("Oracle breaks a consumer", "staging_break", "fail")):
                 m = r[key]
                 if m["n"]:
-                    vrows.append({"group": f"{c['ticket']} {_sub(c)} · {c['stage']} · {c['unit']}", "label": lab,
+                    vrows.append({"group": f"{c['ticket']} {_sub(c)} · {c['stage']} · {_unit(c['unit'])}", "label": lab,
                                   "sub": "", "x": m["x"], "n": m["n"], "ci": m["ci"], "tone": tone})
         v1chart = self.interval("rq3.v1", "V1 gives the agent CI's own information",
                                 "First-CI consumer break and oracle break, V1 next to V0·S2 · x of N, 95% interval",
@@ -404,7 +408,7 @@ class Build:
         for c in rows_cells:
             m = c["metrics"].get("staging_break")
             if m and m["n"]:
-                rows.append({"group": f"{c['ticket']} {c['V']}·{c['S']} · {c['unit']}", "label": c.get("W", "W1"),
+                rows.append({"group": f"{c['ticket']} {c['V']}·{c['S']} · {_unit(c['unit'])}", "label": c.get("W", "W1"),
                              "sub": c["stage"], "x": m["x"], "n": m["n"], "ci": m["ci"]})
         brk = self.interval("rq5.break", "Staging break by ticket wording (W1 vs. W2)",
                             "W2 states the outcome the ticket wants instead of the mechanical change · descriptive, "

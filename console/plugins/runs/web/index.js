@@ -192,7 +192,7 @@ export async function mount(el, shell) {
       if (d.coding_label) flags.push(badge(`Coded ${d.coding_label}`, "accent"));
       const body = [kv([
         ["Run", h("span", { class: "mono" }, d.run_id)],
-        ["Stage / unit", [`${d.stage} · `, unitTag(r.unit), h("span", { class: "muted" }, ` ${r.unit} (${r.adapter || "—"})`), /^X[0-9]$/.test(d.stage || "") ? [" ", badge(`Pilot ${d.stage} · exploratory`, "neutral")] : null]],
+        ["Stage / unit", [`${d.stage} · `, unitTag(r.unit), " ", h("span", { class: "muted small" }, `unit ${r.unit}, adapter ${r.adapter || "—"}`), /^X[0-9]$/.test(d.stage || "") ? [" ", badge(`Pilot ${d.stage} · exploratory`, "neutral")] : null]],
         ["Model", [r.model_requested, r.model_reported].filter(Boolean).join(" → ") || "—"],
         ["Effort", r.effort || "—"],
         ["Context file", r.context_file || "—"],

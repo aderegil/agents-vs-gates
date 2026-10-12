@@ -13,6 +13,8 @@
 .rc-cell { display: grid; grid-template-columns: minmax(0, 1fr) 70px 38px; align-items: center; gap: 10px; font-size: 12.5px; }
 .rc-cell-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rc-cell .num { text-align: right; font-variant-numeric: tabular-nums; }
+.rc-cell-unit { margin-top: 4px; font-size: 12px; color: var(--tinta-2); }
+.rc-cell-unit:first-child { margin-top: 0; }
 .rc-more { align-self: flex-start; margin-left: -8px; }
 .rc-card-foot { display: flex; gap: 18px; padding-top: 8px; border-top: 1px solid var(--linea); }
 .rc-outcomes { display: flex; flex-wrap: wrap; gap: 2px 12px; }

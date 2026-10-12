@@ -258,11 +258,16 @@ export async function mount(el, shell) {
       body.push(h("div", { class: "rc-card-prog" }, bar(c.done, c.total, { running: c.running }),
         h("span", { class: "num strong" }, `${fmtInt(c.done)} of ${fmtInt(c.total)}`),
         c.running ? h("span", { class: "small muted" }, `${c.running} running`) : null));
-      const shown = S.expanded.has(c.stage) ? c.cells : c.cells.slice(0, 5);
-      body.push(h("div", { class: "rc-cells" }, shown.map((x) => h("div", { class: "rc-cell", title: x.cell },
-        h("span", { class: "rc-cell-name" }, cellLabel(x)),
-        bar(x.done, x.total, { running: x.running }),
-        h("span", { class: "num small" }, `${x.done}/${x.total}`)))));
+      // cells grouped by unit, each group under its unit tag (X1 ran the same cells on two units)
+      const units = [...new Set(c.cells.map((x) => x.unit))];
+      const ordered = units.flatMap((u) => c.cells.filter((x) => x.unit === u));
+      const shown = S.expanded.has(c.stage) ? ordered : ordered.slice(0, 5);
+      body.push(h("div", { class: "rc-cells" }, shown.flatMap((x, i) => [
+        x.unit && (i === 0 || shown[i - 1].unit !== x.unit) ? h("div", { class: "rc-cell-unit" }, unitTag(x.unit, { compact: true })) : null,
+        h("div", { class: "rc-cell", title: x.cell },
+          h("span", { class: "rc-cell-name" }, cellLabel(x)),
+          bar(x.done, x.total, { running: x.running }),
+          h("span", { class: "num small" }, `${x.done}/${x.total}`))])));
       if (c.cells.length > 5) body.push(h("button", { type: "button", class: "btn btn-subtle btn-sm rc-more", onclick: () => { S.expanded.has(c.stage) ? S.expanded.delete(c.stage) : S.expanded.add(c.stage); paintCards(); } },
         S.expanded.has(c.stage) ? "Show fewer cells" : `Show all ${c.cells.length} cells`));
       body.push(h("div", { class: "rc-card-foot small" },

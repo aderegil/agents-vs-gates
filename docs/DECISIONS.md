@@ -529,3 +529,22 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - H2, X-rename: 10 of 10 vs 0 of 10, Holm p = 2.2e-5. Replicated.
   - H2, X-remove: 10 of 10 vs 7 of 10, p = 0.21. Not replicated.
   - HS-V2: 10 of 10 vs 10 of 10 on both tickets (p = 1).
+
+## Console: unit glyphs and the replication in Results (2026-10-12, branch console-units; Alfredo's request via the design session)
+- **Glyphs.** Every place a unit appears shows a neutral monogram glyph with its label, never the glyph alone ("CC Claude Code · Sonnet", "CX Codex · gpt-5.6-terra"; the unit id is the tooltip).
+  - Places: the Run Explorer column, filter and detail; Run Control's launch form, stage cards (cells grouped by unit), dry-run table, queue, finished list and workers; the Results panel titles; the Replay Theater HUD.
+  - The monogram is CC for the `cc-*` units and CX for `codex`. The mock agent gets M in a dashed outline and keeps the MOCK hatch and watermark.
+  - It sits in a rounded-square outline, with no color, so the accent stays the only color.
+  - No vendor logos or trademark artwork: the repo is public and shown on stage.
+  - Source of truth: `console/web/lib/units.js`. The Replay copy is `replay/app/src/components/UnitTag.tsx`.
+- **Drawn, not typeset.** The request suggested IBM Plex Mono letters. The monograms are drawn instead as 1.5px stroke paths in the same 24-unit box as the Lucide icons.
+  - They match the icons' weight at 16px, and no new font file is needed (the repo ships only Plex Sans).
+  - A `<select>` option cannot hold an SVG, so the unit filters became segmented buttons (`ui.unitSeg`).
+- **Results.**
+  - RQ2 now shows HS-V2 on the primary unit (pre-registered secondary, uncorrected), next to H2.
+  - It also shows the Codex replication (P6, P1 part), labelled "Replication · not pooled", with its own Holm family. The numbers come straight from `analysis.summarize.aggregate`.
+  - RQ3 adds X-remove V1·S0 on each unit side by side (P2 on Claude, P6's P2 part on Codex), labelled "Descriptive", with no test.
+  - The console's rule changes from "only H2 shows p-values" to "p-values only for pre-registered tests". The test now pins that p keys appear only under `rq2.h2`, `rq2.secondary_v2` and `rq2.replication`, and that there is no Holm p on HS-V2.
+  - Chart group labels name the unit ("P1 · Claude Code + Sonnet") instead of its id.
+- QA: screenshots `docs/qa/units-01…11`. They came from a separate console instance on another port, with temporary users and the real results read-only; the console on :8765 was not touched.
+- Tests (light): `console.tests.test_results`, `test_results_units` (new), `test_runs` and `test_run_control`; the JS model and chart tests; the replay app tests (47); and `console --check` OK. The Replay bundle was rebuilt (`web/dist`).

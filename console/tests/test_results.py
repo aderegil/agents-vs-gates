@@ -244,7 +244,7 @@ class Numbers(unittest.TestCase):
         lo, hi = stats.clopper_pearson(7, 10)
         self.assertAlmostEqual(a["ci"][0], lo, places=3)
         self.assertAlmostEqual(a["ci"][1], hi, places=3)
-        self.assertEqual(a["group"], "P1 · cc-sonnet")
+        self.assertEqual(a["group"], "P1 · Claude Code + Sonnet")
         self.assertEqual((rows[("X-remove", "V0·S0")]["x"], rows[("X-remove", "V0·S0")]["n"]), (10, 10))
         self.assertEqual(len(rows), 2)  # only V0·S0 cells (the contaminated and infra runs are not in N)
 
@@ -301,8 +301,8 @@ class Numbers(unittest.TestCase):
         out = self.chart("rq3", "rq3.outcomes")
         self.assertTrue(all(sum(s["value"] for s in r["segments"]) == r["n"] for r in out["rows"]))
         gate = {(r["group"], r["label"], r["sub"]): r for r in self.chart("rq3", "rq3.gate")["rows"]}
-        self.assertEqual(gate[("P1 · cc-sonnet", "X-rename", "V0·S0")]["x"], 2)
-        self.assertEqual(gate[("P2 · cc-sonnet", "X-remove", "V1·S0")]["x"], 2)
+        self.assertEqual(gate[("P1 · Claude Code + Sonnet", "X-rename", "V0·S0")]["x"], 2)
+        self.assertEqual(gate[("P2 · Claude Code + Sonnet", "X-remove", "V1·S0")]["x"], 2)
         v1 = self.chart("rq3", "rq3.v1")
         self.assertIn("V1", " ".join(r["group"] for r in v1["rows"]))
         self.assertEqual(self.rq["sections"]["rq3"]["tables"][0]["id"], "rq3.coding")
