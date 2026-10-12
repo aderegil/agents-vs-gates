@@ -12,13 +12,24 @@ from harness.adapters.base import Limits
 FIX = Path(__file__).parent / "fixtures" / "codex_exec.jsonl"
 
 
+OFF = [a for f in codex.FEATURES_OFF for a in ("-c", f"features.{f}=false")]
+POLICY = ["-c", 'approval_policy="never"', "-c", 'web_search="disabled"'] + OFF
+
+
 class CodexArgv(unittest.TestCase):
     UNIT = {"model": "gpt-x", "effort": "medium", "windows_sandbox": "mxc"}
 
+    def test_parity_features_off(self):
+        for f in ("code_mode_host", "unified_exec_tty", "apps", "plugins", "remote_plugin", "browser_use",
+                  "computer_use", "image_generation", "multi_agent", "skill_search", "tool_suggest", "hooks", "goals"):
+            self.assertIn(f"features.{f}=false", codex.build_argv(self.UNIT, "W"))
+            self.assertIn(f"features.{f}=false", codex.build_argv(self.UNIT, "W", resume="th"))
+        self.assertIn('web_search="disabled"', codex.build_argv(self.UNIT, "W"))
+
     def test_exec_argv_exact(self):
         self.assertEqual(codex.build_argv(self.UNIT, r"C:\avg\w1\r"),
-                         ["exec", "--json", "-m", "gpt-x", "-c", 'approval_policy="never"',
-                          "-c", 'model_reasoning_effort="medium"', "-c", 'windows.sandbox="mxc"',
+                         ["exec", "--json", "-m", "gpt-x"] + POLICY +
+                         ["-c", 'model_reasoning_effort="medium"', "-c", 'windows.sandbox="mxc"',
                           "--sandbox", "workspace-write", "--ignore-user-config", "-C", r"C:\avg\w1\r", "-"])
         # without effort/backend in the unit only the approval policy is added
         self.assertEqual(codex.build_argv({"model": "gpt-x"}, "W")[:6],
@@ -28,9 +39,9 @@ class CodexArgv(unittest.TestCase):
     def test_resume_argv_exact(self):
         argv = codex.build_argv(self.UNIT, r"C:\avg\w1\r", resume="th-1")
         self.assertEqual(argv, ["exec", "resume", "th-1", "--json", "-c", 'sandbox_mode="workspace-write"',
-                                "-c", 'model="gpt-x"', "-c", 'approval_policy="never"',
-                                "-c", 'model_reasoning_effort="medium"', "-c", 'windows.sandbox="mxc"',
-                                "--ignore-user-config", "-"])
+                                "-c", 'model="gpt-x"'] + POLICY +
+                         ["-c", 'model_reasoning_effort="medium"', "-c", 'windows.sandbox="mxc"',
+                          "--ignore-user-config", "-"])
         self.assertNotIn("--sandbox", argv)
         self.assertNotIn("-C", argv)
         self.assertNotIn("--ephemeral", argv)
@@ -42,6 +53,15 @@ class CodexArgv(unittest.TestCase):
         self.assertIn("node", Path(argv[0]).name.lower())
         with mock.patch("harness.doctor.codex_native_entry", return_value=r"C:\x\bin\codex.exe"):
             self.assertEqual(codex.entry_argv(), [r"C:\x\bin\codex.exe"])
+
+    def test_codex_home_wipe_is_verified(self):
+        tmp = Path(tempfile.mkdtemp())
+        home = tmp / "home"
+        home.mkdir()
+        (home / "memories_1.sqlite").write_text("x", encoding="utf-8")
+        with mock.patch.object(codex.shutil, "rmtree"):          # a wipe that silently fails
+            with self.assertRaisesRegex(RuntimeError, "could not be wiped.*memories_1.sqlite"):
+                codex.prepare_home(home, tmp / "missing-auth.json")
 
     def test_codex_home_only_auth(self):
         tmp = Path(tempfile.mkdtemp())

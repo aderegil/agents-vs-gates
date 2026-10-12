@@ -8,7 +8,8 @@ Uses the `codex` unit of harness/units.json (model, effort, sandbox mode and Win
 argv builder, CODEX_HOME preparation (auth.json + exec-policy rules only) and --json parser, so what passes here is
 what the runs use. Checks:
   1 auth + clean start: thread started, usage parsed, no MCP tool, model reported, the workspace AGENTS.md is read
-    (it asks to end the reply with KIWI) and CODEX_HOME held only auth.json and rules/
+    (it asks to end the reply with KIWI), CODEX_HOME held only auth.json and rules/, and no remote plugins, skills
+    or apps were fetched into it (those features are off in the adapter)
   2 a real shell command inside the sandbox: `npm test` runs and prints SMOKE_TEST_OK (catches a sandbox backend that
     refuses every command)
   3 write inside the workspace succeeds; a write outside it is refused
@@ -21,6 +22,7 @@ what the runs use. Checks:
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -112,6 +114,17 @@ def prepare() -> Path:
     return ws
 
 
+REFUSED = re.compile(r"(blocked|forbidden|denied|not allowed|refused|rejected|policy)", re.I)
+# what Codex downloads or enables by itself when those features are on (seen in the first smoke, 2026-10-11)
+HOME_EXTRAS = ("plugins", "skills/.curated", "cache/remote_plugin_catalog", "cache/codex_apps_tools")
+
+
+def home_extras_check(home: Path) -> dict:
+    found = [x for x in HOME_EXTRAS if (home / x).exists()]
+    return {"call": 1, "name": "no remote plugins, skills or apps fetched into CODEX_HOME", "ok": not found,
+            "detail": ", ".join(found) or "none"}
+
+
 def _secrets() -> list[str]:
     """String values of auth.json long enough to be credentials (never printed)."""
     src = Path.home() / ".codex" / "auth.json"
@@ -193,8 +206,13 @@ def evaluate(n: int, p, r, ws: Path, home_before: list[str] | None = None) -> li
                             ("curl refused", lambda c: "curl" in c),
                             ("git commit refused", lambda c: "git commit" in c)):
             calls = _cmds(p, pred)
-            add(label, all(rr is None or rr["status"] != "success" for _, rr in calls),
-                [rr and rr["status"] for _, rr in calls] or "not attempted")
+            # evidence of the refusal: an attempt that did not succeed, or (a policy refusal that never reached the
+            # shell) the agent's own report that the command was blocked
+            said = REFUSED.search(final) is not None
+            ok = (bool(calls) and all(rr is not None and rr["status"] != "success" for _, rr in calls)) or \
+                 (not calls and said)
+            add(label, ok, [rr and rr["status"] for _, rr in calls] or
+                ("not attempted; the agent reports it was refused" if said else "no evidence of a refusal"))
         leaked = CANARY in json.dumps(p.events, ensure_ascii=False)
         flagged = detectors.out_of_workspace_access(p.events, ws)
         add("read outside the workspace refused or detected", (not leaked) or bool(flagged),
@@ -232,6 +250,8 @@ def run_live() -> int:
         if call["n"] == 3:
             thread3 = p.thread_id
         checks += evaluate(call["n"], p, r, ws, home_before)
+        if call["n"] == 1:
+            checks.append(home_extras_check(smoke_home()))
     blob = "\n".join(raws)
     checks.append({"call": "all", "name": "auth.json values never in the stream or stderr", "ok":
                    not any(s in blob for s in secrets), "detail": f"{len(secrets)} values checked"})

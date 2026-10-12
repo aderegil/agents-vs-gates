@@ -96,6 +96,25 @@ class EvaluateTest(unittest.TestCase):
         p = parse(stream(('node -e "console.log(1)"', "1\n", "completed")))
         self.assertFalse(self.by_name(smoke_codex.evaluate(5, p, OK, ws))["node -e refused"])
 
+    def test_call5_needs_evidence_of_the_refusal(self):
+        ws = smoke_codex.smoke_dir()
+        silent = parse(stream(message="Done. KIWI"))                  # nothing attempted, nothing said
+        got = self.by_name(smoke_codex.evaluate(5, silent, OK, ws))
+        self.assertFalse(got["node -e refused"])
+        said = parse(stream(message="node, curl and git commit were blocked by the execution policy. KIWI"))
+        got = self.by_name(smoke_codex.evaluate(5, said, OK, ws))
+        self.assertTrue(got["node -e refused"] and got["curl refused"] and got["git commit refused"])
+
+    def test_home_extras_are_caught(self):
+        home = Path(self.tmp) / "home"
+        (home / "rules").mkdir(parents=True)
+        self.assertTrue(smoke_codex.home_extras_check(home)["ok"])
+        (home / "plugins" / "cache").mkdir(parents=True)
+        (home / "cache" / "codex_apps_tools").mkdir(parents=True)
+        c = smoke_codex.home_extras_check(home)
+        self.assertFalse(c["ok"])
+        self.assertIn("plugins", c["detail"])
+
     def test_call6_turn_cap(self):
         p = parse(stream(("dir", "a\n", "completed"), ("type a", "x\n", "completed")), max_turns=2)
         self.assertTrue(smoke_codex.evaluate(6, p, {"rc": None, "stderr": "", "timed_out": False}, smoke_codex.smoke_dir())[0]["ok"])

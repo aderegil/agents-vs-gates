@@ -63,8 +63,20 @@ def _toml(v) -> str:
     return json.dumps(str(v))
 
 
+# Codex 0.162.1 turns on, by default and even with an empty CODEX_HOME, capabilities the Claude unit does not have
+# (remote plugins with skills, ChatGPT apps, browser/computer use, image generation, sub-agents, hooks, goals...) and
+# "code mode" (the model writes JS that can run several commands in one tool call, through a TTY). Parity with the
+# Claude unit (Read/Edit/Write/Glob/Grep/Bash) and the turn cap need them off: one shell command per tool call, no TTY.
+# Verified offline with `codex -c features.<f>=false features list` (DECISIONS, smoke diagnosis 2026-10-11).
+FEATURES_OFF = ("code_mode_host", "unified_exec_tty", "apps", "plugins", "remote_plugin", "plugin_sharing",
+                "browser_use", "browser_use_external", "computer_use", "image_generation", "multi_agent",
+                "skill_search", "skill_mcp_dependency_install", "tool_suggest", "goals", "hooks", "in_app_browser")
+
+
 def _config_args(unit: dict) -> list[str]:
-    out = ["-c", 'approval_policy="never"']
+    out = ["-c", 'approval_policy="never"', "-c", 'web_search="disabled"']
+    for f in FEATURES_OFF:
+        out += ["-c", f"features.{f}=false"]
     if unit.get("effort"):
         out += ["-c", f"model_reasoning_effort={_toml(unit['effort'])}"]
     if unit.get("windows_sandbox"):
@@ -96,6 +108,9 @@ def prepare_home(cfg_dir, auth_source: Path | None = None) -> Path:
     if home.exists():
         shutil.rmtree(home, ignore_errors=True)
     home.mkdir(parents=True, exist_ok=True)
+    left = sorted(p.name for p in home.iterdir())
+    if left:   # a previous session's memories/goals/state databases would carry over into this run
+        raise RuntimeError(f"CODEX_HOME could not be wiped ({', '.join(left[:5])} left): refusing to start")
     src = auth_source or (Path.home() / ".codex" / "auth.json")
     if src.exists():
         shutil.copyfile(src, home / "auth.json")
