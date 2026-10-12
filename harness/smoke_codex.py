@@ -27,7 +27,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from harness import detectors, jsonio, paths, proc
+from harness import detectors, gitutil, jsonio, paths, proc
 from harness.adapters import codex as cx
 from harness.adapters.base import Limits, now_iso
 from harness.doctor import sanitize
@@ -101,7 +101,7 @@ def dry_run() -> int:
 def prepare() -> Path:
     for d in (smoke_dir(), outside_dir()):
         if d.exists():
-            shutil.rmtree(d)
+            gitutil.rmtree(d)        # clears the ReadOnly attribute git leaves on .git/objects (WinError 5)
         d.mkdir(parents=True)
     ws = smoke_dir()
     (ws / "package.json").write_text(json.dumps(PACKAGE_JSON, indent=2) + "\n", encoding="utf-8", newline="\n")

@@ -29,7 +29,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from harness import authenv, paths, proc
+from harness import authenv, gitutil, paths, proc
 from harness.adapters.base import Limits, SessionResult, event, now_iso
 
 CALLS = 0
@@ -106,7 +106,10 @@ def prepare_home(cfg_dir, auth_source: Path | None = None) -> Path:
     allowlist) into it. No --ignore-rules: the only rules Codex can load are these."""
     home = Path(cfg_dir)
     if home.exists():
-        shutil.rmtree(home, ignore_errors=True)
+        try:
+            gitutil.rmtree(home)     # clears ReadOnly attributes and retries; whatever is left is caught below
+        except OSError:
+            pass
     home.mkdir(parents=True, exist_ok=True)
     left = sorted(p.name for p in home.iterdir())
     if left:   # a previous session's memories/goals/state databases would carry over into this run

@@ -59,7 +59,7 @@ class CodexArgv(unittest.TestCase):
         home = tmp / "home"
         home.mkdir()
         (home / "memories_1.sqlite").write_text("x", encoding="utf-8")
-        with mock.patch.object(codex.shutil, "rmtree"):          # a wipe that silently fails
+        with mock.patch.object(codex.gitutil, "rmtree"):          # a wipe that silently fails
             with self.assertRaisesRegex(RuntimeError, "could not be wiped.*memories_1.sqlite"):
                 codex.prepare_home(home, tmp / "missing-auth.json")
 
