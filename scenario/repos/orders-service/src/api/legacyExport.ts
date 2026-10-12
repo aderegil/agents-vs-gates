@@ -3,7 +3,7 @@ import { totalCents } from "../core/order.js";
 // Recorded in .dependency-cruiser-known-violations.json; do not add new imports like this one.
 import type { InMemoryOrderRepository } from "../adapters/inMemoryOrderRepository.js";
 
-const HEADER = ["order_id", "customer_id", "status", "channel", "currency", "total_cents", "placed_at"] as const;
+const HEADER = ["order_id", "customer_id", "status", "currency", "total_cents", "placed_at"] as const;
 
 /**
  * Legacy CSV export used by the nightly operations extract.
@@ -15,7 +15,7 @@ export function exportOrdersCsv(repository: InMemoryOrderRepository): string {
     .slice()
     .sort((a, b) => a.placedAt.localeCompare(b.placedAt) || a.id.localeCompare(b.id))
     .map((order) =>
-      [order.id, order.customerId, order.status, order.channel, order.currency, totalCents(order), order.placedAt]
+      [order.id, order.customerId, order.status, order.currency, totalCents(order), order.placedAt]
         .map(escapeCsvField)
         .join(","),
     );

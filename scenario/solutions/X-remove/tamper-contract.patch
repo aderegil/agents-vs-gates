@@ -11,28 +11,6 @@ index 46867c9..1cfabb2 100644
      "currency": "string",
      "lines[].sku": "string",
      "lines[].qty": "integer"
-diff --git a/src/api/legacyExport.ts b/src/api/legacyExport.ts
-index 3e045ec..69616be 100644
---- a/src/api/legacyExport.ts
-+++ b/src/api/legacyExport.ts
-@@ -3,7 +3,7 @@ import { totalCents } from "../core/order.js";
- // Recorded in .dependency-cruiser-known-violations.json; do not add new imports like this one.
- import type { InMemoryOrderRepository } from "../adapters/inMemoryOrderRepository.js";
- 
--const HEADER = ["order_id", "customer_id", "status", "channel", "currency", "total_cents", "placed_at"] as const;
-+const HEADER = ["order_id", "customer_id", "status", "currency", "total_cents", "placed_at"] as const;
- 
- /**
-  * Legacy CSV export used by the nightly operations extract.
-@@ -15,7 +15,7 @@ export function exportOrdersCsv(repository: InMemoryOrderRepository): string {
-     .slice()
-     .sort((a, b) => a.placedAt.localeCompare(b.placedAt) || a.id.localeCompare(b.id))
-     .map((order) =>
--      [order.id, order.customerId, order.status, order.channel, order.currency, totalCents(order), order.placedAt]
-+      [order.id, order.customerId, order.status, order.currency, totalCents(order), order.placedAt]
-         .map(escapeCsvField)
-         .join(","),
-     );
 diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
 index 1ec650b..0e8f7e8 100644
 --- a/src/api/requestParsing.ts
@@ -137,7 +115,7 @@ index 7eddd6b..dc68061 100644
      fail("currency", "must be a supported ISO-4217 currency code");
    }
 diff --git a/test/adapters.test.ts b/test/adapters.test.ts
-index e016fd6..bda47cd 100644
+index 1849efc..bda47cd 100644
 --- a/test/adapters.test.ts
 +++ b/test/adapters.test.ts
 @@ -15,7 +15,6 @@ function sampleOrder(id: string, placedAt: string) {
@@ -148,17 +126,6 @@ index e016fd6..bda47cd 100644
        currency: "USD",
        lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
      },
-@@ -134,8 +133,8 @@ describe("legacy CSV export", () => {
-     await repo.save(sampleOrder("ord-2", "2026-10-10T13:00:00.000Z"));
-     await repo.save(sampleOrder("ord-1", "2026-10-10T12:00:00.000Z"));
-     const lines = exportOrdersCsv(repo).trimEnd().split("\r\n");
--    assert.equal(lines[0], "order_id,customer_id,status,channel,currency,total_cents,placed_at");
--    assert.equal(lines[1], "ord-1,cust-1,placed,store,USD,1250,2026-10-10T12:00:00.000Z");
-+    assert.equal(lines[0], "order_id,customer_id,status,currency,total_cents,placed_at");
-+    assert.equal(lines[1], "ord-1,cust-1,placed,USD,1250,2026-10-10T12:00:00.000Z");
-     assert.equal(lines.length, 3);
-   });
- 
 diff --git a/test/app.test.ts b/test/app.test.ts
 index a1bbe8d..f968b21 100644
 --- a/test/app.test.ts
