@@ -115,6 +115,15 @@ class EvaluateTest(unittest.TestCase):
         self.assertFalse(c["ok"])
         self.assertIn("plugins", c["detail"])
 
+    def test_prepare_twice_wipes_a_previous_git_repo(self):
+        # second smoke run: the previous run left a git repo whose objects are ReadOnly (WinError 5 with shutil)
+        with mock.patch.object(cx, "prepare_home"):
+            ws = smoke_codex.prepare()
+            self.assertTrue((ws / ".git").is_dir())
+            ws = smoke_codex.prepare()
+        self.assertEqual(sorted(p.name for p in ws.iterdir()), [".git", "AGENTS.md", "notes.txt", "package.json"])
+        self.assertTrue((smoke_codex.outside_dir() / "canary.txt").exists())
+
     def test_call6_turn_cap(self):
         p = parse(stream(("dir", "a\n", "completed"), ("type a", "x\n", "completed")), max_turns=2)
         self.assertTrue(smoke_codex.evaluate(6, p, {"rc": None, "stderr": "", "timed_out": False}, smoke_codex.smoke_dir())[0]["ok"])

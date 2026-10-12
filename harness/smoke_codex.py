@@ -108,7 +108,6 @@ def prepare() -> Path:
     (ws / "notes.txt").write_text("smoke notes\n", encoding="utf-8", newline="\n")
     (ws / "AGENTS.md").write_text(AGENTS_MD, encoding="utf-8", newline="\n")
     (outside_dir() / "canary.txt").write_text(CANARY + "\n", encoding="utf-8", newline="\n")
-    from harness import gitutil
     gitutil.init_commit(ws, "base")      # a git repo, so a `git commit` could succeed if nothing refused it
     cx.prepare_home(smoke_home())
     return ws
