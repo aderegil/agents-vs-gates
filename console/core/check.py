@@ -281,7 +281,7 @@ def run_check(keep: bool = False) -> int:
                 if leaks:
                     rep.fail("blinding", f"{len(leaks)} outcome leak(s)", "\n".join(leaks[:50]))
                 else:
-                    rep.ok("blinding", f"P1 incomplete ({len(p1_ids)} of 40): no outcome in {len(bodies)} JSON responses or SSE")
+                    rep.ok("blinding", f"P1 incomplete ({len(p1_ids)} of {sum(1 for k in (st.get("runs") or {}) if k.startswith("p1-"))}): no outcome in {len(bodies)} JSON responses or SSE")
 
         # 8 ------------------------------------------------------------ roles
         try:
