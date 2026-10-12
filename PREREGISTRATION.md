@@ -140,8 +140,9 @@ cell of the stage), frozen with this document.
 
 **Change before the freeze (2026-10-11, Alfredo's decision):** the X-rename/X-remove V2·S0 cells moved from P4 (× 5)
 to P1 (× 10, paraphrased like the other P1 cells), so that the secondary hypothesis HS-V2 (§7) is tested with N = 10
-against a V0·S0 that runs in the same rounds. P4 lost those 10 runs (61 → 51); P0, P2, P5 and P6 keep their cells
-(P6, the Codex copies, keeps V2·S0 × 5 as before). The decision was taken before any Pilot X1 run.
+against a V0·S0 that runs in the same rounds. P4 lost those 10 runs (61 → 51); P0, P2 and P5 keep their cells.
+P6, the Codex replication, follows the design as it now stands: P1 (60, with V2·S0), P2 and P4 (51) with unit `codex`
+= 121 runs. The decision was taken before any Pilot X1 run.
 
 ### Pilot X1 (exploratory, run before the freeze; results disclosed, not part of the confirmatory analysis)
 X-rename and X-remove × {V0·S0, V2·S0}, W1 base text, × 10 per unit: `cc-sonnet` (runs `x1-0001..0040`) and,

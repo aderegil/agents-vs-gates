@@ -40,7 +40,7 @@ class ManifestTest(unittest.TestCase):
     def test_stage_counts(self):
         self.assertEqual(self.m["stage_counts"], {"P0": 5, "P1": 60, "P2": 10, "P4": 51, "P5": 60})
         p6 = manifest.generate(20261011, "real", with_p6=True)
-        self.assertEqual(p6["stage_counts"]["P6"], 40 + 10 + 61)    # P6 keeps the cells from before the V2·S0 move
+        self.assertEqual(p6["stage_counts"]["P6"], 60 + 10 + 51)    # P6 follows the current P1, P2 and P4
         self.assertEqual(manifest.validate(self.m), [])
 
     def test_ids_rounds_and_balance(self):

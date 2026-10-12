@@ -18,8 +18,8 @@ Stages (unit cc-sonnet unless stated; in the mock namespace every unit is `mock`
                                                           = 51
   P5  optional: cc-opus on the core P1 cells (V0·S0, V0·S2; not V2·S0) and the P2 cell (4×10 + 1×10 = 50)
       + RQ5 X-rename V0·S0·W2 × 10 (cc-sonnet) = 60. Unchanged by the V2·S0 move.
-  P6  only with --with-p6: unit `codex` on the cells P1, P2 and P4 had before the V2·S0 move (core P1 4×10, P2,
-      and the §11.2 P4 row with V2·S0 × 5) = 111. Unchanged by the V2·S0 move.
+  P6  only with --with-p6: unit `codex` on the cells of P1, P2 and P4 as they are now (P1 6×10 with V2·S0, P2,
+      P4 without V2·S0) = 60 + 10 + 51 = 121: Codex replicates the formal design as it stands (decision 2026-10-11).
 Within a stage, rounds: round r holds one replicate of every cell that still needs one, shuffled with
 random.Random(f"{seed}:{stage}:{r}"). If a stage is cut after k rounds, every cell has k replicates.
 Run ids are p<stage digit>-<4-digit position in the stage> (p1-0007).
@@ -83,8 +83,8 @@ def stage_cells(stage: str) -> list[dict]:
     if stage == "P5":       # kept as before the V2·S0 move: the core P1 cells only
         return ([dict(c, unit="cc-opus") for c in _p1_core() + stage_cells("P2")]
                 + [_cell("X-rename", "V0", "S0", 10, W="W2")])
-    if stage == "P6":       # kept as before the V2·S0 move (decision 2026-10-11, docs/DECISIONS.md)
-        return [dict(c, unit="codex") for c in _p1_core() + stage_cells("P2") + _p4_cells(with_v2=True)]
+    if stage == "P6":       # Codex replicates P1, P2 and P4 as they are now (decision 2026-10-11, docs/DECISIONS.md)
+        return [dict(c, unit="codex") for s in ("P1", "P2", "P4") for c in stage_cells(s)]
     raise ValueError(stage)
 
 

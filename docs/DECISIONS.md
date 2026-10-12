@@ -296,3 +296,7 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 ## Blinding: repairs no longer visible through the APIs (2026-10-11, Codex audit 2026-10-11 #2)
 - That a run has a repair session says its first CI failed, which a blinded stage must not reveal (spec 11.4). `GET /api/runs/{id}` now returns `files.diffs = null` for blinded stages (it listed `gen`, `fix1`…), and `GET /api/run-control/status` returns `attempt = null` for a worker whose run belongs to a blinded stage (it showed `fix1` live); Run Control shows "session hidden". Turns, tokens and duration stay visible (resource use, spec 22.3).
 - `console --check` (blinding step) now also fails on any P1 body that lists a `fix*` diff or a `fix*` attempt.
+
+## P6 follows the current P1 and P4 (2026-10-11, design session)
+- P6, the Codex replication (generated only with `--with-p6`), is now unit `codex` on P1, P2 and P4 as they stand: P1 60 (with V2·S0, paraphrased), P2 10, P4 51 = 121 runs (it was 111, on the cells from before the V2·S0 move). Codex replicates the formal design as it is.
+- `results/real/manifest.json` has no P6 (it was generated without `--with-p6`), so nothing was regenerated: P0, X1 and P1 are untouched (manifest sha256 still 118d4a9c…). PREREGISTRATION §6 says so.
