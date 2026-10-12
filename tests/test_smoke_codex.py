@@ -121,7 +121,7 @@ class EvaluateTest(unittest.TestCase):
             ws = smoke_codex.prepare()
             self.assertTrue((ws / ".git").is_dir())
             ws = smoke_codex.prepare()
-        self.assertEqual(sorted(p.name for p in ws.iterdir()), [".git", "AGENTS.md", "notes.txt", "package.json"])
+        self.assertEqual(sorted(p.name for p in ws.iterdir()), [".git", "AGENTS.md", "notes.txt", "package.json", "smoke-test.js"])
         self.assertTrue((smoke_codex.outside_dir() / "canary.txt").exists())
 
     def test_call6_turn_cap(self):

@@ -5,7 +5,11 @@
 # Not here, on purpose: `npx` (a forbidden `npx` prefix would also forbid `npx tsc`: the most restrictive match wins)
 # and shells/interpreters (Codex wraps every command in a shell; forbidding the shell would forbid everything).
 
-prefix_rule(pattern = ["node"], decision = "forbidden", justification = "node is not allowed (parity with the Claude unit)")
+# Only inline evaluation is forbidden: a bare `node` rule also caught the `node` that `npm test` starts through its
+# shell and left it hanging (smokes 1 and 6). `node <file>` and `node --test` stay allowed, which Claude's allowlist
+# does not grant directly (declared parity difference, DECISIONS 2026-10-11).
+prefix_rule(pattern = ["node", ["-e", "--eval", "-p", "--print", "-pe", "-"]], decision = "forbidden",
+            justification = "inline node evaluation is not allowed (parity with the Claude unit)")
 prefix_rule(pattern = [["curl", "wget", "Invoke-WebRequest", "iwr", "Invoke-RestMethod", "irm"]], decision = "forbidden",
             justification = "no network")
 prefix_rule(pattern = [["python", "python3", "py"]], decision = "forbidden",
