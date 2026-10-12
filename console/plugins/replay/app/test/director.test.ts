@@ -263,6 +263,7 @@ test("director's cut is deterministic and within 60–90 s for 5–20 minute run
 test("short runs (< 90 s) are never stretched: the demos' cut is at most their own length", () => {
   for (const name of demos) {
     const r = load(name);
+    if (duration(r) >= 90_000) continue; // the M2b sprint demo is long by nature
     const cut = buildCut(r);
     assert.ok(cut.end <= duration(r) + 1e-6, `${name}: ${cut.end} > ${duration(r)}`);
     assert.equal(cut.factor, 1, name);

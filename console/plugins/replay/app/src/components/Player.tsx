@@ -22,6 +22,10 @@ interface Props {
   comparePicker: ReactNode;
   onCloseCompare: () => void;
   onOpenInExplorer?: () => void;
+  /** extra controls next to the picker (e.g. the re-cast roster selector) */
+  tools?: ReactNode;
+  /** a panel under the controls (e.g. the re-cast roster with citations) */
+  footer?: ReactNode;
 }
 
 type DiffPart = ReturnType<typeof conditionDiff>[number];
@@ -135,7 +139,7 @@ function follow(e: ReplayEngine, t: number): void {
 
 const query = () => new URLSearchParams(window.location.search);
 
-export function Player({ replay, compare, picker, comparePicker, onCloseCompare, onOpenInExplorer }: Props) {
+export function Player({ replay, compare, picker, comparePicker, onCloseCompare, onOpenInExplorer, tools, footer }: Props) {
   const engine = useMemo(() => {
     const e = new ReplayEngine(replay);
     // ?t=<ms> opens the replay at a moment (deep links to a key moment; also used for QA screenshots)
@@ -244,6 +248,19 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
     const i = prevSlide(list, c.p);
     c.pause();
     c.seek(i === null ? 0 : list[i].t);
+    apply();
+  }, [c, apply]);
+
+  /** Go to the start / the end of the simulation (Home / End), in every mode (presenter, cut, compare). */
+  const goStart = useCallback(() => {
+    c.pause();
+    c.seek(0);
+    apply();
+  }, [c, apply]);
+
+  const goEnd = useCallback(() => {
+    c.pause();
+    c.seek(tbRef.current.end);
     apply();
   }, [c, apply]);
 
@@ -362,6 +379,12 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
         else c.toggle();
       } else if (k >= "1" && k <= "6") {
         c.speed = SPEEDS[Number(k) - 1];
+      } else if (k === "Home") {
+        e.preventDefault();
+        goStart();
+      } else if (k === "End") {
+        e.preventDefault();
+        goEnd();
       } else if (k === "PageDown" || (k === "ArrowRight" && slidesOn)) {
         e.preventDefault();
         nextMoment();
@@ -393,7 +416,8 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [c, slidesOn, presenting, nextMoment, prevMoment, stepEvent, togglePresent, toggleSlides, toggleCut, apply]);
+  }, [c, slidesOn, presenting, nextMoment, prevMoment, stepEvent, togglePresent, toggleSlides, toggleCut, apply,
+    goStart, goEnd]);
 
   const onStageClick = (e: MouseEvent<HTMLDivElement>) => {
     if (slidesOn && (e.target as HTMLElement).tagName === "CANVAS") nextMoment();
@@ -448,6 +472,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
         <header className="topbar">
           <div className="topbar__left">
             {picker}
+            {tools}
             <div className="meta" aria-label="Run">
               <strong>{m.ticket ?? m.run_id}</strong>
               {condition(replay) && <span>{condition(replay)}</span>}
@@ -543,6 +568,10 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
         <Timeline replay={replay} clock={engine.clock} end={engine.end} onSeek={seekReplay} bands={bands} />
         <div className="controls__row">
           <div className="transport">
+            <button type="button" className="icon-btn" onClick={goStart}
+              aria-label="Go to the start (Home)" title="Go to the start (Home)">
+              <Icon name="first" size={18} />
+            </button>
             <button type="button" className="icon-btn"
               onClick={() => (slidesOn ? prevMoment() : stepEvent(-1))}
               aria-label={slidesOn ? "Previous key moment (Left arrow)" : "Previous event (Left arrow)"}
@@ -558,6 +587,10 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
               aria-label={slidesOn ? "Next key moment (Right arrow)" : "Next event (Right arrow)"}
               title={slidesOn ? "Next key moment (→ / PgDn / Space / click)" : "Next event (→)"}>
               <Icon name="next" size={18} />
+            </button>
+            <button type="button" className="icon-btn" onClick={goEnd}
+              aria-label="Go to the end (End)" title="Go to the end (End)">
+              <Icon name="last" size={18} />
             </button>
             <span className="clock num" aria-live="off">
               {fmt(engine.clock)} <span className="muted">/ {fmt(engine.end)}</span>
@@ -584,11 +617,12 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
           <SpeedControl value={c.speed} onChange={(s) => { c.speed = s; refresh(); }} />
           <div className="keys muted small" aria-hidden="true">
             {slidesOn
-              ? "→ PgDn Space click next moment · ← PgUp previous · P exit slides · D cut · F present"
-              : "Space play · 1–6 speed · ← → event · P slides · D cut · F present · E events · M map"}
+              ? "→ PgDn Space click next moment · ← PgUp previous · Home End start/end · P exit slides · D cut · F present"
+              : "Space play · 1–6 speed · ← → event · Home End start/end · P slides · D cut · F present · E events · M map"}
           </div>
         </div>
       </footer>
+      {footer}
         </div>
         {showPanel && <EventsPanel replay={replay} applied={engine.state.applied} follow={moving}
           onSeek={seekReplay} />}

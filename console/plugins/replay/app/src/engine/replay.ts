@@ -20,6 +20,8 @@ export interface ReplayPlace {
   note?: string;
   /** exporter 2: false when nobody uses the place in this run (drawn dimmed) */
   used?: boolean;
+  /** exporter 4: the lifecycle column it belongs to (define, build, verify, production) */
+  zone?: string;
 }
 
 export interface ReplayActor {
@@ -30,6 +32,10 @@ export interface ReplayActor {
   avatar: { style: "human" | "agent" | "system"; seed: string; badge?: string | null };
   home: string;
   simulated?: boolean;
+  /** re-cast view only: the model has no member for this role (drawn dimmed) */
+  recast_missing?: boolean;
+  /** re-cast view only: the Teams member playing this role */
+  recast_member?: string;
 }
 
 export interface ReplayStep {
@@ -84,7 +90,9 @@ export interface SceneConsumer {
   desk: string;
   /** the contract the consumer holds, as the CI contract checks name it ("OrderPlaced", "GET /orders/{id}") */
   contract?: string | null;
-  oracle: Record<string, { status: CheckStatus } & SceneMoment>;
+  /** per PR version (gen, final); a failing result carries the oracle's own words: "5 of 5 tests failed", the first
+   * failing test's name and its failure head ("billing could not invoice order A") */
+  oracle: Record<string, { status: CheckStatus; tests?: string; test?: string; impact?: string } & SceneMoment>;
   reads: ({ tool?: string; path: string } & SceneMoment)[];
   edits: { path: string; seq: number | null; t_ms: number }[];
   /** a fictional code owner for the desk (M1 traces have no consumer people) */
@@ -114,6 +122,23 @@ export interface Scene {
   consumers: SceneConsumer[];
   diff_cards: DiffCard[];
   sources: string[];
+  /** exporter 4: the lifecycle columns, left to right */
+  zones?: SceneZone[];
+  /** exporter 4: which AI-SDLC model the run follows */
+  lifecycle_model?: { label: string; detail?: string; source?: string; kind?: "single-ticket" | "sprint" };
+  /** exporter 4: single-ticket runs: the ticket comes from the product role because the scenario fixes it */
+  ticket_origin?: ({ place: string; label: string; ticket?: string | null; title?: string | null; to: string }
+    & SceneMoment) | null;
+}
+
+export interface SceneZone {
+  id: string;
+  label: string;
+  x0: number;
+  x1: number;
+  roles: string;
+  band: "probabilistic" | "deterministic";
+  band_label: string;
 }
 
 export interface Replay {

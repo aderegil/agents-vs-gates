@@ -2,6 +2,7 @@
 // after the iframe loads (docs/contracts/console-api.md §4); we then use /api/replay/list and /api/replay/run/{id}
 // with the same session cookie. Standalone (vite preview): ?replay=<url-to-json>[&compare=<url>], or the bundled
 // demo replays (exported from replay/fixtures, all mock, all watermarked SIMULATED).
+import type { TeamModel } from "./engine/recast";
 import type { Replay } from "./engine/replay";
 
 export interface Hello {
@@ -21,6 +22,8 @@ export interface RunEntry {
   ns?: Ns;
   finished?: boolean;
   cached?: boolean;
+  /** a replay bundled with the theater (all SIMULATED), listed after the namespaces' runs */
+  demo?: boolean;
   stage?: string | null;
   ticket?: string | null;
   condition?: { V?: string; S?: string; W?: string } | null;
@@ -143,6 +146,24 @@ export async function exportRuns(h: Hello): Promise<ExportResult[]> {
 
 export function canExport(h: Hello | null | undefined): boolean {
   return !!h?.user && ["owner", "operator", "presenter"].includes(h.user.role);
+}
+
+/** The AI-SDLC models of the Teams plugin (members mapped to v2.1 roles, with citations), for the sprint re-cast.
+ * Inside the console: /api/teams; standalone: the copy bundled with the theater (teams/index.json). */
+export async function loadTeams(h: Hello | null): Promise<TeamModel[]> {
+  if (h) {
+    const list = await getJson<{ models: { id: string }[] }>(`${h.apiBase}/teams`);
+    return Promise.all(list.models.map((m) => getJson<TeamModel>(`${h.apiBase}/teams/${encodeURIComponent(m.id)}`)));
+  }
+  const body = await getJson<{ models: TeamModel[] }>("teams/index.json");
+  return body.models;
+}
+
+/** Inside the console: the runs of both namespaces, then the bundled demos (e.g. the M2b sprint, which is not a run
+ * under results/). */
+export async function listAll(h: Hello): Promise<RunEntry[]> {
+  const [runs, demos] = await Promise.all([listRuns(h), listDemos().catch(() => [] as RunEntry[])]);
+  return [...runs, ...demos.map((d) => ({ ...d, demo: true }))];
 }
 
 export async function listDemos(): Promise<RunEntry[]> {

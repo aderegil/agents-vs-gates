@@ -16,7 +16,8 @@ test("PR tray layout without a reviewer; unused places are dimmed", () => {
   assert.equal(r.scene?.layout, "pr-tray");
   assert.ok(r.places.some((p) => p.id === "pr-tray"));
   assert.ok(!r.places.some((p) => p.id === "review-table"));
-  assert.equal(isDimmed(r, "product-desk"), true);
+  assert.equal(isDimmed(r, "planning-room"), true);
+  assert.equal(isDimmed(r, "product-desk"), false, "the ticket comes from Product (scenario)");
   assert.equal(isDimmed(r, "ci-tower"), false);
   const pr = r.steps.find((s) => s.key === "pr_opened");
   assert.ok(pr);

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import { Player } from "./components/Player";
+import { canRecast, recast, RECAST_NOTE, type TeamModel } from "./engine/recast";
 import type { Replay } from "./engine/replay";
 import {
-  canExport, exportRuns, listDemos, listRuns, loadReplay, navigateShell, onHello, runLabel, waitHello, type Hello,
+  canExport, exportRuns, listAll, listDemos, loadReplay, loadTeams, navigateShell, onHello, runLabel, waitHello, type Hello,
   type RunEntry,
 } from "./data";
 
@@ -26,6 +27,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("Loading…");
   const [exporting, setExporting] = useState(false);
+  const [teams, setTeams] = useState<TeamModel[]>([]);
+  // ?recast=<model id> opens the sprint re-cast (deep link, QA)
+  const [recastId, setRecastId] = useState<string>(() => query.get("recast") ?? "");
   const [notice, setNotice] = useState<string | null>(null);
 
   async function onExport(h: Hello) {
@@ -38,7 +42,7 @@ function App() {
         + (r.skipped_blinded ? `, ${r.skipped_blinded} blinded (not exported)` : "")
         + (Object.keys(r.errors).length ? `, ${Object.keys(r.errors).length} failed` : ""));
       setNotice(`Export new runs · ${parts.join(" · ")}`);
-      setRuns(await listRuns(h));
+      setRuns(await listAll(h));
     } catch (e) {
       setError(`Export failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -61,7 +65,7 @@ function App() {
       try {
         if (h) {
           setSource({ kind: "shell", hello: h });
-          const list = await listRuns(h);
+          const list = await listAll(h);
           if (cancelled) return;
           setRuns(list);
           const want = h.params?.run;
@@ -88,7 +92,7 @@ function App() {
   // Later avg:hello messages (shell navigate with a new run) re-select.
   useEffect(() => onHello((h) => {
     setSource({ kind: "shell", hello: h });
-    listRuns(h).then((list) => {
+    listAll(h).then((list) => {
       setRuns(list);
       const want = h.params?.run;
       const hit = want ? pickRun(list, want, h.params?.ns) : undefined;
@@ -122,13 +126,27 @@ function App() {
     };
   }, [compareUrl]);
 
+  const shownRecast = useMemo(() => {
+    if (!replay || !recastId || !canRecast(replay)) return null;
+    const model = teams.find((m) => m.id === recastId);
+    return model ? recast(replay, model) : null;
+  }, [replay, recastId, teams]);
+
+  // the Teams models are fetched once a sprint (the only replay that can be re-cast) is open
+  useEffect(() => {
+    if (!replay || !canRecast(replay) || teams.length) return;
+    const h = source?.kind === "shell" ? source.hello : null;
+    loadTeams(h).then(setTeams).catch((e) => setError(`Cannot load the Teams models: ${e instanceof Error ? e.message : String(e)}`));
+  }, [replay, source, teams.length]);
+
   const option = (r: RunEntry) => (
     <option key={r.url} value={r.url} disabled={r.blinded}>
       {runLabel(r)}{r.blinded ? " — blinded" : ""}
     </option>
   );
-  const real = runs.filter((r) => r.source !== "mock");
-  const mock = runs.filter((r) => r.source === "mock");
+  const real = runs.filter((r) => r.source !== "mock" && !r.demo);
+  const mock = runs.filter((r) => r.source === "mock" && !r.demo);
+  const demos = runs.filter((r) => r.demo);
   const shellHello = source?.kind === "shell" ? source.hello : null;
   const picker = (
     <>
@@ -136,10 +154,11 @@ function App() {
         <span className="sr-only">Run</span>
         <select value={selected ?? ""} onChange={(e) => setSelected(e.target.value || null)} aria-label="Run to replay">
           {!selected && <option value="">Select a run…</option>}
-          {real.length > 0 && mock.length > 0 ? (
+          {real.length + mock.length > 0 && (real.length > 0 || demos.length > 0) ? (
             <>
-              <optgroup label="Real runs">{real.map(option)}</optgroup>
-              <optgroup label="Simulated (mock agent)">{mock.map(option)}</optgroup>
+              {real.length > 0 && <optgroup label="Real runs">{real.map(option)}</optgroup>}
+              {mock.length > 0 && <optgroup label="Simulated (mock agent)">{mock.map(option)}</optgroup>}
+              {demos.length > 0 && <optgroup label="Bundled demos (SIMULATED)">{demos.map(option)}</optgroup>}
             </>
           ) : runs.map(option)}
         </select>
@@ -182,6 +201,39 @@ function App() {
   }
 
   const shell = source?.kind === "shell" ? source : null;
+  const entry = runs.find((r) => r.url === selected);
+  const sprint = canRecast(replay);
+  const tools = sprint ? (
+    <label className="picker picker--compare" title="Show this SIMULATED sprint with another AI-SDLC model's team (Teams plugin data). Same run, same steps.">
+      <span className="sr-only">Team roster</span>
+      <select value={recastId} aria-label="Team roster"
+        onChange={(e) => setRecastId(e.target.value)}>
+        <option value="">Roster: as recorded</option>
+        {teams.map((m) => <option key={m.id} value={m.id}>Re-cast: {m.short}</option>)}
+      </select>
+    </label>
+  ) : null;
+  const footer = shownRecast ? (
+    <details className="recast" aria-label="Re-cast roster" open={query.get("roster") === "1"}>
+      <summary className="recast__head">
+        <strong>{RECAST_NOTE}</strong> · roster of <strong>{shownRecast.replay.meta.recast ? (shownRecast.replay.meta.recast as { name: string }).name : ""}</strong>
+        {" "}from the Teams plugin (each member's v2.1 role and citation); roles the model lacks are dimmed.
+      </summary>
+      <ul className="recast__seats">
+        {shownRecast.seats.map((s) => (
+          <li key={s.actor} className={s.member ? "" : "is-missing"}>
+            <span className="recast__role">{s.role.replace(/_/g, " ")}</span>
+            <span>{s.member ? s.member.display_name : "no counterpart"}</span>
+            {s.member?.citation && <span className="recast__cite">{s.member.citation.file}{s.member.citation.section ? ` § ${s.member.citation.section}` : ""}</span>}
+          </li>
+        ))}
+      </ul>
+      {shownRecast.unplaced.length > 0 && (
+        <div className="recast__unplaced">Members with no seat in this sprint: {shownRecast.unplaced.map((m) => m.display_name).join(", ")}</div>
+      )}
+    </details>
+  ) : null;
+  const shown = shownRecast ? shownRecast.replay : replay;
   return (
     <>
       {error && <div className="banner-error" role="alert">{error}</div>}
@@ -192,13 +244,15 @@ function App() {
         </div>
       )}
       <Player
-        key={replay.meta.trace_sha256}
-        replay={replay}
+        key={`${replay.meta.trace_sha256}:${recastId}`}
+        replay={shown}
+        tools={tools}
+        footer={footer}
         compare={compare}
         picker={picker}
         comparePicker={comparePicker}
         onCloseCompare={() => setCompareUrl(null)}
-        onOpenInExplorer={shell ? () => navigateShell("runs", {
+        onOpenInExplorer={shell && !entry?.demo ? () => navigateShell("runs", {
           run: replay.meta.run_id,
           ns: runs.find((r) => r.url === selected)?.ns ?? (replay.meta.source === "mock" ? "mock" : "real"),
         }) : undefined}

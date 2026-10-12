@@ -89,6 +89,17 @@
       "outcome": "fixed_code",
       "label": "st-demo-1 · X-rename · V0·S0 · diff cards: rename, then @deprecated aliases (SIMULATED)",
       "url": "m1-xrename-v0s0-diffs.json"
+    },
+    {
+      "run_id": "sprint-mock-F1",
+      "stage": "M2b",
+      "ticket": "EPIC-RQ6",
+      "condition": {},
+      "source": "mock",
+      "date": "2026-10-12",
+      "outcome": "released",
+      "label": "sprint-mock-F1 · EPIC-RQ6 · M2b multi-role sprint F1 · every lifecycle role (SIMULATED)",
+      "url": "m2b-sprint-f1.json"
     }
   ]
 }

@@ -105,7 +105,7 @@
 .timeline__marker.tone-pass { background: var(--pass); }
 .timeline__marker.tone-fail { background: var(--fail); }
 .timeline__marker:hover { outline: var(--trazo) solid var(--tinta); outline-offset: 1px; }
-.timeline__moments { display: flex; gap: 6px; flex-wrap: wrap; }
+.timeline__moments { display: flex; gap: 6px; flex-wrap: wrap; max-height: 64px; overflow-y: auto; }
 .moment { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px;
   border: var(--trazo) solid var(--linea); border-radius: var(--radio); background: var(--superficie);
   font-size: 12px; cursor: pointer; color: var(--tinta-2); }
@@ -176,3 +176,17 @@
   .events { max-height: 320px; }
   .keys { display: none; }
 }
+
+/* ---------------------------------------------------------------- re-cast roster (M2b sprint only) */
+.recast { margin: 0 0 4px; padding: 6px 12px; max-height: 180px; overflow-y: auto; background: var(--superficie); border: var(--trazo) solid var(--linea);
+  border-radius: var(--radio); font-size: 12px; }
+.recast__head { margin: 0; color: var(--tinta-2); cursor: pointer; }
+.recast[open] .recast__head { margin-bottom: 6px; }
+.recast__head strong { color: var(--tinta); }
+.recast__seats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2px 16px; }
+.recast__seats li { display: grid; grid-template-columns: 120px 1fr; column-gap: 8px; }
+.recast__seats li.is-missing { opacity: 0.5; }
+.recast__role { color: var(--tinta-2); }
+.recast__cite { grid-column: 2; color: var(--tinta-2); font-size: 11px; word-break: break-word; }
+.recast__unplaced { margin-top: 6px; color: var(--tinta-2); }

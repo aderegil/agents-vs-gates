@@ -79,9 +79,17 @@ function prPlace(r: Replay): string | null {
   return null;
 }
 
+/** Single-ticket runs: the ticket sheet goes from the product desk to the agent's desk when it is assigned. */
+export function ticketSheet(r: Replay): Travel | null {
+  const o = r.scene?.ticket_origin;
+  if (!o || !hasPlace(r, o.place) || !hasPlace(r, o.to)) return null;
+  return { kind: "sheet", from: o.place, to: o.to, t0: o.t_ms, dur: SHEET_MS, label: o.ticket ? `ticket ${o.ticket}` : "ticket" };
+}
+
 /** Everything that travels during the run, in a fixed order (deterministic). */
 export function travels(r: Replay): Travel[] {
-  const out: Travel[] = [...architectSheets(r)];
+  const ticket = ticketSheet(r);
+  const out: Travel[] = [...(ticket ? [ticket] : []), ...architectSheets(r)];
   const tray = prPlace(r);
   const desk = agentDesk(r);
   const contract = new Map((r.scene?.consumers ?? []).map((c) => [c.id, c]));
@@ -122,6 +130,11 @@ export function restingSheets(r: Replay, t: number): Travel[] {
   return architectSheets(r).filter((s) => t >= s.t0 + s.dur);
 }
 
+/** Zone of a place (exporter 4); older replays have none. */
+export function zoneOf(r: Replay, placeId: string): string | null {
+  return r.places.find((p) => p.id === placeId)?.zone ?? null;
+}
+
 /** How many versions of the PR sit in the tray at clock t (opened + repairs pushed). */
 export function trayCount(r: Replay, t: number): number {
   let n = 0;
@@ -136,8 +149,9 @@ export type Mood = "neutral" | "worried" | "relieved";
 
 export interface OwnerView {
   mood: Mood;
-  /** the oracle verdict shown at the desk: which PR version, pass/fail, and the oracle's own message head */
-  alert: { state: string; status: CheckStatus; text: string } | null;
+  /** the oracle verdict shown at the desk: which PR version, pass/fail, the oracle's own message head and, for a
+   * failure, what broke in the oracle's own words (impact), when the message names it */
+  alert: { state: string; status: CheckStatus; text: string; impact?: string } | null;
 }
 
 function oracleMessage(r: Replay, seq: number): string {
@@ -162,13 +176,13 @@ export function ownerView(r: Replay, c: SceneConsumer, t: number): OwnerView {
       const relief = gen && gen.status !== "pass" && t - (fin.t_ms + PACKET_MS) < RELIEF_MS;
       return { mood: relief ? "relieved" : "neutral", alert: { state: "final", status: "pass", text } };
     }
-    return { mood: "worried", alert: { state: "final", status: fin.status, text } };
+    return { mood: "worried", alert: { state: "final", status: fin.status, text, impact: fin.impact } };
   }
   if (gen && arrived(gen)) {
     const text = oracleMessage(r, gen.seq);
     return gen.status === "pass"
       ? { mood: "neutral", alert: { state: "gen", status: "pass", text } }
-      : { mood: "worried", alert: { state: "gen", status: gen.status, text } };
+      : { mood: "worried", alert: { state: "gen", status: gen.status, text, impact: gen.impact } };
   }
   return { mood: "neutral", alert: null };
 }

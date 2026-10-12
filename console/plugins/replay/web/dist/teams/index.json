@@ -1,0 +1,1334 @@
+{
+ "source": "console/plugins/teams/data (copy)",
+ "models": [
+  {
+   "id": "anthropic",
+   "order": 1,
+   "name": "Anthropic — AI-native SDLC playbook",
+   "short": "Anthropic",
+   "publisher": "Anthropic (Louis Claxton)",
+   "date": "2026-08-21",
+   "url": "https://claude.com/resources/articles/the-ai-native-sdlc-playbook",
+   "label": null,
+   "summary": "A playbook of plays across six stages in which each stage commits an artifact (intent.md, spec.md, plan.md, PR, incident record) that triggers the next, with humans approving at the gates.",
+   "source_phases": "Plan · Design · Build · Test · Deploy · Maintain",
+   "members": [
+    {
+     "id": "originator",
+     "role": "originator",
+     "v21_role": "originator",
+     "v21_note": null,
+     "actor_type": "human",
+     "responsibility": "Describes the problem to Claude in their own words and corrects the resulting intent.md.",
+     "phase": "discovery",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Plan — Capture as intent.md (How to execute it)"
+     },
+     "display_name": "Priya · Originator",
+     "seed": "anthropic:originator"
+    },
+    {
+     "id": "product-owner",
+     "role": "product owner",
+     "v21_role": "product_owner",
+     "v21_note": null,
+     "actor_type": "human",
+     "responsibility": "Reviews and corrects intent.md, approves it, and reviews and signs off spec.md.",
+     "phase": "discovery",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Plan — Capture as intent.md; Design — Requirements and design"
+     },
+     "display_name": "Tomás · Product Owner",
+     "seed": "anthropic:product-owner"
+    },
+    {
+     "id": "policy-owner",
+     "role": "policy owner",
+     "v21_role": "policy_owner",
+     "v21_note": null,
+     "actor_type": "human",
+     "responsibility": "Resolves flagged spec concerns with the product owner; signs off changes to the skill that encodes the policy.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Design — Requirements and design; Build — Skills as institutional knowledge"
+     },
+     "display_name": "Aiko · Policy Owner",
+     "seed": "anthropic:policy-owner"
+    },
+    {
+     "id": "tech-lead",
+     "role": "tech lead",
+     "v21_role": "tech_lead",
+     "v21_note": "Higher-risk plans go to a 'tech lead or architect' (Build — plan mode).",
+     "actor_type": "human",
+     "responsibility": "Writes REVIEW.md, sets the human review threshold and tunes review findings monthly.",
+     "phase": "review",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Deploy — AI in the PR review loop (How to execute it)"
+     },
+     "display_name": "Femi · Tech Lead",
+     "seed": "anthropic:tech-lead"
+    },
+    {
+     "id": "engineer",
+     "role": "engineer",
+     "v21_role": "engineer",
+     "v21_note": null,
+     "actor_type": "human",
+     "responsibility": "Iterates on and approves plan.md in plan mode, then steers several parallel Claude Code sessions.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Build — Claude Code plan mode as the default starting point; Parallel sessions and subagents"
+     },
+     "display_name": "Lena · Engineer",
+     "seed": "anthropic:engineer"
+    },
+    {
+     "id": "claude-code",
+     "role": "Claude Code",
+     "v21_role": "code_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Drafts the plan in plan mode, then implements code and tests; can run in auto mode once the plan is approved.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Build — Claude Code plan mode as the default starting point; Claude Code on auto mode"
+     },
+     "display_name": "Claude Code",
+     "seed": "anthropic:claude-code"
+    },
+    {
+     "id": "researcher",
+     "role": "researcher",
+     "v21_role": "researcher",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Subagent that explores the codebase and reports back without flooding the main context.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Build — Parallel sessions and subagents (How to execute it)"
+     },
+     "display_name": "Researcher subagent",
+     "seed": "anthropic:researcher"
+    },
+    {
+     "id": "code-simplifier",
+     "role": "code simplifier",
+     "v21_role": "code_simplifier",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Subagent that strips needless complexity after the main agent finishes.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Build — Parallel sessions and subagents (How to execute it)"
+     },
+     "display_name": "Code Simplifier subagent",
+     "seed": "anthropic:code-simplifier"
+    },
+    {
+     "id": "verifier",
+     "role": "verifier",
+     "v21_role": "verifier",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Subagent that runs the app, checks the change against plan.md and reports; it does not fix anything.",
+     "phase": "testing",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Build — Parallel sessions and subagents (.claude/agents/verifier.md)"
+     },
+     "display_name": "Verifier subagent",
+     "seed": "anthropic:verifier"
+    },
+    {
+     "id": "code-review",
+     "role": "Code Review",
+     "v21_role": "review_agent",
+     "v21_note": "Managed Code Review service (research preview) or claude-code-action in CI.",
+     "actor_type": "agent",
+     "responsibility": "Runs the REVIEW.md passes (Bugs, Security, Compliance) on every PR; findings alone neither approve nor block.",
+     "phase": "review",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Deploy — AI in the PR review loop"
+     },
+     "display_name": "Code Review",
+     "seed": "anthropic:code-review"
+    },
+    {
+     "id": "code-owner",
+     "role": "code owner",
+     "v21_role": "code_owner",
+     "v21_note": null,
+     "actor_type": "human",
+     "responsibility": "Approves the PR through branch protection; the agent that wrote the code has no way to approve it.",
+     "phase": "review",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Deploy — AI in the PR review loop (Governance considerations); Test — Give Claude a feedback loop"
+     },
+     "display_name": "Omar · Code Owner",
+     "seed": "anthropic:code-owner"
+    },
+    {
+     "id": "platform-engineer",
+     "role": "platform engineer",
+     "v21_role": null,
+     "v21_note": "No v2.1 equivalent; the platform team also owns managed settings.",
+     "actor_type": "human",
+     "responsibility": "Collects eval tasks, expresses approval gates as hooks and runs Claude non-interactively in CI/CD.",
+     "phase": "deployment",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Test — Continuous evals in CI; Deploy — Hooks as approval gates; CI/CD integration and deployment"
+     },
+     "display_name": "Sofia · Platform Engineer",
+     "seed": "anthropic:platform-engineer"
+    },
+    {
+     "id": "release-manager",
+     "role": "release manager",
+     "v21_role": "release_manager",
+     "v21_note": null,
+     "actor_type": "human",
+     "responsibility": "Authorizes production releases; a hook blocks the production deploy until a named release manager signs off.",
+     "phase": "deployment",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Deploy — CI/CD integration and deployment (Governance considerations)"
+     },
+     "display_name": "Ravi · Release Manager",
+     "seed": "anthropic:release-manager"
+    },
+    {
+     "id": "monitoring-agent",
+     "role": "monitoring agent",
+     "v21_role": "monitoring_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Diagnoses a breached control band and writes it up as a new intent.md; acts only through gated routes.",
+     "phase": "maintenance",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Maintain — Maintenance and closing the loop"
+     },
+     "display_name": "Monitoring Agent",
+     "seed": "anthropic:monitoring-agent"
+    },
+    {
+     "id": "service-owner",
+     "role": "service owner / on-call engineer",
+     "v21_role": null,
+     "v21_note": "No v2.1 equivalent; v2.1 routes alert-born intent.md to product_owner.",
+     "actor_type": "human",
+     "responsibility": "Picks the metric and detection script, then triages agent findings: fix now, schedule, or dismiss.",
+     "phase": "maintenance",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Maintain — Closing the loop (How to execute it)"
+     },
+     "display_name": "Mateo · Service Owner",
+     "seed": "anthropic:service-owner"
+    },
+    {
+     "id": "security-lead",
+     "role": "security lead",
+     "v21_role": "policy_owner",
+     "v21_note": "Partial: security policy only.",
+     "actor_type": "human",
+     "responsibility": "Connects repositories to scheduled Claude Security scans and organizes them so finding ownership is clear.",
+     "phase": "maintenance",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Maintain — Recurring codebase scans (How to execute it)"
+     },
+     "display_name": "Ingrid · Security Lead",
+     "seed": "anthropic:security-lead"
+    }
+   ],
+   "gaps": [
+    {
+     "text": "No Scrum Master role is defined.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§4 Tabla comparativa de roles (row 'Scrum master')"
+     }
+    },
+    {
+     "text": "In the AI-native process the human architect appears once, as the 'tech lead or architect' who approves higher-risk plans (the other mention describes the traditional SDLC).",
+     "citation": {
+      "file": "fuentes/ai-sdlc/anthropic/anthropic-ai-native-sdlc-playbook-2026-08-21.txt",
+      "section": "Build — Claude Code plan mode as the default starting point (Governance considerations)"
+     }
+    },
+    {
+     "text": "Architecture rules are context (CLAUDE.md) checked by in-session hooks and an LLM Compliance review pass; the playbook does not propose them as deterministic CI checks.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§5.1 Reglas de arquitectura verificadas en CI (fitness functions) — Anthropic"
+     }
+    },
+    {
+     "text": "Cross-repository work is barely addressed: a dedicated intent repo is suggested only when intent spans many repositories; CLAUDE.md, hooks and review are per repo.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§5.2 Cambios que cruzan repositorios — Anthropic"
+     }
+    }
+   ]
+  },
+  {
+   "id": "aws",
+   "order": 2,
+   "name": "AWS — AI-Driven Development Life Cycle (AI-DLC)",
+   "short": "AWS AI-DLC",
+   "publisher": "AWS (Raja SP, AWS DevOps & Developer Productivity Blog); awslabs/aidlc-workflows",
+   "date": "2025-07-31",
+   "url": "https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/",
+   "related_urls": [
+    "https://github.com/awslabs/aidlc-workflows"
+   ],
+   "label": null,
+   "summary": "A methodology in which AI plans, asks and implements only after human validation; the blog names only human roles, and the 14 agents come from the awslabs open-source implementation (aidlc-workflows v2.11.0, MIT-0).",
+   "source_phases": "Inception · Construction · Operations",
+   "members": [
+    {
+     "id": "product-owners",
+     "role": "product owners",
+     "v21_role": "product_owner",
+     "v21_note": "From the blog, not from aidlc-workflows.",
+     "actor_type": "human",
+     "responsibility": "Named in the blog; in Mob Elaboration the entire team validates AI's requirements, stories and units.",
+     "phase": "discovery",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/aws-ai-dlc-blog-2025-07-31.md",
+      "section": "Why do we need a transformative approach to AI in software?; How does AI-DLC work? (Inception phase)"
+     },
+     "display_name": "Chen · Product Owner",
+     "seed": "aws:product-owners"
+    },
+    {
+     "id": "architects",
+     "role": "architects",
+     "v21_role": "architect",
+     "v21_note": "From the blog, not from aidlc-workflows.",
+     "actor_type": "human",
+     "responsibility": "Named in the blog; in Mob Construction the team clarifies technical and architectural choices in real time.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/aws-ai-dlc-blog-2025-07-31.md",
+      "section": "Why do we need a transformative approach to AI in software?; How does AI-DLC work? (Construction phase)"
+     },
+     "display_name": "Kwame · Architect",
+     "seed": "aws:architects"
+    },
+    {
+     "id": "developers",
+     "role": "developers",
+     "v21_role": "engineer",
+     "v21_note": "From the blog, not from aidlc-workflows.",
+     "actor_type": "human",
+     "responsibility": "Named in the blog; shift from routine coding to problem-solving while AI generates code and tests.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/aws-ai-dlc-blog-2025-07-31.md",
+      "section": "What are the benefits of this methodology? (Velocity; Developer Experience)"
+     },
+     "display_name": "Nadia · Developer",
+     "seed": "aws:developers"
+    },
+    {
+     "id": "product-agent",
+     "role": "Product Agent",
+     "v21_role": "requirements_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Leads intent capture, market research, scope definition, requirements analysis and user stories.",
+     "phase": "discovery",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-product-agent.md"
+     },
+     "display_name": "Product Agent",
+     "seed": "aws:product-agent"
+    },
+    {
+     "id": "product-lead",
+     "role": "Product Lead",
+     "v21_role": "review_agent",
+     "v21_note": "Reviews requirements/UX, not PRs; in v2.1 only a human product_owner approves.",
+     "actor_type": "agent",
+     "responsibility": "Reviews requirements, stories and UX artifacts; does not produce; the customer's voice at the quality gate.",
+     "phase": "discovery",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-product-lead-agent.md"
+     },
+     "display_name": "Product Lead",
+     "seed": "aws:product-lead"
+    },
+    {
+     "id": "design-agent",
+     "role": "Design Agent",
+     "v21_role": null,
+     "v21_note": "No design role in v2.1.",
+     "actor_type": "agent",
+     "responsibility": "UX/UI designer: leads rough and refined mockups, interaction design and accessibility.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-design-agent.md"
+     },
+     "display_name": "Design Agent",
+     "seed": "aws:design-agent"
+    },
+    {
+     "id": "architect-agent",
+     "role": "Architect Agent",
+     "v21_role": "architect",
+     "v21_note": "Agent here; architect is a human role in v2.1.",
+     "actor_type": "agent",
+     "responsibility": "Leads feasibility, domain, contract, functional and NFR design, and units generation.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-architect-agent.md"
+     },
+     "display_name": "Architect Agent",
+     "seed": "aws:architect-agent"
+    },
+    {
+     "id": "architecture-reviewer",
+     "role": "Architecture Reviewer",
+     "v21_role": "review_agent",
+     "v21_note": "Reviews design artifacts, not code.",
+     "actor_type": "agent",
+     "responsibility": "Reviews technical design artifacts for soundness, implementability and coherence.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-architecture-reviewer-agent.md"
+     },
+     "display_name": "Architecture Reviewer",
+     "seed": "aws:architecture-reviewer"
+    },
+    {
+     "id": "compliance-agent",
+     "role": "Compliance Agent",
+     "v21_role": "policy_owner",
+     "v21_note": "Agent here; policy_owner is a human role in v2.1.",
+     "actor_type": "agent",
+     "responsibility": "Support-only GRC analyst: compliance mapping, data classification and risk assessment.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-compliance-agent.md"
+     },
+     "display_name": "Compliance Agent",
+     "seed": "aws:compliance-agent"
+    },
+    {
+     "id": "devsecops-agent",
+     "role": "DevSecOps Agent",
+     "v21_role": "policy_owner",
+     "v21_note": "Agent here; security policy sits with a human policy_owner in v2.1.",
+     "actor_type": "agent",
+     "responsibility": "Threat modelling, security requirements, secure design review and security pipeline integration.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-devsecops-agent.md"
+     },
+     "display_name": "DevSecOps Agent",
+     "seed": "aws:devsecops-agent"
+    },
+    {
+     "id": "delivery-agent",
+     "role": "Delivery Agent",
+     "v21_role": "task_planner",
+     "v21_note": "Partial: delivery planning and Bolt sequencing.",
+     "actor_type": "agent",
+     "responsibility": "Engineering-manager agent: team formation, Bolt sequencing, phase handoffs and delivery planning.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-delivery-agent.md"
+     },
+     "display_name": "Delivery Agent",
+     "seed": "aws:delivery-agent"
+    },
+    {
+     "id": "composer-agent",
+     "role": "Composer Agent",
+     "v21_role": "supervisor",
+     "v21_note": "Partial: composes the workflow; dispatched by the /aidlc orchestrator.",
+     "actor_type": "agent",
+     "responsibility": "Estimates implementation entropy and composes the minimum viable sequence of stages for the intent.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-composer-agent.md"
+     },
+     "display_name": "Composer Agent",
+     "seed": "aws:composer-agent"
+    },
+    {
+     "id": "developer-agent",
+     "role": "Developer Agent",
+     "v21_role": "code_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Leads code generation and the reverse-engineering code scan; also data modelling.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-developer-agent.md"
+     },
+     "display_name": "Developer Agent",
+     "seed": "aws:developer-agent"
+    },
+    {
+     "id": "quality-agent",
+     "role": "Quality Agent",
+     "v21_role": "verifier",
+     "v21_note": "Partial: also designs the tests.",
+     "actor_type": "agent",
+     "responsibility": "QA lead: test strategy, test case design and quality gates; leads Build and Test and performance validation.",
+     "phase": "testing",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-quality-agent.md"
+     },
+     "display_name": "Quality Agent",
+     "seed": "aws:quality-agent"
+    },
+    {
+     "id": "aws-platform-agent",
+     "role": "AWS Platform Agent",
+     "v21_role": "devops_agent",
+     "v21_note": "Partial: infrastructure, not pipelines.",
+     "actor_type": "agent",
+     "responsibility": "Leads AWS infrastructure design and environment provisioning.",
+     "phase": "deployment",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-aws-platform-agent.md"
+     },
+     "display_name": "AWS Platform Agent",
+     "seed": "aws:aws-platform-agent"
+    },
+    {
+     "id": "pipeline-deploy-agent",
+     "role": "Pipeline & Deploy Agent",
+     "v21_role": "devops_agent",
+     "v21_note": "Release approval stays human (release_manager) in v2.1.",
+     "actor_type": "agent",
+     "responsibility": "'CI/CD engineer and release manager': leads CI pipeline, deployment pipeline and deployment execution.",
+     "phase": "deployment",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-pipeline-deploy-agent.md"
+     },
+     "display_name": "Pipeline & Deploy Agent",
+     "seed": "aws:pipeline-deploy-agent"
+    },
+    {
+     "id": "operations-agent",
+     "role": "Operations Agent",
+     "v21_role": "monitoring_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "SRE: observability setup, incident response, and feedback and optimization.",
+     "phase": "maintenance",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "2. Front-matter de los 14 agentes — core/agents/aidlc-operations-agent.md"
+     },
+     "display_name": "Operations Agent",
+     "seed": "aws:operations-agent"
+    }
+   ],
+   "gaps": [
+    {
+     "text": "The blog defines no formal roles and names no agents; the 14 agents come from the separate awslabs implementation.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§1 AWS: AI-Driven Development Life Cycle (AI-DLC) — Roles"
+     }
+    },
+    {
+     "text": "No Scrum Master: 'sprints' become 'bolts', and in aidlc-workflows the Delivery Agent sequences them.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§4 Tabla comparativa de roles (row 'Scrum master')"
+     }
+    },
+    {
+     "text": "The CI quality gates listed for the Pipeline & Deploy Agent are lint, coverage, security scan, integration tests, manual approval and smoke tests; none checks architecture rules, which an LLM agent (Architecture Reviewer) reviews.",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "3. cicd-patterns.md — Quality Gates"
+     }
+    },
+    {
+     "text": "Cross-repo verification appears only as advice in the agent's knowledge file: 'Use contract testing (Pact) to verify compatibility across repos'.",
+     "citation": {
+      "file": "fuentes/ai-sdlc/aws/awslabs-aidlc-workflows-README-y-agentes.md",
+      "section": "3. cicd-patterns.md — Monorepo vs Polyrepo CI Strategies (Polyrepo)"
+     }
+    }
+   ]
+  },
+  {
+   "id": "kiro",
+   "order": 3,
+   "name": "Kiro — Specs and custom agents",
+   "short": "Kiro",
+   "publisher": "Kiro (AWS) — official documentation, unsigned",
+   "date": null,
+   "date_note": "Pages carry no publication date; captured 2026-10-10.",
+   "url": "https://kiro.dev/docs/specs/",
+   "related_urls": [
+    "https://kiro.dev/docs/custom-agents/",
+    "https://kiro.dev/docs/hooks/"
+   ],
+   "label": null,
+   "summary": "An agentic IDE/CLI where specs (requirements.md, design.md, tasks.md) structure the work, built-in and custom agents do it, and hooks automate checks inside the session.",
+   "source_phases": "Requirements or Bug Analysis · Design · Tasks",
+   "members": [
+    {
+     "id": "product-manager",
+     "role": "product manager",
+     "v21_role": "product_owner",
+     "v21_note": "Mentioned only in an example pattern, not a defined role.",
+     "actor_type": "human",
+     "responsibility": "Provides user stories and iterates on the formalized requirements with Kiro.",
+     "phase": "discovery",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-specs.md",
+      "section": "Requirements-First Workflow — Common Patterns: Pattern 1: Product Feature Development"
+     },
+     "display_name": "Bruno · Product Manager",
+     "seed": "kiro:product-manager"
+    },
+    {
+     "id": "user",
+     "role": "user ('Your role')",
+     "v21_role": "engineer",
+     "v21_note": "One generic user also covers product_owner and tech_lead approvals.",
+     "actor_type": "human",
+     "responsibility": "Reviews and confirms requirements, design and tasks at each phase, then starts implementation.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-specs.md",
+      "section": "Requirements-First Workflow — Workflow Steps ('Your role')"
+     },
+     "display_name": "Elif · User",
+     "seed": "kiro:user"
+    },
+    {
+     "id": "spec",
+     "role": "Spec",
+     "v21_role": "requirements_agent",
+     "v21_note": "Also covers task_planner (tasks.md).",
+     "actor_type": "agent",
+     "responsibility": "Produces requirements.md, design.md and tasks.md, with approval gates between phases.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+      "section": "Built-in agents — Spec agents"
+     },
+     "display_name": "Spec agent",
+     "seed": "kiro:spec"
+    },
+    {
+     "id": "quick-spec",
+     "role": "Quick Spec",
+     "v21_role": "requirements_agent",
+     "v21_note": "Same output as Spec, no human gates.",
+     "actor_type": "agent",
+     "responsibility": "Auto-generates all three spec phases without approval gates.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+      "section": "Built-in agents (table); Spec agents"
+     },
+     "display_name": "Quick Spec agent",
+     "seed": "kiro:quick-spec"
+    },
+    {
+     "id": "bug-fix",
+     "role": "Bug Fix",
+     "v21_role": "requirements_agent",
+     "v21_note": "Bug analysis in place of requirements.",
+     "actor_type": "agent",
+     "responsibility": "Root cause analysis, fix design and implementation tasks for a bug (bugfix.md).",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+      "section": "Built-in agents — Spec agents"
+     },
+     "display_name": "Bug Fix agent",
+     "seed": "kiro:bug-fix"
+    },
+    {
+     "id": "plan",
+     "role": "Plan",
+     "v21_role": "task_planner",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Read-only: explores the codebase and produces an implementation plan; hands off to Default once approved.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+      "section": "Built-in agents — Plan agent"
+     },
+     "display_name": "Plan agent",
+     "seed": "kiro:plan"
+    },
+    {
+     "id": "default",
+     "role": "Default",
+     "v21_role": "code_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "General-purpose coding agent that starts every session: writes code, debugs, refactors.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+      "section": "Built-in agents — Default agent"
+     },
+     "display_name": "Default agent",
+     "seed": "kiro:default"
+    },
+    {
+     "id": "context-gathering",
+     "role": "Context gathering",
+     "v21_role": "researcher",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Built-in sub-agent that explores the project structure and gathers relevant files and context.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+      "section": "Invoking as sub-agents — Built-in sub-agents"
+     },
+     "display_name": "Context gathering sub-agent",
+     "seed": "kiro:context-gathering"
+    },
+    {
+     "id": "general-purpose",
+     "role": "General purpose",
+     "v21_role": "code_agent",
+     "v21_note": "Parallel helper of the main agent.",
+     "actor_type": "agent",
+     "responsibility": "Built-in sub-agent for parallelized tasks of any kind, using the default agent configuration.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+      "section": "Invoking as sub-agents — Built-in sub-agents"
+     },
+     "display_name": "General purpose sub-agent",
+     "seed": "kiro:general-purpose"
+    },
+    {
+     "id": "custom-agents",
+     "role": "custom agents (e.g. code-review-agent)",
+     "v21_role": "review_agent",
+     "v21_note": "Example only; teams can define any role.",
+     "actor_type": "agent",
+     "responsibility": "Team-defined agents in .kiro/agents/ with their own tools, permissions and prompt; example: code review.",
+     "phase": "review",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-custom-agents.md",
+      "section": "Agent examples — Code review agent"
+     },
+     "display_name": "Custom agent · code-review-agent",
+     "seed": "kiro:custom-agents"
+    },
+    {
+     "id": "hook-pre-tool-use",
+     "role": "Pre Tool Use hook",
+     "v21_role": null,
+     "v21_note": "In-session automation; no CI equivalent in the docs.",
+     "actor_type": "system",
+     "responsibility": "Triggers before the agent invokes a tool and can validate and block the call.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-steering-hooks.md",
+      "section": "Hook types — Pre Tool Use"
+     },
+     "display_name": "Hook · Pre Tool Use",
+     "seed": "kiro:hook-pre-tool-use"
+    },
+    {
+     "id": "hook-post-task",
+     "role": "Post Task Execution hook",
+     "v21_role": null,
+     "v21_note": "In-session automation; no CI equivalent in the docs.",
+     "actor_type": "system",
+     "responsibility": "Triggers after a spec task completes, e.g. to run tests or linting on changed files.",
+     "phase": "testing",
+     "citation": {
+      "file": "fuentes/ai-sdlc/kiro/kiro-steering-hooks.md",
+      "section": "Hook types — Post Task Execution"
+     },
+     "display_name": "Hook · Post Task Execution",
+     "seed": "kiro:hook-post-task"
+    }
+   ],
+   "gaps": [
+    {
+     "text": "No product owner, QA or architect is defined as a role; the human is a generic user ('Your role').",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§2 Kiro: Specs y Custom agents — Roles"
+     }
+    },
+    {
+     "text": "Checks run inside the agent session (hooks, optional property-based tests); the reviewed specs and agents docs do not mention CI/CD gates or architecture rules, which live in design.md and steering as context.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§5.1 Reglas de arquitectura verificadas en CI (fitness functions) — Kiro"
+     }
+    },
+    {
+     "text": "Kiro Web can plan changes across several repositories in one spec session, but the reviewed docs do not say how the cross-repo result is verified.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§5.2 Cambios que cruzan repositorios — Kiro"
+     }
+    }
+   ]
+  },
+  {
+   "id": "ai-sdlc-io",
+   "order": 4,
+   "name": "ai-sdlc.io — AI-SDLC Framework (spec v1alpha1)",
+   "short": "ai-sdlc.io",
+   "publisher": "AI-SDLC Framework (GitHub org ai-sdlc-framework; no company named)",
+   "date": null,
+   "date_note": "Pages carry no publication date; spec v1alpha1, Status: Draft; captured 2026-10-10.",
+   "url": "https://ai-sdlc.io/",
+   "related_urls": [
+    "https://ai-sdlc.io/docs/spec/primer",
+    "https://github.com/ai-sdlc-framework/ai-sdlc"
+   ],
+   "label": "early-stage open-source project, not an industry standard",
+   "summary": "A declarative governance framework (Kubernetes-style YAML resources) in which an operator decides open questions, an orchestrator dispatches agents, and cross-harness reviewers and quality gates run before merge.",
+   "source_phases": "CAPTURE · DECIDE · ADMIT · DISPATCH · REVIEW · ATTEST · MERGE",
+   "members": [
+    {
+     "id": "operator",
+     "role": "operator",
+     "v21_role": "engineer",
+     "v21_note": "Its PR approval maps to code_owner in v2.1.",
+     "actor_type": "human",
+     "responsibility": "Resolves open questions until the Definition-of-Ready gate passes, and approves the PR before merge.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-home.md",
+      "section": "From idea to merged PR — 2. DECIDE; 7. MERGE"
+     },
+     "display_name": "Hana · Operator",
+     "seed": "ai-sdlc-io:operator"
+    },
+    {
+     "id": "refinement-reviewer",
+     "role": "refinement-reviewer",
+     "v21_role": "review_agent",
+     "v21_note": "Reviews task readiness, not code.",
+     "actor_type": "agent",
+     "responsibility": "LLM evaluator in DoR Stage B: scores semantic gates such as whether acceptance criteria are verifiable.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+      "section": "Definition-of-Ready gate — How it works"
+     },
+     "display_name": "refinement-reviewer",
+     "seed": "ai-sdlc-io:refinement-reviewer"
+    },
+    {
+     "id": "security-compliance-lead",
+     "role": "Security / Compliance Lead",
+     "v21_role": "policy_owner",
+     "v21_note": null,
+     "actor_type": "human",
+     "responsibility": "Persona that enforces security and regulatory compliance: hard-mandatory gates, audit trails, provenance.",
+     "phase": "planning",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-primer.md",
+      "section": "9. Target Personas"
+     },
+     "display_name": "Zara · Security Lead",
+     "seed": "ai-sdlc-io:security-compliance-lead"
+    },
+    {
+     "id": "cli-orchestrator",
+     "role": "cli-orchestrator",
+     "v21_role": "flow_engine",
+     "v21_note": "spec-roles §1 maps it to supervisor; modelled here as deterministic code (flow_engine).",
+     "actor_type": "system",
+     "responsibility": "Walks the dependency graph, admits ready work, dispatches developer subagents in worktrees and opens PRs.",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-home.md",
+      "section": "Five pillars — Autonomous Orchestrator"
+     },
+     "display_name": "cli-orchestrator",
+     "seed": "ai-sdlc-io:cli-orchestrator"
+    },
+    {
+     "id": "code-agent",
+     "role": "code-agent / coding-agent",
+     "v21_role": "code_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Implements features with tested code; executes the pipeline's implement stage (AgentRole 'Software Engineer').",
+     "phase": "implementation",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-primer.md",
+      "section": "7. Getting Started — Step 3: Add Agent Roles"
+     },
+     "display_name": "code-agent",
+     "seed": "ai-sdlc-io:code-agent"
+    },
+    {
+     "id": "code-reviewer",
+     "role": "code-reviewer",
+     "v21_role": "review_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Catches implementation mistakes, on a harness other than the implementer's (default: Codex).",
+     "phase": "review",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+      "section": "Cross-harness review — What we ship"
+     },
+     "display_name": "code-reviewer",
+     "seed": "ai-sdlc-io:code-reviewer"
+    },
+    {
+     "id": "test-reviewer",
+     "role": "test-reviewer",
+     "v21_role": "review_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Reviews test coverage and quality, on a harness other than the implementer's (default: Codex).",
+     "phase": "review",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+      "section": "Cross-harness review — What we ship"
+     },
+     "display_name": "test-reviewer",
+     "seed": "ai-sdlc-io:test-reviewer"
+    },
+    {
+     "id": "security-reviewer",
+     "role": "security-reviewer",
+     "v21_role": "review_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Hostile-input security analysis, on a harness independent of the implementer (default: Claude Opus).",
+     "phase": "review",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+      "section": "Cross-harness review — What we ship"
+     },
+     "display_name": "security-reviewer",
+     "seed": "ai-sdlc-io:security-reviewer"
+    },
+    {
+     "id": "tester-agent",
+     "role": "tester-agent",
+     "v21_role": "verifier",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Receives a handoff from code-agent when implementation completes; named only as a handoff target.",
+     "phase": "testing",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-spec.md",
+      "section": "5.2.3 Example (AgentRole handoffs)"
+     },
+     "display_name": "tester-agent",
+     "seed": "ai-sdlc-io:tester-agent"
+    },
+    {
+     "id": "ci-verifier",
+     "role": "CI verifier",
+     "v21_role": "ci",
+     "v21_note": "scripts/verify-attestation.mjs",
+     "actor_type": "system",
+     "responsibility": "Checks the PR's signed attestation holds all three reviewer verdicts, approved, before allowing merge.",
+     "phase": "testing",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-docs-conceptos.md",
+      "section": "Cross-harness review — What you'll see in your PRs"
+     },
+     "display_name": "CI verifier",
+     "seed": "ai-sdlc-io:ci-verifier"
+    },
+    {
+     "id": "deploy-agent",
+     "role": "deploy-agent",
+     "v21_role": "devops_agent",
+     "v21_note": null,
+     "actor_type": "agent",
+     "responsibility": "Runs the pipeline's deploy stage, gated by a staging-verification quality gate.",
+     "phase": "deployment",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-spec.md",
+      "section": "5.1.3 Example (Pipeline, stage 'deploy')"
+     },
+     "display_name": "deploy-agent",
+     "seed": "ai-sdlc-io:deploy-agent"
+    },
+    {
+     "id": "engineering-manager",
+     "role": "Engineering Manager",
+     "v21_role": null,
+     "v21_note": "Governs the agent, not the artifacts; outside v2.1 scope (spec-roles §1).",
+     "actor_type": "human",
+     "responsibility": "Approves an agent's autonomy promotions; persona that owns team delivery and quality.",
+     "phase": "maintenance",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-primer.md",
+      "section": "7. Getting Started — Step 4: Configure Autonomy; 9. Target Personas"
+     },
+     "display_name": "Diego · Engineering Manager",
+     "seed": "ai-sdlc-io:engineering-manager"
+    }
+   ],
+   "gaps": [
+    {
+     "text": "No architect role; architecture appears only as the AutonomyPolicy option 'requireApproval: architecture-changes-only'.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§4 Tabla comparativa de roles (row 'Arquitectura')"
+     }
+    },
+    {
+     "text": "The example quality gates cover coverage, security, reviewers and provenance; the reviewed docs propose no architecture-rule gate.",
+     "citation": {
+      "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+      "section": "§5.1 Reglas de arquitectura verificadas en CI (fitness functions) — ai-sdlc.io"
+     }
+    },
+    {
+     "text": "Cross-repo appears only as an Enterprise feature ('Enterprise MCP tools (SSO, org policy, cross-repo)'), without detail.",
+     "citation": {
+      "file": "fuentes/ai-sdlc/ai-sdlc-io/ai-sdlc-io-home.md",
+      "section": "Free and open source — Enterprise"
+     }
+    }
+   ]
+  },
+  {
+   "id": "agents-vs-gates",
+   "order": 5,
+   "name": "Agents vs. Gates — this experiment (AISDLC-Trace 2.1)",
+   "short": "Agents vs. Gates",
+   "publisher": "Agents vs. Gates experiment (Alfredo De Regil)",
+   "date": "2026-10-10",
+   "url": null,
+   "label": null,
+   "summary": "The v2.1 roles that act in this experiment: one code agent per repo against CI with architecture gates (M1), and a multi-role AI-SDLC flow with humans simulated by fixed policy (M2).",
+   "source_phases": "discovery · planning · implementation · review · testing · deployment · maintenance",
+   "members": [
+    {
+     "id": "originator",
+     "role": "originator",
+     "v21_role": "originator",
+     "v21_note": "M2 only; simulated: true.",
+     "actor_type": "human",
+     "responsibility": "Simulated by fixed policy: raises the problem and produces the first intent.md (M2).",
+     "phase": "discovery",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Felix · Originator",
+     "seed": "originator"
+    },
+    {
+     "id": "product-owner",
+     "role": "product_owner",
+     "v21_role": "product_owner",
+     "v21_note": "M2 only; simulated: true.",
+     "actor_type": "human",
+     "responsibility": "Simulated by fixed policy: approves spec.md if it meets its checklist (M2).",
+     "phase": "discovery",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Amara · Product Owner",
+     "seed": "product-owner"
+    },
+    {
+     "id": "requirements-agent",
+     "role": "requirements_agent",
+     "v21_role": "requirements_agent",
+     "v21_note": "M2 only.",
+     "actor_type": "agent",
+     "responsibility": "Drafts intent.md and spec.md with acceptance criteria and risks (M2).",
+     "phase": "discovery",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Requirements Agent",
+     "seed": "requirements-agent"
+    },
+    {
+     "id": "task-planner",
+     "role": "task_planner",
+     "v21_role": "task_planner",
+     "v21_note": "M2 only.",
+     "actor_type": "agent",
+     "responsibility": "Breaks the approved spec into tasks in plan.md (M2).",
+     "phase": "planning",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Task Planner",
+     "seed": "task-planner"
+    },
+    {
+     "id": "engineer",
+     "role": "engineer",
+     "v21_role": "engineer",
+     "v21_note": "M2 only; simulated: true.",
+     "actor_type": "human",
+     "responsibility": "Simulated by fixed policy: approves plan.md (M2).",
+     "phase": "planning",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Yusuf · Engineer",
+     "seed": "engineer"
+    },
+    {
+     "id": "tech-lead",
+     "role": "tech_lead",
+     "v21_role": "tech_lead",
+     "v21_note": "M2 only; simulated: true.",
+     "actor_type": "human",
+     "responsibility": "Simulated by fixed policy: reviews higher-risk specs and PRs and owns REVIEW.md (M2).",
+     "phase": "planning",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Greta · Tech Lead",
+     "seed": "tech-lead"
+    },
+    {
+     "id": "architect",
+     "role": "architect",
+     "v21_role": "architect",
+     "v21_note": "v2.1 extension; on the roster with simulated: true.",
+     "actor_type": "human",
+     "responsibility": "Owns ARCHITECTURE-RULES.md, the catalog and ADRs; CODEOWNER of gate paths. Fixed artifacts; does not act in runs.",
+     "phase": "planning",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§13.2 Extensiones v2.1 (1. Rol humano architect); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+     },
+     "display_name": "Maya · Architect",
+     "seed": "architect"
+    },
+    {
+     "id": "flow-engine",
+     "role": "flow_engine",
+     "v21_role": "flow_engine",
+     "v21_note": "v2.1 extension; replaces an agent supervisor.",
+     "actor_type": "system",
+     "responsibility": "Deterministic harness orchestrator: assigns the task, relays CI feedback, changes phases; coordinates M2.",
+     "phase": "implementation",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§13.2 Extensiones v2.1 (2. roles de sistema); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+     },
+     "display_name": "Flow engine",
+     "seed": "flow-engine"
+    },
+    {
+     "id": "code-orders",
+     "role": "code_agent",
+     "v21_role": "code_agent",
+     "v21_note": "M1 and M2.",
+     "actor_type": "agent",
+     "responsibility": "Implements the ticket in orders-service and fixes it after CI feedback; opens the PR.",
+     "phase": "implementation",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§13.3 De la transcripción a la traza (M1, sondas de un agente)"
+     },
+     "display_name": "Code Agent · orders-service",
+     "seed": "code-orders"
+    },
+    {
+     "id": "code-payments",
+     "role": "code_agent",
+     "v21_role": "code_agent",
+     "v21_note": "M2 only.",
+     "actor_type": "agent",
+     "responsibility": "One code agent per affected repo in M2; this one implements the payments-service stories.",
+     "phase": "implementation",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/); §16.1 Escenario completo"
+     },
+     "display_name": "Code Agent · payments-service",
+     "seed": "code-payments"
+    },
+    {
+     "id": "ci",
+     "role": "ci",
+     "v21_role": "ci",
+     "v21_note": "v2.1 extension.",
+     "actor_type": "system",
+     "responsibility": "Runs build, test, contract and architecture-gate (ARCH-n) checks on every PR attempt.",
+     "phase": "review",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§13.2 Extensiones v2.1 (2. roles de sistema; 3. Eventos nuevos); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+     },
+     "display_name": "CI",
+     "seed": "ci"
+    },
+    {
+     "id": "review-agent",
+     "role": "review_agent",
+     "v21_role": "review_agent",
+     "v21_note": "M2 only.",
+     "actor_type": "agent",
+     "responsibility": "Reviews PRs on a different model than the code agent; can request changes, never approves (M2).",
+     "phase": "review",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Review Agent",
+     "seed": "review-agent"
+    },
+    {
+     "id": "code-owner",
+     "role": "code_owner",
+     "v21_role": "code_owner",
+     "v21_note": "M2 only; simulated: true.",
+     "actor_type": "human",
+     "responsibility": "Simulated by fixed policy: approves the merge if CI is green and the reviewer requested no changes (M2).",
+     "phase": "review",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Kenji · Code Owner",
+     "seed": "code-owner"
+    },
+    {
+     "id": "verifier",
+     "role": "verifier",
+     "v21_role": "verifier",
+     "v21_note": "M2 only.",
+     "actor_type": "agent",
+     "responsibility": "Runs the app and tests in isolation and reports without fixing (M2).",
+     "phase": "testing",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Verifier",
+     "seed": "verifier"
+    },
+    {
+     "id": "staging",
+     "role": "staging",
+     "v21_role": "staging",
+     "v21_note": "v2.1 extension; metadata.instrument = true.",
+     "actor_type": "system",
+     "responsibility": "Oracle instrument: checks consumers after the loop; its results are hidden from the agent and never fed back.",
+     "phase": "testing",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§13.2 Extensiones v2.1 (2. roles de sistema); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+     },
+     "display_name": "Staging (oracle)",
+     "seed": "staging"
+    },
+    {
+     "id": "devops-agent",
+     "role": "devops_agent",
+     "v21_role": "devops_agent",
+     "v21_note": "M2 only, permissive condition.",
+     "actor_type": "agent",
+     "responsibility": "Prepares pipelines, containers and rollback; in M2 it acts only in the permissive condition.",
+     "phase": "deployment",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "DevOps Agent",
+     "seed": "devops-agent"
+    },
+    {
+     "id": "release-manager",
+     "role": "release_manager",
+     "v21_role": "release_manager",
+     "v21_note": "M2 only; simulated: true.",
+     "actor_type": "human",
+     "responsibility": "Simulated by fixed policy: authorizes the production release (M2).",
+     "phase": "deployment",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     },
+     "display_name": "Lucía · Release Manager",
+     "seed": "release-manager"
+    }
+   ],
+   "gaps": [
+    {
+     "text": "No Scrum Master, by design: no reviewed source includes one and the role spec does not either.",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+     }
+    },
+    {
+     "text": "Human roles are simulated by fixed policy (simulated: true), not played by people.",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§16.2 AI-SDLC flow multi-rol (flow/); §13.2 Extensiones v2.1 (rule 13)"
+     }
+    },
+    {
+     "text": "Coordination is deterministic code (flow_engine), not a supervisor agent.",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§13.2 Extensiones v2.1 (2. roles de sistema)"
+     }
+    },
+    {
+     "text": "Team composition is not measured in the experiment; this view exists for the visual demo.",
+     "citation": {
+      "file": "docs/construccion-experimento.md",
+      "section": "§22.6 Teams & Avatars"
+     }
+    }
+   ]
+  }
+ ]
+}

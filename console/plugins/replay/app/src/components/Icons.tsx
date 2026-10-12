@@ -6,6 +6,8 @@ const P = {
   pause: <><path d="M8 5v14" /><path d="M16 5v14" /></>,
   prev: <><path d="M6 5v14" /><path d="M18 5 9 12l9 7z" /></>,
   next: <><path d="M18 5v14" /><path d="m6 5 9 7-9 7z" /></>,
+  first: <><path d="M5 5v14" /><path d="M12 5 5 12l7 7" /><path d="M19 5l-7 7 7 7" /></>,
+  last: <><path d="M19 5v14" /><path d="m12 5 7 7-7 7" /><path d="m5 5 7 7-7 7" /></>,
   expand: <><path d="M4 9V4h5" /><path d="M20 9V4h-5" /><path d="M4 15v5h5" /><path d="M20 15v5h-5" /></>,
   panel: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></>,
   record: <><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3" /></>,
