@@ -7,6 +7,9 @@ Checks, in order, all always run (none short-circuits another):
     typecheck (build)  unit-tests (test)  ARCH-1 ARCH-2 ARCH-3 (gate)  ARCH-4 (contract)  ARCH-5 ARCH-6 ARCH-7 (gate)
     ARCH-8 (contract)
 `error` = the check could not run (e.g. createApp is gone); it counts as a CI failure.
+Fail closed (2026-10-11): a check whose input is empty never passes. dependency-cruiser analysing 0 modules under src/,
+no source files to scan, 0 contracts of a kind, a contract with no required fields, a missing/unreadable catalog or
+PII baseline -> `error`; `npm test` that runs 0 tests (or reports no test count) -> `fail`.
 
 The broker, catalog and PII baseline are copied from scenario/repos/architecture to %TEMP%\\avg-ci-<runid>-* (outside
 the workspace) and deleted at the end (spec 7.3). In V1, ARCH-4 uses the workspace's contracts/consumers/*.json with
@@ -58,9 +61,14 @@ def materialize_architecture(run_id: str) -> Path:
     """Copy broker/, catalog/ and pii-baseline.json to a temp folder outside every workspace (spec 7.3)."""
     safe = re.sub(r"[^A-Za-z0-9_.-]", "_", run_id)[:60] or "adhoc"
     tmp = Path(tempfile.mkdtemp(prefix=f"avg-ci-{safe}-"))
-    shutil.copytree(ARCH_SRC / "broker", tmp / "broker")
-    shutil.copytree(ARCH_SRC / "catalog", tmp / "catalog")
-    shutil.copyfile(ARCH_SRC / "pii-baseline.json", tmp / "pii-baseline.json")
+    # A missing piece is not fatal here: it is copied as empty/absent and the checks that read it report `error`.
+    for d in ("broker", "catalog"):
+        if (ARCH_SRC / d).is_dir():
+            shutil.copytree(ARCH_SRC / d, tmp / d)
+        else:
+            (tmp / d).mkdir()
+    if (ARCH_SRC / "pii-baseline.json").is_file():
+        shutil.copyfile(ARCH_SRC / "pii-baseline.json", tmp / "pii-baseline.json")
     return tmp
 
 
@@ -105,29 +113,55 @@ def _stage_tests(svc: Path) -> dict:
     text = r.text
     summary = [l.strip() for l in text.splitlines() if re.match(r"^\s*(ℹ|#)\s*(tests|pass|fail|skipped|todo|cancelled)\b", l)]
     if r.code == 0:
+        counts = _test_counts(summary)
+        if "tests" not in counts:
+            return {"status": "fail", "output": "unit-tests FAIL: npm test exited 0 but reported no test count "
+                                                "(no `tests N` summary line); could not confirm that any test ran\n"
+                                                + _tail(text, 1500), "ms": r.duration_ms}
+        if counts.get("pass", counts["tests"]) == 0:
+            return {"status": "fail", "output": f"unit-tests FAIL: npm test ran {counts['tests']} test(s) and 0 passed "
+                                                "(no test files found, or every test skipped); 0 tests is not green\n"
+                                                + "\n".join(summary), "ms": r.duration_ms}
         return {"status": "pass", "output": "unit-tests PASS: npm test exited 0" + (
             "\n" + "\n".join(summary) if summary else ""), "ms": r.duration_ms}
     return {"status": "fail", "output": f"unit-tests FAIL: npm test exited {r.code}\n" + _tail(text, 3500),
             "ms": r.duration_ms}
 
 
+def _test_counts(summary: list[str]) -> dict[str, int]:
+    """Sums the node:test summary counters (`ℹ tests 39` / `# pass 39`) over every run in the output."""
+    counts: dict[str, int] = {}
+    for line in summary:
+        m = re.match(r"^(?:ℹ|#)\s*(tests|pass)\s+(\d+)\s*$", line)
+        if m:
+            counts[m.group(1)] = counts.get(m.group(1), 0) + int(m.group(2))
+    return counts
+
+
 def _stage_depcruise(svc: Path) -> dict:
     argv = toolchain.tool("depcruise") + ["src", "--config", ".dependency-cruiser.cjs", "--ignore-known",
                                           "--output-type", "json", "--no-progress"]
     r = toolchain.run(argv, svc, env=toolchain.base_env(), timeout=DEPCRUISE_TIMEOUT)
-    res = {"ms": r.duration_ms, "violations": None, "error": None}
+    res = {"ms": r.duration_ms, "violations": None, "error": None, "modules": 0}
     if r.timed_out:
         res["error"] = f"dependency-cruiser timed out after {DEPCRUISE_TIMEOUT}s"
         return res
     try:
         data = json.loads(r.out)
         res["violations"] = (data.get("summary") or {}).get("violations") or []
-    except ValueError:
+        res["modules"] = sum(1 for m in data.get("modules") or []
+                             if isinstance(m, dict) and str(m.get("source", "")).startswith("src/"))
+    except (ValueError, AttributeError):
         res["error"] = "dependency-cruiser did not run: " + _tail(r.text, 1500)
+        return res
+    if res["modules"] == 0:
+        # e.g. empty src/, or an includeOnly/exclude that matches nothing: a gate that analysed nothing must not pass
+        res["error"] = ("dependency-cruiser analysed 0 modules under src/; the check could not run "
+                        "(empty src/, or .dependency-cruiser.cjs filters out every file)")
     return res
 
 
-def _arch_layer_checks(dc: dict, io_findings: list[str], io_ms: int) -> list[dict]:
+def _arch_layer_checks(dc: dict, io_findings: list[str], io_ms: int, n_sources: int = 1) -> list[dict]:
     out = []
     by_rule: dict[str, list[str]] = {"ARCH-1": [], "ARCH-2": [], "ARCH-3": []}
     if dc["violations"] is not None:
@@ -145,14 +179,21 @@ def _arch_layer_checks(dc: dict, io_findings: list[str], io_ms: int) -> list[dic
         if rid == "ARCH-3":
             lines += io_findings
         ms = dc["ms"] + (io_ms if rid == "ARCH-3" else 0)
-        if dc["error"] is not None:
-            out.append(_check(rid, "error", f"{rid} ERROR: {dc['error']}" + ("\n" + "\n".join(lines) if lines else ""), ms))
+        errors = [dc["error"]] if dc["error"] is not None else []
+        if rid == "ARCH-3" and n_sources == 0:
+            errors.append(NO_SOURCES)
+        if errors:
+            out.append(_check(rid, "error", "\n".join(f"{rid} ERROR: {e}" for e in errors)
+                              + ("\n" + "\n".join(lines) if lines else ""), ms))
         elif lines:
             out.append(_check(rid, "fail", "\n".join(lines), ms))
         else:
             what = "dependency-cruiser" + (" + I/O scan" if rid == "ARCH-3" else "")
-            out.append(_check(rid, "pass", f"{rid} PASS: no violations ({what})", ms))
+            out.append(_check(rid, "pass", f"{rid} PASS: no violations ({what}, {dc['modules']} modules)", ms))
     return out
+
+
+NO_SOURCES = "the source scan found 0 code files under src/; the check could not run"
 
 
 def contract_files(svc: Path, visibility: str, arch: Path) -> list[Path]:
@@ -197,11 +238,20 @@ def _stage_contracts(svc: Path, main: Path | None, files: list[Path]) -> dict:
 
 def _contract_check(rid: str, cr: dict) -> dict:
     results = [r for r in cr["results"] if r.get("rule") == rid]
+    where = "contracts/consumers/ and the broker" if rid == "ARCH-4" else "the broker"
+    n_files = sum(1 for f in cr["files"] if _is_rest(f) == (rid == "ARCH-8"))
     if not cr["ok"] and not results:
         # probe could not run and there were no contracts of this kind to attribute it to
-        n_files = sum(1 for f in cr["files"] if _is_rest(f) == (rid == "ARCH-8"))
         if n_files == 0:
             return _check(rid, "error", f"{rid} ERROR: {cr['error']}", cr["ms"])
+    if n_files == 0 and not results:
+        kind = "event" if rid == "ARCH-4" else "REST"
+        return _check(rid, "error", f"{rid} ERROR: found 0 {kind} consumer contracts in {where}; the check could not "
+                                    f"run (a contract check with nothing to check never passes)", cr["ms"])
+    # A contract that requires nothing would pass vacuously.
+    results = [{**r, "status": "error", "problems": [f"{r.get('contract') or '(unnamed contract)'} requires no fields "
+                                                     f"(empty `requires`); nothing to check"]}
+               if r.get("status") == "pass" and not r.get("fields") else r for r in results]
     lines, statuses = [], []
     for r in results:
         statuses.append(r["status"])
@@ -212,22 +262,29 @@ def _contract_check(rid: str, cr: dict) -> dict:
             for p in r.get("problems") or ["unknown problem"]:
                 lines.append(f"{rid} {word} {r['consumer']}: {p}")
     if not results:
-        where = "contracts/consumers/" if rid == "ARCH-4" else "the broker"
         if not cr["ok"]:
             return _check(rid, "error", f"{rid} ERROR: {cr['error']}", cr["ms"])
-        return _check(rid, "pass", f"{rid} PASS: no consumer contracts found in {where}", cr["ms"])
+        return _check(rid, "error", f"{rid} ERROR: the contract checker returned no result for {n_files} contract "
+                                    f"file(s) in {where}; the check could not run", cr["ms"])
     status = "fail" if "fail" in statuses else "error" if "error" in statuses else "pass"
     # failing lines first, so the feedback leads with what broke
     lines.sort(key=lambda l: 0 if (" FAIL " in l or " ERROR " in l) else 1)
     return _check(rid, status, "\n".join(lines), cr["ms"])
 
 
-def _pii_check(sources, cr: dict, cat: catalog_mod.Catalog, arch: Path) -> dict:
+def _pii_check(sources, cr: dict, cat: catalog_mod.Catalog, arch: Path, input_errors: list[str] = ()) -> dict:
     t0 = time.monotonic()
+    errors = list(input_errors)
     try:
-        baseline = set(json.loads((arch / "pii-baseline.json").read_text(encoding="utf-8")))
-    except (ValueError, OSError):
+        raw = json.loads((arch / "pii-baseline.json").read_text(encoding="utf-8"))
+        if not isinstance(raw, list) or not all(isinstance(x, str) for x in raw):
+            raise ValueError("not a JSON list of strings")
+        baseline = set(raw)
+    except (ValueError, OSError) as ex:
         baseline = set()
+        why = "missing" if isinstance(ex, FileNotFoundError) else \
+            f"unreadable ({type(ex).__name__})" if isinstance(ex, OSError) else f"invalid ({ex})"
+        errors.append(f"the PII baseline (pii-baseline.json) is {why}; the check could not run")
     events = {ev for svc, ev in cat.topic_owner.values() if svc == cat.me}
     static = scans.pii_static(sources, events)
     dynamic: list[str] = []
@@ -250,10 +307,37 @@ def _pii_check(sources, cr: dict, cat: catalog_mod.Catalog, arch: Path) -> dict:
         if key not in baseline and key not in static:
             lines.append(f"ARCH-6 FAIL {key} carries customer PII (only customer-service stores PII; carry customerId)")
     ms = int((time.monotonic() - t0) * 1000)
+    if errors:
+        return _scan_check("ARCH-6", list(dict.fromkeys(lines)), "", ms, errors)
     if lines:
         return _check("ARCH-6", "fail", "\n".join(dict.fromkeys(lines)), ms)
     note = "" if caps else " (runtime payloads not available; type scan only)"
     return _check("ARCH-6", "pass", f"ARCH-6 PASS: no new PII fields (baseline: {', '.join(sorted(baseline))}){note}", ms)
+
+
+def _scan_check(rid: str, findings: list[str], pass_text: str, ms: int, errors: list[str]) -> dict:
+    """A source scan: `error` if its input was empty or unreadable (findings still listed), else fail/pass."""
+    if errors:
+        return _check(rid, "error", "\n".join([f"{rid} ERROR: {e}" for e in errors] + findings), ms)
+    if findings:
+        return _check(rid, "fail", "\n".join(findings), ms)
+    return _check(rid, "pass", pass_text, ms)
+
+
+def load_catalog(catalog_dir: Path, me: str = "orders-service") -> tuple[catalog_mod.Catalog, str | None]:
+    """The catalog, or an empty one plus the reason it cannot be used (missing, empty, unparseable, no `me`)."""
+    try:
+        services = catalog_mod.load_dir(catalog_dir)
+    except Exception as ex:  # any parser failure is an unusable input, never a pass
+        return catalog_mod.Catalog({}, me), (f"the architecture catalog could not be parsed ({type(ex).__name__}: "
+                                             f"{ex}); the check could not run")
+    if not services:
+        return catalog_mod.Catalog({}, me), "the architecture catalog is missing or empty (0 catalog/*.yaml files); " \
+                                            "the check could not run"
+    if me not in services:
+        return catalog_mod.Catalog(services, me), (f"the architecture catalog has no entry for {me} "
+                                                   f"(catalog/{me}.yaml); the check could not run")
+    return catalog_mod.Catalog(services, me), None
 
 
 # ---- main entry ------------------------------------------------------------------------------------------------
@@ -272,7 +356,7 @@ def run_ci(workspace: Path, visibility: str | None = None, run_id: str = "adhoc"
 
 def _run(svc: Path, visibility: str, arch: Path) -> dict:
     t0 = time.monotonic()
-    cat = catalog_mod.Catalog(catalog_mod.load_dir(arch / "catalog"))
+    cat, cat_error = load_catalog(arch / "catalog")
     files = contract_files(svc, visibility, arch)
     with ThreadPoolExecutor(max_workers=3) as pool:
         f_tsc = pool.submit(_stage_tsc, svc)
@@ -291,13 +375,14 @@ def _run(svc: Path, visibility: str, arch: Path) -> dict:
 
     checks = [_check("typecheck", tsc["status"], tsc["output"], tsc["ms"]),
               _check("unit-tests", tests["status"], tests["output"], tests["ms"])]
-    checks += _arch_layer_checks(dc, io, scan_ms)
+    checks += _arch_layer_checks(dc, io, scan_ms, len(sources))
     checks.append(_contract_check("ARCH-4", cr))
-    checks.append(_check("ARCH-5", "fail" if a5 else "pass", "\n".join(a5) if a5 else
-                         "ARCH-5 PASS: every outgoing call is declared in catalog/orders-service.yaml", scan_ms))
-    checks.append(_pii_check(sources, cr, cat, arch))
-    checks.append(_check("ARCH-7", "fail" if a7 else "pass", "\n".join(a7) if a7 else
-                         "ARCH-7 PASS: no database connections or clients", scan_ms))
+    # ARCH-5/6/7 read the source tree and the catalog; either one empty or unreadable -> error, never pass.
+    input_errors = ([] if sources else [NO_SOURCES]) + ([cat_error] if cat_error else [])
+    checks.append(_scan_check("ARCH-5", a5, "ARCH-5 PASS: every outgoing call is declared in catalog/orders-service.yaml",
+                              scan_ms, input_errors))
+    checks.append(_pii_check(sources, cr, cat, arch, input_errors))
+    checks.append(_scan_check("ARCH-7", a7, "ARCH-7 PASS: no database connections or clients", scan_ms, input_errors))
     checks.append(_contract_check("ARCH-8", cr))
     failed = [c for c in checks if c["status"] != "pass"]
     return {"ok": not failed, "checks": checks, "feedback_text": _feedback_text(failed)}
