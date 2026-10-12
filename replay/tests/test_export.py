@@ -104,7 +104,7 @@ class BuildReplay(unittest.TestCase):
         # M1 has no reviewer: no review table, the PR goes to the tray beside the CI tower
         self.assertNotIn("review-table", places)
         self.assertNotIn("review-desk", places)
-        self.assertEqual(places["staging-bench"]["note"], "hidden from the agent")
+        self.assertIn("hidden from the agent", places["staging-bench"]["note"])
         self.assertEqual(places["desk-orders"]["label"], "Checkout · orders")
 
     def test_markers_break_repair(self):
@@ -214,7 +214,8 @@ class SceneV2(unittest.TestCase):
         self.assertTrue(mv, "the agent walks to the PR tray")
         used = {p["id"]: p["used"] for p in r["places"]}
         self.assertTrue(used["ci-tower"] and used["pr-tray"] and used["desk-orders"] and used["staging-bench"])
-        self.assertFalse(used["product-desk"] or used["planning-room"] or used["merge-gate"])
+        self.assertFalse(used["planning-room"] or used["analysis-desk"] or used["tester-desk"] or used["merge-gate"])
+        self.assertTrue(used["product-desk"], "the ticket comes from the product role (scenario)")
 
     def test_reviewer_runs_keep_the_review_table(self):
         events = ex.read_trace(REPO / "flow" / "examples" / "sprint-mock-F1.jsonl")
@@ -308,7 +309,7 @@ class SceneV2(unittest.TestCase):
         a = ex.build_replay(events)["meta"]["extras_sha256"]
         b = ex.build_replay(events, self._extras(record={"visibility": "V0"}))["meta"]["extras_sha256"]
         self.assertNotEqual(a, b)
-        self.assertEqual(ex.build_replay(events)["meta"]["exporter_version"], 3)
+        self.assertEqual(ex.build_replay(events)["meta"]["exporter_version"], 4)
 
     def test_real_p0_runs_export_when_present(self):
         root = REPO / "results" / "real" / "runs"
@@ -321,6 +322,74 @@ class SceneV2(unittest.TestCase):
                 jsonschema.validate(r, SCHEMA)
                 self.assertEqual(r["meta"]["source"], "real")
                 self.assertTrue(r["scene"]["diff_cards"], "every P0 run edited the event file")
+
+
+
+class SceneV3(unittest.TestCase):
+    """Theater v3: the floor as a lifecycle (Define, Build, Verify & release, Production)."""
+
+    def test_four_zones_left_to_right_and_every_place_in_one(self):
+        r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"))
+        zones = r["scene"]["zones"]
+        self.assertEqual([z["id"] for z in zones], ["define", "build", "verify", "production"])
+        self.assertEqual([z["x0"] for z in zones], sorted(z["x0"] for z in zones))
+        for p in r["places"]:
+            z = next(z for z in zones if z["id"] == p["zone"])
+            self.assertTrue(z["x0"] <= p["x"] <= z["x1"], p["id"])
+        self.assertEqual({z["band"] for z in zones}, {"probabilistic", "deterministic"})
+
+    def test_single_ticket_define_zone_and_lifecycle_label(self):
+        r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"))
+        sc = r["scene"]
+        self.assertEqual(sc["lifecycle_model"]["label"], "Single-ticket harness (Agents vs. Gates)")
+        o = sc["ticket_origin"]
+        self.assertEqual((o["place"], o["label"], o["ticket"]), ("product-desk", "ticket written by Product · scenario",
+                                                                 "X-rename"))
+        assign = next(s for s in r["steps"] if s.get("key") == "task_assigned")
+        self.assertEqual((o["seq"], o["t_ms"], o["to"]), (assign["seq"], assign["t_ms"], "desk-orders"))
+        ids = {p["id"] for p in r["places"]}
+        self.assertFalse(ids & {"dev-billing", "dev-storefront", "dev-payments"}, "dev desks only for agents present")
+
+    def test_sprint_shows_every_define_role_and_its_framework(self):
+        r = ex.build_replay(ex.read_trace(REPO / "flow" / "examples" / "sprint-mock-F1.jsonl"))
+        sc = r["scene"]
+        self.assertNotIn("ticket_origin", sc)
+        self.assertEqual(sc["lifecycle_model"]["kind"], "sprint")
+        self.assertIn("agents-vs-gates flow", sc["lifecycle_model"]["label"])
+        used = {p["id"]: p["used"] for p in r["places"]}
+        for pid in ("product-desk", "planning-room", "analysis-desk", "architecture-library", "tester-desk",
+                    "review-desk", "merge-gate"):
+            self.assertTrue(used[pid], pid)
+        homes = {a["id"]: a["home"] for a in r["actors"]}
+        self.assertEqual(homes["code-billing"], "dev-billing")
+        self.assertEqual(homes["requirements-agent"], "analysis-desk")
+        self.assertEqual(homes["verifier"], "tester-desk")
+        orders = next(p for p in r["places"] if p["id"] == "desk-orders")
+        self.assertEqual((orders["x"], orders["y"]), ex.DESK_ORDERS_GRID)
+
+    def test_production_impact_comes_from_the_oracle_message_only(self):
+        r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"))
+        cons = {c["id"]: c for c in r["scene"]["consumers"]}
+        events = load("m1-xrename-v0s0-break-repair.jsonl")
+        msgs = {(e["payload"]["consumer"], e["payload"]["state"]): e["payload"].get("message")
+                for e in events if e["event_type"] == "ORACLE_RESULT"}
+        for (cid, state), msg in msgs.items():
+            o = cons[cid]["oracle"][state]
+            if o["status"] == "pass":
+                self.assertNotIn("impact", o)
+            elif o.get("impact"):
+                self.assertIn(o["impact"], msg)
+        self.assertEqual(ex.oracle_impact(None), {})
+        self.assertEqual(ex.oracle_impact("5 of 5 tests failed: billing invoices order A: billing could not invoice "
+                                          "order A: ContractViolationError x")["impact"],
+                         "billing could not invoice order A")
+
+    def test_consumer_owners_are_labelled_as_teams(self):
+        r = ex.build_replay(load("m1-xrename-v0s0-break-repair.jsonl"))
+        titles = {c["id"]: c["owner"]["title"] for c in r["scene"]["consumers"]}
+        self.assertEqual(titles, {"billing-service": "Billing team (consumer)",
+                                  "analytics-ingest": "Analytics team (consumer)",
+                                  "web-storefront": "Storefront team (consumer)"})
 
 
 if __name__ == "__main__":

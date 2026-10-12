@@ -292,6 +292,25 @@ def snapshot_run(run_id: str) -> Path:
     return dst
 
 
+SPRINT_DEMOS = {
+    "m2b-sprint-f1": (REPO / "flow" / "examples" / "sprint-mock-F1.jsonl",
+                      "EPIC-RQ6 · M2b multi-role sprint F1 · every lifecycle role"),
+}
+NL = chr(10)
+TEAMS_DATA = REPO / "console" / "plugins" / "teams" / "data"
+TEAMS_DIR = REPO / "console" / "plugins" / "replay" / "app" / "public" / "teams"
+
+
+def write_teams() -> None:
+    """Bundles the Teams plugin's models (read-only copy) for the standalone theater's sprint re-cast."""
+    TEAMS_DIR.mkdir(parents=True, exist_ok=True)
+    models = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(TEAMS_DATA.glob("*.json"))]
+    models.sort(key=lambda m: (m.get("order", 99), m["id"]))
+    with open(TEAMS_DIR / "index.json", "w", encoding="utf-8", newline=NL) as f:
+        json.dump({"source": "console/plugins/teams/data (copy)", "models": models}, f, indent=1, ensure_ascii=False)
+        f.write(NL)
+
+
 def write_demo() -> None:
     """Exports every fixture to the theater's bundled demo set (public/demo/*.json + index.json)."""
     from replay.export import build_replay, load_extras, read_trace
@@ -301,6 +320,11 @@ def write_demo() -> None:
     for stem, (run_id, label) in RUN_DEMOS.items():
         d = snapshot_run(run_id)
         items.append((stem, label, d / "events.jsonl", d))
+    # the M2b multi-role sprint (mock flow, read from flow/examples, never written): the only replay that shows every
+    # lifecycle role at work, and the one the theater can re-cast with another model's team
+    for stem, (trace, label) in SPRINT_DEMOS.items():
+        if trace.is_file():
+            items.append((stem, label, trace, None))
     for stem, label, trace, run_dir in items:
         r = build_replay(read_trace(trace), load_extras(run_dir) if run_dir else None)
         with open(DEMO_DIR / f"{stem}.json", "w", encoding="utf-8", newline="\n") as f:
@@ -322,6 +346,7 @@ def main() -> None:
     remove_v1().write(HERE / "m1-xremove-v1-gate.jsonl")
     units().write(HERE / "m1-xunits-v0s0-oracle.jsonl")
     write_demo()
+    write_teams()
     print("fixtures written to", HERE, "and demo replays to", DEMO_DIR)
 
 

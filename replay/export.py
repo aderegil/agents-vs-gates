@@ -20,7 +20,7 @@ from datetime import datetime
 from pathlib import Path
 
 SCHEMA = "replay/1"
-EXPORTER_VERSION = 3
+EXPORTER_VERSION = 4
 GAP_THRESHOLD_MS = 3000
 GAP_COMPRESSED_MS = 1500
 TEXT_MAX = 600
@@ -29,47 +29,99 @@ CAPTION_MAX = 200
 LEGEND_MOCK = "SIMULATED (mock agent) — not a real run"
 LEGEND_REAL = "Replay of a real run"
 
-# The AI-SDLC Office (spec 22.5 item 2). x/y are normalized positions on the aerial map. The left half of the back
-# rows is "before generation" (spec, context, the agent's desk), the right half "after generation" (CI, merge gate);
-# the front row holds the other teams' desks and the staging bench. Which of these a run shows depends on the run:
-# without a reviewer the review table becomes a PR tray beside the CI tower (see `_layout`).
+# The AI-SDLC Office as a lifecycle, left to right (Theater v3): DEFINE (product, delivery, analysis, architecture),
+# BUILD (code agents, testing), VERIFY & RELEASE (PR tray or review, CI, merge gate / release) and PRODUCTION (the
+# running services with their owning teams, the staging oracle that runs those teams' own tests, and the users).
+# x/y are normalized positions on the aerial map; `zone` names the column. Which places a run shows depends on the run
+# (see build_replay: PR tray without a reviewer, dev desks only for the code agents present).
+ZONES: list[dict] = [
+    {"id": "define", "label": "Define", "x0": 0.0, "x1": 0.22,
+     "roles": "product owner · delivery · analyst · architect", "band": "probabilistic"},
+    {"id": "build", "label": "Build", "x0": 0.22, "x1": 0.46, "roles": "code agents · tester", "band": "probabilistic"},
+    {"id": "verify", "label": "Verify & release", "x0": 0.46, "x1": 0.68,
+     "roles": "CI · review · merge gate · release manager", "band": "deterministic"},
+    {"id": "production", "label": "Production", "x0": 0.68, "x1": 1.0,
+     "roles": "running services · their teams · users", "band": "deterministic"},
+]
+# The v2 idea kept as a sub-band under the zone titles: what happens before code exists and while it is generated is
+# probabilistic (spec, context, the model); what checks it afterwards is deterministic (CI, gates, the teams' tests).
+BANDS = {"probabilistic": "before generation and generation · probabilistic",
+         "deterministic": "after generation · deterministic"}
+
 PLACES: list[dict] = [
-    {"id": "product-desk", "label": "Product desk", "kind": "desk", "x": 0.07, "y": 0.17, "note": "discovery"},
-    {"id": "planning-room", "label": "Planning room", "kind": "room", "x": 0.23, "y": 0.17, "note": "planning"},
-    {"id": "architecture-library", "label": "Architecture library", "kind": "library", "x": 0.40, "y": 0.15,
-     "note": "ARCH-n rules, catalog, ADRs"},
-    {"id": "dispatch", "label": "Dispatch board", "kind": "system", "x": 0.62, "y": 0.15, "note": "flow engine"},
-    {"id": "desk-orders", "label": "Checkout · orders", "kind": "desk", "x": 0.16, "y": 0.50,
-     "note": "orders-service"},
-    {"id": "desk-billing", "label": "Finance · billing", "kind": "desk", "x": 0.08, "y": 0.86,
-     "note": "billing-service"},
-    {"id": "desk-analytics", "label": "Data · analytics", "kind": "desk", "x": 0.26, "y": 0.86,
-     "note": "analytics-ingest"},
-    {"id": "desk-storefront", "label": "Digital · storefront", "kind": "desk", "x": 0.44, "y": 0.86,
-     "note": "web-storefront"},
-    {"id": "review-desk", "label": "Review desk", "kind": "desk", "x": 0.86, "y": 0.15, "note": "reviewers"},
-    {"id": "review-table", "label": "Review table", "kind": "room", "x": 0.87, "y": 0.32, "note": "pull request"},
-    {"id": "pr-tray", "label": "PR tray", "kind": "system", "x": 0.555, "y": 0.50,
-     "note": "CI is the only reviewer"},
-    {"id": "ci-tower", "label": "CI Tower", "kind": "system", "x": 0.69, "y": 0.48, "note": "one light per check"},
-    {"id": "merge-gate", "label": "Merge gate", "kind": "gate", "x": 0.89, "y": 0.50, "note": "merge"},
-    {"id": "staging-bench", "label": "Staging bench", "kind": "stage", "x": 0.80, "y": 0.86,
-     "note": "hidden from the agent"},
+    # DEFINE
+    {"id": "product-desk", "label": "Product", "kind": "desk", "x": 0.07, "y": 0.18, "note": "product owner",
+     "zone": "define"},
+    {"id": "planning-room", "label": "Delivery · planning", "kind": "room", "x": 0.16, "y": 0.33,
+     "note": "scrum master / delivery", "zone": "define"},
+    {"id": "analysis-desk", "label": "Analysis", "kind": "desk", "x": 0.06, "y": 0.5, "note": "analyst",
+     "zone": "define"},
+    {"id": "architecture-library", "label": "Architecture library", "kind": "library", "x": 0.14, "y": 0.7,
+     "note": "ARCH-n rules, catalog, ADRs", "zone": "define"},
+    # BUILD
+    {"id": "dispatch", "label": "Dispatch board", "kind": "system", "x": 0.34, "y": 0.16, "note": "flow engine",
+     "zone": "build"},
+    {"id": "desk-orders", "label": "Checkout · orders", "kind": "desk", "x": 0.33, "y": 0.42,
+     "note": "orders-service", "zone": "build"},
+    {"id": "dev-storefront", "label": "Dev · storefront", "kind": "desk", "x": 0.4, "y": 0.33,
+     "note": "web-storefront", "zone": "build"},
+    {"id": "dev-payments", "label": "Dev · payments", "kind": "desk", "x": 0.28, "y": 0.52,
+     "note": "payments-service", "zone": "build"},
+    {"id": "dev-billing", "label": "Dev · billing", "kind": "desk", "x": 0.4, "y": 0.52, "note": "billing-service",
+     "zone": "build"},
+    {"id": "dev-analytics", "label": "Dev · analytics", "kind": "desk", "x": 0.28, "y": 0.71,
+     "note": "analytics-ingest", "zone": "build"},
+    {"id": "dev-inventory", "label": "Dev · inventory", "kind": "desk", "x": 0.4, "y": 0.71,
+     "note": "inventory-service", "zone": "build"},
+    {"id": "tester-desk", "label": "Testing", "kind": "desk", "x": 0.34, "y": 0.86, "note": "tester / verifier",
+     "zone": "build"},
+    # VERIFY & RELEASE
+    {"id": "review-desk", "label": "Review desk", "kind": "desk", "x": 0.52, "y": 0.17, "note": "reviewers",
+     "zone": "verify"},
+    {"id": "review-table", "label": "Review table", "kind": "room", "x": 0.54, "y": 0.45, "note": "pull request",
+     "zone": "verify"},
+    {"id": "pr-tray", "label": "PR tray", "kind": "system", "x": 0.505, "y": 0.42,
+     "note": "CI is the only reviewer", "zone": "verify"},
+    {"id": "ci-tower", "label": "CI Tower", "kind": "system", "x": 0.6, "y": 0.36, "note": "one light per check",
+     "zone": "verify"},
+    {"id": "merge-gate", "label": "Merge gate · release", "kind": "gate", "x": 0.58, "y": 0.72,
+     "note": "release manager", "zone": "verify"},
+    # PRODUCTION
+    {"id": "staging-bench", "label": "Staging oracle", "kind": "stage", "x": 0.93, "y": 0.17,
+     "note": "the teams' own tests · hidden from the agent", "zone": "production"},
+    {"id": "desk-billing", "label": "billing-service", "kind": "desk", "x": 0.76, "y": 0.3,
+     "note": "Billing team", "zone": "production"},
+    {"id": "desk-analytics", "label": "analytics-ingest", "kind": "desk", "x": 0.93, "y": 0.47,
+     "note": "Analytics team", "zone": "production"},
+    {"id": "desk-storefront", "label": "web-storefront", "kind": "desk", "x": 0.78, "y": 0.66,
+     "note": "Storefront team", "zone": "production"},
+    {"id": "users", "label": "Users", "kind": "stage", "x": 0.88, "y": 0.88, "note": "illustrative",
+     "zone": "production"},
 ]
 PLACE_IDS = {p["id"] for p in PLACES}
-REVIEWER_ROLES = {"review_agent", "code_owner", "verifier", "code_simplifier"}
+REVIEWER_ROLES = {"review_agent", "code_owner", "code_simplifier"}
+DEFINE_ROLES = {"originator", "product_owner", "requirements_agent", "researcher", "task_planner", "tech_lead",
+                "supervisor", "policy_owner", "engineer", "architect"}
+DEV_DESKS = {"dev-storefront", "dev-payments", "dev-billing", "dev-analytics", "dev-inventory"}
+# M1 (one code agent): the agent's desk sits in the middle of BUILD; with several code agents (M2b) the dev desks fill
+# BUILD in a grid and the orders desk moves to its top-left cell.
+DESK_ORDERS_GRID = (0.28, 0.33)
 
 ROLE_HOME = {
     "flow_engine": "dispatch", "ci": "ci-tower", "staging": "staging-bench", "architect": "architecture-library",
-    "originator": "product-desk", "product_owner": "product-desk", "requirements_agent": "product-desk",
+    "originator": "product-desk", "product_owner": "product-desk",
+    "requirements_agent": "analysis-desk", "researcher": "analysis-desk",
     "task_planner": "planning-room", "engineer": "planning-room", "tech_lead": "planning-room",
-    "researcher": "planning-room", "supervisor": "planning-room", "policy_owner": "planning-room",
-    "review_agent": "review-desk", "code_owner": "review-desk", "verifier": "review-desk",
-    "code_simplifier": "review-desk",
+    "supervisor": "planning-room", "policy_owner": "planning-room",
+    "verifier": "tester-desk", "tester": "tester-desk",
+    "review_agent": "review-desk", "code_owner": "review-desk", "code_simplifier": "review-desk",
     "devops_agent": "merge-gate", "release_manager": "merge-gate", "monitoring_agent": "staging-bench",
 }
-REPO_DESKS = (("orders", "desk-orders"), ("billing", "desk-billing"), ("analytics", "desk-analytics"),
-              ("storefront", "desk-storefront"), ("web", "desk-storefront"))
+REPO_DESKS = (("orders", "desk-orders"), ("billing", "dev-billing"), ("analytics", "dev-analytics"),
+              ("storefront", "dev-storefront"), ("web", "dev-storefront"), ("payments", "dev-payments"),
+              ("inventory", "dev-inventory"))
+LIFECYCLE_SINGLE_TICKET = "Single-ticket harness (Agents vs. Gates)"
+TICKET_ORIGIN_LABEL = "ticket written by Product · scenario"
 
 # The other teams (M1 consumers of orders-service). Folder = the repo folder in a V2 workspace.
 CONSUMERS = (("billing-service", "desk-billing"), ("analytics-ingest", "desk-analytics"),
@@ -77,9 +129,9 @@ CONSUMERS = (("billing-service", "desk-billing"), ("analytics-ingest", "desk-ana
 # Fictional code owners for the consumer desks when the run has none of its own (M1 traces carry no consumer
 # people). Invented first names and seeds; they are not real people. They only react to the run's oracle results.
 CONSUMER_CAST = {
-    "billing-service": {"name": "Noor", "title": "billing owner", "seed": "cast:noor:billing"},
-    "analytics-ingest": {"name": "Kenji", "title": "analytics owner", "seed": "cast:kenji:analytics"},
-    "web-storefront": {"name": "Lucía", "title": "storefront owner", "seed": "cast:lucia:storefront"},
+    "billing-service": {"name": "Noor", "title": "Billing team (consumer)", "seed": "cast:noor:billing"},
+    "analytics-ingest": {"name": "Kenji", "title": "Analytics team (consumer)", "seed": "cast:kenji:analytics"},
+    "web-storefront": {"name": "Lucía", "title": "Storefront team (consumer)", "seed": "cast:lucia:storefront"},
 }
 READ_TOOLS = {"read", "grep", "glob", "ls", "notebookread", "view", "search", "find"}
 EDIT_TOOLS = {"edit", "write", "multiedit", "notebookedit", "apply_patch", "create", "str_replace"}
@@ -538,14 +590,39 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
         if s is not None and not s.get("caption"):
             s["caption"] = _clip(f"{name_of(s['actor'])} edits {card['file']} ({card['session']}).", CAPTION_MAX)
 
+    # DEFINE: who originated the work. Single-ticket runs have no product person in the trace; the ticket comes from
+    # the product role because the scenario fixes it, so the product desk shows that (and only that).
+    roles = {a["role"] for a in actors}
+    assign = next((s for s in steps if s.get("key") == "task_assigned"), None)
+    if not roles & {"originator", "product_owner"} and assign is not None:
+        scene["ticket_origin"] = {"place": "product-desk", "label": TICKET_ORIGIN_LABEL, "ticket": md.get("ticket"),
+                                  "title": assign.get("text"), "to": by_id.get(assign.get("target") or "", {}).get(
+                                      "home", "desk-orders"), "seq": assign["seq"], "t_ms": assign["t_ms"]}
+    frameworks = [str(f) for f in (sp.get("frameworks") or []) if f]
+    if frameworks:
+        scene["lifecycle_model"] = {"label": " · ".join(frameworks),
+                                    "detail": f"{len(roles - {'flow_engine', 'ci', 'staging'})} roles on the floor"
+                                              f" (AISDLC-Trace 2.1 role set)",
+                                    "source": "SESSION_STARTED.payload.frameworks", "kind": "sprint"}
+    else:
+        scene["lifecycle_model"] = {"label": LIFECYCLE_SINGLE_TICKET, "detail": "one code agent, one ticket",
+                                    "source": "harness (M1)", "kind": "single-ticket"}
+    scene["zones"] = [dict(z, band_label=BANDS[z["band"]]) for z in ZONES]
+
     used = _used_places(actors, steps, scene, has_reviewer)
+    grid = any(d in used for d in DEV_DESKS)
     places = []
     for p in PLACES:
         if p["id"] == "pr-tray" and has_reviewer:
             continue
         if p["id"] in ("review-table", "review-desk") and not has_reviewer:
             continue
-        places.append(dict(p, used=p["id"] in used))
+        if p["id"] in DEV_DESKS and p["id"] not in used:
+            continue  # dev desks exist only for the code agents a run has
+        q = dict(p, used=p["id"] in used)
+        if p["id"] == "desk-orders" and grid:
+            q["x"], q["y"] = DESK_ORDERS_GRID
+        places.append(q)
 
     hold = int(((end or {}).get("visual") or {}).get("hold_ms") or 0)
     duration = (steps[-1]["t_ms"] if steps else 0) + hold
@@ -577,6 +654,25 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
     return {"meta": meta, "places": places, "actors": actors, "steps": steps, "markers": markers, "scene": scene}
 
 
+def oracle_impact(message) -> dict:
+    """What a failing oracle result says broke, in the oracle's own words. The message is "<n of m tests failed>:
+    <test name>: <failure> | <test name>: <failure> ..."; the impact is the first test's failure head ("billing could
+    not invoice order A"), else its test name. Nothing is composed: no message, no impact."""
+    msg = str(message or "").strip()
+    if not msg:
+        return {}
+    head, _, rest = msg.partition(": ")
+    out = {"tests": head} if "test" in head else {}
+    first = (rest if "test" in head else msg).split(" | ")[0].strip()
+    parts = [x.strip() for x in first.split(": ") if x.strip()]
+    if len(parts) >= 2:
+        out["impact"] = _clip(parts[1], 80)
+        out["test"] = _clip(parts[0], 120)
+    elif parts and parts[0] != head:
+        out["impact"] = _clip(parts[0], 80)
+    return out
+
+
 def _used_places(actors: list[dict], steps: list[dict], scene: dict, has_reviewer: bool) -> set[str]:
     """Places somebody uses in this run: actors' homes, every place a step happens at or moves to, the other teams'
     desks when the oracle or the agent visits them, the library when the architect is on the floor."""
@@ -589,6 +685,10 @@ def _used_places(actors: list[dict], steps: list[dict], scene: dict, has_reviewe
     for c in scene["consumers"]:
         if c["oracle"] or c["reads"] or c["edits"] or c.get("owner_actor"):
             used.add(c["desk"])
+    if any(c["oracle"] for c in scene["consumers"]):
+        used.add("users")
+    if scene.get("ticket_origin"):
+        used.add("product-desk")
     if has_reviewer:
         used.add("review-table")
     return used
@@ -645,9 +745,10 @@ def _scene(events: list[dict], steps: list[dict], actors: list[dict], t_of_seq: 
     for e in events:
         p = e.get("payload") or {}
         if e.get("event_type") == "ORACLE_RESULT" and p.get("consumer"):
-            oracle.setdefault(p["consumer"], {})[p.get("state", "final")] = {
-                "status": "pass" if p.get("ok") else "fail", "seq": int(e.get("seq", 0)),
-                "t_ms": t_of_seq.get(int(e.get("seq", 0)), 0)}
+            o = {"status": "pass" if p.get("ok") else "fail", "seq": int(e.get("seq", 0)),
+                 "t_ms": t_of_seq.get(int(e.get("seq", 0)), 0)}
+            o.update(oracle_impact(p.get("message")) if not p.get("ok") else {})
+            oracle.setdefault(p["consumer"], {})[p.get("state", "final")] = o
 
     # tool calls: correlation id -> event seq; reads and edits by path
     corr_seq: dict[str, int] = {}
