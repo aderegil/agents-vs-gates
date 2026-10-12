@@ -433,3 +433,4 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - `harness.manifest --ns mock --p6-sidecar` wrote 121 runs (P1 60, P2 10, P4 51).
   - `runner --ns mock --stage P6 --part P1 --workers 2`: 60 of 60 done in 16 min, 0 infrastructure failures. The 6 P1 cells × 10, paraphrases p1..p5 × 12. The P2 and P4 parts stayed pending, and P6 stayed blinded in `--status`.
   - `state.p6_manifest_sha256` was recorded and `manifest.json` was untouched.
+- **Real sidecar written (2026-10-12, 08:49 local).** Alfredo approved P6 in full (all 121 runs, "Lanza Codex completo"). `harness.manifest --p6-sidecar` (seed 20261011) wrote `results/real/manifest-p6.json`: P1 60, P2 10, P4 51 = 121 runs, sha256 `d38a061bfea7b0f643fc872321e6ff71e5c08e54d30c2e507d766967ada0e086`. `prereg --verify` OK after writing it. Launched as `runner --ns real --stage P6 --workers 3` (all parts, P6 order) on scenario `b02008da…`.
