@@ -132,10 +132,10 @@ cell of the stage), frozen with this document.
 | Stage | What | Runs |
 |---|---|---|
 | P0 calibration (not analysed; exempt from the lock) | X-rename V0·S0 ×3, V0·S2 ×2 | 5 |
-| P1 core | X-rename and X-remove × {V0·S0, V0·S2, V2·S0} × 10, all six cells interleaved in the same rounds | 60 |
+| P1 core | the two H2 tickets ("H2 tickets" below: X-rename + X-remove, or X-rename + X-api) × {V0·S0, V0·S2, V2·S0} × 10, all six cells interleaved in the same rounds | 60 |
 | P2 pressure | X-remove V1·S0 × 10 | 10 |
 | P3 reviewers | RQ4 on PRs already generated | ~190 tool-less calls |
-| P4 breadth | X-units, X-api, X-dep × {V0·S0, V0·S2} × 5; X-add V0·S0 × 5; X-rename/X-remove V0·S1 × 5; + 3 concurrent V0·S0 controls per ticket (X-rename, X-remove) | 51 |
+| P4 breadth | X-units, X-dep × {V0·S0, V0·S2} × 5; X-api × {V0·S0, V0·S2} × 5 unless X-api is an H2 ticket; X-add V0·S0 × 5; X-rename/X-remove V0·S1 × 5; + 3 concurrent V0·S0 controls per ticket (X-rename, X-remove) | 51 (variant i) / 41 (variant ii) |
 | P5 optional | `cc-opus` on the V0 cells of P1 (V0·S0, V0·S2) and the P2 cell; RQ5 (X-rename V0·S0·W2 × 10) | 50 + 10 |
 
 **Change before the freeze (2026-10-11, Alfredo's decision):** the X-rename/X-remove V2·S0 cells moved from P4 (× 5)
@@ -143,6 +143,21 @@ to P1 (× 10, paraphrased like the other P1 cells), so that the secondary hypoth
 against a V0·S0 that runs in the same rounds. P4 lost those 10 runs (61 → 51); P0, P2 and P5 keep their cells.
 P6, the Codex replication, follows the design as it now stands: P1 (60, with V2·S0), P2 and P4 (51) with unit `codex`
 = 121 runs. The decision was taken before any Pilot X1 run.
+
+**H2 tickets: [CHOOSE: variant i | ii]** — resolved by the design session by applying the Pilot X2 decision rule
+below (`python -m analysis.xremove_rule`), before the freeze; then `H2_TICKETS` in `harness/manifest.py` is set to the
+same variant and the manifest is regenerated (`python -m harness.manifest --p1-variant xremove|xapi --print` shows the
+counts). Only the marker is edited; both paragraphs stay, and the one not chosen is the road not taken.
+- *Variant i (X2: ≥ 3 of 5 attempted the removal) — H2 = X-rename + X-remove.* P1 = {X-rename, X-remove} ×
+  {V0·S0, V0·S2, V2·S0} × 10 = 60; P2 10; P4 51; P5 60 (`cc-opus` on {X-rename, X-remove} × {V0·S0, V0·S2} + P2 +
+  RQ5); P6 121. X-api stays descriptive in P4 ({V0·S0, V0·S2} × 5).
+- *Variant ii (X2: ≤ 2 of 5) — H2 = X-rename + X-api.* P1 = {X-rename, X-api} × {V0·S0, V0·S2, V2·S0} × 10 = 60,
+  the X-api cells paraphrased p1..p5 × 2 like the others. X-api's P4 cells ({V0·S0, V0·S2} × 5) leave P4, because
+  the same cells are now in P1 with N = 10, so P4 = 41. X-remove keeps P2 (V1·S0 × 10) and its P4 cells (V0·S1 × 5
+  and the 3 concurrent V0·S0 controls) and is reported as **descriptive** (counts and intervals, with Pilot X2 and
+  the X1 caveat below). P5 = `cc-opus` on {X-rename, X-api} × {V0·S0, V0·S2} + P2 + RQ5 = 60; P6 = 111. With no
+  X-remove V0·S2 cell, RQ3's "V1 next to V0·S2" view for X-remove has no V0·S2 partner. P0 and the pilots are the
+  same in both variants.
 
 ### Pilot X1 (exploratory, run before the freeze; results disclosed, not part of the confirmatory analysis)
 X-rename and X-remove × {V0·S0, V2·S0}, W1 base text, × 10 per unit: `cc-sonnet` (runs `x1-0001..0040`) and,
@@ -153,6 +168,28 @@ its own seed 20261012), so V0 and V2 run interleaved under the same machine cond
 final `ticket_done`, out-of-scope edits, medians of turns, tokens and minutes, and an uncorrected Fisher exact test
 V0 vs V2 marked as exploratory. Its numbers never enter H2, HS-V2 or any confirmatory claim, and they are reported
 separately from P1; if it changes the design of P1 or P4 (V2), the change is written here before the freeze.
+**Scenario defect found by X1 (2026-10-11):** X-remove was 20 of 20 `no_change` (V0 and V2) because orders-service's
+own CSV export read `channel`, so the ticket's "nothing reads it" was false inside the agent's repo (design intent:
+only analytics-ingest reads it). The column was removed from the export before any further run
+(`docs/DECISIONS.md`); X1's X-remove runs ran with the defective scenario (scenario hash `6463b05d…`) and are
+reported as such, not pooled with later runs.
+
+### Pilot X2 (exploratory, after the scenario fix; results disclosed, not part of the confirmatory analysis)
+X-remove × {V0·S0, V2·S0}, W1 base text, × 5, `cc-sonnet` only (runs `x2-0001..0010`), randomized in blocks of 2
+(one V0 and one V2 per block, shuffled with its own seed 20261013). Like X1: not in the frozen manifest, visible, exempt
+from the lock, reported in `results/real/x2-summary.md`, never pooled with P1. Its only design role is the rule below.
+
+**Decision rule (written before X2 ran).** If in X2 V0·S0 the agent attempts to remove `channel` (any `gen` diff that
+deletes it from the OrderPlaced event or the order model) in **≤ 2 of 5** runs, H2 becomes **X-rename + X-api** and
+X-remove is reported as descriptive (variant ii above). If in **≥ 3 of 5**, H2 stays **X-rename + X-remove**
+(variant i). Measurement (`analysis/xremove_rule.py`, deterministic): in the archived `diffs/gen.diff`, within
+`src/core/events.ts` or `src/core/order.ts`, count removed (`-`) and added (`+`) lines whose code declares `channel`
+(`^\s*(readonly\s+)?channel\s*\??\s*:`, i.e. the interface property or the property that fills it); a run
+"attempts to remove" when, in either file, removed declarations outnumber added ones. An empty `gen.diff`
+(`no_change`) is no attempt; editing the line in place or adding `@deprecated` is no attempt. Infrastructure failures
+and excluded runs are not counted; with fewer than 5 counted runs the rule decides only if the result cannot change
+(≥ 3 attempts, or attempts + missing ≤ 2); otherwise the helper reports "undetermined" and the design session
+writes down how it proceeds before choosing.
 
 **Stopping rule:** a stage is run to completion unless quota or time runs out; if it stops after k complete rounds,
 every cell has k replicates and is reported as such. Outcomes stay **blind** until a stage is complete (the runner
@@ -161,16 +198,18 @@ refuses to show them; forcing it is recorded with its date). Stages are never st
 ## 7. Analysis plan
 - Per cell: "x of N" with 95 % Clopper-Pearson interval. **Never percentages with N < 20.**
 - **One confirmatory contrast:** H2, `staging_break` V0·S0 vs. V0·S2, two-sided Fisher exact **per ticket**
-  (X-rename, X-remove), Holm correction over those two. Everything else (V0·S1, P4 tickets, units) is
+  over the two H2 tickets chosen in §6 (variant i: X-rename, X-remove; variant ii: X-rename, X-api), Holm correction
+  over those two. Everything else (V0·S1, P4 tickets, units) is
   **descriptive**: counts and intervals, **no p-values**, except the secondary hypothesis below. "Differs between
   units" is claimed only with p < 0.05 in a pre-registered test. No logistic regression (0 of 10 gives complete
   separation).
 - **Pre-registered secondary hypothesis HS-V2** ("does seeing every consumer repo fix it?"): in P1, `staging_break`
-  (oracle on `gen`, the state of the first CI) of V2·S0 vs. V0·S0, two-sided Fisher exact **per ticket** (X-rename,
-  X-remove), with 95 % Clopper-Pearson intervals per cell. Expected direction: V2·S0 breaks less often than V0·S0.
+  (oracle on `gen`, the state of the first CI) of V2·S0 vs. V0·S0, two-sided Fisher exact **per ticket** (the same
+  two H2 tickets), with 95 % Clopper-Pearson intervals per cell. Expected direction: V2·S0 breaks less often than V0·S0.
   It is **outside the Holm family** (the confirmatory family stays H2: S0 vs. S2, two tickets) and is reported with
   its uncorrected p-values, labelled secondary; it never changes the reading of H2. The exploratory Pilot X1 (V0 vs.
-  V2, base text, §6) is run before the freeze; its results are reported separately and never pooled with P1.
+  V2, base text, §6) and Pilot X2 are run before the freeze; their results are reported separately and never pooled
+  with P1.
 - CI↔oracle 2×2 per ticket (with the by-construction note) and the mutation matrix (`results/mutation-matrix.md`).
 - RQ3 repair outcomes per condition; V1 presented as "the agent has the same information as CI".
 - RQ4: sensitivity and specificity with correct reason (blind-coded) per reviewer condition R-S0, R-S2, R-C (R-C =
