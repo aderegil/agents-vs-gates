@@ -128,6 +128,20 @@ class RunsListTest(unittest.TestCase):
             self.assertEqual(by["p1-0001"]["detectors"], 1)
             self.assertFalse(by["p1-0001"]["blinded"])
 
+    def test_pilot_runs_listed_and_visible(self):
+        """X1 / X2 run folders (x1-, x1c-, x2- ids) are listed and open, with outcomes (always-visible pilots)."""
+        with ConsoleFixture(copy_real=PLUGINS) as fx:
+            seed_explorer(fx.results)
+            ns = fx.results / "mock"
+            make_run(ns, "x1-0001", "X1", ticket="X-remove", outcome="no_change")
+            make_run(ns, "x2-0001", "X2", ticket="X-remove", V="V2", outcome="fixed_code")
+            by = {r["run_id"]: r for r in fx.owner.get("/api/runs?ns=mock").json["runs"]}
+            self.assertEqual((by["x1-0001"]["stage"], by["x1-0001"]["outcome"]), ("X1", "no_change"))
+            self.assertEqual((by["x2-0001"]["stage"], by["x2-0001"]["outcome"]), ("X2", "fixed_code"))
+            self.assertFalse(by["x2-0001"]["blinded"])
+            self.assertEqual(fx.owner.get("/api/runs/x2-0001?ns=mock").status, 200)
+            self.assertEqual(fx.owner.get("/api/runs/x3-0001?ns=mock").status, 404)
+
     def test_namespaces_never_mix(self):
         with ConsoleFixture(copy_real=PLUGINS) as fx:
             seed_explorer(fx.results)

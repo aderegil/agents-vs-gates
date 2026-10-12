@@ -127,12 +127,13 @@ export async function mount(el, shell) {
 
   async function load() {
     try {
-      const [rq, reviewer, mutation, excluded, pilot] = await Promise.all([
+      const [rq, reviewer, mutation, excluded, pilot, pilot2] = await Promise.all([
         shell.api.get("results/rq"), shell.api.get("results/reviewer"),
         shell.api.get("results/mutation"), shell.api.get("results/excluded"),
         shell.api.get("results/pilot").catch(() => null),
+        shell.api.get("results/pilot", { query: { stage: "X2" } }).catch(() => null),
       ]);
-      S.data = { rq, reviewer, mutation, excluded, pilot };
+      S.data = { rq, reviewer, mutation, excluded, pilot, pilot2 };
       if (alive) draw();
     } catch (e) {
       if (alive) body.replaceChildren(h("div", { class: "notice fail" }, iconEl("circle-alert", 16), e.error || String(e)));
@@ -318,13 +319,14 @@ export async function mount(el, shell) {
     return out;
   }
 
-  // ---- pilot X1 (exploratory; outside the confirmatory analysis)
+  // ---- pilots X1 / X2 (exploratory; outside the confirmatory analysis)
   function pilotSection(p) {
     const ci = (d) => d && d.n ? `${fmtXofN(d.x, d.n)} ${fmtCI(d.ci)}` : "—";
     const counts = (c) => Object.entries(c || {}).map(([k, v]) => `${k.replace(/_/g, " ")} ${v}`).join(", ") || "—";
     const num = (v) => v == null ? "—" : String(v);
     const pv = (v) => v == null ? "—" : v.toPrecision(3);
     const out = [notice(p.note, "", "info")];
+    if (p.rule) out.push(notice(`Pre-registered decision rule, X-remove V0·S0: attempted to remove channel in gen in ${p.rule.attempts} of ${p.rule.n} counted runs. ${p.rule.text}`, "", "info"));
     for (const [unit, tickets] of Object.entries(p.units)) {
       for (const [ticket, g] of Object.entries(tickets)) {
         const a = g.V0, b = g.V2;
@@ -357,7 +359,7 @@ export async function mount(el, shell) {
   // ---- page
   function toolbar() {
     const st = S.data.rq.stages;
-    const chips = st.length ? st.map((s) => badge(`${s.stage} · ${s.visible ? (["P0", "X1", "selftest"].includes(s.stage) ? "always visible" : "unblinded") : BLINDED}`, s.visible ? "accent" : "neutral"))
+    const chips = st.length ? st.map((s) => badge(`${s.stage} · ${s.visible ? (["P0", "X1", "X2", "selftest"].includes(s.stage) ? "always visible" : "unblinded") : BLINDED}`, s.visible ? "accent" : "neutral"))
       : [h("span", { class: "small muted" }, "No stage has runs in this namespace yet.")];
     const seg = h("div", { class: "res-seg", role: "group", "aria-label": "Export style" },
       ["app", "deck"].map((id) => h("button", { type: "button", "aria-pressed": String(S.style === id), title: id === "app" ? "App: the console's light style" : "Deck: black, deck purple, cyan = pass, pink = fail",
@@ -375,6 +377,7 @@ export async function mount(el, shell) {
     if (secs.rq5) items.push({ id: "rq5", label: "RQ5", render: () => h("div", { class: "stack" }, sectionBody(secs.rq5)) });
     items.push({ id: "instrument", label: "CI vs. oracle", render: () => h("div", { class: "stack" }, instrumentSection()) });
     if (d.pilot && d.pilot.runs) items.push({ id: "pilot", label: "Pilot X1 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot)) });
+    if (d.pilot2 && d.pilot2.runs) items.push({ id: "pilot2", label: "Pilot X2 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot2)) });
     items.push({ id: "excluded", label: "Excluded", count: d.excluded.excluded.length || null, render: () => h("div", { class: "stack" }, excludedSection()) });
     if (!items.some((i) => i.id === S.tab)) S.tab = "rq1";
     const t = tabs({ items, active: S.tab, onChange: (id) => { S.tab = id; store.set("tab", id); } });

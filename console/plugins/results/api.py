@@ -95,9 +95,13 @@ def register(router, ctx):
         return payload.excluded_payload(req.ns)
 
     def pilot(req):
-        """Pilot X1 (exploratory, always visible like P0): analysis.pilot_x1, computed on request."""
+        """Pilots X1 / X2 (exploratory, always visible like P0): analysis.pilot_x1, computed on request.
+        ?stage=X1 (default) or X2."""
         from analysis import pilot_x1
-        return pilot_x1.summarize(req.ns)
+        stage = (req.query.get("stage") or "X1").strip()
+        if stage not in pilot_x1.STAGE_TICKETS:
+            raise ApiError(400, "stage must be X1 or X2")
+        return pilot_x1.summarize(req.ns, stage)
 
     def export(req):
         chart = (req.query.get("chart") or "").strip()

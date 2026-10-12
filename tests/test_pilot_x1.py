@@ -13,7 +13,7 @@ from harness import blinding, jsonio, manifest, paths, runner
 
 class PilotManifestTest(unittest.TestCase):
     def test_x1_runs_blocks_of_four_and_ids(self):
-        runs = manifest.pilot_runs("real")
+        runs = manifest.pilot_runs("real", "X1")
         self.assertEqual(len(runs), 80)
         for unit, prefix in (("cc-sonnet", "x1"), ("codex", "x1c")):
             mine = [r for r in runs if r["unit"] == unit]
@@ -32,10 +32,11 @@ class PilotManifestTest(unittest.TestCase):
         # same order for both units, deterministic
         self.assertEqual([(r["ticket"], r["visibility"]) for r in runs[:40]],
                          [(r["ticket"], r["visibility"]) for r in runs[40:]])
-        self.assertEqual(runs, manifest.pilot_runs("real"))
+        self.assertEqual(runs, manifest.pilot_runs("real", "X1"))
+        self.assertEqual(manifest.pilot_runs("real")[:80], runs)     # X1 first, unchanged by X2
 
     def test_mock_has_only_x1_with_unit_mock(self):
-        runs = manifest.pilot_runs("mock")
+        runs = manifest.pilot_runs("mock", "X1")
         self.assertEqual(len(runs), 40)
         self.assertTrue(all(r["unit"] == "mock" and r["run_id"].startswith("x1-") for r in runs))
 

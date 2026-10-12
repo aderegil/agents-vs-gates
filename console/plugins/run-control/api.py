@@ -27,8 +27,8 @@ from harness import blinding, paths
 from harness.jsonio import read_json, write_json_atomic
 
 # argparse `choices` of harness/runner.py --stage (P3 is the reviewer study, run by harness.reviewer).
-RUNNABLE = ("P0", "X1", "P1", "P2", "P4", "P5", "P6")
-EXPLORATORY = ("P0", "X1")   # no pre-registration lock needed (calibration, pilot); same as harness.runner
+RUNNABLE = ("P0", "X1", "X2", "P1", "P2", "P4", "P5", "P6")
+EXPLORATORY = ("P0", "X1", "X2")   # no pre-registration lock needed (calibration, pilots); same as harness.runner
 STAGE_NOTE = {"P3": "Reviewer calls (RQ4) run from the reviewer study, not from a batch."}
 WORKERS_NOTICE = "Parallel runs don't add quota; they spend it faster"
 MAX_BATCH = 1000
@@ -196,7 +196,7 @@ def register(router, ctx):
                 notes.append("The mock manifest does not exist yet; the runner generates it on first use.")
         elif not todo:
             blocking.append({"code": "empty", "message": f"Nothing pending in {stage} ({ns})"})
-        elif ns == "real" and not params["unit"] and len({r["unit"] for r in todo}) > 1 and stage == "X1":
+        elif ns == "real" and not params["unit"] and len({r["unit"] for r in todo}) > 1 and stage in ("X1", "X2"):
             blocking.append({"code": "unit", "message": f"{stage} has runs for several units "
                              f"({', '.join(sorted({r['unit'] for r in todo}))}); pick one unit"})
         if alive:
@@ -590,7 +590,7 @@ def register(router, ctx):
         body = req.json if isinstance(req.json, dict) else {}
         stage = body.get("stage")
         if stage not in experiment.STAGES or stage in blinding.ALWAYS_VISIBLE:
-            raise ApiError(400, "Pick a stage P1-P6 (P0 and X1 are always visible)")
+            raise ApiError(400, "Pick a stage P1-P6 (P0, X1 and X2 are always visible)")
         if body.get("confirm") != f"UNBLIND {stage}":
             raise ApiError(400, f"Type UNBLIND {stage} to confirm")
         manifest, state = experiment.load(ns)

@@ -1,6 +1,6 @@
 // Pure logic of Run Control (no DOM): formatting, labels, request bodies, button reasons. Tested by model.test.mjs.
 
-export const STAGE_ORDER = ["P0", "X1", "P1", "P2", "P3", "P4", "P5", "P6"];
+export const STAGE_ORDER = ["P0", "X1", "X2", "P1", "P2", "P3", "P4", "P5", "P6"];
 
 /** 3725 → "1:02:05"; 125 → "2:05"; null → "—" */
 export function fmtElapsed(sec) {

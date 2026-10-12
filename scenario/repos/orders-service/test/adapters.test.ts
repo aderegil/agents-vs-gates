@@ -134,8 +134,8 @@ describe("legacy CSV export", () => {
     await repo.save(sampleOrder("ord-2", "2026-10-10T13:00:00.000Z"));
     await repo.save(sampleOrder("ord-1", "2026-10-10T12:00:00.000Z"));
     const lines = exportOrdersCsv(repo).trimEnd().split("\r\n");
-    assert.equal(lines[0], "order_id,customer_id,status,channel,currency,total_cents,placed_at");
-    assert.equal(lines[1], "ord-1,cust-1,placed,store,USD,1250,2026-10-10T12:00:00.000Z");
+    assert.equal(lines[0], "order_id,customer_id,status,currency,total_cents,placed_at");
+    assert.equal(lines[1], "ord-1,cust-1,placed,USD,1250,2026-10-10T12:00:00.000Z");
     assert.equal(lines.length, 3);
   });
 
