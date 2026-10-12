@@ -150,6 +150,7 @@ class RunsDetailTest(unittest.TestCase):
             self.assertEqual(rec["ticket"], "X-rename")
             self.assertEqual(rec["totals"]["turns"], 10)
             self.assertIsNone(d.json["coding_label"])
+            self.assertIsNone(d.json["files"]["diffs"])     # fix1 would say CI failed (Codex audit 2026-10-11 #2)
             for tab in ("diff", "ci", "oracle", "detectors", "transcript"):
                 r = fx.owner.get(f"/api/runs/p1-0001/{tab}?ns=mock")
                 self.assertEqual(r.status, 403, tab)

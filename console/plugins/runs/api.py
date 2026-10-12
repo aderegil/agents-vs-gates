@@ -183,7 +183,12 @@ def register(router, ctx):
                 "facets": facets, "blinded_stages": blinded_stages}
 
     # ------------------------------------------------------------ GET /api/runs/{id}
-    def files_of(d) -> dict:
+    def files_of(d, visible: bool = True) -> dict:
+        """diffs: the refs with a diff (gen, fix1…), only for visible stages: that a run has fix1 says CI failed
+        (spec 11.4; Codex audit 2026-10-11 #2). Blinded: None."""
+        if not visible:
+            return {"diffs": None, "transcript": (d / "transcript.jsonl").is_file(), "trace": (d / "events.jsonl").is_file(),
+                    "replay": (d / "events.jsonl").is_file()}
         diffs = sorted((p.name[:-5] for p in (d / "diffs").glob("*.diff") if DIFF_FILE.match(p.name)),
                        key=lambda r: (r != "gen", int(r[3:]) if r.startswith("fix") else 0)) if (d / "diffs").is_dir() else []
         return {"diffs": diffs, "transcript": (d / "transcript.jsonl").is_file(), "trace": (d / "events.jsonl").is_file(),
@@ -199,7 +204,7 @@ def register(router, ctx):
         label = labels(ns).get(rid) if visible else None
         return {"ns": ns, "run_id": rid, "stage": rec.get("stage"), "blinded": not visible,
                 "blinded_message": None if visible else BLINDED_MSG, "status": _status(rid, state),
-                "record": record, "files": files_of(d), "coding_label": label,
+                "record": record, "files": files_of(d, visible), "coding_label": label,
                 "source": "mock" if ns == "mock" else "real"}
 
     # ------------------------------------------------------------ diff / ci / oracle / detectors

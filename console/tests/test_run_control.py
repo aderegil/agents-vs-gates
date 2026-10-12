@@ -154,7 +154,7 @@ class StatusTest(unittest.TestCase):
             self.assertEqual(len(d["workers"]), 2)
             w1, w2 = d["workers"]
             self.assertEqual((w1["run"]["run_id"], w1["run"]["attempt"], w1["run"]["turns"], w1["run"]["tokens"]),
-                             ("p1-0004", "fix1", 5, 12345))
+                             ("p1-0004", None, 5, 12345))     # P1 is blinded: a fix1 in flight says CI failed
             self.assertIsNone(w2["run"])
             # planned 4, done 1, one in flight → 2 left; the queue never lists the running run
             p1 = [r["run_id"] for r in m["runs"] if r["stage"] == "P1"]

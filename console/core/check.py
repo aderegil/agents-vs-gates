@@ -262,6 +262,16 @@ def run_check(keep: bool = False) -> int:
                             got = [k for k in hidden if d.get(k) not in (None, {}, [])]
                             if got:
                                 leaks.append(f"{t}{where}: {rid} exposes {got}")
+                for t, body in bodies:          # repairs say CI failed: no fix* diff names, no worker session
+                    for where, d in _walk(body):
+                        rid = d.get("run_id")
+                        if not (isinstance(rid, str) and rid.startswith("p1-")):
+                            continue
+                        files = d.get("files") if isinstance(d.get("files"), dict) else {}
+                        if any(str(x).startswith("fix") for x in (files.get("diffs") or [])):
+                            leaks.append(f"{t}{where}: {rid} lists repair diffs")
+                        if isinstance(d.get("attempt"), str) and d["attempt"].startswith("fix"):
+                            leaks.append(f"{t}{where}: {rid} shows the repair session in flight")
                 from console.core.events import finished_payload
                 if "outcome" in finished_payload("mock", {"run_id": p1_ids[0] if p1_ids else "p1-0001"}, st):
                     leaks.append("SSE runner.run_finished carries an outcome for P1")

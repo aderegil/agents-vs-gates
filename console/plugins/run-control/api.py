@@ -338,9 +338,12 @@ def register(router, ctx):
         workers = []
         for k in range(1, max(1, min(3, n_workers)) + 1):
             w = wstate.get(str(k)) if alive else None
+            # the session in flight (gen, fix1…) only for visible stages: a repair says CI failed (audit 2026-10-11 #2)
+            seen = bool(w) and blinding.is_visible(state, stage_by_run.get(w.get("run_id")) or experiment.stage_of_run(
+                str(w.get("run_id") or "")))
             workers.append({"worker": k, "run": None if not w else {
                 "run_id": w.get("run_id"), "ticket": w.get("ticket"), "cell": w.get("cell"),
-                "attempt": w.get("attempt"), "started_at": w.get("started_at"),
+                "attempt": w.get("attempt") if seen else None, "started_at": w.get("started_at"),
                 "turns": w.get("turns"), "tokens": w.get("tokens")}})
 
         # next queued runs of the active batch

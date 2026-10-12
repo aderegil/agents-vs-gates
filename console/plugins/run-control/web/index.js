@@ -388,12 +388,12 @@ export async function mount(el, shell) {
     if (!r) return h("div", { class: "rc-worker is-idle" }, h("div", { class: "rc-worker-head" }, h("span", { class: "strong" }, `Worker ${col.worker}`), badge("Idle", "neutral")),
       h("p", { class: "small muted" }, s.alive ? "Waiting for the next run" : "No run in progress"));
     return h("div", { class: "rc-worker" },
-      h("div", { class: "rc-worker-head" }, h("span", { class: "strong" }, `Worker ${col.worker}`), badge(r.attempt || "gen", "accent")),
+      h("div", { class: "rc-worker-head" }, h("span", { class: "strong" }, `Worker ${col.worker}`), badge(r.attempt || "session hidden", r.attempt ? "accent" : "neutral")),
       h("dl", { class: "kv" },
         h("dt", {}, "Run"), h("dd", { class: "mono" }, r.run_id),
         h("dt", {}, "Ticket"), h("dd", {}, r.ticket || "—"),
         h("dt", {}, "Cell"), h("dd", {}, cellKeyLabel(r.cell)),
-        h("dt", {}, "Attempt"), h("dd", {}, r.attempt || "gen"),
+        h("dt", {}, "Attempt"), h("dd", {}, r.attempt || "hidden while the stage is blinded"),
         h("dt", {}, "Elapsed"), h("dd", { class: "num" }, h("span", { "data-since": r.started_at || "" }, fmtElapsed(r.started_at ? (Date.now() - Date.parse(r.started_at)) / 1000 : null))),
         h("dt", {}, "Turns"), h("dd", { class: "num" }, fmtInt(r.turns)),
         h("dt", {}, "Tokens"), h("dd", { class: "num" }, fmtInt(r.tokens))));
