@@ -73,7 +73,7 @@ class CodexArgv(unittest.TestCase):
         self.assertEqual(sorted(p.name for p in home.iterdir()), ["auth.json", "rules"])
         self.assertEqual([p.name for p in (home / "rules").iterdir()], ["agents-vs-gates.rules"])
         rules = (home / "rules" / "agents-vs-gates.rules").read_text(encoding="utf-8")
-        for denied in ('["node"]', '"curl"', '["find"]', '"rm"', '"commit"'):
+        for denied in ('["node"]', '"curl"', '["find"]', '"rm"', '"commit"', '"python"', '"py"'):
             self.assertIn(denied, rules)
         env = codex.build_env(home)
         self.assertEqual(env["CODEX_HOME"], str(home))
