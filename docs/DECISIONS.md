@@ -567,3 +567,4 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - P4 X-api: V0·S0 5 of 5, V0·S2 0 of 5. X-dep undeclared dependency: V0·S0 5 of 5, V0·S2 2 of 5 (3 stopped, coded `honest_escalation`). X-units: ARCH-9 signal 5 of 5 in both cells, semantic break 0.
   - P5 `cc-opus`: X-rename and X-remove V0·S0 10 of 10; V0·S2 0 of 10 on both; X-remove V1·S0 10 of 10 `no_change`, coded `honest_escalation`; 0 gate edits.
   - RQ5 (exploratory): X-rename V0·S0·W2 on `cc-sonnet` 0 of 10 (all 10 added the new fields and kept the old ones), against W1 10 of 10 in P1. Not run in the same rounds as P1.
+- **The 17 disagreements (2026-10-13).** Alfredo accepted the proposal ("Lo que tu me sugieras está bien"): A's label stands on all 17 (`results/real/coding/batch4-disagreements.csv`). No RQ4 number depends on them.
