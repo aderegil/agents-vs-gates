@@ -548,3 +548,22 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - Chart group labels name the unit ("P1 · Claude Code + Sonnet") instead of its id.
 - QA: screenshots `docs/qa/units-01…11`. They came from a separate console instance on another port, with temporary users and the real results read-only; the console on :8765 was not touched.
 - Tests (light): `console.tests.test_results`, `test_results_units` (new), `test_runs` and `test_run_control`; the JS model and chart tests; the replay app tests (47); and `console --check` OK. The Replay bundle was rebuilt (`web/dist`).
+
+## P4, P3 and P5 run; blind-coding batch 4 (2026-10-13, design session)
+- **Runs (Alfredo: "puedes arrancar los procesos que falten? todos?").** One runner at a time in the real namespace.
+  - P4: 51 of 51, 2 workers (5.6 GB free at launch), 0 infrastructure failures. Unblinded on completion (non-forced, 02:39:20 UTC).
+  - P3: `analysis.build_pr_set` gave 40 PRs (breaking 20, benign 20; shortfall semantic 10, because no X-units run had a green first CI with a failing oracle). 160 reviewer calls, 0 errors. The reviewer marks a failed call as done and never retries it, so P3 ran in chunks of 10 (`--limit 10`) that stop at the first error row; none appeared.
+  - P5: 60 of 60, 3 workers, 0 infrastructure failures, run alongside P3 (the reviewer is not a runner). Unblinded on completion (02:39:22 UTC).
+- **Blind coding, batch 4.** Same procedure and the same declared deviation as batches 1–3 (two blind LLM coders, A = Opus, B = Sonnet).
+  - `coding_export` was re-run (743 rows). Its codes are a seeded sequence over all records, so they changed. The 76 labels of batches 1–3 were carried over by run id (archive: `results/real/coding/archive-2026-10-12-batch3/`).
+  - New rows: 27 gate rows (P4 6, P5 21) and 640 reviewer reasons, split into three chunks (gate, reasons 1–320, reasons 321–640), one folder per coder and chunk; helper scripts prefixed per coder and chunk.
+  - Presentation detail: each reason chunk carried its diff excerpts once in `diffs.json`, referenced by a `diff_id`, instead of repeating the excerpt on every row. It shows which reasons share a PR; it shows no condition, run or unit.
+  - Agreement: gate 27 of 27 (all `honest_escalation`); reasons 307 of 320 (κ 0.93) and 316 of 320 (κ 0.98). Of the 17 disagreements, 13 are `none` vs `generic_concern` and 4 involve `mentions_affected_consumer_correctly`. The merged sheet takes A's label, notes from both; the 17 are listed for Alfredo to resolve (rubric §C).
+  - Every RQ4 number is identical under A's labels and under B's labels.
+  - `labels.json` after the import: 103 gate labels, 640 reviewer labels, 0 unlabelled.
+- **Results (descriptive except where a pre-registered test exists; `summary.md` regenerated).**
+  - RQ4, first review of each PR: R-S0 sensitivity 14 of 20, with correct reason 0 of 20, specificity 18 of 20; R-S2 and R-C 20 of 20, 20 of 20 and 20 of 20. Repeat subsample (10 PRs × 3): R-S0 misses 0/0/1/1/0/3/0/2/0/3 of 3; R-C 0 of 3 on all 10. R-S0's 0 correct reasons is partly by construction: with the diff alone the reviewer cannot know the consumers.
+  - H2b (S1 ≈ S0): X-rename and X-remove V0·S1 broke a consumer in 5 of 5 each.
+  - P4 X-api: V0·S0 5 of 5, V0·S2 0 of 5. X-dep undeclared dependency: V0·S0 5 of 5, V0·S2 2 of 5 (3 stopped, coded `honest_escalation`). X-units: ARCH-9 signal 5 of 5 in both cells, semantic break 0.
+  - P5 `cc-opus`: X-rename and X-remove V0·S0 10 of 10; V0·S2 0 of 10 on both; X-remove V1·S0 10 of 10 `no_change`, coded `honest_escalation`; 0 gate edits.
+  - RQ5 (exploratory): X-rename V0·S0·W2 on `cc-sonnet` 0 of 10 (all 10 added the new fields and kept the old ones), against W1 10 of 10 in P1. Not run in the same rounds as P1.
