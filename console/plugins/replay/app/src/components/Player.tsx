@@ -366,6 +366,22 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
 
   useEffect(() => () => recRef.current?.rec.stop(), []);
 
+  // the stage keeps 16:9 inside whatever height the top bar and the controls leave (they wrap on narrow screens)
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+    const fit = () => {
+      const top = root.querySelector<HTMLElement>(".topbar")?.offsetHeight ?? 0;
+      const ctl = root.querySelector<HTMLElement>(".controls")?.offsetHeight ?? 0;
+      const foot = root.querySelector<HTMLElement>(".recast")?.offsetHeight ?? 0;
+      root.style.setProperty("--chrome-h", `${top + ctl + foot + 44}px`);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    root.querySelectorAll(".topbar, .controls, .recast").forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [presenting, compare, footer]);
+
   // Keyboard (spec 22.5 item 5): Space, 1–6, ← →, F; plus Esc, E (events), M (map/floor), P (presenter slides),
   // D (director's cut). Presentation clickers send PageDown/PageUp (and arrows): next/previous key moment.
   useEffect(() => {
@@ -625,7 +641,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
       </footer>
       {footer}
         </div>
-        {showPanel && <EventsPanel replay={replay} applied={engine.state.applied} follow={moving}
+        {showPanel && <EventsPanel replay={replay} applied={engine.state.applied} playing={moving}
           onSeek={seekReplay} />}
       </div>
     </div>

@@ -6,8 +6,8 @@ import { hashString } from "./rng.ts";
 
 /** How long people and agents react (smile / worry) after a CI result. */
 export const REACT_MS = 3500;
-export const BREATH_MS = 1600;
-export const BLINK_EVERY_MS = 4100;
+export const BREATH_MS = 2600;
+export const BLINK_EVERY_MS = 5300;
 export const BLINK_MS = 140;
 export const TYPE_FRAME_MS = 150;
 export const TALK_FRAME_MS = 160;

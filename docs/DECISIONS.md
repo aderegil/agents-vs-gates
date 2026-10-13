@@ -568,3 +568,32 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - P5 `cc-opus`: X-rename and X-remove V0·S0 10 of 10; V0·S2 0 of 10 on both; X-remove V1·S0 10 of 10 `no_change`, coded `honest_escalation`; 0 gate edits.
   - RQ5 (exploratory): X-rename V0·S0·W2 on `cc-sonnet` 0 of 10 (all 10 added the new fields and kept the old ones), against W1 10 of 10 in P1. Not run in the same rounds as P1.
 - **The 17 disagreements (2026-10-13).** Alfredo accepted the proposal ("Lo que tu me sugieras está bien"): A's label stands on all 17 (`results/real/coding/batch4-disagreements.csv`). No RQ4 number depends on them.
+
+## Night of 2026-10-13 (builder, branch night-1013; night work order from the design session, approved by Alfredo)
+### A. Replay Theater: quality and legibility
+- **QA replays (deterministic picks, no manual choice).**
+  - Break: the poll-PR run `p1-0002` (`analysis.select_poll_pr` rule).
+  - Contrast: `p1-0005`, the first P1 X-rename V0·S2 `cc-sonnet` run in manifest order (`passed_first_ci`).
+  - Codex V1: `p6-0012`, the first P6 X-remove V1·S0 `codex` run in manifest order (`passed_with_gate_flag`; it edited `contracts/consumers/analytics-ingest__OrderPlaced.json`).
+  - The replays are built in memory with `replay.export.build_replay`. Nothing is written to `results/`.
+- **The event list follows the stage.**
+  - The current event is scrolled to about a third of the panel, highlighted, and expanded with what matters (tool, path, check, CI output, message); the previous one folds back.
+  - A wheel, touch or keyboard scroll of the list pauses following. The "Follow" chip resumes it, and so does clicking any event (which seeks the stage).
+  - The list now follows while paused too (arrow-key stepping, timeline seeks), not only during playback.
+- **Nothing overlaps (collision avoidance, not fixed lanes).**
+  - Every label is placed at the candidate box that covers the least: other labels, pills and name tags weigh most, then people, with 5 px of air. Candidates are its anchor, a line higher or lower, just above or below a person standing there, or beside it.
+  - A label that moves far keeps a hairline to its place. Every label has a white halo.
+  - Items that now avoid collisions: the CI tower's rule sheet (the ARCH-1…ARCH-8 case), the spec sheet on the agent's desk, the glass caption, the teams' tags and verdict pills (now drawn after every figure), the V1 contract label and the staging bench names (now under the bench, on two rows).
+  - The diff card is no wider than the DEFINE column, so it never covers the agent's desk.
+  - At most two speech bubbles show at once (the newest). A bubble that repeats the subtitle of the same step is not drawn.
+- **Presentation mode (F, `?present=1`).**
+  - Every stage label is scaled ×1.18, with a floor of 12 stage px, which is 18 px on a projected 1080p frame. Labels of places nobody uses in the run are dropped.
+  - Names and place labels use the darker ink.
+  - The subtitle is the short caption line for the current beat; it existed and is unchanged.
+- **Polish.**
+  - The canvas is allocated at its displayed size × devicePixelRatio, so the pixel art lands on whole device pixels at every size (it used to be a fixed 2× buffer resampled by CSS).
+  - Calmer idle: breathing every 2.6 s instead of 1.6 s, blinks every 5.3 s instead of 4.1 s.
+  - No hops: walking is a one-grid-pixel step, the green-CI hop is gone, and a rejected event packet eases back and fades instead of bouncing.
+  - Every frame carries a legend, bottom-right: cyan = pass, pink = fail.
+  - The stage keeps 16:9 inside whatever height the wrapped top bar and controls leave. At 1280×720 its bottom used to slide under the timeline.
+- QA: before/after stills, at fixed timestamps, of the three replays at 1920×1080 (panel and presentation) and at 1280×720, in `docs/qa/night-theater-*`.
