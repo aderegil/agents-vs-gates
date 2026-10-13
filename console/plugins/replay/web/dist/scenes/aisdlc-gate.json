@@ -1,0 +1,1368 @@
+{
+ "meta": {
+  "run_id": "aisdlc-gate",
+  "source": "illustration",
+  "unit": "illustration",
+  "model": null,
+  "date": "2026-10-13",
+  "started_at": "2026-10-13T09:00:00.000Z",
+  "ticket": "X-rename",
+  "condition": {},
+  "outcome": null,
+  "ticket_done": null,
+  "session_outcome": "success",
+  "stage": null,
+  "title": "Meridian Retail · rename on OrderPlaced · + the gate",
+  "scenario": "meridian-retail/illustration",
+  "trace_sha256": "03d06979ab8a4e536f6e4d3424785af0c71ed9156843f6e3ce1212cb98ef90a9",
+  "schema": "replay/1",
+  "exporter_version": 4,
+  "legend": "Illustration · scripted from public documentation",
+  "duration_ms": 58900,
+  "duration_real_ms": 54400,
+  "event_count": 35,
+  "extras_sha256": "9df133529e3dfe710529db48f000891a5e4c5366fc695b53574330530d5ae475",
+  "illustration_source": "This talk's proposal (Agents vs. Gates), 13 Oct 2026"
+ },
+ "places": [
+  {
+   "id": "product-desk",
+   "label": "Product",
+   "kind": "desk",
+   "x": 0.07,
+   "y": 0.18,
+   "note": "product owner",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "planning-room",
+   "label": "Delivery · planning",
+   "kind": "room",
+   "x": 0.16,
+   "y": 0.33,
+   "note": "scrum master / delivery",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "analysis-desk",
+   "label": "Analysis",
+   "kind": "desk",
+   "x": 0.06,
+   "y": 0.5,
+   "note": "analyst",
+   "zone": "define",
+   "used": false
+  },
+  {
+   "id": "architecture-library",
+   "label": "Architecture library",
+   "kind": "library",
+   "x": 0.14,
+   "y": 0.7,
+   "note": "ARCH-n rules, catalog, ADRs",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "dispatch",
+   "label": "Dispatch board",
+   "kind": "system",
+   "x": 0.34,
+   "y": 0.16,
+   "note": "flow engine",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "desk-orders",
+   "label": "Checkout · orders",
+   "kind": "desk",
+   "x": 0.33,
+   "y": 0.42,
+   "note": "orders-service",
+   "zone": "build",
+   "used": true
+  },
+  {
+   "id": "tester-desk",
+   "label": "Testing",
+   "kind": "desk",
+   "x": 0.34,
+   "y": 0.86,
+   "note": "tester / verifier",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "review-desk",
+   "label": "Review desk",
+   "kind": "desk",
+   "x": 0.52,
+   "y": 0.17,
+   "note": "reviewers",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "review-table",
+   "label": "Review table",
+   "kind": "room",
+   "x": 0.54,
+   "y": 0.45,
+   "note": "pull request",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "ci-tower",
+   "label": "CI Tower",
+   "kind": "system",
+   "x": 0.6,
+   "y": 0.36,
+   "note": "one light per check",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "merge-gate",
+   "label": "Merge gate · release",
+   "kind": "gate",
+   "x": 0.58,
+   "y": 0.72,
+   "note": "release manager",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "staging-bench",
+   "label": "The other teams' tests",
+   "kind": "stage",
+   "x": 0.93,
+   "y": 0.17,
+   "note": "illustration: what happens downstream",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-billing",
+   "label": "billing-service",
+   "kind": "desk",
+   "x": 0.76,
+   "y": 0.3,
+   "note": "Billing team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-analytics",
+   "label": "analytics-ingest",
+   "kind": "desk",
+   "x": 0.93,
+   "y": 0.47,
+   "note": "Analytics team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-storefront",
+   "label": "web-storefront",
+   "kind": "desk",
+   "x": 0.78,
+   "y": 0.66,
+   "note": "Storefront team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "users",
+   "label": "Users",
+   "kind": "stage",
+   "x": 0.88,
+   "y": 0.88,
+   "note": "illustrative",
+   "zone": "production",
+   "used": true
+  }
+ ],
+ "actors": [
+  {
+   "id": "product-owner",
+   "role": "product_owner",
+   "actor_type": "human",
+   "display_name": "Amara · Product Owner",
+   "avatar": {
+    "style": "human",
+    "seed": "product-owner",
+    "badge": null
+   },
+   "home": "product-desk"
+  },
+  {
+   "id": "architect",
+   "role": "architect",
+   "actor_type": "human",
+   "display_name": "Maya · Architect",
+   "avatar": {
+    "style": "human",
+    "seed": "architect",
+    "badge": null
+   },
+   "home": "architecture-library"
+  },
+  {
+   "id": "engineer",
+   "role": "engineer",
+   "actor_type": "human",
+   "display_name": "Yusuf · Engineer",
+   "avatar": {
+    "style": "human",
+    "seed": "engineer",
+    "badge": null
+   },
+   "home": "planning-room"
+  },
+  {
+   "id": "code-agent",
+   "role": "code_agent",
+   "actor_type": "agent",
+   "display_name": "Code Agent · orders-service",
+   "avatar": {
+    "style": "agent",
+    "seed": "code-agent",
+    "badge": null
+   },
+   "home": "desk-orders"
+  },
+  {
+   "id": "code-owner",
+   "role": "code_owner",
+   "actor_type": "human",
+   "display_name": "Greta · Code Owner",
+   "avatar": {
+    "style": "human",
+    "seed": "code-owner",
+    "badge": null
+   },
+   "home": "review-desk"
+  },
+  {
+   "id": "release-manager",
+   "role": "release_manager",
+   "actor_type": "human",
+   "display_name": "Ravi · Release Manager",
+   "avatar": {
+    "style": "human",
+    "seed": "release-manager",
+    "badge": null
+   },
+   "home": "merge-gate"
+  },
+  {
+   "id": "ci",
+   "role": "ci",
+   "actor_type": "system",
+   "display_name": "CI",
+   "avatar": {
+    "style": "system",
+    "seed": "ci",
+    "badge": null
+   },
+   "home": "ci-tower"
+  },
+  {
+   "id": "staging",
+   "role": "staging",
+   "actor_type": "system",
+   "display_name": "The other teams' tests",
+   "avatar": {
+    "style": "system",
+    "seed": "staging",
+    "badge": null
+   },
+   "home": "staging-bench"
+  }
+ ],
+ "steps": [
+  {
+   "t_ms": 0,
+   "t_real_ms": 0,
+   "seq": 0,
+   "actor": "product-owner",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "Meridian Retail · rename on OrderPlaced · + the gate",
+   "key": null,
+   "narration": "Any of the above + the gate · Rename totalCents/placedAt on OrderPlaced at Meridian Retail (fictional).",
+   "detail": {
+    "event_type": "SESSION_STARTED",
+    "event_id": "evt-0000",
+    "phase": "discovery",
+    "to_phase": "discovery",
+    "scenario": "meridian-retail/illustration",
+    "condition": ""
+   }
+  },
+  {
+   "t_ms": 2600,
+   "t_real_ms": 2600,
+   "seq": 1,
+   "actor": "product-owner",
+   "action": "work",
+   "target": null,
+   "place": "product-desk",
+   "text": "intent.md · Rename totalCents/placedAt on OrderPlaced",
+   "key": null,
+   "narration": "Same flow as any of the models: intent, spec, plan. The difference comes after generation.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0001",
+    "phase": "discovery",
+    "artifact_id": "art-intent",
+    "artifact_type": "intent",
+    "stage": "intent",
+    "axis": "intent"
+   }
+  },
+  {
+   "t_ms": 3800,
+   "t_real_ms": 3800,
+   "seq": 2,
+   "actor": "product-owner",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "intent accepted",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0002",
+    "phase": "planning",
+    "from_phase": "discovery",
+    "to_phase": "planning",
+    "stage": "spec",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 6400,
+   "t_real_ms": 6400,
+   "seq": 3,
+   "actor": "architect",
+   "action": "work",
+   "target": null,
+   "place": "architecture-library",
+   "text": "spec.md · ARCH-4: published events stay backward compatible (consumer contracts in the central catalog)",
+   "key": null,
+   "narration": "The rule lives in the spec: ARCH-4, published events stay backward compatible.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0003",
+    "phase": "planning",
+    "artifact_id": "art-spec",
+    "artifact_type": "spec",
+    "stage": "spec",
+    "axis": "spec",
+    "rule": true
+   }
+  },
+  {
+   "t_ms": 8800,
+   "t_real_ms": 8800,
+   "seq": 4,
+   "actor": "product-owner",
+   "action": "speak",
+   "target": null,
+   "place": "product-desk",
+   "text": "Spec accepted",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0004",
+    "phase": "planning",
+    "decision": "approved",
+    "subject_artifact_id": "art-spec",
+    "stage": "spec",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 11400,
+   "t_real_ms": 11400,
+   "seq": 5,
+   "actor": "code-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "plan.md · Rename on OrderPlaced; tests",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0005",
+    "phase": "planning",
+    "artifact_id": "art-plan",
+    "artifact_type": "plan",
+    "stage": "plan",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 13800,
+   "t_real_ms": 13800,
+   "seq": 6,
+   "actor": "engineer",
+   "action": "speak",
+   "target": null,
+   "place": "planning-room",
+   "text": "Plan accepted",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0006",
+    "phase": "planning",
+    "decision": "approved",
+    "subject_artifact_id": "art-plan",
+    "stage": "plan",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 15000,
+   "t_real_ms": 15000,
+   "seq": 7,
+   "actor": "engineer",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "plan accepted",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0007",
+    "phase": "implementation",
+    "from_phase": "planning",
+    "to_phase": "implementation",
+    "stage": "code",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 17000,
+   "t_real_ms": 17000,
+   "seq": 8,
+   "actor": "code-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "Edit · src/core/events.ts",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0008",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "input_summary": "src/core/events.ts",
+    "correlation_id": "call-0008",
+    "stage": "code",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 18600,
+   "t_real_ms": 18600,
+   "seq": 9,
+   "actor": "code-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+   "key": null,
+   "narration": "Same scripted case in every model: the first attempt renames the fields and drops the old names, although the rule is in the agent's context.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0009",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "status": "success",
+    "output_summary": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+    "correlation_id": "call-0008",
+    "stage": "code",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 20600,
+   "t_real_ms": 20600,
+   "seq": 10,
+   "actor": "code-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "Bash · npm test",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0010",
+    "phase": "implementation",
+    "tool_name": "Bash",
+    "input_summary": "npm test",
+    "correlation_id": "call-0010",
+    "stage": "code",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 22200,
+   "t_real_ms": 22200,
+   "seq": 11,
+   "actor": "code-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "all tests passed",
+   "key": null,
+   "narration": "Its own tests pass.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0011",
+    "phase": "implementation",
+    "tool_name": "Bash",
+    "status": "success",
+    "output_summary": "all tests passed",
+    "correlation_id": "call-0010",
+    "stage": "code",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 23400,
+   "t_real_ms": 23400,
+   "seq": 12,
+   "actor": "code-agent",
+   "action": "phase",
+   "target": null,
+   "place": "desk-orders",
+   "text": "PR opened",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0012",
+    "phase": "review",
+    "from_phase": "implementation",
+    "to_phase": "review",
+    "stage": "PR",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 26000,
+   "t_real_ms": 26000,
+   "seq": 13,
+   "actor": "code-agent",
+   "action": "move",
+   "target": null,
+   "place": "review-table",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0013",
+    "phase": "review",
+    "stage": "PR",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 26000,
+   "t_real_ms": 26000,
+   "seq": 13,
+   "actor": "code-agent",
+   "action": "handoff",
+   "target": "review-table",
+   "place": "review-table",
+   "text": "PR #412 · 3 files changed",
+   "key": "pr_opened",
+   "narration": null,
+   "caption": "Code Agent · orders-service opens a pull request (3 files changed) and leaves it on the review table.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0013",
+    "phase": "review",
+    "artifact_id": "art-pr",
+    "diff": null,
+    "stage": "PR",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 27800,
+   "t_real_ms": 27800,
+   "seq": 14,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "caption": "CI picks up the pull request and runs 3 deterministic checks.",
+   "detail": {
+    "event_type": "CI_RUN_STARTED",
+    "event_id": "evt-0014",
+    "phase": "review",
+    "run_attempt": 0,
+    "subject_artifact_id": "art-pr",
+    "stage": "CI",
+    "axis": "ci",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 28500,
+   "t_real_ms": 28500,
+   "seq": 15,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "lint: zero warnings",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "lint",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0015",
+    "phase": "review",
+    "category": "build",
+    "duration_ms": 900,
+    "output": "lint: zero warnings",
+    "stage": "CI",
+    "axis": "ci",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 29200,
+   "t_real_ms": 29200,
+   "seq": 16,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "tests: all green",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "tests",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "category": "test",
+    "duration_ms": 900,
+    "output": "tests: all green",
+    "stage": "CI",
+    "axis": "ci",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 29900,
+   "t_real_ms": 29900,
+   "seq": 17,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "ARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)\nARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)\nARCH-4 PASS web-storefront: GET /orders/{id} (9 required fields present)",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "ARCH-4",
+    "status": "fail",
+    "rule": "ARCH-4"
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0017",
+    "phase": "review",
+    "category": "contract",
+    "duration_ms": 900,
+    "output": "ARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)\nARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)\nARCH-4 PASS web-storefront: GET /orders/{id} (9 required fields present)",
+    "stage": "CI",
+    "axis": "ci",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 30800,
+   "t_real_ms": 30800,
+   "seq": 18,
+   "actor": "ci",
+   "action": "ci_result",
+   "target": null,
+   "place": "ci-tower",
+   "text": "CI blocks the pull request: ARCH-4 fails. Billing needs totalCents; analytics needs placedAt.",
+   "key": "ci_fail",
+   "narration": "CI blocks the pull request: ARCH-4 fails. Billing needs totalCents; analytics needs placedAt.",
+   "caption": "CI blocks the pull request: ARCH-4 failed (1 of 3 checks). Its output goes back to Code Agent · orders-service.",
+   "check": {
+    "id": "attempt-0",
+    "status": "fail",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CI_RUN_COMPLETED",
+    "event_id": "evt-0018",
+    "phase": "review",
+    "run_attempt": 0,
+    "ok": false,
+    "failed_checks": [
+     "ARCH-4"
+    ],
+    "stage": "CI",
+    "axis": "ci",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 33000,
+   "t_real_ms": 33000,
+   "seq": 19,
+   "actor": "ci",
+   "action": "speak",
+   "target": "code-agent",
+   "place": "ci-tower",
+   "text": "CI failed on your change. Output: ARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)\nARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)\nARCH-4 PASS web-storefront: GET /orders/{id} (9 required fields present)",
+   "key": null,
+   "narration": "The red build goes back to the agent, with the exact fields the other teams need.",
+   "detail": {
+    "event_type": "MESSAGE_EXCHANGED",
+    "event_id": "evt-0019",
+    "phase": "review",
+    "interaction_type": "feedback_request",
+    "content": "CI failed on your change. Output: ARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)\nARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)\nARCH-4 PASS web-storefront: GET /orders/{id} (9 required fields present)",
+    "feedback": "ci_output",
+    "stage": "CI",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 33000,
+   "t_real_ms": 33000,
+   "seq": 19,
+   "actor": "code-agent",
+   "action": "move",
+   "target": null,
+   "place": "desk-orders",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "MESSAGE_EXCHANGED",
+    "event_id": "evt-0019",
+    "phase": "review",
+    "stage": "CI",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 35600,
+   "t_real_ms": 35600,
+   "seq": 20,
+   "actor": "code-agent",
+   "action": "move",
+   "target": null,
+   "place": "review-table",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_UPDATED",
+    "event_id": "evt-0020",
+    "phase": "review",
+    "stage": "CI",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 35600,
+   "t_real_ms": 35600,
+   "seq": 20,
+   "actor": "code-agent",
+   "action": "handoff",
+   "target": "review-table",
+   "place": "review-table",
+   "text": "PR #412 · keeps totalCents and placedAt as @deprecated aliases",
+   "key": "repair",
+   "narration": "The agent keeps the old names as @deprecated aliases and pushes again.",
+   "caption": "Code Agent · orders-service pushes repair 1 (keeps totalCents and placedAt as @deprecated aliases).",
+   "detail": {
+    "event_type": "ARTIFACT_UPDATED",
+    "event_id": "evt-0020",
+    "phase": "review",
+    "artifact_id": "art-pr",
+    "version": 2,
+    "diff": {
+     "files_changed": 2,
+     "lines_added": 8,
+     "lines_removed": 0
+    },
+    "stage": "CI",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 37400,
+   "t_real_ms": 37400,
+   "seq": 21,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "caption": "CI picks up the pull request and runs 3 deterministic checks (attempt 2).",
+   "detail": {
+    "event_type": "CI_RUN_STARTED",
+    "event_id": "evt-0021",
+    "phase": "review",
+    "run_attempt": 1,
+    "subject_artifact_id": "art-pr",
+    "stage": "CI",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 38100,
+   "t_real_ms": 38100,
+   "seq": 22,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "lint: zero warnings",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "lint",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0022",
+    "phase": "review",
+    "category": "build",
+    "duration_ms": 900,
+    "output": "lint: zero warnings",
+    "stage": "CI",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 38800,
+   "t_real_ms": 38800,
+   "seq": 23,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "tests: all green",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "tests",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0023",
+    "phase": "review",
+    "category": "test",
+    "duration_ms": 900,
+    "output": "tests: all green",
+    "stage": "CI",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 39500,
+   "t_real_ms": 39500,
+   "seq": 24,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "ARCH-4 PASS billing-service: OrderPlaced (4 required fields present)\nARCH-4 PASS analytics-ingest: OrderPlaced (5 required fields present)\nARCH-4 PASS web-storefront: GET /orders/{id} (9 required fields present)",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "ARCH-4",
+    "status": "pass",
+    "rule": "ARCH-4"
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0024",
+    "phase": "review",
+    "category": "contract",
+    "duration_ms": 900,
+    "output": "ARCH-4 PASS billing-service: OrderPlaced (4 required fields present)\nARCH-4 PASS analytics-ingest: OrderPlaced (5 required fields present)\nARCH-4 PASS web-storefront: GET /orders/{id} (9 required fields present)",
+    "stage": "CI",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 40400,
+   "t_real_ms": 40400,
+   "seq": 25,
+   "actor": "ci",
+   "action": "ci_result",
+   "target": null,
+   "place": "ci-tower",
+   "text": "CI passes: ARCH-4 green for all three consumers.",
+   "key": "ci_pass",
+   "narration": "CI passes: ARCH-4 green for all three consumers.",
+   "caption": "CI passes: all 3 checks pass.",
+   "check": {
+    "id": "attempt-1",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CI_RUN_COMPLETED",
+    "event_id": "evt-0025",
+    "phase": "review",
+    "run_attempt": 1,
+    "ok": true,
+    "failed_checks": [],
+    "stage": "CI",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 42800,
+   "t_real_ms": 42800,
+   "seq": 26,
+   "actor": "code-owner",
+   "action": "speak",
+   "target": null,
+   "place": "review-desk",
+   "text": "Approved",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0026",
+    "phase": "review",
+    "decision": "approved",
+    "subject_artifact_id": "art-pr",
+    "stage": "PR",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 44000,
+   "t_real_ms": 44000,
+   "seq": 27,
+   "actor": "code-owner",
+   "action": "phase",
+   "target": null,
+   "place": "review-desk",
+   "text": "merged",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0027",
+    "phase": "deployment",
+    "from_phase": "review",
+    "to_phase": "deployment",
+    "stage": "release",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 46000,
+   "t_real_ms": 46000,
+   "seq": 28,
+   "actor": "code-agent",
+   "action": "handoff",
+   "target": "release-manager",
+   "place": "review-table",
+   "text": "Release PR #412?",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "APPROVAL_REQUESTED",
+    "event_id": "evt-0028",
+    "phase": "deployment",
+    "gate": "production-release",
+    "request_id": "rel-1",
+    "stage": "release",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 48400,
+   "t_real_ms": 48400,
+   "seq": 29,
+   "actor": "release-manager",
+   "action": "speak",
+   "target": null,
+   "place": "merge-gate",
+   "text": "approved · Release authorized",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "APPROVAL_DECIDED",
+    "event_id": "evt-0029",
+    "phase": "deployment",
+    "request_id": "rel-1",
+    "decision": "approved",
+    "stage": "release",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 49600,
+   "t_real_ms": 49600,
+   "seq": 30,
+   "actor": "release-manager",
+   "action": "phase",
+   "target": null,
+   "place": "merge-gate",
+   "text": "released",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0030",
+    "phase": "maintenance",
+    "from_phase": "deployment",
+    "to_phase": "maintenance",
+    "stage": "release",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 51000,
+   "t_real_ms": 51000,
+   "seq": 31,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "billing-service (final): all tests passed",
+   "key": "oracle",
+   "narration": "The other teams keep working.",
+   "caption": "Staging oracle, hidden from the agent: the other teams run their own tests on the final pull request. All 3 pass.",
+   "check": {
+    "id": "billing-service",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0031",
+    "phase": "maintenance",
+    "consumer": "billing-service",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "release",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 51500,
+   "t_real_ms": 51500,
+   "seq": 32,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "analytics-ingest (final): all tests passed",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "analytics-ingest",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0032",
+    "phase": "maintenance",
+    "consumer": "analytics-ingest",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "release",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 52000,
+   "t_real_ms": 52000,
+   "seq": 33,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "web-storefront (final): all tests passed",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "web-storefront",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0033",
+    "phase": "maintenance",
+    "consumer": "web-storefront",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "release",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 54400,
+   "t_real_ms": 54400,
+   "seq": 34,
+   "actor": "product-owner",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "Caught in CI by a deterministic check of the consumers' contracts; repaired before merge",
+   "key": "session_end",
+   "narration": "Caught by a required check that reads the consumers' contracts. The agent repaired it before merge.",
+   "caption": "Caught in CI by a deterministic check of the consumers' contracts; repaired before merge",
+   "detail": {
+    "event_type": "SESSION_ENDED",
+    "event_id": "evt-0034",
+    "phase": "maintenance",
+    "outcome": "success",
+    "stats": {
+     "events": 35
+    }
+   }
+  }
+ ],
+ "markers": [
+  {
+   "t_ms": 26000,
+   "label": "PR opened · 3 files changed",
+   "kind": "pr_opened"
+  },
+  {
+   "t_ms": 30800,
+   "label": "CI failed: ARCH-4",
+   "kind": "ci_fail"
+  },
+  {
+   "t_ms": 35600,
+   "label": "Repair 1 pushed · keeps totalCents and placedAt as @deprecated aliases",
+   "kind": "repair"
+  },
+  {
+   "t_ms": 40400,
+   "label": "CI passed",
+   "kind": "ci_pass"
+  },
+  {
+   "t_ms": 51000,
+   "label": "Oracle (final): all 3 consumers pass",
+   "kind": "oracle"
+  },
+  {
+   "t_ms": 54400,
+   "label": "End: success",
+   "kind": "session_end"
+  }
+ ],
+ "scene": {
+  "layout": "review",
+  "visibility": null,
+  "spec": null,
+  "agent": "code-agent",
+  "context": null,
+  "fitness_functions": [
+   "ARCH-4"
+  ],
+  "consumers": [
+   {
+    "id": "billing-service",
+    "desk": "desk-billing",
+    "contract": "OrderPlaced",
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 31,
+      "t_ms": 51000
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Noor",
+     "title": "Billing team (consumer)",
+     "seed": "cast:noor:billing",
+     "fictional": true
+    }
+   },
+   {
+    "id": "analytics-ingest",
+    "desk": "desk-analytics",
+    "contract": "OrderPlaced",
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 32,
+      "t_ms": 51500
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Kenji",
+     "title": "Analytics team (consumer)",
+     "seed": "cast:kenji:analytics",
+     "fictional": true
+    }
+   },
+   {
+    "id": "web-storefront",
+    "desk": "desk-storefront",
+    "contract": "GET /orders/{id}",
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 33,
+      "t_ms": 52000
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Lucía",
+     "title": "Storefront team (consumer)",
+     "seed": "cast:lucia:storefront",
+     "fictional": true
+    }
+   }
+  ],
+  "diff_cards": [],
+  "sources": [
+   "events.jsonl"
+  ],
+  "lifecycle_model": {
+   "label": "Any of the above + the gate",
+   "detail": "6 roles on the floor (AISDLC-Trace 2.1 role set)",
+   "source": "SESSION_STARTED.payload.frameworks",
+   "kind": "illustration"
+  },
+  "zones": [
+   {
+    "id": "define",
+    "label": "Define",
+    "x0": 0.0,
+    "x1": 0.22,
+    "roles": "product owner · delivery · analyst · architect",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "build",
+    "label": "Build",
+    "x0": 0.22,
+    "x1": 0.46,
+    "roles": "code agents · tester",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "verify",
+    "label": "Verify & release",
+    "x0": 0.46,
+    "x1": 0.68,
+    "roles": "CI · review · merge gate · release manager",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   },
+   {
+    "id": "production",
+    "label": "Production",
+    "x0": 0.68,
+    "x1": 1.0,
+    "roles": "running services · their teams · users",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   }
+  ],
+  "illustration": {
+   "id": "gate",
+   "model": "Any of the above + the gate",
+   "short": "+ the gate",
+   "source": "This talk's proposal (Agents vs. Gates), 13 Oct 2026",
+   "date": "2026-10-13",
+   "url": null,
+   "stages": [
+    "intent",
+    "spec",
+    "plan",
+    "code",
+    "PR",
+    "CI",
+    "release"
+   ],
+   "rule": {
+    "axis": "spec",
+    "place": "architecture-library",
+    "label": "The spec AND a required CI check (ARCH-4)"
+   },
+   "blocks": {
+    "axis": "ci",
+    "place": "ci-tower",
+    "label": "Required check ARCH-4 (consumer contracts)"
+   },
+   "ci_arch": true,
+   "outcome": {
+    "status": "caught",
+    "axis": "ci",
+    "label": "Caught in CI (ARCH-4), repaired"
+   }
+  }
+ }
+}

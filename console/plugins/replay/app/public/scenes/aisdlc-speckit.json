@@ -1,0 +1,979 @@
+{
+ "meta": {
+  "run_id": "aisdlc-speckit",
+  "source": "illustration",
+  "unit": "illustration",
+  "model": null,
+  "date": "2026-10-13",
+  "started_at": "2026-10-13T09:00:00.000Z",
+  "ticket": "X-rename",
+  "condition": {},
+  "outcome": null,
+  "ticket_done": null,
+  "session_outcome": "failed",
+  "stage": null,
+  "title": "Meridian Retail · rename on OrderPlaced · spec-kit",
+  "scenario": "meridian-retail/illustration",
+  "trace_sha256": "e3f708db0a913f2caf588dcdf3d3bb7e67ef36088c2216b5f37d7d91eb1dfd0b",
+  "schema": "replay/1",
+  "exporter_version": 4,
+  "legend": "Illustration · scripted from public documentation",
+  "duration_ms": 46500,
+  "duration_real_ms": 42000,
+  "event_count": 24,
+  "extras_sha256": "9df133529e3dfe710529db48f000891a5e4c5366fc695b53574330530d5ae475",
+  "illustration_source": "github/spec-kit README and spec-driven.md (public docs, read 13 Oct 2026)"
+ },
+ "places": [
+  {
+   "id": "product-desk",
+   "label": "Product",
+   "kind": "desk",
+   "x": 0.07,
+   "y": 0.18,
+   "note": "product owner",
+   "zone": "define",
+   "used": false
+  },
+  {
+   "id": "planning-room",
+   "label": "Delivery · planning",
+   "kind": "room",
+   "x": 0.16,
+   "y": 0.33,
+   "note": "scrum master / delivery",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "analysis-desk",
+   "label": "Analysis",
+   "kind": "desk",
+   "x": 0.06,
+   "y": 0.5,
+   "note": "analyst",
+   "zone": "define",
+   "used": false
+  },
+  {
+   "id": "architecture-library",
+   "label": "Architecture library",
+   "kind": "library",
+   "x": 0.14,
+   "y": 0.7,
+   "note": "ARCH-n rules, catalog, ADRs",
+   "zone": "define",
+   "used": false
+  },
+  {
+   "id": "dispatch",
+   "label": "Dispatch board",
+   "kind": "system",
+   "x": 0.34,
+   "y": 0.16,
+   "note": "flow engine",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "desk-orders",
+   "label": "Checkout · orders",
+   "kind": "desk",
+   "x": 0.33,
+   "y": 0.42,
+   "note": "orders-service",
+   "zone": "build",
+   "used": true
+  },
+  {
+   "id": "tester-desk",
+   "label": "Testing",
+   "kind": "desk",
+   "x": 0.34,
+   "y": 0.86,
+   "note": "tester / verifier",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "pr-tray",
+   "label": "PR tray",
+   "kind": "system",
+   "x": 0.505,
+   "y": 0.42,
+   "note": "pull request",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "ci-tower",
+   "label": "CI Tower",
+   "kind": "system",
+   "x": 0.6,
+   "y": 0.36,
+   "note": "one light per check",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "merge-gate",
+   "label": "Merge gate · release",
+   "kind": "gate",
+   "x": 0.58,
+   "y": 0.72,
+   "note": "release manager",
+   "zone": "verify",
+   "used": false
+  },
+  {
+   "id": "staging-bench",
+   "label": "The other teams' tests",
+   "kind": "stage",
+   "x": 0.93,
+   "y": 0.17,
+   "note": "illustration: what happens downstream",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-billing",
+   "label": "billing-service",
+   "kind": "desk",
+   "x": 0.76,
+   "y": 0.3,
+   "note": "Billing team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-analytics",
+   "label": "analytics-ingest",
+   "kind": "desk",
+   "x": 0.93,
+   "y": 0.47,
+   "note": "Analytics team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-storefront",
+   "label": "web-storefront",
+   "kind": "desk",
+   "x": 0.78,
+   "y": 0.66,
+   "note": "Storefront team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "users",
+   "label": "Users",
+   "kind": "stage",
+   "x": 0.88,
+   "y": 0.88,
+   "note": "illustrative",
+   "zone": "production",
+   "used": true
+  }
+ ],
+ "actors": [
+  {
+   "id": "maintainer",
+   "role": "tech_lead",
+   "actor_type": "human",
+   "display_name": "Ada · Maintainer",
+   "avatar": {
+    "style": "human",
+    "seed": "maintainer",
+    "badge": null
+   },
+   "home": "planning-room"
+  },
+  {
+   "id": "developer",
+   "role": "engineer",
+   "actor_type": "human",
+   "display_name": "Rui · Developer",
+   "avatar": {
+    "style": "human",
+    "seed": "developer",
+    "badge": null
+   },
+   "home": "planning-room"
+  },
+  {
+   "id": "agent",
+   "role": "code_agent",
+   "actor_type": "agent",
+   "display_name": "AI agent · orders-service (/speckit commands)",
+   "avatar": {
+    "style": "agent",
+    "seed": "agent",
+    "badge": null
+   },
+   "home": "desk-orders"
+  },
+  {
+   "id": "ci",
+   "role": "ci",
+   "actor_type": "system",
+   "display_name": "CI",
+   "avatar": {
+    "style": "system",
+    "seed": "ci",
+    "badge": null
+   },
+   "home": "ci-tower"
+  },
+  {
+   "id": "staging",
+   "role": "staging",
+   "actor_type": "system",
+   "display_name": "The other teams' tests",
+   "avatar": {
+    "style": "system",
+    "seed": "staging",
+    "badge": null
+   },
+   "home": "staging-bench"
+  }
+ ],
+ "steps": [
+  {
+   "t_ms": 0,
+   "t_real_ms": 0,
+   "seq": 0,
+   "actor": "maintainer",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "Meridian Retail · rename on OrderPlaced · spec-kit",
+   "key": null,
+   "narration": "GitHub spec-kit · Rename totalCents/placedAt on OrderPlaced at Meridian Retail (fictional).",
+   "detail": {
+    "event_type": "SESSION_STARTED",
+    "event_id": "evt-0000",
+    "phase": "discovery",
+    "to_phase": "discovery",
+    "scenario": "meridian-retail/illustration",
+    "condition": ""
+   }
+  },
+  {
+   "t_ms": 2600,
+   "t_real_ms": 2600,
+   "seq": 1,
+   "actor": "maintainer",
+   "action": "work",
+   "target": null,
+   "place": "planning-room",
+   "text": "memory/constitution.md · Article IV (project): published events stay backward compatible · Article IX: Integration-First Testing, contracts and contract tests first",
+   "key": null,
+   "narration": "/speckit.constitution: the project's articles. The rule is Article IV, written by the project.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0001",
+    "phase": "discovery",
+    "artifact_id": "art-const",
+    "artifact_type": "context_file",
+    "stage": "constitution",
+    "axis": "intent",
+    "rule": true
+   }
+  },
+  {
+   "t_ms": 4800,
+   "t_real_ms": 4800,
+   "seq": 2,
+   "actor": "developer",
+   "action": "speak",
+   "target": "agent",
+   "place": "planning-room",
+   "text": "/speckit.specify Rename totalCents/placedAt on OrderPlaced",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "MESSAGE_EXCHANGED",
+    "event_id": "evt-0002",
+    "phase": "discovery",
+    "interaction_type": "task_assignment",
+    "content": "/speckit.specify Rename totalCents/placedAt on OrderPlaced",
+    "stage": "specify",
+    "axis": "intent"
+   }
+  },
+  {
+   "t_ms": 6000,
+   "t_real_ms": 6000,
+   "seq": 3,
+   "actor": "developer",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "specify",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0003",
+    "phase": "planning",
+    "from_phase": "discovery",
+    "to_phase": "planning",
+    "stage": "specify",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 8600,
+   "t_real_ms": 8600,
+   "seq": 4,
+   "actor": "agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "specs/012-orderplaced-rename/spec.md · What and why: rename the two fields",
+   "key": null,
+   "narration": "/speckit.specify writes spec.md on its own branch.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0004",
+    "phase": "planning",
+    "artifact_id": "art-spec",
+    "artifact_type": "spec",
+    "stage": "specify",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 11000,
+   "t_real_ms": 11000,
+   "seq": 5,
+   "actor": "developer",
+   "action": "speak",
+   "target": null,
+   "place": "planning-room",
+   "text": "Spec reviewed",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0005",
+    "phase": "planning",
+    "decision": "approved",
+    "subject_artifact_id": "art-spec",
+    "stage": "specify",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 12600,
+   "t_real_ms": 12600,
+   "seq": 6,
+   "actor": "agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "memory/constitution.md · plan gates",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_READ",
+    "event_id": "evt-0006",
+    "phase": "planning",
+    "artifact_id": "art-const",
+    "stage": "plan",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 15200,
+   "t_real_ms": 15200,
+   "seq": 7,
+   "actor": "agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "plan.md · Phase -1 gates: Integration-First ✓ contracts defined ✓ contract tests written ✓ · contracts/orderplaced.json updated to the new names",
+   "key": null,
+   "narration": "/speckit.plan: plan.md, data-model.md, contracts/. The Phase -1 gates are a checklist the agent fills.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0007",
+    "phase": "planning",
+    "artifact_id": "art-plan",
+    "artifact_type": "plan",
+    "stage": "plan",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 17800,
+   "t_real_ms": 17800,
+   "seq": 8,
+   "actor": "agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "tasks.md · Contract tests first, then the publisher",
+   "key": null,
+   "narration": "/speckit.tasks: tasks.md.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0008",
+    "phase": "planning",
+    "artifact_id": "art-tasks",
+    "artifact_type": "task_list",
+    "stage": "tasks",
+    "axis": "tasks"
+   }
+  },
+  {
+   "t_ms": 20200,
+   "t_real_ms": 20200,
+   "seq": 9,
+   "actor": "developer",
+   "action": "speak",
+   "target": null,
+   "place": "planning-room",
+   "text": "Tests validated (Red)",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0009",
+    "phase": "planning",
+    "decision": "approved",
+    "subject_artifact_id": "art-tasks",
+    "stage": "tasks",
+    "axis": "tasks"
+   }
+  },
+  {
+   "t_ms": 21400,
+   "t_real_ms": 21400,
+   "seq": 10,
+   "actor": "developer",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "implement",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0010",
+    "phase": "implementation",
+    "from_phase": "planning",
+    "to_phase": "implementation",
+    "stage": "implement",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 23400,
+   "t_real_ms": 23400,
+   "seq": 11,
+   "actor": "agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "Edit · src/core/events.ts",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0011",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "input_summary": "src/core/events.ts",
+    "correlation_id": "call-0011",
+    "stage": "implement",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 25000,
+   "t_real_ms": 25000,
+   "seq": 12,
+   "actor": "agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+   "key": null,
+   "narration": "Same scripted case in every model: the first attempt renames the fields and drops the old names, although the rule is in the agent's context.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0012",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "status": "success",
+    "output_summary": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+    "correlation_id": "call-0011",
+    "stage": "implement",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 27000,
+   "t_real_ms": 27000,
+   "seq": 13,
+   "actor": "agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "Bash · npm test",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0013",
+    "phase": "implementation",
+    "tool_name": "Bash",
+    "input_summary": "npm test",
+    "correlation_id": "call-0013",
+    "stage": "implement",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 28600,
+   "t_real_ms": 28600,
+   "seq": 14,
+   "actor": "agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "contract tests (orders-service's own contracts/): all passed",
+   "key": null,
+   "narration": "Contract tests pass: they test this service's own contracts, now with the new names.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0014",
+    "phase": "implementation",
+    "tool_name": "Bash",
+    "status": "success",
+    "output_summary": "contract tests (orders-service's own contracts/): all passed",
+    "correlation_id": "call-0013",
+    "stage": "implement",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 29800,
+   "t_real_ms": 29800,
+   "seq": 15,
+   "actor": "agent",
+   "action": "phase",
+   "target": null,
+   "place": "desk-orders",
+   "text": "branch ready",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0015",
+    "phase": "review",
+    "from_phase": "implementation",
+    "to_phase": "review",
+    "stage": "implement",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 32400,
+   "t_real_ms": 32400,
+   "seq": 16,
+   "actor": "agent",
+   "action": "move",
+   "target": null,
+   "place": "pr-tray",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "stage": "implement",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 32400,
+   "t_real_ms": 32400,
+   "seq": 16,
+   "actor": "agent",
+   "action": "handoff",
+   "target": "pr-tray",
+   "place": "pr-tray",
+   "text": "PR #31 · 012-orderplaced-rename",
+   "key": "pr_opened",
+   "narration": "The branch goes up for review. spec-kit's docs do not describe CI or pull requests.",
+   "caption": "AI agent · orders-service (/speckit commands) opens a pull request (012-orderplaced-rename) and leaves it on the PR tray: CI is its only reviewer.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "artifact_id": "art-pr",
+    "diff": null,
+    "stage": "implement",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 34800,
+   "t_real_ms": 34800,
+   "seq": 17,
+   "actor": "developer",
+   "action": "speak",
+   "target": null,
+   "place": "planning-room",
+   "text": "Merged",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0017",
+    "phase": "review",
+    "decision": "approved",
+    "subject_artifact_id": "art-pr",
+    "stage": "implement",
+    "axis": "review",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 36000,
+   "t_real_ms": 36000,
+   "seq": 18,
+   "actor": "developer",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "merged",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0018",
+    "phase": "deployment",
+    "from_phase": "review",
+    "to_phase": "deployment",
+    "stage": "(not described)",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 37200,
+   "t_real_ms": 37200,
+   "seq": 19,
+   "actor": "developer",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "running",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0019",
+    "phase": "maintenance",
+    "from_phase": "deployment",
+    "to_phase": "maintenance",
+    "stage": "(not described)",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 38600,
+   "t_real_ms": 38600,
+   "seq": 20,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "billing-service (final): 1 of 5 tests failed: invoices order A: totalCents missing",
+   "key": "oracle",
+   "narration": "Billing and analytics break: their contracts live in their own repos.",
+   "caption": "Staging oracle, hidden from the agent: the other teams run their own tests on the final pull request. 2 of 3 break.",
+   "check": {
+    "id": "billing-service",
+    "status": "fail",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0020",
+    "phase": "maintenance",
+    "consumer": "billing-service",
+    "state": "final",
+    "ok": false,
+    "message": "1 of 5 tests failed: invoices order A: totalCents missing",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "(not described)",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 39100,
+   "t_real_ms": 39100,
+   "seq": 21,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "analytics-ingest (final): 1 of 5 tests failed: records order A: placedAt missing",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "analytics-ingest",
+    "status": "fail",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0021",
+    "phase": "maintenance",
+    "consumer": "analytics-ingest",
+    "state": "final",
+    "ok": false,
+    "message": "1 of 5 tests failed: records order A: placedAt missing",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "(not described)",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 39600,
+   "t_real_ms": 39600,
+   "seq": 22,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "web-storefront (final): all tests passed",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "web-storefront",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0022",
+    "phase": "maintenance",
+    "consumer": "web-storefront",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "(not described)",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 42000,
+   "t_real_ms": 42000,
+   "seq": 23,
+   "actor": "maintainer",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "The break escaped: the constitution was read; nothing after generation checked the consumers",
+   "key": "session_end",
+   "narration": "Escaped: the rule lived in the constitution, as context and a plan checklist.",
+   "caption": "The break escaped: the constitution was read; nothing after generation checked the consumers",
+   "detail": {
+    "event_type": "SESSION_ENDED",
+    "event_id": "evt-0023",
+    "phase": "maintenance",
+    "outcome": "failed",
+    "stats": {
+     "events": 24
+    }
+   }
+  }
+ ],
+ "markers": [
+  {
+   "t_ms": 32400,
+   "label": "PR opened · 012-orderplaced-rename",
+   "kind": "pr_opened"
+  },
+  {
+   "t_ms": 38600,
+   "label": "Oracle (final): 2 of 3 consumers fail",
+   "kind": "oracle"
+  },
+  {
+   "t_ms": 42000,
+   "label": "End: failed",
+   "kind": "session_end"
+  }
+ ],
+ "scene": {
+  "layout": "pr-tray",
+  "visibility": null,
+  "spec": null,
+  "agent": "agent",
+  "context": {
+   "file": "memory/constitution.md",
+   "summary": "Article IV (project): published events stay backward compatible · Article IX: Integration-First Testing, contracts and contract tests first",
+   "seq": 1,
+   "t_ms": 2600
+  },
+  "fitness_functions": [],
+  "consumers": [
+   {
+    "id": "billing-service",
+    "desk": "desk-billing",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "fail",
+      "seq": 20,
+      "t_ms": 38600,
+      "tests": "1 of 5 tests failed",
+      "impact": "totalCents missing",
+      "test": "invoices order A"
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Noor",
+     "title": "Billing team (consumer)",
+     "seed": "cast:noor:billing",
+     "fictional": true
+    }
+   },
+   {
+    "id": "analytics-ingest",
+    "desk": "desk-analytics",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "fail",
+      "seq": 21,
+      "t_ms": 39100,
+      "tests": "1 of 5 tests failed",
+      "impact": "placedAt missing",
+      "test": "records order A"
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Kenji",
+     "title": "Analytics team (consumer)",
+     "seed": "cast:kenji:analytics",
+     "fictional": true
+    }
+   },
+   {
+    "id": "web-storefront",
+    "desk": "desk-storefront",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 22,
+      "t_ms": 39600
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Lucía",
+     "title": "Storefront team (consumer)",
+     "seed": "cast:lucia:storefront",
+     "fictional": true
+    }
+   }
+  ],
+  "diff_cards": [],
+  "sources": [
+   "events.jsonl"
+  ],
+  "lifecycle_model": {
+   "label": "GitHub spec-kit",
+   "detail": "3 roles on the floor (AISDLC-Trace 2.1 role set)",
+   "source": "SESSION_STARTED.payload.frameworks",
+   "kind": "illustration"
+  },
+  "zones": [
+   {
+    "id": "define",
+    "label": "Define",
+    "x0": 0.0,
+    "x1": 0.22,
+    "roles": "product owner · delivery · analyst · architect",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "build",
+    "label": "Build",
+    "x0": 0.22,
+    "x1": 0.46,
+    "roles": "code agents · tester",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "verify",
+    "label": "Verify & release",
+    "x0": 0.46,
+    "x1": 0.68,
+    "roles": "CI · review · merge gate · release manager",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   },
+   {
+    "id": "production",
+    "label": "Production",
+    "x0": 0.68,
+    "x1": 1.0,
+    "roles": "running services · their teams · users",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   }
+  ],
+  "illustration": {
+   "id": "speckit",
+   "model": "GitHub spec-kit",
+   "short": "spec-kit",
+   "source": "github/spec-kit README and spec-driven.md (public docs, read 13 Oct 2026)",
+   "date": "2026-10-13",
+   "url": "https://github.com/github/spec-kit",
+   "stages": [
+    "constitution",
+    "specify",
+    "plan",
+    "tasks",
+    "implement"
+   ],
+   "rule": {
+    "axis": "intent",
+    "place": "planning-room",
+    "label": "The constitution (a project article), checked by plan gates"
+   },
+   "blocks": {
+    "axis": "review",
+    "place": "pr-tray",
+    "label": "Team review (no CI step described)"
+   },
+   "ci_arch": false,
+   "outcome": {
+    "status": "escapes",
+    "axis": "production",
+    "label": "Escapes: 2 consumers break"
+   }
+  }
+ }
+}

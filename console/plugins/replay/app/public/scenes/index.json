@@ -1,0 +1,761 @@
+{
+ "label": "Illustration · scripted from public documentation",
+ "axis": [
+  "intent",
+  "spec",
+  "plan",
+  "tasks",
+  "code",
+  "review",
+  "ci",
+  "release",
+  "production"
+ ],
+ "axis_label": {
+  "intent": "Intent",
+  "spec": "Spec",
+  "plan": "Plan",
+  "tasks": "Tasks",
+  "code": "Code",
+  "review": "Review",
+  "ci": "CI",
+  "release": "Release",
+  "production": "Production"
+ },
+ "feature": "Rename totalCents/placedAt on OrderPlaced",
+ "premise": "Same scripted case in every model: the first attempt renames the fields and drops the old names, although the rule is in the agent's context.",
+ "scenes": [
+  {
+   "id": "aisdlc-anthropic",
+   "url": "scenes/aisdlc-anthropic.json",
+   "title": "Anthropic · AI-native SDLC playbook",
+   "short": "Anthropic",
+   "source": "Anthropic, The AI-native SDLC playbook (21 Aug 2026)",
+   "date": "2026-08-21",
+   "stages": [
+    "Plan",
+    "Design",
+    "Build",
+    "Test",
+    "Deploy",
+    "Maintain"
+   ],
+   "rule": {
+    "axis": "plan",
+    "place": "desk-orders",
+    "label": "CLAUDE.md · Architecture (context the agent reads)"
+   },
+   "blocks": {
+    "axis": "review",
+    "place": "review-desk",
+    "label": "Code owner approval (branch protection)"
+   },
+   "ci_arch": false,
+   "outcome": {
+    "status": "caught",
+    "axis": "review",
+    "label": "Caught at review: LLM pass + human"
+   },
+   "duration_ms": 68900,
+   "columns": {
+    "intent": {
+     "stages": [
+      "Plan"
+     ],
+     "artifacts": [
+      "intent/orderplaced-rename.md"
+     ],
+     "checks": [],
+     "who": [
+      "Priya · Originator",
+      "Tomás · Product Owner"
+     ],
+     "t_ms": 2600
+    },
+    "spec": {
+     "stages": [
+      "Design"
+     ],
+     "artifacts": [
+      "spec.md"
+     ],
+     "checks": [],
+     "who": [
+      "Tomás · Product Owner",
+      "Claude · spec session"
+     ],
+     "t_ms": 6200
+    },
+    "plan": {
+     "stages": [
+      "Build"
+     ],
+     "artifacts": [
+      "CLAUDE.md",
+      "plan.md"
+     ],
+     "checks": [],
+     "who": [
+      "Lena · Engineer",
+      "Claude Code · orders-service"
+     ],
+     "t_ms": 12400
+    },
+    "tasks": {
+     "stages": [],
+     "artifacts": [],
+     "checks": [],
+     "who": [],
+     "t_ms": null
+    },
+    "code": {
+     "stages": [
+      "Build",
+      "Test"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Claude Code · orders-service"
+     ],
+     "t_ms": 23600
+    },
+    "review": {
+     "stages": [
+      "Deploy"
+     ],
+     "artifacts": [
+      "PR #412"
+     ],
+     "checks": [],
+     "who": [
+      "Claude Code · orders-service",
+      "Code Review",
+      "Lena · Engineer",
+      "Omar · Code Owner"
+     ],
+     "t_ms": 30000
+    },
+    "ci": {
+     "stages": [
+      "Deploy"
+     ],
+     "artifacts": [],
+     "checks": [
+      "lint",
+      "tests"
+     ],
+     "who": [],
+     "t_ms": 34400
+    },
+    "release": {
+     "stages": [
+      "Deploy"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Omar · Code Owner",
+      "Claude Code · orders-service",
+      "Ravi · Release Manager"
+     ],
+     "t_ms": 54000
+    },
+    "production": {
+     "stages": [
+      "Maintain"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Ravi · Release Manager"
+     ],
+     "t_ms": 59600
+    }
+   }
+  },
+  {
+   "id": "aisdlc-aws",
+   "url": "scenes/aisdlc-aws.json",
+   "title": "AWS · AI-DLC (blog + aidlc-workflows)",
+   "short": "AWS AI-DLC",
+   "source": "AWS, AI-DLC blog (31 Jul 2025) + awslabs/aidlc-workflows 2.11.0",
+   "date": "2025-07-31",
+   "stages": [
+    "Inception",
+    "Construction",
+    "Operations"
+   ],
+   "rule": {
+    "axis": "plan",
+    "place": "planning-room",
+    "label": "The design artifacts (Contract Design), reviewed by an LLM reviewer"
+   },
+   "blocks": {
+    "axis": "release",
+    "place": "merge-gate",
+    "label": "Release: manual approval (tech lead or product owner)"
+   },
+   "ci_arch": false,
+   "outcome": {
+    "status": "escapes",
+    "axis": "production",
+    "label": "Escapes: 2 consumers break"
+   },
+   "duration_ms": 56500,
+   "columns": {
+    "intent": {
+     "stages": [
+      "Inception"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Chen · Product Owner"
+     ],
+     "t_ms": 2200
+    },
+    "spec": {
+     "stages": [
+      "Inception"
+     ],
+     "artifacts": [
+      "requirements.md"
+     ],
+     "checks": [],
+     "who": [
+      "Product Agent",
+      "Product Lead",
+      "Chen · Product Owner"
+     ],
+     "t_ms": 4800
+    },
+    "plan": {
+     "stages": [
+      "Inception",
+      "Construction"
+     ],
+     "artifacts": [
+      "design/contract-design.md"
+     ],
+     "checks": [],
+     "who": [
+      "Chen · Product Owner",
+      "Architect Agent",
+      "Architecture Reviewer",
+      "Kwame · Architect"
+     ],
+     "t_ms": 10800
+    },
+    "tasks": {
+     "stages": [],
+     "artifacts": [],
+     "checks": [],
+     "who": [],
+     "t_ms": null
+    },
+    "code": {
+     "stages": [
+      "Construction"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Kwame · Architect",
+      "Developer Agent · orders-service",
+      "Quality Agent"
+     ],
+     "t_ms": 19400
+    },
+    "review": {
+     "stages": [
+      "Construction"
+     ],
+     "artifacts": [
+      "PR #88"
+     ],
+     "checks": [],
+     "who": [
+      "Developer Agent · orders-service"
+     ],
+     "t_ms": 29400
+    },
+    "ci": {
+     "stages": [
+      "Construction"
+     ],
+     "artifacts": [],
+     "checks": [
+      "lint",
+      "unit-tests",
+      "coverage",
+      "security-scan",
+      "integration"
+     ],
+     "who": [],
+     "t_ms": 33800
+    },
+    "release": {
+     "stages": [
+      "Operations"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Pipeline & Deploy Agent",
+      "Chen · Product Owner"
+     ],
+     "t_ms": 39400
+    },
+    "production": {
+     "stages": [
+      "Operations"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Chen · Product Owner",
+      "Operations Agent"
+     ],
+     "t_ms": 45000
+    }
+   }
+  },
+  {
+   "id": "aisdlc-kiro",
+   "url": "scenes/aisdlc-kiro.json",
+   "title": "Kiro · specs, steering, hooks",
+   "short": "Kiro",
+   "source": "Kiro docs: Specs, Steering, Hooks, Custom agents (captured 10 Oct 2026)",
+   "date": "2026-10-10",
+   "stages": [
+    "Requirements",
+    "Design",
+    "Tasks",
+    "Implementation"
+   ],
+   "rule": {
+    "axis": "plan",
+    "place": "desk-orders",
+    "label": "Steering structure.md and design.md (context)"
+   },
+   "blocks": {
+    "axis": "review",
+    "place": "pr-tray",
+    "label": "The user reviewing the PR (no CI step described)"
+   },
+   "ci_arch": false,
+   "outcome": {
+    "status": "escapes",
+    "axis": "production",
+    "label": "Escapes: 2 consumers break"
+   },
+   "duration_ms": 46500,
+   "columns": {
+    "intent": {
+     "stages": [
+      "Steering",
+      "Requirements"
+     ],
+     "artifacts": [
+      ".kiro/steering/structure.md"
+     ],
+     "checks": [],
+     "who": [
+      "Elif · User"
+     ],
+     "t_ms": 2600
+    },
+    "spec": {
+     "stages": [
+      "Requirements"
+     ],
+     "artifacts": [
+      ".kiro/specs/orderplaced-rename/requirements.md"
+     ],
+     "checks": [],
+     "who": [
+      "Elif · User",
+      "Spec agent"
+     ],
+     "t_ms": 6000
+    },
+    "plan": {
+     "stages": [
+      "Design"
+     ],
+     "artifacts": [
+      "design.md"
+     ],
+     "checks": [],
+     "who": [
+      "Spec agent",
+      "Elif · User"
+     ],
+     "t_ms": 12600
+    },
+    "tasks": {
+     "stages": [
+      "Tasks"
+     ],
+     "artifacts": [
+      "tasks.md"
+     ],
+     "checks": [],
+     "who": [
+      "Spec agent"
+     ],
+     "t_ms": 20200
+    },
+    "code": {
+     "stages": [
+      "Implementation"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Elif · User",
+      "Kiro agent · orders-service"
+     ],
+     "t_ms": 21400
+    },
+    "review": {
+     "stages": [
+      "Implementation"
+     ],
+     "artifacts": [
+      "PR #57"
+     ],
+     "checks": [],
+     "who": [
+      "Kiro agent · orders-service",
+      "Elif · User"
+     ],
+     "t_ms": 29800
+    },
+    "ci": {
+     "stages": [],
+     "artifacts": [],
+     "checks": [],
+     "who": [],
+     "t_ms": null
+    },
+    "release": {
+     "stages": [
+      "(not described)"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Elif · User"
+     ],
+     "t_ms": 36000
+    },
+    "production": {
+     "stages": [
+      "(not described)"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Elif · User"
+     ],
+     "t_ms": 37200
+    }
+   }
+  },
+  {
+   "id": "aisdlc-speckit",
+   "url": "scenes/aisdlc-speckit.json",
+   "title": "GitHub spec-kit",
+   "short": "spec-kit",
+   "source": "github/spec-kit README and spec-driven.md (public docs, read 13 Oct 2026)",
+   "date": "2026-10-13",
+   "stages": [
+    "constitution",
+    "specify",
+    "plan",
+    "tasks",
+    "implement"
+   ],
+   "rule": {
+    "axis": "intent",
+    "place": "planning-room",
+    "label": "The constitution (a project article), checked by plan gates"
+   },
+   "blocks": {
+    "axis": "review",
+    "place": "pr-tray",
+    "label": "Team review (no CI step described)"
+   },
+   "ci_arch": false,
+   "outcome": {
+    "status": "escapes",
+    "axis": "production",
+    "label": "Escapes: 2 consumers break"
+   },
+   "duration_ms": 46500,
+   "columns": {
+    "intent": {
+     "stages": [
+      "constitution",
+      "specify"
+     ],
+     "artifacts": [
+      "memory/constitution.md"
+     ],
+     "checks": [],
+     "who": [
+      "Ada · Maintainer",
+      "Rui · Developer"
+     ],
+     "t_ms": 2600
+    },
+    "spec": {
+     "stages": [
+      "specify"
+     ],
+     "artifacts": [
+      "specs/012-orderplaced-rename/spec.md"
+     ],
+     "checks": [],
+     "who": [
+      "Rui · Developer",
+      "AI agent · orders-service (/speckit commands)"
+     ],
+     "t_ms": 6000
+    },
+    "plan": {
+     "stages": [
+      "plan"
+     ],
+     "artifacts": [
+      "plan.md"
+     ],
+     "checks": [],
+     "who": [
+      "AI agent · orders-service (/speckit commands)"
+     ],
+     "t_ms": 12600
+    },
+    "tasks": {
+     "stages": [
+      "tasks"
+     ],
+     "artifacts": [
+      "tasks.md"
+     ],
+     "checks": [],
+     "who": [
+      "AI agent · orders-service (/speckit commands)",
+      "Rui · Developer"
+     ],
+     "t_ms": 17800
+    },
+    "code": {
+     "stages": [
+      "implement"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Rui · Developer",
+      "AI agent · orders-service (/speckit commands)"
+     ],
+     "t_ms": 21400
+    },
+    "review": {
+     "stages": [
+      "implement"
+     ],
+     "artifacts": [
+      "PR #31"
+     ],
+     "checks": [],
+     "who": [
+      "AI agent · orders-service (/speckit commands)",
+      "Rui · Developer"
+     ],
+     "t_ms": 29800
+    },
+    "ci": {
+     "stages": [],
+     "artifacts": [],
+     "checks": [],
+     "who": [],
+     "t_ms": null
+    },
+    "release": {
+     "stages": [
+      "(not described)"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Rui · Developer"
+     ],
+     "t_ms": 36000
+    },
+    "production": {
+     "stages": [
+      "(not described)"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Rui · Developer"
+     ],
+     "t_ms": 37200
+    }
+   }
+  },
+  {
+   "id": "aisdlc-gate",
+   "url": "scenes/aisdlc-gate.json",
+   "title": "Any of the above + the gate",
+   "short": "+ the gate",
+   "source": "This talk's proposal (Agents vs. Gates), 13 Oct 2026",
+   "date": "2026-10-13",
+   "stages": [
+    "intent",
+    "spec",
+    "plan",
+    "code",
+    "PR",
+    "CI",
+    "release"
+   ],
+   "rule": {
+    "axis": "spec",
+    "place": "architecture-library",
+    "label": "The spec AND a required CI check (ARCH-4)"
+   },
+   "blocks": {
+    "axis": "ci",
+    "place": "ci-tower",
+    "label": "Required check ARCH-4 (consumer contracts)"
+   },
+   "ci_arch": true,
+   "outcome": {
+    "status": "caught",
+    "axis": "ci",
+    "label": "Caught in CI (ARCH-4), repaired"
+   },
+   "duration_ms": 58900,
+   "columns": {
+    "intent": {
+     "stages": [
+      "intent"
+     ],
+     "artifacts": [
+      "intent.md"
+     ],
+     "checks": [],
+     "who": [
+      "Amara · Product Owner"
+     ],
+     "t_ms": 2600
+    },
+    "spec": {
+     "stages": [
+      "spec"
+     ],
+     "artifacts": [
+      "spec.md"
+     ],
+     "checks": [],
+     "who": [
+      "Amara · Product Owner",
+      "Maya · Architect"
+     ],
+     "t_ms": 3800
+    },
+    "plan": {
+     "stages": [
+      "plan"
+     ],
+     "artifacts": [
+      "plan.md"
+     ],
+     "checks": [],
+     "who": [
+      "Code Agent · orders-service",
+      "Yusuf · Engineer"
+     ],
+     "t_ms": 11400
+    },
+    "tasks": {
+     "stages": [],
+     "artifacts": [],
+     "checks": [],
+     "who": [],
+     "t_ms": null
+    },
+    "code": {
+     "stages": [
+      "code"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Yusuf · Engineer",
+      "Code Agent · orders-service"
+     ],
+     "t_ms": 15000
+    },
+    "review": {
+     "stages": [
+      "PR",
+      "CI"
+     ],
+     "artifacts": [
+      "PR #412"
+     ],
+     "checks": [],
+     "who": [
+      "Code Agent · orders-service",
+      "Greta · Code Owner"
+     ],
+     "t_ms": 23400
+    },
+    "ci": {
+     "stages": [
+      "CI"
+     ],
+     "artifacts": [],
+     "checks": [
+      "lint",
+      "tests",
+      "ARCH-4"
+     ],
+     "who": [],
+     "t_ms": 27800
+    },
+    "release": {
+     "stages": [
+      "release"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Greta · Code Owner",
+      "Code Agent · orders-service",
+      "Ravi · Release Manager"
+     ],
+     "t_ms": 44000
+    },
+    "production": {
+     "stages": [
+      "release"
+     ],
+     "artifacts": [],
+     "checks": [],
+     "who": [
+      "Ravi · Release Manager"
+     ],
+     "t_ms": 49600
+    }
+   }
+  }
+ ]
+}

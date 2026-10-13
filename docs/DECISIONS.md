@@ -597,3 +597,47 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - Every frame carries a legend, bottom-right: cyan = pass, pink = fail.
   - The stage keeps 16:9 inside whatever height the wrapped top bar and controls leave. At 1280×720 its bottom used to slide under the timeline.
 - QA: before/after stills, at fixed timestamps, of the three replays at 1920×1080 (panel and presentation) and at 1280×720, in `docs/qa/night-theater-*`.
+### B. The full AI-SDLC on stage: one scripted scene per public model, comparable
+- **What.** `replay/scenes/make_scenes.py` scripts five AISDLC-Trace 2.1 sessions:
+  - Anthropic playbook;
+  - AWS AI-DLC (blog + `awslabs/aidlc-workflows`);
+  - Kiro (specs, steering, hooks);
+  - GitHub spec-kit;
+  - "Any of the above + the gate".
+  The exporter turns each into a replay that the theater plays (`public/scenes`, bundled into `web/dist`). Every beat cites the section it stages (`replay/scenes/SOURCES.md`, generated). Validation:
+  - trace rules 1–13 and the replay schema, in `replay.tests.test_scenes`;
+  - real exports are unchanged: illustration support only touches traces whose source is `illustration`, so `EXPORTER_VERSION` stays 4 and no real cache is invalidated.
+- **Labelling.**
+  - A new replay source `illustration` (contract `replay.schema.json`).
+  - Every frame carries a dashed watermark, "Illustration · scripted from public documentation · <source, date>", and the top bar shows an ILLUSTRATION chip. The real runs keep "Replay of a real run · <id>".
+  - The lanes view carries the same label.
+- **Same feature, same premise.**
+  - The feature is Meridian Retail's X-rename (`totalCents`/`placedAt` on `OrderPlaced`). In every scene the agent's first attempt drops the old names although the rule is in its context.
+  - This is the scripted case, not a rate. The README cites the measured rates with the rule in view (X-rename 0 of 10 per unit; Codex X-remove 7 of 10), so the scenes say "helps, does not guarantee" without implying a frequency.
+  - The scenes then differ only in what each model has after generation.
+- **Outcomes follow each model's own mechanisms.**
+  - Anthropic: caught at review, by the REVIEW.md compliance pass, an LLM finding that advises. This is consistent with P3, where reviewers given the rule flagged 20 of 20 with the correct reason. Then @claude fixes it and the code owner approves.
+  - AWS, Kiro and spec-kit: the break escapes to the other teams, because no step after generation reads their contracts.
+    - AWS's quality gates are lint, coverage, security, integration, manual approval and smoke. Pact appears only as knowledge in a pattern.
+    - Kiro's and spec-kit's docs describe no CI step, and the scenes show that silence.
+  - The gate: ARCH-4 fails the PR in CI (with the experiment's own output lines), the agent repairs with @deprecated aliases, and CI passes.
+- **Roles only as named.**
+  - Casts come from the Teams plugin rosters (fictional people).
+  - Where the trace schema forces a role:
+    - AWS's Architect Agent plays `task_planner`, because `architect` is a human role in the schema and the agent leads Units Generation;
+    - Kiro's User and spec-kit's developer play `engineer`;
+    - spec-kit's maintainer plays `tech_lead`.
+  - spec-kit comes from its public README and `spec-driven.md`, read 13 Oct 2026 (constitution Articles I–IX; IV–VI are defined by each project, so the rule is a project article; Phase −1 gates; no CI or PR in the docs).
+- **On the floor.**
+  - The header shows the model's own stage names, with the current one marked.
+  - Callouts, placed with the same collision avoidance as the labels: "Where the rule lives" (accent outline), "What blocks the merge" (ink) and, at the CI tower, "no architecture check in CI" or "no CI step in this model's docs".
+  - Places the model doesn't use read "not in this model". The staging bench becomes "The other teams' tests" (no hidden oracle in an illustration).
+  - Two theater-wide improvements came out of this:
+    - in presentation mode, a place where people stand drops its own label (their name tags say it);
+    - name tags are placed after every figure, so two people at one desk no longer overlap.
+- **Compare mode (`?lanes=1`, "Compare AI-SDLC models").**
+  - The five models are rows on one phase axis (intent → spec → plan → tasks → code → review → CI → release → production). Each cell shows the model's stage names, artifacts, checks and who acted.
+  - Highlights: where the rule lives (accent), what blocks the merge (ink), the outcome (cyan caught, pink reaches the other teams), and "no architecture check" in CI.
+  - A playhead reveals one column every 4.6 s with a one-line caption, then a closing line (~55 s).
+  - A stacked-lanes view was chosen over five canvases side by side, which are unreadable at 1080p. The two-pane synchronized compare still works for any two scenes.
+- QA: `docs/qa/night-scene-*`, `docs/qa/night-lanes-*`.

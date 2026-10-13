@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import { ModelLanes } from "./components/ModelLanes";
 import { Player } from "./components/Player";
 import { canRecast, recast, RECAST_NOTE, type TeamModel } from "./engine/recast";
 import type { Replay } from "./engine/replay";
@@ -31,6 +32,8 @@ function App() {
   // ?recast=<model id> opens the sprint re-cast (deep link, QA)
   const [recastId, setRecastId] = useState<string>(() => query.get("recast") ?? "");
   const [notice, setNotice] = useState<string | null>(null);
+  // ?lanes=1 (or ?lanes=anthropic,gate) opens the AI-SDLC models side by side
+  const [lanes, setLanes] = useState<boolean>(() => !!query.get("lanes"));
 
   async function onExport(h: Hello) {
     setExporting(true);
@@ -101,7 +104,7 @@ function App() {
   }), []);
 
   useEffect(() => {
-    if (!selected) return;
+    if (!selected || lanes) return;
     let cancelled = false;
     setError(null);
     loadReplay(selected)
@@ -146,7 +149,8 @@ function App() {
   );
   const real = runs.filter((r) => r.source !== "mock" && !r.demo);
   const mock = runs.filter((r) => r.source === "mock" && !r.demo);
-  const demos = runs.filter((r) => r.demo);
+  const demos = runs.filter((r) => r.demo && !r.illustration);
+  const scenes = runs.filter((r) => r.illustration);
   const shellHello = source?.kind === "shell" ? source.hello : null;
   const picker = (
     <>
@@ -159,10 +163,21 @@ function App() {
               {real.length > 0 && <optgroup label="Real runs">{real.map(option)}</optgroup>}
               {mock.length > 0 && <optgroup label="Simulated (mock agent)">{mock.map(option)}</optgroup>}
               {demos.length > 0 && <optgroup label="Bundled demos (SIMULATED)">{demos.map(option)}</optgroup>}
+              {scenes.length > 0 && (
+                <optgroup label="AI-SDLC models (Illustration · scripted from public documentation)">
+                  {scenes.map(option)}
+                </optgroup>
+              )}
             </>
           ) : runs.map(option)}
         </select>
       </label>
+      {scenes.length > 0 && (
+        <button type="button" className="btn btn--quiet" onClick={() => setLanes(true)}
+          title="The scripted AI-SDLC scenes side by side on one phase axis (illustrations, not runs)">
+          Compare AI-SDLC models
+        </button>
+      )}
       {shellHello && canExport(shellHello) && (
         <button type="button" className="btn btn--quiet" disabled={exporting} onClick={() => onExport(shellHello)}
           title="Write replay.json for every finished run of a visible stage that has none yet (real and mock). Blinded stages are never exported.">
@@ -184,6 +199,19 @@ function App() {
       </select>
     </label>
   ) : null;
+
+  if (lanes) {
+    return (
+      <div className="lanes-page">
+        {runs.length > 0 && query.get("capture") !== "1" && (
+          <div className="lanes-page__bar">
+            <button type="button" className="btn btn--quiet" onClick={() => setLanes(false)}>Back to the theater</button>
+          </div>
+        )}
+        <ModelLanes onOpen={(u) => { setLanes(false); setSelected(u); }} />
+      </div>
+    );
+  }
 
   if (!replay) {
     return (

@@ -28,6 +28,15 @@ CAPTION_MAX = 200
 
 LEGEND_MOCK = "SIMULATED (mock agent) — not a real run"
 LEGEND_REAL = "Replay of a real run"
+# Scripted scenes of the public AI-SDLC models (replay/scenes): never a measured run.
+LEGEND_ILLUSTRATION = "Illustration · scripted from public documentation"
+# Illustration events carry these metadata keys to the steps: the model's own stage name, the common phase axis
+# (intent → spec → plan → tasks → code → review → CI → release → production) and the place a hand-off goes to.
+ILLUSTRATION_KEYS = ("stage", "axis", "handoff_to", "rule", "blocks")
+ILLUSTRATION_PLACES = {
+    "staging-bench": {"label": "The other teams' tests", "note": "illustration: what happens downstream"},
+    "pr-tray": {"note": "pull request"},
+}
 
 # The AI-SDLC Office as a lifecycle, left to right (Theater v3): DEFINE (product, delivery, analysis, architecture),
 # BUILD (code agents, testing), VERIFY & RELEASE (PR tray or review, CI, merge gate / release) and PRODUCTION (the
@@ -315,7 +324,7 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
     end = next((e for e in reversed(events) if e.get("event_type") == "SESSION_ENDED"), None)
     stats = ((end or {}).get("payload") or {}).get("stats") or {}
 
-    source = "mock" if md.get("source") == "mock" else "real"
+    source = {"mock": "mock", "illustration": "illustration"}.get(md.get("source"), "real")
     model = md.get("model")
 
     # Actors: roster first (in order), then anyone else that emits events.
@@ -399,6 +408,9 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
             d = {"event_type": et, "event_id": e.get("event_id"), "phase": e.get("phase")}
             if detail:
                 d.update(detail)
+            if source == "illustration":
+                emd = e.get("metadata") or {}
+                d.update({k: emd[k] for k in ILLUSTRATION_KEYS if emd.get(k) is not None})
             s["detail"] = d
             steps.append(s)
             return s
@@ -472,7 +484,8 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
             itype = inter.get("interaction_type")
             src_role = by_id.get(actor, {}).get("role")
             to_agent = target in agent_ids or (not target and src_role == "flow_engine" and agent_ids)
-            feedback = src_role == "flow_engine" and to_agent and str(p.get("content") or "").startswith("CI ")
+            # CI output sent back to the agent (in the illustrations CI itself sends it)
+            feedback = (src_role == "flow_engine" or (source == "illustration" and src_role == "ci")) and to_agent                 and str(p.get("content") or "").startswith("CI ")
             step("speak", text=p.get("content"), target=target or (agent_ids[0] if feedback else None),
                  detail={"interaction_type": itype, "content": p.get("content"),
                          **({"feedback": "ci_output"} if feedback else {})})
@@ -608,6 +621,11 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
         scene["lifecycle_model"] = {"label": LIFECYCLE_SINGLE_TICKET, "detail": "one code agent, one ticket",
                                     "source": "harness (M1)", "kind": "single-ticket"}
     scene["zones"] = [dict(z, band_label=BANDS[z["band"]]) for z in ZONES]
+    if source == "illustration" and isinstance(md.get("illustration"), dict):
+        # which public model the scene stages, its source and date, its own stage names, where the architecture rule
+        # lives and what blocks the merge (drawn on the floor and in the compare lanes)
+        scene["illustration"] = md["illustration"]
+        scene["lifecycle_model"]["kind"] = "illustration"
 
     used = _used_places(actors, steps, scene, has_reviewer)
     grid = any(d in used for d in DEV_DESKS)
@@ -620,6 +638,9 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
         if p["id"] in DEV_DESKS and p["id"] not in used:
             continue  # dev desks exist only for the code agents a run has
         q = dict(p, used=p["id"] in used)
+        if source == "illustration":
+            # an illustration has no hidden oracle and no CI-only review: name those places for what they show
+            q.update(ILLUSTRATION_PLACES.get(p["id"], {}))
         if p["id"] == "desk-orders" and grid:
             q["x"], q["y"] = DESK_ORDERS_GRID
         places.append(q)
@@ -645,12 +666,14 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
         "trace_sha256": trace_sha256(events),
         "schema": SCHEMA,
         "exporter_version": EXPORTER_VERSION,
-        "legend": LEGEND_MOCK if source == "mock" else LEGEND_REAL,
+        "legend": {"mock": LEGEND_MOCK, "illustration": LEGEND_ILLUSTRATION}.get(source, LEGEND_REAL),
         "duration_ms": duration,
         "duration_real_ms": max(0, ts[-1] - t0),
         "event_count": len(events),
         "extras_sha256": extras_sha256(extras),
     }
+    if source == "illustration" and scene.get("illustration"):
+        meta["illustration_source"] = scene["illustration"].get("source")
     return {"meta": meta, "places": places, "actors": actors, "steps": steps, "markers": markers, "scene": scene}
 
 

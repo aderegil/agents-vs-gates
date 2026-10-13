@@ -14,6 +14,7 @@
 .chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border: var(--trazo) solid var(--linea);
   border-radius: var(--radio); color: var(--tinta); font-size: 12px; font-weight: 500; white-space: nowrap; }
 .chip--real { border-color: var(--tinta); font-weight: 600; }
+.chip--ill { border: var(--trazo) dashed var(--tinta); font-weight: 600; }
 .chip--sim { border-color: var(--tinta); background: var(--tinta); color: #fff;
   border-bottom: 3px solid var(--warn); }
 
@@ -192,6 +193,9 @@
 }
 
 /* ---------------------------------------------------------------- re-cast roster (M2b sprint only) */
+.lanes-page { display: flex; flex-direction: column; height: 100%; }
+.lanes-page__bar { padding: 8px 16px 0; }
+.lanes-page .lanes { flex: 1; min-height: 0; }
 .recast { margin: 0 0 4px; padding: 6px 12px; max-height: 180px; overflow-y: auto; background: var(--superficie); border: var(--trazo) solid var(--linea);
   border-radius: var(--radio); font-size: 12px; }
 .recast__head { margin: 0; color: var(--tinta-2); cursor: pointer; }

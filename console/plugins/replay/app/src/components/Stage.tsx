@@ -11,8 +11,8 @@ import {
 import { lastCiResult, poseFor, type CiReaction } from "../engine/motion";
 import {
   bubbleVisible, isActive, narrationAt, walkProgress,
-  type ActorView, type Bubble, type ReplayActor, type ReplayEngine, type ReplayPlace, type SceneConsumer,
-  type SceneZone,
+  type ActorView, type Bubble, type Illustration, type ReplayActor, type ReplayEngine, type ReplayPlace,
+  type SceneConsumer, type SceneZone,
 } from "../engine/replay";
 import {
   cardAt, editsAt, glassFor, isDimmed, ownerView, readsAt, restingSheets, travels, travelsAt, trayCount,
@@ -202,6 +202,8 @@ interface PlaceLabel {
   noteSize: number;
   /** nobody uses the place in this run */
   dim?: boolean;
+  /** the place id */
+  place?: string;
 }
 
 /** Per-frame layout state: what is already on screen, so labels and bubbles can avoid it. */
@@ -216,6 +218,8 @@ interface Layout {
   glass?: { lines: string[]; x: number; y: number; scale: number };
   /** drawn after every figure, before the place labels (the teams' labels and verdict pills) */
   late: (() => void)[];
+  /** places where somebody of the run stands now (presentation mode drops their place label: the names say it) */
+  occupied?: Set<string>;
 }
 
 /** Text with a halo in the surface color, so a label stays readable over lines, props and people. */
@@ -323,6 +327,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
     byPlace.set(v.place, list);
   }
   for (const list of byPlace.values()) list.sort();
+  layout.occupied = new Set([...byPlace.keys()].filter((k) => !SYSTEM_PLACES.has(k) && k !== "pr-tray"));
 
   // Figures first (positions only), so place labels and bubbles know where people are before anything is drawn.
   for (const a of replay.actors) {
@@ -360,6 +365,8 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   for (const l of layout.labels) drawPlaceLabel(ctx, l, c, layout);
   if (layout.glass) drawGlassCaption(ctx, layout.glass, c, layout);
   if (zones.length) drawZoneTitles(ctx, zones, c);
+  const ill = replay.scene?.illustration;
+  if (ill) drawIllustrationCallouts(ctx, engine, ill, placeById, c, layout);
   // a bubble said by the same step as the subtitle would say it twice: the subtitle wins
   const narr = state.narration;
   if (narr && narrationAt(state, clock, engine.end)) layout.bubbles = layout.bubbles.filter((b) => b.bubble.at !== narr.at);
@@ -1085,6 +1092,12 @@ function drawHeader(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Stag
   ctx.font = `600 ${fz(15)}px ${FONT}`;
   ctx.textBaseline = "middle";
   ctx.textAlign = "left";
+  const ill = engine.replay.scene?.illustration;
+  if (ill && !label) {
+    drawIllustrationHeader(ctx, engine, ill, c);
+    ctx.restore();
+    return;
+  }
   const title = label ?? `AI-SDLC Office · ${m.ticket ?? m.run_id}${cond ? ` · ${cond}` : ""}`;
   ctx.fillText(title, MARGIN_X - 16, HEADER_H / 2 + 2);
   const tw = ctx.measureText(title).width;
@@ -1111,6 +1124,124 @@ function drawHeader(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Stag
   ctx.fillText(`${phase}${phase ? "   " : ""}${fmtClock(engine.clock)} / ${fmtClock(engine.end)}`,
     STAGE_W - MARGIN_X + 16, HEADER_H / 2 + 2);
   ctx.restore();
+}
+
+/** The stage a scripted scene is in: the model's own name for it, from the latest applied step that has one. */
+function currentStage(engine: ReplayEngine): string | null {
+  const steps = engine.replay.steps;
+  for (let i = engine.state.applied - 1; i >= 0; i--) {
+    const st = (steps[i].detail ?? {})["stage"];
+    if (typeof st === "string") return st;
+  }
+  return null;
+}
+
+/** Illustration header: the model (left), its own stage names with the current one marked (right). */
+function drawIllustrationHeader(ctx: CanvasRenderingContext2D, engine: ReplayEngine, ill: Illustration, c: StageColors) {
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.font = `600 ${fz(15)}px ${FONT}`;
+  ctx.fillStyle = c.ink;
+  const x0 = MARGIN_X - 16;
+  ctx.fillText(ill.model, x0, HEADER_H / 2 + 2);
+  const tw = ctx.measureText(ill.model).width;
+  ctx.font = `400 ${fz(13)}px ${FONT}`;
+  ctx.fillStyle = c.ink2;
+  ctx.fillText("· Meridian Retail (fictional)", x0 + tw + 8, HEADER_H / 2 + 2);
+  const cur = currentStage(engine);
+  const size = fz(12);
+  ctx.font = `600 ${size}px ${FONT}`;
+  const pad = 8;
+  const widths = ill.stages.map((s) => ctx.measureText(s).width + pad * 2);
+  let x = STAGE_W - MARGIN_X + 16 - widths.reduce((a, b) => a + b + 4, -4);
+  const h = size + 10;
+  const y = (HEADER_H - h) / 2 + 1;
+  ill.stages.forEach((s, i) => {
+    const on = s === cur;
+    ctx.fillStyle = on ? c.ink : c.surface;
+    ctx.fillRect(x, y, widths[i], h);
+    ctx.strokeStyle = on ? c.ink : c.lineStrong;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, widths[i] - 1, h - 1);
+    ctx.fillStyle = on ? "#ffffff" : c.ink2;
+    ctx.fillText(s, x + pad, y + h / 2 + 0.5);
+    x += widths[i] + 4;
+  });
+}
+
+/** The first step at or before the clock that carries a flag (the rule beat, the merge-blocker beat). */
+function flagAt(engine: ReplayEngine, key: string): boolean {
+  const steps = engine.replay.steps;
+  for (let i = 0; i < engine.state.applied; i++) if ((steps[i].detail ?? {})[key]) return true;
+  return false;
+}
+
+/**
+ * Illustration callouts on the floor, placed where they cover least: where the architecture rule lives (accent
+ * outline) once the scene has put it there, what blocks the merge (ink) once that beat happened, and at the CI tower
+ * whether the model's CI checks architecture at all.
+ */
+function drawIllustrationCallouts(ctx: CanvasRenderingContext2D, engine: ReplayEngine, ill: Illustration,
+  places: Map<string, ReplayPlace>, c: StageColors, layout: Layout) {
+  const callout = (placeId: string, head: string, text: string, style: "rule" | "block" | "quiet") => {
+    const p = places.get(placeId);
+    if (!p) return;
+    const { px, py, scale } = placePixel(p);
+    ctx.save();
+    const hs = fz(10);
+    const ts = fz(12);
+    ctx.font = `500 ${ts}px ${FONT}`;
+    const lines = wrap(ctx, text, present ? 230 : 210, 3);
+    ctx.font = `700 ${hs}px ${FONT}`;
+    const hw = ctx.measureText(head).width;
+    ctx.font = `500 ${ts}px ${FONT}`;
+    const w = Math.max(hw, ...lines.map((l) => ctx.measureText(l).width)) + 18;
+    const h = hs + 6 + lines.length * (ts + 3) + 8;
+    const top = py - 60 * scale;
+    const cands: Rect[] = [
+      { x: px - w / 2, y: top - h - 6, w, h }, { x: px - w / 2, y: py + 30, w, h },
+      { x: px + 60 * scale, y: top - h / 2, w, h }, { x: px - 60 * scale - w, y: top - h / 2, w, h },
+      { x: px - w / 2, y: top - h - 46, w, h }, { x: px - w / 2, y: py + 70, w, h },
+      { x: px + 60 * scale, y: py + 10, w, h }, { x: px - 60 * scale - w, y: py + 10, w, h },
+      { x: px + 60 * scale, y: top - h - 20, w, h }, { x: px - 60 * scale - w, y: top - h - 20, w, h },
+    ];
+    const r = bestRect(cands, layout);
+    const fill = style === "block" ? c.ink : c.surface;
+    const ink = style === "block" ? "#ffffff" : c.ink;
+    ctx.fillStyle = fill;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.strokeStyle = style === "rule" ? ACCENT : style === "block" ? c.ink : c.lineStrong;
+    ctx.lineWidth = style === "rule" ? 2.5 : 1.5;
+    if (style === "quiet") ctx.setLineDash([4, 3]);
+    ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+    ctx.setLineDash([]);
+    // a hairline to the place
+    ctx.strokeStyle = style === "rule" ? ACCENT : c.ink2;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    const ex = Math.max(r.x + 6, Math.min(r.x + r.w - 6, px));
+    const ey = r.y > py ? r.y : r.y + r.h;
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(px, r.y > py ? py + 4 : top + 30 * scale);
+    ctx.stroke();
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.font = `700 ${hs}px ${FONT}`;
+    ctx.fillStyle = style === "rule" ? ACCENT : style === "block" ? "#c7d2fe" : c.ink2;
+    ctx.fillText(head, r.x + 9, r.y + 5);
+    ctx.font = `500 ${ts}px ${FONT}`;
+    ctx.fillStyle = ink;
+    lines.forEach((l, i) => ctx.fillText(l, r.x + 9, r.y + hs + 9 + i * (ts + 3)));
+    ctx.restore();
+    layout.obstacles.push(r);
+  };
+  if (flagAt(engine, "rule")) callout(ill.rule.place, "WHERE THE RULE LIVES", ill.rule.label, "rule");
+  if (flagAt(engine, "blocks")) callout(ill.blocks.place, "WHAT BLOCKS THE MERGE", ill.blocks.label, "block");
+  const pr = engine.replay.steps.slice(0, engine.state.applied).some((s) => s.key === "pr_opened");
+  if (pr && !ill.ci_arch && places.has("ci-tower")) {
+    const ciUsed = engine.replay.steps.slice(0, engine.state.applied).some((s) => s.place === "ci-tower");
+    callout("ci-tower", "CI", ciUsed ? "no architecture check in CI" : "no CI step in this model's docs", "quiet");
+  }
 }
 
 function actorPosition(id: string, v: ActorView, clock: number, places: Map<string, ReplayPlace>,
@@ -1221,39 +1352,52 @@ function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, 
   }
   if (v.gateMark) ny = Math.max(ny, py + w * 0.14 + 3); // below the pink ring
 
-  ctx.save();
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  const nameSize = fz(Math.round(13 * Math.max(fig.scale, 0.9)));
-  ctx.font = `${present ? 600 : 500} ${nameSize}px ${FONT}`;
-  ctx.fillStyle = c.ink;
-  const shown = a.recast_missing ? `${a.role.replace(/_/g, " ")} · no counterpart` : a.display_name;
-  haloText(ctx, shown, px, ny);
-  const nw = ctx.measureText(shown).width;
-  layout.obstacles.push({ x: px - nw / 2 - 2, y: ny - 1, w: nw + 4, h: nameSize + 3 });
-  ny += nameSize + 3;
-  if (a.simulated) {
+  // the name tag is placed after every figure is drawn, where it covers least (two people at one desk side by side)
+  const ny0 = ny;
+  layout.late.push(() => {
+    ctx.save();
+    if (a.recast_missing) ctx.globalAlpha = 0.3;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    const nameSize = fz(Math.round(13 * Math.max(fig.scale, 0.9)));
     const s2 = fz(Math.round(12 * Math.max(fig.scale, 0.9)));
-    ctx.font = `400 ${s2}px ${FONT}`;
-    ctx.fillStyle = c.ink2;
-    haloText(ctx, "simulated by policy", px, ny);
-    const sw = ctx.measureText("simulated by policy").width;
-    layout.obstacles.push({ x: px - sw / 2 - 2, y: ny - 1, w: sw + 4, h: s2 + 3 });
-    ny += s2 + 2;
-  }
-  if (v.gateMark) {
     const gs = fz(11);
+    const shown = a.recast_missing ? `${a.role.replace(/_/g, " ")} · no counterpart` : a.display_name;
+    const gateText = v.gateMark ? `Gate touched · ${v.gateMark}` : "";
+    ctx.font = `${present ? 600 : 500} ${nameSize}px ${FONT}`;
+    const nw = ctx.measureText(shown).width;
+    ctx.font = `400 ${s2}px ${FONT}`;
+    const sw = a.simulated ? ctx.measureText("simulated by policy").width : 0;
     ctx.font = `600 ${gs}px ${FONT}`;
-    const t = `Gate touched · ${v.gateMark}`;
-    const tw = ctx.measureText(t).width + 10;
-    ctx.fillStyle = FAIL;
-    ctx.fillRect(Math.round(px - tw / 2), Math.round(ny), Math.round(tw), gs + 5);
-    ctx.fillStyle = "#ffffff";
-    ctx.textBaseline = "middle";
-    ctx.fillText(t, px, ny + (gs + 5) / 2 + 0.5);
-    layout.obstacles.push({ x: px - tw / 2, y: ny, w: tw, h: gs + 5 });
-  }
-  ctx.restore();
+    const tw = gateText ? ctx.measureText(gateText).width + 10 : 0;
+    const bw = Math.max(nw, sw, tw) + 4;
+    const bh = nameSize + 3 + (a.simulated ? s2 + 2 : 0) + (gateText ? gs + 5 : 0);
+    const at = (cx: number, top: number): Rect => ({ x: cx - bw / 2, y: top - 1, w: bw, h: bh });
+    const r = bestRect([at(px, ny0), at(px - bw * 0.55 - 6, ny0), at(px + bw * 0.55 + 6, ny0),
+      at(px, ny0 + nameSize + 4)], layout);
+    const cx = r.x + bw / 2;
+    let yy = r.y + 1;
+    ctx.font = `${present ? 600 : 500} ${nameSize}px ${FONT}`;
+    ctx.fillStyle = c.ink;
+    haloText(ctx, shown, cx, yy);
+    yy += nameSize + 3;
+    if (a.simulated) {
+      ctx.font = `400 ${s2}px ${FONT}`;
+      ctx.fillStyle = c.ink2;
+      haloText(ctx, "simulated by policy", cx, yy);
+      yy += s2 + 2;
+    }
+    if (gateText) {
+      ctx.font = `600 ${gs}px ${FONT}`;
+      ctx.fillStyle = FAIL;
+      ctx.fillRect(Math.round(cx - tw / 2), Math.round(yy), Math.round(tw), gs + 5);
+      ctx.fillStyle = "#ffffff";
+      ctx.textBaseline = "middle";
+      ctx.fillText(gateText, cx, yy + (gs + 5) / 2 + 0.5);
+    }
+    layout.obstacles.push(r);
+    ctx.restore();
+  });
 
   ctx.restore();
   if (bubbleVisible(v, clock) && v.bubble) {
@@ -1281,7 +1425,8 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
     ctx.fillStyle = c.ink2;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    const legend = "Their own tests = the truth check (hidden from the agent)";
+    const legend = replay.scene?.illustration ? "Downstream: the other teams' own tests"
+      : "Their own tests = the truth check (hidden from the agent)";
     const lw = ctx.measureText(legend).width;
     // kept inside the frame (the users stand in the bottom-right corner)
     const lx = Math.min(px, STAGE_W - 8 - lw / 2);
@@ -1379,9 +1524,12 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
   // a consumer team seated at this counter carries the label (team, service) under it
   if (replay.scene?.consumers.some((k) => k.desk === place.id && k.owner)) return;
   layout.labels.push(anchored
-    ? { text: place.label, note, x: px, y: py + 6, anchor: "top", size, noteSize, dim }
-    : { text: place.label, note: dim ? "not part of this run" : place.id === "users" ? place.note ?? null : null,
-      x: px, y: top - 6 - (dim || place.id === "users" ? noteSize + 2 : 0), anchor: "bottom", size, noteSize, dim });
+    ? { text: place.label, note, x: px, y: py + 6, anchor: "top", size, noteSize, dim, place: place.id }
+    : { text: place.label,
+      note: dim ? (replay.scene?.illustration ? "not in this model" : "not part of this run")
+        : place.id === "users" ? place.note ?? null : null,
+      x: px, y: top - 6 - (dim || place.id === "users" ? noteSize + 2 : 0), anchor: "bottom", size, noteSize, dim,
+      place: place.id });
 
   if (owner && bubbleVisible(owner, clock) && owner.bubble) {
     layout.bubbles.push(place.id === "ci-tower"
@@ -1426,7 +1574,7 @@ function labelBox(ctx: CanvasRenderingContext2D, l: PlaceLabel): Rect & { bw: nu
  * label that had to move far keeps a hairline to its place. Presentation mode drops the places nobody uses.
  */
 function drawPlaceLabel(ctx: CanvasRenderingContext2D, l: PlaceLabel, c: StageColors, layout: Layout) {
-  if (present && l.dim) return;
+  if (present && (l.dim || (l.place && layout.occupied?.has(l.place)))) return;
   const box = labelBox(ctx, l);
   const { bw, h } = box;
   const at = (dx: number, top: number): Rect => ({ x: l.x + dx - bw / 2, y: top - 1, w: bw, h });
@@ -1827,7 +1975,32 @@ function drawWatermark(ctx: CanvasRenderingContext2D, meta: ReplayEngine["replay
   const x = 8;
   ctx.textBaseline = "middle";
   ctx.textAlign = "left";
-  if (meta.source === "mock") {
+  if (meta.source === "illustration") {
+    // dashed: a scripted scene, never to be confused with "Replay of a real run"
+    const ill = (meta as { legend?: string }).legend || "Illustration · scripted from public documentation";
+    const src = (meta as { illustration_source?: string }).illustration_source;
+    ctx.font = `600 ${fz(13)}px ${FONT}`;
+    const head = ill;
+    const hw = ctx.measureText(head).width;
+    ctx.font = `400 ${fz(12)}px ${FONT}`;
+    const tail = src ? ` · ${src}` : "";
+    let t2 = tail;
+    while (t2.length > 12 && hw + ctx.measureText(t2).width + 24 > STAGE_W * 0.62) t2 = `${t2.slice(0, -2)}…`;
+    const w = hw + ctx.measureText(t2).width + 20;
+    ctx.fillStyle = c.surface;
+    ctx.fillRect(x, y + 3, w, h - 6);
+    ctx.strokeStyle = c.ink;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 3]);
+    ctx.strokeRect(x + 0.5, y + 3.5, w - 1, h - 7);
+    ctx.setLineDash([]);
+    ctx.fillStyle = c.ink;
+    ctx.font = `600 ${fz(13)}px ${FONT}`;
+    ctx.fillText(head, x + 10, y + h / 2 + 0.5);
+    ctx.font = `400 ${fz(12)}px ${FONT}`;
+    ctx.fillStyle = c.ink2;
+    ctx.fillText(t2, x + 10 + hw, y + h / 2 + 0.5);
+  } else if (meta.source === "mock") {
     ctx.font = `600 14px ${FONT}`;
     const legend = meta.legend || "SIMULATED (mock agent) — not a real run";
     const inner = ctx.measureText(legend).width + 20;

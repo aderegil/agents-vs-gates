@@ -63,7 +63,8 @@ export interface ReplayMarker {
 
 export interface ReplayMeta {
   run_id: string;
-  source: "real" | "mock";
+  /** "illustration": a scene scripted from public documentation (replay/scenes), never a run */
+  source: "real" | "mock" | "illustration";
   unit: string;
   model?: string | null;
   date: string;
@@ -125,10 +126,29 @@ export interface Scene {
   /** exporter 4: the lifecycle columns, left to right */
   zones?: SceneZone[];
   /** exporter 4: which AI-SDLC model the run follows */
-  lifecycle_model?: { label: string; detail?: string; source?: string; kind?: "single-ticket" | "sprint" };
+  lifecycle_model?: { label: string; detail?: string; source?: string;
+    kind?: "single-ticket" | "sprint" | "illustration" };
+  /** illustrations only: the public model a scripted scene stages */
+  illustration?: Illustration;
   /** exporter 4: single-ticket runs: the ticket comes from the product role because the scenario fixes it */
   ticket_origin?: ({ place: string; label: string; ticket?: string | null; title?: string | null; to: string }
     & SceneMoment) | null;
+}
+
+/** A scripted scene's model: its source and date, its own stage names, where the architecture rule lives, what
+ * blocks the merge and how the scripted case ends. */
+export interface Illustration {
+  id: string;
+  model: string;
+  short: string;
+  source: string;
+  date: string;
+  url?: string | null;
+  stages: string[];
+  rule: { axis: string; place: string; label: string };
+  blocks: { axis: string; place: string; label: string };
+  ci_arch: boolean;
+  outcome: { status: "caught" | "escapes"; axis: string; label: string };
 }
 
 export interface SceneZone {

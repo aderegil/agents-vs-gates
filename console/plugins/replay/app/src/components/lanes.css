@@ -1,0 +1,66 @@
+/* Model lanes (ModelLanes.tsx): the scripted AI-SDLC scenes on one phase axis. Same light tokens as the theater;
+   accent = where the rule lives, ink = what blocks the merge, cyan/pink only for the outcome. */
+.lanes { display: flex; flex-direction: column; gap: 14px; height: 100%; padding: 22px 28px 18px; background: var(--fondo);
+  overflow: auto; }
+.lanes__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+.lanes__head h1 { margin: 0; font-size: clamp(20px, 2.1vw, 34px); font-weight: 600; letter-spacing: -0.01em; }
+.lanes__feature { margin: 4px 0 0; color: var(--tinta-2); font-size: clamp(13px, 1.15vw, 19px); }
+.lanes__label { flex: none; padding: 6px 12px; border: var(--trazo) dashed var(--tinta); border-radius: var(--radio);
+  background: var(--superficie); font-weight: 600; font-size: clamp(12px, 0.95vw, 16px); }
+
+.lanes__grid { display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; }
+.lanes__row { display: grid; grid-template-columns: minmax(150px, 13%) repeat(var(--cols), minmax(0, 1fr)); gap: 6px;
+  flex: 1; min-height: 0; }
+.lanes__row--axis { flex: none; }
+.lanes__axis { padding: 6px 8px; border-bottom: 3px solid var(--linea); color: var(--tinta-2); font-weight: 600;
+  font-size: clamp(12px, 0.95vw, 16px); text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.35;
+  transition: opacity 0.6s ease, border-color 0.6s ease; }
+.lanes__axis.is-on { opacity: 1; }
+.lanes__axis.is-now { color: var(--tinta); border-bottom-color: var(--tinta); }
+.lanes__model { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 8px 10px;
+  border-left: 4px solid var(--tinta); background: var(--superficie); border-radius: var(--radio); min-width: 0; }
+.lanes__row--axis .lanes__model { border: 0; background: none; color: var(--tinta-2); font-weight: 600;
+  font-size: clamp(12px, 0.95vw, 16px); text-transform: uppercase; letter-spacing: 0.04em; justify-content: flex-end; }
+.lanes__model strong { font-size: clamp(14px, 1.25vw, 21px); }
+.lanes__model span { color: var(--tinta-2); font-size: clamp(10px, 0.72vw, 12.5px); line-height: 1.3; }
+.lanes__open { align-self: flex-start; margin-top: 2px; padding: 2px 8px; border: var(--trazo) solid var(--linea);
+  border-radius: var(--radio); background: var(--superficie); font-size: 12px; cursor: pointer; }
+
+.lanes__cell { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 8px 9px; min-width: 0;
+  background: var(--superficie); border: var(--trazo) solid var(--linea); border-radius: var(--radio); overflow: hidden;
+  opacity: 0.12; transition: opacity 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease; }
+.lanes__cell.is-on { opacity: 1; }
+.lanes__cell.is-now { border-color: var(--linea-fuerte); }
+.lanes__stage { font-weight: 600; font-size: clamp(12px, 0.98vw, 16.5px); line-height: 1.2; }
+.lanes__art { font-family: var(--mono); font-size: clamp(10px, 0.72vw, 12.5px); color: var(--tinta); word-break: break-word;
+  line-height: 1.3; }
+.lanes__who { color: var(--tinta-2); font-size: clamp(10px, 0.75vw, 13px); line-height: 1.3; }
+.lanes__none { color: var(--tinta-2); font-size: clamp(10px, 0.75vw, 13px); font-style: italic; }
+.lanes__cell.is-rule { border: 2.5px solid var(--acento); }
+.lanes__cell.is-blocks { box-shadow: inset 0 0 0 2px var(--tinta); }
+.lanes__cell.is-out.is-caught { background: #e6f8fb; border-color: var(--pass); }
+.lanes__cell.is-out.is-escapes { background: #fde8f0; border-color: var(--fail); }
+.lanes__tag { align-self: flex-start; margin-top: auto; padding: 2px 7px; border-radius: 4px; font-size: clamp(10px, 0.72vw, 12.5px);
+  font-weight: 600; line-height: 1.35; }
+.lanes__tag + .lanes__tag { margin-top: 3px; }
+.lanes__tag--rule { color: var(--acento); border: 1.5px solid var(--acento); background: var(--superficie); }
+.lanes__tag--blocks { color: #fff; background: var(--tinta); }
+.lanes__tag--quiet { color: var(--tinta-2); border: 1.5px dashed var(--linea-fuerte); }
+.lanes__tag--caught { color: #0e7490; border: 1.5px solid var(--pass); background: var(--superficie); }
+.lanes__tag--escapes { color: #fff; background: var(--fail); }
+
+.lanes__foot { display: flex; flex-direction: column; gap: 8px; }
+.lanes__caption { align-self: center; max-width: 82%; padding: 10px 22px; background: var(--tinta); color: #fff;
+  border-radius: var(--radio); font-size: clamp(16px, 1.45vw, 26px); font-weight: 500; text-align: center; }
+.lanes__controls { display: flex; align-items: center; gap: 8px; }
+.lanes__legend { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; color: var(--tinta-2);
+  font-size: clamp(11px, 0.8vw, 14px); }
+.lanes__legend .sw { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; border-radius: 2px; }
+.sw--rule { border: 2.5px solid var(--acento); }
+.sw--blocks { background: var(--tinta); }
+.sw--pass { background: var(--pass); }
+.sw--fail { background: var(--fail); }
+.lanes__src { margin-left: auto; }
+/* the video capture hides the controls */
+.lanes.is-capture .lanes__controls { display: none; }
+@media (max-width: 900px) { .lanes__row { grid-template-columns: 120px repeat(var(--cols), minmax(90px, 1fr)); } .lanes__grid { overflow-x: auto; } }

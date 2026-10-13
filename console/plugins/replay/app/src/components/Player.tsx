@@ -491,7 +491,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
             {picker}
             {tools}
             <div className="meta" aria-label="Run">
-              <strong>{m.ticket ?? m.run_id}</strong>
+              <strong>{m.source === "illustration" ? String(m["title"] ?? m.run_id) : m.ticket ?? m.run_id}</strong>
               {condition(replay) && <span>{condition(replay)}</span>}
               <UnitTag unit={m.unit} />
               {m.model && m.model !== m.unit && <span>{m.model}</span>}
@@ -499,7 +499,9 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
               {m.outcome && <span className="chip">{m.outcome.replace(/_/g, " ")}</span>}
               {m.ticket_done && <span className="chip">ticket {m.ticket_done.replace(/_/g, " ")}</span>}
               {m.source === "mock" ? <span className="chip chip--sim">SIMULATED</span>
-                : <span className="chip chip--real" title={m.legend}>REAL</span>}
+                : m.source === "illustration"
+                  ? <span className="chip chip--ill" title={m.legend}>ILLUSTRATION · scripted</span>
+                  : <span className="chip chip--real" title={m.legend}>REAL</span>}
             </div>
           </div>
           <div className="topbar__right">

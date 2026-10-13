@@ -24,6 +24,8 @@ export interface RunEntry {
   cached?: boolean;
   /** a replay bundled with the theater (all SIMULATED), listed after the namespaces' runs */
   demo?: boolean;
+  /** a scripted AI-SDLC scene (replay/scenes): an illustration, never a run */
+  illustration?: boolean;
   stage?: string | null;
   ticket?: string | null;
   condition?: { V?: string; S?: string; W?: string } | null;
@@ -162,13 +164,41 @@ export async function loadTeams(h: Hello | null): Promise<TeamModel[]> {
 /** Inside the console: the runs of both namespaces, then the bundled demos (e.g. the M2b sprint, which is not a run
  * under results/). */
 export async function listAll(h: Hello): Promise<RunEntry[]> {
-  const [runs, demos] = await Promise.all([listRuns(h), listDemos().catch(() => [] as RunEntry[])]);
-  return [...runs, ...demos.map((d) => ({ ...d, demo: true }))];
+  const [runs, demos, scenes] = await Promise.all([listRuns(h), listDemos().catch(() => [] as RunEntry[]),
+    listScenes().catch(() => [] as RunEntry[])]);
+  return [...runs, ...demos.map((d) => ({ ...d, demo: true })), ...scenes];
 }
 
 export async function listDemos(): Promise<RunEntry[]> {
-  const body = await getJson<{ runs: RunEntry[] }>("demo/index.json");
-  return body.runs.map((r) => ({ ...r, url: `demo/${r.url}` }));
+  const [body, scenes] = await Promise.all([getJson<{ runs: RunEntry[] }>("demo/index.json"),
+    listScenes().catch(() => [] as RunEntry[])]);
+  return [...body.runs.map((r) => ({ ...r, url: `demo/${r.url}` })), ...scenes];
+}
+
+/** The scripted AI-SDLC scenes (replay/scenes), one per public model: illustrations, never runs. */
+export interface SceneIndex {
+  label: string;
+  axis: string[];
+  axis_label: Record<string, string>;
+  feature: string;
+  premise: string;
+  scenes: {
+    id: string; url: string; title: string; short: string; source: string; date: string; stages: string[];
+    rule: { axis: string; place: string; label: string }; blocks: { axis: string; place: string; label: string };
+    ci_arch: boolean; outcome: { status: "caught" | "escapes"; axis: string; label: string }; duration_ms: number;
+    columns: Record<string, { stages: string[]; artifacts: string[]; checks?: string[]; who: string[];
+      t_ms: number | null }>;
+  }[];
+}
+
+export function loadSceneIndex(): Promise<SceneIndex> {
+  return getJson<SceneIndex>("scenes/index.json");
+}
+
+export async function listScenes(): Promise<RunEntry[]> {
+  const idx = await loadSceneIndex();
+  return idx.scenes.map((s) => ({ run_id: s.id, url: s.url, source: "illustration", demo: true, illustration: true,
+    label: `ILLUSTRATION · ${s.title}` }));
 }
 
 export function loadReplay(url: string): Promise<Replay> {
