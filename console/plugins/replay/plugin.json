@@ -7,5 +7,6 @@
   "roles": ["owner", "operator", "presenter", "viewer"],
   "kind": "iframe",
   "entry": "web/dist/index.html",
-  "api": "api.py"
+  "api": "api.py",
+  "simple": true
 }

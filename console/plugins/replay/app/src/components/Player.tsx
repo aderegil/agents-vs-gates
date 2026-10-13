@@ -14,6 +14,7 @@ import "./presenter.css";
 import { SpeedControl } from "./SpeedControl";
 import { Stage, type StageHandle } from "./Stage";
 import { Timeline, fmt } from "./Timeline";
+import { plainCondition } from "./labels";
 import { UnitTag } from "./UnitTag";
 
 interface Props {
@@ -492,7 +493,11 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
             {tools}
             <div className="meta" aria-label="Run">
               <strong>{m.source === "illustration" ? String(m["title"] ?? m.run_id) : m.ticket ?? m.run_id}</strong>
-              {condition(replay) && <span>{condition(replay)}</span>}
+              {condition(replay) && (
+                <span className="cond" title={plainCondition(m.condition ?? {}).title}>
+                  {plainCondition(m.condition ?? {}).text} <code className="cond__code">{condition(replay)}</code>
+                </span>
+              )}
               <UnitTag unit={m.unit} />
               {m.model && m.model !== m.unit && <span>{m.model}</span>}
               <span className="num">{m.date}</span>

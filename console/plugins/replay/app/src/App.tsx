@@ -68,6 +68,7 @@ function App() {
       try {
         if (h) {
           setSource({ kind: "shell", hello: h });
+          if (h.params?.lanes) setLanes(true);
           const list = await listAll(h);
           if (cancelled) return;
           setRuns(list);
@@ -95,6 +96,7 @@ function App() {
   // Later avg:hello messages (shell navigate with a new run) re-select.
   useEffect(() => onHello((h) => {
     setSource({ kind: "shell", hello: h });
+    if (h.params?.lanes) setLanes(true);
     listAll(h).then((list) => {
       setRuns(list);
       const want = h.params?.run;

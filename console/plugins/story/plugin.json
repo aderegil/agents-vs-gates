@@ -1,0 +1,12 @@
+{
+  "id": "story",
+  "name": "Home",
+  "icon": "home",
+  "order": 0,
+  "description": "What we tested, what happened, and where to see it.",
+  "roles": ["owner", "operator", "presenter", "viewer"],
+  "kind": "module",
+  "entry": "web/index.js",
+  "api": "api.py",
+  "simple": true
+}

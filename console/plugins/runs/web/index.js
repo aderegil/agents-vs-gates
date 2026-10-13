@@ -7,6 +7,7 @@ import {
   parseDiff, diffStats, sideBySide, splitArch, isArch, groupTranscript, outcomeTone, ticketDoneTone, statusTone, flagChips,
   filtersToQuery, conditionLabel, fmtBytes,
 } from "./model.js";
+import { GLOSSARY, plainCondition, conditionTitle, conditionCode, outcomeLabel } from "/web/lib/labels.js";
 
 const BLINDED = "Blinded until stage complete";
 let alive = false;
@@ -21,7 +22,8 @@ export async function mount(el, shell) {
   alive = true;
   const S = {
     rows: [], facets: null, blinded: [], total: 0,
-    filters: { stage: "", ticket: "", V: "", S: "", W: "", unit: "", status: "", q: "" },
+    // filters can arrive in the link (Home's Talk figures, Results): #/runs?stage=P1&V=V0&S=S2
+    filters: Object.fromEntries(["stage", "ticket", "V", "S", "W", "unit", "status", "q"].map((k) => [k, shell.params[k] || ""])),
     selected: null, detail: null, cache: new Map(), tab: shell.params.tab || "summary",
     diffView: "unified", diffRef: null, loadSeq: 0,
   };
@@ -60,7 +62,8 @@ export async function mount(el, shell) {
     const f = S.facets || { stages: [], tickets: [], V: [], S: [], W: [], units: [], statuses: [] };
     const sel = (key, label, options) => h("label", { class: "rx-f" }, h("span", {}, label),
       h("select", { class: "select select-sm", "aria-label": label, onchange: (e) => { S.filters[key] = e.target.value; loadList(); } },
-        h("option", { value: "" }, "All"), options.map((o) => h("option", { value: o, selected: S.filters[key] === o }, o))));
+        h("option", { value: "" }, "All"), options.map((o) => h("option", { value: o, selected: S.filters[key] === o, title: GLOSSARY[o]?.long || null },
+          GLOSSARY[o] && ["V", "S", "W"].includes(key) ? `${o} · ${GLOSSARY[o].short}` : o))));
     const search = h("input", { class: "input input-sm", type: "search", placeholder: "Run ID or cell", value: S.filters.q, "aria-label": "Search runs", style: { width: "170px" },
       oninput: (e) => { S.filters.q = e.target.value; clearTimeout(timer); timer = setTimeout(loadList, 250); } });
     const active = Object.values(S.filters).some(Boolean);
@@ -79,14 +82,17 @@ export async function mount(el, shell) {
       sort: undefined,
       columns: [
         { key: "run_id", label: "ID", sort: true, render: (r) => h("span", { class: "mono strong", "data-run": r.run_id }, r.run_id) },
-        { key: "cell", label: "Cell", sort: (r) => r.cell, render: (r) => h("span", { title: r.cell }, conditionLabel(r)) },
+        { key: "cell", label: "Cell", sort: (r) => r.cell, render: (r) => h("span", { class: "rx-cell", title: `${r.cell}
+${conditionTitle(r.visibility, r.spec, r.wording)}` },
+          h("span", { class: "strong" }, r.ticket), " · ", plainCondition(r.visibility, r.spec, r.wording), " ",
+          h("span", { class: "rx-code mono" }, conditionCode(r.visibility, r.spec, r.wording))) },
         { key: "unit", label: "Unit", sort: (r) => unitInfo(r.unit).label, render: (r) => unitTag(r.unit, { compact: true }) },
         { key: "turns", label: "Turns", num: true, sort: true, render: (r) => fmtInt(r.turns) },
         { key: "duration_ms", label: "Duration", num: true, sort: true, render: (r) => r.duration_ms == null ? "—" : fmtDuration(r.duration_ms) },
         { key: "tokens", label: "Tokens", num: true, sort: true, render: (r) => fmtInt(r.tokens) },
         { key: "flags", label: "Flags", render: (r) => h("span", { class: "rx-chips" }, flagChips(r).map((c) => h("span", { title: c.title }, badge(c.text, c.tone)))) },
         { key: "outcome", label: "Outcome", sort: (r) => r.outcome || "", render: (r) => r.blinded ? h("span", { class: "small muted rx-blind", title: BLINDED }, iconEl("lock", 12), " Blinded")
-          : (r.outcome ? badge(r.outcome, outcomeTone(r.outcome)) : h("span", { class: "muted" }, "—")) },
+          : (r.outcome ? h("span", { title: r.outcome }, badge(outcomeLabel(r.outcome), outcomeTone(r.outcome))) : h("span", { class: "muted" }, "—")) },
       ],
     });
     tableBox.replaceChildren(t);
@@ -124,7 +130,8 @@ export async function mount(el, shell) {
     const head = h("div", { class: "rx-head" },
       h("div", { class: "rx-head-main" },
         h("span", { class: "mono strong rx-id" }, d.run_id),
-        h("span", { class: "muted" }, conditionLabel(r)),
+        h("span", { class: "muted", title: conditionTitle(r.visibility, r.spec, r.wording) },
+          `${r.ticket} · ${plainCondition(r.visibility, r.spec, r.wording)} (${conditionCode(r.visibility, r.spec, r.wording)})`),
         unitTag(r.unit, { model: r.model_reported }),
         d.blinded ? badge("Blinded", "neutral") : (r.outcome ? badge(r.outcome, outcomeTone(r.outcome)) : null),
         d.status && d.status !== "done" ? badge(d.status, statusTone(d.status)) : null,

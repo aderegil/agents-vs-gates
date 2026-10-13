@@ -605,6 +605,46 @@ def load_mutation() -> dict:
     return out
 
 
+# ---------------------------------------------------------------- Claude Code vs Codex per cell (descriptive)
+
+BY_AGENT_UNITS = (("cc-sonnet", ("P1", "P2", "P4"), "Claude Code · Sonnet"), ("codex", ("P6",), "Codex"),
+                  ("cc-opus", ("P5",), "Claude Code · Opus"))
+BY_AGENT_METRICS = (("staging_break", "Broke another team, first try"), ("staging_break_final", "Broke another team, final PR"),
+                    ("gate_flagged", "Touched the gate"), ("no_change", "Stopped without a change"))
+
+
+def by_agent(b: "Build") -> dict:
+    """Each design cell (ticket × V × S × W) with every unit side by side: Claude Code + Sonnet over P1, P2 and P4, Codex
+    over P6 (which replicates those parts), Opus over P5. Counts only; no test (the pre-registration has no test between
+    agents)."""
+    outs = {(o["stage"], o["cell"]): o["counts"] for o in b.agg["rq3"]["outcomes"] if b.visible(o["stage"])}
+    acc: dict = {}
+    for c in b.cells():
+        unit = c.get("unit")
+        spec = next((u for u in BY_AGENT_UNITS if u[0] == unit and c["stage"] in u[1]), None)
+        if not spec:
+            continue
+        key = (c.get("ticket"), c.get("V"), c.get("S"), c.get("W", "W1"))
+        slot = acc.setdefault(key, {}).setdefault(unit, {"n": 0, "stages": set(), **{m: 0 for m, _ in BY_AGENT_METRICS}})
+        slot["n"] += c["n"]
+        slot["stages"].add(c["stage"])
+        for m, _ in BY_AGENT_METRICS[:3]:
+            slot[m] += (c["metrics"].get(m) or {}).get("x", 0)
+        slot["no_change"] += outs.get((c["stage"], c["cell"]), {}).get("no_change", 0)
+    rows = []
+    for (ticket, V, S, W), units in sorted(acc.items(), key=lambda kv: tuple(str(x) for x in kv[0])):
+        if "codex" not in units or "cc-sonnet" not in units:
+            continue
+        rows.append({"ticket": ticket, "V": V, "S": S, "W": W,
+                     "units": {u: {"n": v["n"], "stages": sorted(v["stages"], key=_stage_key),
+                                   **{m: {"x": v[m], "n": v["n"]} for m, _ in BY_AGENT_METRICS}} for u, v in units.items()}})
+    return {"title": "Claude Code vs Codex, cell by cell", "units": [{"unit": u, "label": l, "stages": list(st)} for u, st, l in BY_AGENT_UNITS],
+            "metrics": [{"key": k, "label": l} for k, l in BY_AGENT_METRICS], "rows": rows,
+            "note": "Descriptive. Each agent is tested only against itself in the pre-registration; there is no test "
+                    "between agents, so no p-values here. Claude Code + Sonnet sums P1, P2 and P4; Codex is P6, which "
+                    "replicates those parts; Opus is P5. Only cells run on both Claude Code + Sonnet and Codex are listed."}
+
+
 # ---------------------------------------------------------------- public entry points
 
 def rq_payload(ns: str) -> dict:
@@ -613,7 +653,8 @@ def rq_payload(ns: str) -> dict:
     rq5 = b.rq5()
     if rq5:
         sections["rq5"] = rq5
-    return {**_head(b), "sections": sections, "order": [k for k in ("rq1", "rq2", "rq3", "rq5") if k in sections]}
+    return {**_head(b), "sections": sections, "order": [k for k in ("rq1", "rq2", "rq3", "rq5") if k in sections],
+            "by_agent": by_agent(b)}
 
 
 def reviewer_payload(ns: str) -> dict:

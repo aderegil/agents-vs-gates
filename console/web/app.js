@@ -14,7 +14,26 @@ const S = {
   esTopics: new Set(),
   header: null,
   gPending: null,
+  mode: readMode(),     // "simple" (the story path) | "expert" (every plugin); remembered per browser
 };
+
+/** Simple shows the story path (plugins whose manifest says simple: true); Expert shows everything. */
+function readMode() {
+  try { return localStorage.getItem("avg.mode") === "expert" ? "expert" : "simple"; } catch { return "simple"; }
+}
+
+function railPlugins() {
+  const simple = S.plugins.filter((p) => p.simple);
+  return S.mode === "expert" || !simple.length ? S.plugins : simple;
+}
+
+function setMode(mode) {
+  if (mode === S.mode) return;
+  S.mode = mode;
+  try { localStorage.setItem("avg.mode", mode); } catch { /* private window: the choice lasts this session */ }
+  buildFrame();
+  route(true);
+}
 const root = () => document.getElementById("root");
 
 const api = createApi({
@@ -148,7 +167,7 @@ function buildFrame() {
   const u = S.session.user;
   const rail = h("nav", { class: "rail", "aria-label": "Plugins" },
     h("span", { class: "brand", title: "Agents vs. Gates — Console", "aria-hidden": "true" }, "AG"),
-    S.plugins.map((p) => h("a", { class: "rail-btn", href: `#/${p.id}`, "data-plugin": p.id,
+    railPlugins().map((p) => h("a", { class: "rail-btn", href: `#/${p.id}`, "data-plugin": p.id,
       "data-tip": `${p.name}  ·  g ${p.order}`, "aria-label": p.name, html: icon(p.icon, 20) })),
     h("span", { class: "rail-spacer" }),
     h("button", { type: "button", class: "rail-btn", "data-tip": "Keyboard shortcuts  ·  ?", "aria-label": "Keyboard shortcuts",
@@ -212,6 +231,11 @@ function paintStatus() {
     items.push(h("span", { class: "item", title: `Runner in the ${other} namespace` }, h("span", { class: `dot ${runnerText(o).dot}` }), `${other === "mock" ? "Mock" : "Real"}: ${runnerText(o).text}`));
   }
   items.push(h("span", { class: "spacer" }));
+  items.push(h("span", { class: "item" }, h("span", { class: "sr-only" }, "View"),
+    h("span", { class: "ns-switch mode-switch", role: "group", "aria-label": "Simple or Expert view" },
+      [["simple", "Simple", "The story path: Home, Results, Replay, Runs, Scenario"], ["expert", "Expert", "Every panel, including Run Control and Readiness"]]
+        .map(([m, label, tip]) => h("button", { type: "button", "aria-pressed": String(S.mode === m), title: tip,
+          onclick: () => setMode(m) }, label)))));
   items.push(h("span", { class: "item" }, h("span", { class: "sr-only" }, "Namespace"),
     h("span", { class: "ns-switch", role: "group", "aria-label": "Namespace" },
       ["real", "mock"].map((ns) => h("button", { type: "button", "aria-pressed": String(S.ns === ns),
@@ -389,6 +413,7 @@ function makeShell(plugin, params, unsubs) {
     api,
     get user() { return { ...S.session.user }; },
     get ns() { return S.ns; },
+    get mode() { return S.mode; },
     canWrite: !plugin.readonly,
     params: { ...params },
     plugin: { id: plugin.id, name: plugin.name },

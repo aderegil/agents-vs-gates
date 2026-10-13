@@ -5,6 +5,14 @@ import { h, table, badge, bar, button, panel, notice, empty, field, fmtInt, fmtD
 import {
   fmtElapsed, fmtCompact, cellLabel, cellKeyLabel, cellUnit, stageBadges, outcomeEntries, launchBody, validAmount, reasonFor, launchSignature, hhmm,
 } from "./model.js";
+import { plainCondition, conditionTitle, parseCell } from "/web/lib/labels.js";
+
+/** A cell key with its plain meaning beside the codes, the glossary on hover. */
+function cellPlain(cell) {
+  const p = parseCell(cell);
+  return h("span", { title: conditionTitle(p.V, p.S, p.W) }, cellKeyLabel(cell, { unit: false }), " ",
+    h("span", { class: "muted small" }, plainCondition(p.V, p.S, p.W)));
+}
 import { outputPanel } from "./output.js";
 
 const unitCell = (cell) => (cellUnit(cell) ? unitTag(cellUnit(cell), { compact: true }) : "—");
@@ -370,14 +378,14 @@ export async function mount(el, shell) {
     liveEls = { cols: colsEl };
     liveBuilt = true;
     const queue = table({ caption: "Next queued runs", keyboard: false, empty: s.alive ? "The queue is empty." : "No batch is running.",
-      columns: [{ key: "run_id", label: "Run", mono: true }, { key: "ticket", label: "Ticket" }, { key: "cell", label: "Cell", render: (r) => cellKeyLabel(r.cell, { unit: false }) },
+      columns: [{ key: "run_id", label: "Run", mono: true }, { key: "ticket", label: "Ticket" }, { key: "cell", label: "Cell", render: (r) => cellPlain(r.cell) },
         { key: "unit", label: "Unit", render: (r) => unitCell(r.cell) }],
       rows: s.queue });
     const fin = table({ caption: "Finished runs", keyboard: true, empty: "No finished runs yet.",
       onRowClick: (r) => shell.navigate("runs", { run: r.run_id, ns: shell.ns }),
       columns: [
         { key: "run_id", label: "Run", mono: true },
-        { key: "cell", label: "Cell", render: (r) => cellKeyLabel(r.cell, { unit: false }) },
+        { key: "cell", label: "Cell", render: (r) => cellPlain(r.cell) },
         { key: "unit", label: "Unit", render: (r) => unitCell(r.cell) },
         { key: "turns", label: "Turns", num: true },
         { key: "duration_ms", label: "Duration", num: true, render: (r) => r.duration_ms == null ? "—" : fmtDuration(r.duration_ms) },
@@ -401,7 +409,7 @@ export async function mount(el, shell) {
       h("dl", { class: "kv" },
         h("dt", {}, "Run"), h("dd", { class: "mono" }, r.run_id),
         h("dt", {}, "Ticket"), h("dd", {}, r.ticket || "—"),
-        h("dt", {}, "Cell"), h("dd", {}, cellKeyLabel(r.cell, { unit: false })),
+        h("dt", {}, "Cell"), h("dd", {}, cellPlain(r.cell)),
         h("dt", {}, "Unit"), h("dd", {}, unitCell(r.cell)),
         h("dt", {}, "Attempt"), h("dd", {}, r.attempt || "hidden while the stage is blinded"),
         h("dt", {}, "Elapsed"), h("dd", { class: "num" }, h("span", { "data-since": r.started_at || "" }, fmtElapsed(r.started_at ? (Date.now() - Date.parse(r.started_at)) / 1000 : null))),

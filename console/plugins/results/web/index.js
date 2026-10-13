@@ -4,6 +4,7 @@
 // A stage that is not unblinded arrives without numbers; this page only shows "Blinded until stage complete".
 import { h, table, badge, empty, panel, notice, iconEl, button, tabs, fmtInt, unitTag } from "/web/lib/ui.js";
 import { markdownViewer, mdViewSwitch } from "/web/lib/markdown.js";
+import { GLOSSARY, plainCondition, conditionTitle, conditionCode } from "/web/lib/labels.js";
 import { renderChart, renderSlide, dataTable, THEMES, SLIDE, fmtXofN, fmtCI } from "./charts.js";
 
 const BLINDED = "Blinded until stage complete";
@@ -433,22 +434,63 @@ export async function mount(el, shell) {
       h("div", { class: "row" }, h("span", { class: "small muted" }, "Export style"), seg, h("span", { class: "small muted" }, "SVG and PNG · 1920×1080")));
   }
 
+  // Claude Code vs Codex, cell by cell: counts side by side, no test (C.5)
+  function byAgentSection() {
+    const ba = S.data.rq.by_agent;
+    const out = [h("div", { class: "res-qhead" }, h("span", { class: "res-code" }, "By agent"), h("h2", {}, "The same cells, Claude Code and Codex side by side"),
+      badge("Descriptive", "neutral"))];
+    if (!ba || !ba.rows.length) { out.push(empty("No cell has been run on both Claude Code + Sonnet and Codex yet.")); return out; }
+    out.push(h("p", { class: "small muted res-note" }, ba.note));
+    const units = ba.units.filter((u) => ba.rows.some((r) => r.units[u.unit]));
+    for (const m of ba.metrics) {
+      const tbl = table({
+        caption: m.label, keyboard: false,
+        columns: [
+          { key: "cell", label: "Cell", render: (r) => h("span", { title: conditionTitle(r.V, r.S, r.W) },
+            h("span", { class: "strong" }, r.ticket), " · ", plainCondition(r.V, r.S, r.W), " ", h("span", { class: "res-chip mono" }, conditionCode(r.V, r.S, r.W))) },
+          ...units.map((u) => ({ key: u.unit, num: true,
+            label: h("span", { class: "res-unit-col" }, unitTag(u.unit, { compact: true }), h("span", { class: "muted small" }, u.stages.join(" + "))),
+            render: (r) => { const v = r.units[u.unit]; return v ? `${v[m.key].x} of ${v[m.key].n}` : "—"; } })),
+        ],
+        rows: ba.rows,
+      });
+      out.push(panel({ title: m.label, flush: true, actions: badge("Descriptive", "neutral"), body: tbl }));
+    }
+    return out;
+  }
+
+  function glossaryStrip() {
+    return h("div", { class: "res-gloss", "aria-label": "What the codes mean" },
+      h("span", { class: "small muted" }, "Codes:"),
+      ["V0", "V1", "V2", "S0", "S1", "S2"].map((c) => h("span", { class: "res-gloss-item", title: `${c}: ${GLOSSARY[c].long}` },
+        h("span", { class: "res-chip mono" }, c), GLOSSARY[c].short)),
+      h("span", { class: "small muted" }, "· hover for the full meaning"));
+  }
+
+  const TAB_LABEL = { rq1: "RQ1 · Nothing in view", rq2: "RQ2 · Rule or repos", rq3: "RQ3 · What CI does",
+    rq4: "RQ4 · AI reviewer", rq5: "RQ5 · Ticket wording" };
+
   function draw() {
     const d = S.data;
     const items = [];
     const secs = d.rq.sections;
-    for (const id of ["rq1", "rq2", "rq3"]) items.push({ id, label: secs[id].code, render: () => h("div", { class: "stack" }, sectionBody(secs[id])) });
-    items.push({ id: "rq4", label: "RQ4", render: () => h("div", { class: "stack" }, reviewerSection()) });
-    if (secs.rq5) items.push({ id: "rq5", label: "RQ5", render: () => h("div", { class: "stack" }, sectionBody(secs.rq5)) });
-    items.push({ id: "instrument", label: "CI vs. oracle", render: () => h("div", { class: "stack" }, instrumentSection()) });
-    if (d.pilot && d.pilot.runs) items.push({ id: "pilot", label: "Pilot X1 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot)) });
-    if (d.pilot2 && d.pilot2.runs) items.push({ id: "pilot2", label: "Pilot X2 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot2)) });
-    items.push({ id: "excluded", label: "Excluded", count: d.excluded.excluded.length || null, render: () => h("div", { class: "stack" }, excludedSection()) });
+    const expert = shell.mode !== "simple";
+    for (const id of ["rq1", "rq2", "rq3"]) items.push({ id, label: TAB_LABEL[id] || secs[id].code, render: () => h("div", { class: "stack" }, sectionBody(secs[id])) });
+    items.push({ id: "rq4", label: TAB_LABEL.rq4, render: () => h("div", { class: "stack" }, reviewerSection()) });
+    if (secs.rq5) items.push({ id: "rq5", label: TAB_LABEL.rq5, render: () => h("div", { class: "stack" }, sectionBody(secs.rq5)) });
+    items.push({ id: "by-agent", label: "By agent", render: () => h("div", { class: "stack" }, byAgentSection()) });
+    // Simple mode keeps the story path; the instrument, the pilots and the exclusions are in Expert mode
+    if (expert) {
+      items.push({ id: "instrument", label: "CI vs. oracle", render: () => h("div", { class: "stack" }, instrumentSection()) });
+      if (d.pilot && d.pilot.runs) items.push({ id: "pilot", label: "Pilot X1 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot)) });
+      if (d.pilot2 && d.pilot2.runs) items.push({ id: "pilot2", label: "Pilot X2 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot2)) });
+      items.push({ id: "excluded", label: "Excluded", count: d.excluded.excluded.length || null, render: () => h("div", { class: "stack" }, excludedSection()) });
+    }
     if (!items.some((i) => i.id === S.tab)) S.tab = "rq1";
     const t = tabs({ items, active: S.tab, onChange: (id) => { S.tab = id; store.set("tab", id); } });
     body.replaceChildren(...[
       d.rq.simulated ? notice(h("span", {}, h("strong", {}, d.rq.banner), ". Every figure exported from this namespace carries the MOCK watermark; it cannot be switched off."), "", "info") : null,
-      toolbar(), t].filter(Boolean));
+      toolbar(), glossaryStrip(), t].filter(Boolean));
   }
 
   const soon = (data) => {

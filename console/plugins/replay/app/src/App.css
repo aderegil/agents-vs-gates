@@ -9,6 +9,9 @@
 .meta { display: flex; align-items: center; gap: 10px; color: var(--tinta-2); font-size: 13px; min-width: 0;
   flex-wrap: wrap; }
 .meta strong { color: var(--tinta); font-weight: 600; }
+/* plain condition with its code chip (labels.ts) */
+.cond { display: inline-flex; align-items: center; gap: 6px; cursor: help; }
+.cond__code { padding: 0 5px; border: 1px solid var(--linea); border-radius: 4px; background: var(--suave); font-size: 11px; color: var(--tinta-2); }
 /* unit glyph + label (components/UnitTag.tsx): same stroke and ink as the icons, never the glyph alone */
 .unit-tag { display: inline-flex; align-items: center; gap: 6px; color: var(--tinta); white-space: nowrap; }
 .chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border: var(--trazo) solid var(--linea);
