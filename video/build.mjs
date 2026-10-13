@@ -82,6 +82,7 @@ async function captureScene(context, seg, enc, stillOnly) {
 async function captureTheater(context, seg, enc, stillOnly) {
   const page = await context.newPage();
   await page.clock.install({ time: new Date("2026-10-12T12:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-12T12:00:01Z")); // time moves only with runFor (see clips.mjs)
   const url = `${ORIGIN}/theater/index.html?replay=/replays/${seg.theater}.json${seg.cut ? "&cut=1" : ""}&present=1`;
   await page.goto(url);
   await page.waitForSelector("canvas", { timeout: 60000 });

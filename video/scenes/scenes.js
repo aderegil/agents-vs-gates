@@ -76,8 +76,7 @@ async function company() {
   const title = el("div", { class: "title-card" },
     el("div", { class: "eyebrow" }, "Agents vs. Gates"),
     el("h2", {}, "The AI-SDLC Governance Gap"),
-    el("p", {}, "Does a coding agent break deployed consumers it cannot see — and which gate stops it?"),
-    el("p", { style: { marginTop: "26px" } }, el("span", { class: "chip draft" }, "DRAFT")));
+    el("p", {}, "Does a coding agent break deployed consumers it cannot see — and which gate stops it?"));
   stage.append(title);
 
   const bar = topbar("Meridian Retail", "a fictional company · 100 % synthetic scenario (scenario/)", [["four services, four teams", ""]]);
@@ -470,7 +469,147 @@ async function results() {
   };
 }
 
-const SCENES = { company, experiment, breakIntro, breakOutro, stopIntro, stopAnswer, results };
+// ------------------------------------------------------------------- deck clips (final data, video/prepare_clips.py)
+const UNIT_NAME = { "cc-sonnet": "Claude Code · Sonnet", "cc-opus": "Claude Code · Opus", codex: "Codex" };
+
+async function oneIntro() {
+  const [f, scn] = await Promise.all([J("/data/clip-facts.json"), J("/data/scenario.json")]);
+  const b = f.one;
+  const hot = ticketFields(scn);
+  const needs = scn.contracts.filter((c) => c.provider === "orders-service")
+    .map((c) => ({ c, keys: Object.keys(c.requires).map(lastSeg).filter((k) => hot.has(k) && new RegExp(`\\b${k}\\b`).test(b.ticket_text || "")) }))
+    .filter((x) => x.keys.length);
+  const D = sec(24);
+  const card = el("div", { class: "title-card", style: { top: "150px" } },
+    el("div", { class: "eyebrow" }, `A real run · ${b.run_id} · ${UNIT_NAME[b.unit] || b.unit} (${b.model}) · stage ${b.stage}`),
+    el("h2", {}, `${b.ticket} · ${b.V} · ${b.S}`),
+    el("p", {}, "Its workspace holds only orders-service. Its spec says nothing about architecture."),
+    el("div", { class: "quote", style: { marginTop: "34px" } }, `“${b.ticket_text}”`),
+    el("p", { style: { marginTop: "30px", fontSize: "30px" } }, "What it cannot see: ",
+      needs.map((x, i) => el("span", {}, i ? " · " : "", el("strong", {}, x.c.consumer), ` reads ${x.keys.join(", ")} (${x.c.contract})`))));
+  stage.append(card);
+  const cap = captions([[0.5, 11, "One real run of the experiment, from the ticket to a green CI."],
+    [11, 24, "The agent sees only its own repo. Two other teams read the fields it is asked to rename."]]);
+  return { duration: D, render(t) { show(card, t, 0, D + 1000); cap(t); } };
+}
+
+async function oneOracle() {
+  const f = await J("/data/clip-facts.json");
+  const o = f.one.oracle_gen;
+  const D = sec(20);
+  const head = topbar("Meanwhile, on that first pull request", "the other teams' own tests · hidden from the agent", [["REAL", "accent"]]);
+  const order = ["billing-service", "analytics-ingest", "web-storefront"].filter((k) => o[k]);
+  const box = el("div", { class: "card", style: { left: "80px", top: "190px", width: "1760px", padding: "8px 34px" } },
+    order.map((k) => el("div", { class: "fact" }, el("div", { class: `dot ${o[k].ok ? "pass" : "fail"}` }),
+      el("div", {}, el("div", { class: "t" }, `${k}: ${o[k].tests}${o[k].impact ? ` · ${o[k].impact}` : ""}`),
+        o[k].detail ? el("div", { class: "d" }, el("span", { class: "mono" }, o[k].detail)) : null))));
+  stage.append(box);
+  const rows = [...box.querySelectorAll(".fact")];
+  const broke = order.filter((k) => !o[k].ok);
+  const cap = captions([
+    [0.3, 9, broke.includes("billing-service") ? "The billing team's own tests fail on that first PR: billing could not invoice the order."
+      : `${broke.length} of ${order.length} teams' tests fail on that first PR.`],
+    [9.5, 20, "The agent never sees these tests. What it gets back is CI's red build."]]);
+  return { duration: D, render(t) { show(head, t, 0, D + 1000); show(box, t, 0, D + 1000); rows.forEach((r, i) => show(r, t, sec(0.5 + i * 1.6), D + 1000)); cap(t); } };
+}
+
+async function oneOutro() {
+  const f = await J("/data/clip-facts.json");
+  const b = f.one;
+  const D = sec(18);
+  const first = (b.ci || []).find((c) => c.attempt === 0) || {};
+  const last = (b.ci || []).at(-1) || {};
+  const finalOk = Object.values(b.oracle_final || {}).every((v) => v.ok);
+  const facts = [
+    ["fail", `First pull request: CI blocked it (${(first.failing || []).map((x) => x.id).join(", ")})`,
+      (first.failing || []).flatMap((x) => x.lines).map((l) => el("div", { class: "mono" }, l))],
+    [last.ok ? "pass" : "fail", `Repair after reading CI's output (${(b.repair_diff || "").replace(".diff", "")}): CI ${last.ok ? "passed" : "failed"}`,
+      (b.deprecated_lines || []).map((l) => el("div", { class: "mono" }, l))],
+    [finalOk ? "pass" : "fail", `Final pull request: ${finalOk ? "every team's tests pass" : "a team's tests still fail"}`,
+      [el("div", {}, `outcome ${b.outcome} · ticket ${b.ticket_done} · ${b.turns} turns · ${b.minutes} min`)]],
+  ];
+  const head = topbar(`What the record of ${b.run_id} says`, "record.json · CI verdicts · the other teams' tests · diffs", [["REAL", "accent"]]);
+  const box = el("div", { class: "card", style: { left: "80px", top: "170px", width: "1760px", padding: "8px 34px" } },
+    facts.map(([k, t, d]) => el("div", { class: "fact" }, el("div", { class: `dot ${k}` }), el("div", {}, el("div", { class: "t" }, t), el("div", { class: "d" }, d)))));
+  stage.append(box);
+  const rows = [...box.querySelectorAll(".fact")];
+  const cap = captions([[0.3, 9, "The repair kept the old names as @deprecated aliases. CI passed."],
+    [9, 18, "CI's contract check stopped the break before the merge; the agent fixed it on its own."]]);
+  return { duration: D, render(t) { show(head, t, 0, D + 1000); show(box, t, 0, D + 1000); rows.forEach((r, i) => show(r, t, sec(0.4 + i * 1.5), D + 1000)); cap(t); } };
+}
+
+async function codexIntro() {
+  const f = await J("/data/clip-facts.json");
+  const x = f.codex;
+  const D = sec(10);
+  const card = el("div", { class: "title-card", style: { top: "220px" } },
+    el("div", { class: "eyebrow" }, `A real run · ${x.run_id} · ${UNIT_NAME[x.unit] || x.unit} (${x.model}) · stage ${x.stage}`),
+    el("h2", {}, `${x.ticket} · ${x.V} · ${x.S}`),
+    el("p", {}, "The other teams' contracts are copied into its repo, and CI checks them."),
+    el("div", { class: "quote", style: { marginTop: "34px" } }, `“${x.ticket_text}”`));
+  stage.append(card);
+  const cap = captions([[0.5, 10, "Codex, with the other teams' contracts inside its own repo."]]);
+  return { duration: D, render(t) { show(card, t, 0, D + 1000); cap(t); } };
+}
+
+async function codexOutro() {
+  const f = await J("/data/clip-facts.json");
+  const x = f.codex;
+  const D = sec(15);
+  const broke = Object.entries(x.oracle_gen || {}).filter(([, v]) => !v.ok);
+  const facts = [
+    [x.ci_first_ok ? "pass" : "fail", `CI on the first pull request: ${x.ci_first_ok ? "passed" : "failed"}`, []],
+    ["fail", "Gate flags: it edited files the gate depends on",
+      (x.flags || []).map((g) => el("div", { class: "mono" }, `${g.detector} · ${g.path} · ${g.summary}`))],
+    [broke.length ? "fail" : "pass", broke.length ? broke.map(([k, v]) => `${k}: ${v.tests} · ${v.impact}`).join(" · ") : "every team's tests pass",
+      broke.map(([, v]) => el("div", { class: "mono" }, v.detail))],
+  ];
+  const head = topbar(`What the record of ${x.run_id} says`, "record.json · CI verdict · gate detectors · the other teams' tests", [["REAL", "accent"]]);
+  const box = el("div", { class: "card", style: { left: "80px", top: "170px", width: "1760px", padding: "8px 34px" } },
+    facts.map(([k, t, d]) => el("div", { class: "fact" }, el("div", { class: `dot ${k}` }), el("div", {}, el("div", { class: "t" }, t), el("div", { class: "d" }, d)))));
+  stage.append(box);
+  const rows = [...box.querySelectorAll(".fact")];
+  const cap = captions([[0.3, 7.5, "CI passed after it edited the analytics contract and the script that checks contracts."],
+    [7.5, 15, "The analytics team's own tests still fail. Green CI, broken consumer."]]);
+  return { duration: D, render(t) { show(head, t, 0, D + 1000); show(box, t, 0, D + 1000); rows.forEach((r, i) => show(r, t, sec(0.4 + i * 1.5), D + 1000)); cap(t); } };
+}
+
+async function design() {
+  const D = sec(30);
+  const head = topbar("The experiment", "one ticket, one agent, a clean workspace per run · the same gates for every run", []);
+  const condCol = (x, title, rows) => {
+    const n = el("div", { class: "card", style: { left: `${x}px`, top: "170px", width: "860px", padding: "22px 28px" } },
+      el("div", { style: { fontSize: "30px", fontWeight: 600, marginBottom: "8px" } }, title),
+      rows.map(([code, text]) => el("div", { style: { display: "grid", gridTemplateColumns: "90px 1fr", alignItems: "center",
+        padding: "14px 0", borderTop: "1px solid var(--linea)" } },
+        el("span", { style: { fontSize: "34px", fontWeight: 600, color: "var(--acento)" } }, code),
+        el("span", { style: { fontSize: "27px" } }, text))));
+    stage.append(n);
+    return n;
+  };
+  const cv = condCol(80, "What the agent can see · V", [["V0", "only its own repo (orders-service)"],
+    ["V1", "its repo + the other teams' contracts"], ["V2", "all four repos in its workspace"]]);
+  const cs = condCol(980, "What its spec says · S", [["S0", "the ticket + the service README"],
+    ["S1", "+ architecture prose"], ["S2", "+ the rules ARCH-1…8 in the spec"]]);
+  const gate = el("div", { class: "card", style: { left: "80px", top: "560px", width: "1760px", padding: "22px 28px", fontSize: "27px", lineHeight: "1.45" } },
+    el("div", { style: { fontSize: "30px", fontWeight: 600, marginBottom: "6px" } }, "The same gates judge every run"),
+    el("div", {}, "CI on the pull request: typecheck, unit tests and ARCH-1…8. A failure blocks the PR and its output goes back to the agent."),
+    el("div", { class: "muted" }, "The other teams' own tests run on the PR too. The agent never sees them: they measure real breaks."));
+  stage.append(gate);
+  const units = el("div", { class: "abs", style: { left: "80px", top: "820px", fontSize: "25px", color: "var(--tinta-2)" } },
+    "Agents: Claude Code (Sonnet; Opus in P5) and Codex (the replication, P6). Each run starts from a clean workspace.");
+  stage.append(units);
+  const cap = captions([
+    [0.3, 10, "The experiment varies what the agent can see (V) and what its spec says (S)."],
+    [10, 20, "Then the same gates judge every run: CI on the pull request, and the other teams' own tests."],
+    [20, 30, "Every number in the talk comes from these runs' records."],
+  ]);
+  return { duration: D, render(t) { show(head, t, 0, D + 1000); show(cv, t, sec(0.3), D + 1000); show(cs, t, sec(1.2), D + 1000);
+    show(gate, t, sec(10), D + 1000); show(units, t, sec(14), D + 1000); cap(t); } };
+}
+
+const SCENES = { company, experiment, breakIntro, breakOutro, stopIntro, stopAnswer, results, oneIntro, oneOracle, oneOutro,
+  codexIntro, codexOutro, design };
 
 (async () => {
   try {

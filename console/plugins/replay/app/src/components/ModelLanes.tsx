@@ -33,7 +33,9 @@ function useClock(autoplay: boolean, total: number) {
     const loop = () => {
       // performance.now(), not the frame timestamp (see Player): extra painted frames do not advance the playhead
       const now = performance.now();
-      if (last.current !== null && playing) setT((v) => Math.min(total, v + (now - (last.current as number))));
+      // the delta is taken now: a lazy state updater runs later, after last.current has moved on
+      const d = last.current === null ? 0 : now - last.current;
+      if (playing && d > 0) setT((v) => Math.min(total, Math.max(0, v + d)));
       last.current = now;
       raf = requestAnimationFrame(loop);
     };

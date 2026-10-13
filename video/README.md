@@ -1,4 +1,4 @@
-# Talk video (draft)
+# Talk video and deck clips
 
 A 4–5 minute, 1920×1080, silent MP4 for "The AI-SDLC Governance Gap" (Alfredo narrates live). Subtitles are drawn
 into the frames. Storyboard: `docs/qa/video-storyboard.md`.
@@ -40,6 +40,30 @@ Options: `--only <ids>` (comma list, then re-concatenates), `--skip-prepare`, `-
 
 Segments: `01-company` (45 s) · `02-experiment` (45 s) · `03a/b/c` break case x1-0002 (intro, director's cut, record)
 · `04a/b/c` contrast x1-0003 (intro, 0.5× replay, the agent's final message verbatim) · `05-results` (≥ 45 s).
+
+## Deck clips (night of 2026-10-13): one MP4 per slide
+
+```
+cd video
+node clips.mjs --fps 30                       # prepare_clips.py, every clip, out/manifest.json
+node clips.mjs --fps 30 --only exp-one-run    # one clip (the manifest keeps the others)
+```
+
+`out/manifest.json` lists each clip with `file`, `duration_s`, `shows`, `source`, `label`, `format`. All 1920×1080,
+H.264, 30 fps, no audio, short English subtitles in frame.
+
+| File | What it shows | Data |
+|---|---|---|
+| `exp-one-run.mp4` | One real run (the poll-PR run, `analysis.select_poll_pr`), ~2.5 min: ticket → rename → own tests → PR → CI red (ARCH-4) → the other teams' tests on that first PR → red build back to the agent → @deprecated aliases → CI green | `results/real/runs/<run>` |
+| `exp-codex-contract.mp4` | One P6 Codex X-remove V1·S0 run (first in manifest order with a D6 flag): edits the analytics contract and the check script, CI green, analytics broken | same |
+| `exp-company-design.mp4` | Meridian Retail (fictional), the design and the gates | `scenario/` |
+| `aisdlc-<model>.mp4` | The scripted AI-SDLC scenes (anthropic, aws, kiro, speckit, gate): **Illustration · scripted from public documentation** on every frame | `replay/scenes` |
+| `aisdlc-compare.mp4` | The five scenes on one phase axis (the theater's lanes view) | `public/scenes/index.json` |
+
+`prepare_clips.py` builds the two real replays in memory (never written to `results/`), the card facts
+(`work/clip-facts.json`, from the records) and freezes the theater build in `work/theater`. Theater segments run on a
+**paused** virtual clock (`page.clock.pauseAt`): installed but running, Playwright's clock also follows wall time, and
+every slow screenshot pushed the replay ahead (the first night renders ran ~3× fast; fixed before delivery).
 
 ## Rules it keeps
 - Nothing is written outside `video/work`, `video/out` and `docs/qa/video-*.png`; `results/` is read only.

@@ -668,3 +668,24 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - `console --check` now expects the story plugin. QA: before/after stills `docs/qa/night-console-*`, from private consoles on ports 8781 (main) and 8782 (this branch) over a copy of `results/real` without bundles or replay caches. The console on :8765 was not touched.
 - Tests: `console.tests.test_story` (new), plus the console suites (152 OK, 1 skipped), the JS model and chart tests (60) and the replay app tests (47).
 - **Theater timing fix (found while rendering D).** The player now advances its clock from `performance.now()`, not the frame timestamp, and so does the lanes view. A frame painted for another reason must not move playback.
+### D. Clips for the deck
+- **One file per segment** (`video/clips.mjs`, `video/prepare_clips.py`), listed in `video/out/manifest.json` with `file`, `duration_s`, `shows`, `source` (plus `label` and `format`). The design session's update reshaped the set:
+  - `exp-one-run`: one real run only, ~2.5 min, no results grids and no Codex.
+  - `exp-codex-contract`: optional, slide 18.
+  - `exp-company-design`: may stay unused.
+  - `aisdlc-<model>` × 5 and `aisdlc-compare`.
+  - No results clip: the results are reveals on later slides.
+- **Run picks are rules.**
+  - `exp-one-run` uses the poll-PR run (`analysis.select_poll_pr`, spec 14.3): p1-0002.
+  - `exp-codex-contract` uses the first P6 X-remove V1·S0 `codex` run in manifest order with a D6 flag (consumer contract modified): p6-0012.
+  - Card facts come from the records (`work/clip-facts.json`); nothing is typed by hand.
+- **Order in `exp-one-run`.** The deck asked for "CI red → billing team's oracle fails → red build back to the agent". The oracle ran on the first PR after the session ended, so the clip:
+  - plays the theater (0.5×) until just after CI turns red;
+  - cuts to a card titled "Meanwhile, on that first pull request · the other teams' own tests · hidden from the agent", with each team's verdict in the oracle's own words;
+  - resumes the theater from just before the red build goes back to the agent, through the repair and green CI, stopping before the oracle results appear again;
+  - ends on a "what the record says" card.
+- **CI wording** follows the corrected figures (design session, 13 Oct): "stopped every first attempt (140 of 140)", high by construction. No clip uses "86 of 88".
+- **Virtual clock.** Theater and lanes segments run on a paused Playwright clock (`clock.pauseAt` after `install`). The first night render of the theater clips ran ~3× fast because an installed clock also follows wall time, so every slow screenshot advanced the replay. Those clips were re-rendered before delivery, and `build.mjs` got the same fix. Frames are captured at 30 fps.
+- Every AI-SDLC clip carries "Illustration · scripted from public documentation" with its source and date in every frame. The real-run clips carry "Replay of a real run · <id>", and their chip says "Real run · 0.5× speed" or "Real run · 1×".
+- Renders ran only with ≥ 6 GB free RAM (checked before each clip and each segment); no other heavy job ran at the same time.
+- The compare lanes had a second timing bug, found in the re-render: the playhead read a ref inside a lazy React state updater, so under a virtual clock the deltas could come out negative. The delta is now taken before the update and clamped at 0. That clip was re-rendered as well.
