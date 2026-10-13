@@ -79,6 +79,13 @@ function clips() {
       source: "console/plugins/replay/app/public/scenes/index.json (from replay/scenes/make_scenes.py)",
       label: "Illustration · scripted from public documentation",
     },
+    {
+      file: "aisdlc-compare-neutral.mp4",
+      segments: [{ kind: "lanes", query: "neutral=1" }],
+      shows: "Neutral variant of the comparison: the same five lanes with no per-vendor outcome. Vendor lanes show where the rule lives and review as \"review (advisory)\"; their CI cells say only \"no architecture check in CI (not described)\". Only the \"+ the gate\" lane shows an outcome: blocks the merge in CI, caught by ARCH-4 and repaired.",
+      source: "console/plugins/replay/app/public/scenes/index.json (from replay/scenes/make_scenes.py), theater lanes view ?neutral=1",
+      label: "Illustration · scripted from public documentation",
+    },
   ];
 }
 
@@ -140,13 +147,13 @@ async function captureTheater(context, seg, enc) {
   return wall + (seg.hold || 0);
 }
 
-async function captureLanes(context, enc) {
+async function captureLanes(context, enc, query = "") {
   const page = await context.newPage();
   await page.clock.install({ time: new Date("2026-10-13T12:00:00Z") });
   // paused: time moves only with runFor. Installed but running, the fake clock also follows wall time, so every
   // slow screenshot would push the replay ahead (the first renders ran ~3× fast)
   await page.clock.pauseAt(new Date("2026-10-13T12:00:01Z"));
-  await page.goto(`${ORIGIN}/theater/index.html?lanes=1&autoplay=1&capture=1`);
+  await page.goto(`${ORIGIN}/theater/index.html?lanes=1&autoplay=1&capture=1${query ? `&${query}` : ""}`);
   await page.clock.runFor(1600);
   await page.waitForSelector(".lanes__grid", { timeout: 60000 });
   await page.clock.runFor(200);
@@ -172,7 +179,7 @@ async function renderSegment(seg, file) {
     const enc = encoder(file, FPS);
     try {
       const ms = seg.kind === "scene" ? await captureScene(context, seg, enc)
-        : seg.kind === "lanes" ? await captureLanes(context, enc) : await captureTheater(context, seg, enc);
+        : seg.kind === "lanes" ? await captureLanes(context, enc, seg.query) : await captureTheater(context, seg, enc);
       await enc.close();
       return ms;
     } catch (e) {

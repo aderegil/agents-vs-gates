@@ -689,3 +689,9 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 - Every AI-SDLC clip carries "Illustration · scripted from public documentation" with its source and date in every frame. The real-run clips carry "Replay of a real run · <id>", and their chip says "Real run · 0.5× speed" or "Real run · 1×".
 - Renders ran only with ≥ 6 GB free RAM (checked before each clip and each segment); no other heavy job ran at the same time.
 - The compare lanes had a second timing bug, found in the re-render: the playhead read a ref inside a lazy React state updater, so under a virtual clock the deltas could come out negative. The delta is now taken before the update and clamped at 0. That clip was re-rendered as well.
+- **Neutral comparison (design session request, 13 Oct).**
+  - `aisdlc-compare-neutral.mp4` (`?lanes=1&neutral=1`) uses the same layout and the same five lanes, with no per-vendor verdict.
+  - Vendor lanes drop every outcome and merge-blocker tag. Their CI cells say only "no architecture check in CI (not described)". Review reads "review (advisory)" wherever somebody besides the author acts on the PR: Anthropic, Kiro and spec-kit. AWS's review lane has no such reviewer; its reviews happen at design time and at release.
+  - Only "+ the gate" shows an outcome: it blocks the merge in CI, and the break is caught by ARCH-4 and repaired.
+  - The per-vendor caption lines become neutral. The clip still opens with "Same scripted case in every lane…" and still ends on "The rule is written down in every model. What differs is whether something checks it after generation."
+  - `aisdlc-compare.mp4` is unchanged. The neutral clip is a separate manifest entry; the choice between them is Alfredo's.

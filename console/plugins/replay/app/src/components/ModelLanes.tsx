@@ -22,6 +22,14 @@ const CAPTION: Record<string, string> = {
   release: "Release: a person authorizes it.",
   production: "Downstream: caught before the merge, or the other teams find out.",
 };
+/** ?neutral=1: no per-vendor verdict. Only the gate lane shows an outcome; review, where a model has one, reads the
+ * same in every lane; vendor CI cells say only that no architecture check is described. */
+const CAPTION_NEUTRAL: Record<string, string> = {
+  ...CAPTION,
+  review: "Review: where a model has one, it is advisory.",
+  production: "The same scripted case in every lane; only the gate lane has a check after generation.",
+};
+const GATE_ID = "aisdlc-gate";
 const FINAL = "The rule is written down in every model. What differs is whether something checks it after generation.";
 
 function useClock(autoplay: boolean, total: number) {
@@ -43,6 +51,35 @@ function useClock(autoplay: boolean, total: number) {
     return () => cancelAnimationFrame(raf);
   }, [playing, total]);
   return { t, setT, playing, setPlaying };
+}
+
+type Lane = SceneIndex["scenes"][number];
+
+/** A vendor lane's cell in the neutral variant: what the model does, where the rule lives, review as advisory; no
+ * outcome, no merge blocker, and in CI only "no architecture check in CI (not described)". */
+function neutralCell(s: Lane, a: string, on: boolean, now: boolean) {
+  const c = s.columns[a];
+  const rule = s.rule.axis === a;
+  // a review exists when somebody besides the author acts on the pull request
+  const review = a === "review" && !!c && c.who.length > 1;
+  const cls = ["lanes__cell", on ? "is-on" : "", now ? "is-now" : "", rule ? "is-rule" : ""].join(" ");
+  if (a === "ci") {
+    return (
+      <div key={a} className={cls} role="cell">
+        <div className="lanes__tag lanes__tag--quiet">no architecture check in CI (not described)</div>
+      </div>
+    );
+  }
+  return (
+    <div key={a} className={cls} role="cell">
+      {c && c.stages.length > 0 && <div className="lanes__stage">{c.stages.join(" · ")}</div>}
+      {c && c.artifacts.length > 0 && <div className="lanes__art">{c.artifacts.slice(0, 3).join("  ")}</div>}
+      {c && c.who.length > 0 && <div className="lanes__who">{c.who.slice(0, rule || review ? 2 : 3).join(", ")}</div>}
+      {(!c || (!c.stages.length && !c.who.length)) && <div className="lanes__none">not described</div>}
+      {rule && <div className="lanes__tag lanes__tag--rule">rule lives here</div>}
+      {review && <div className="lanes__tag lanes__tag--quiet">review (advisory)</div>}
+    </div>
+  );
 }
 
 export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
@@ -80,7 +117,8 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
   const shown = Math.min(axis.length, Math.floor(t / COLUMN_MS) + 1);
   const final = t >= axis.length * COLUMN_MS;
   const col = final ? null : axis[shown - 1];
-  const caption = final ? FINAL : CAPTION[col ?? ""] ?? "";
+  const neutral = query.get("neutral") === "1";
+  const caption = final ? FINAL : (neutral ? CAPTION_NEUTRAL : CAPTION)[col ?? ""] ?? "";
 
   return (
     <div className={`lanes ${query.get("capture") === "1" ? "is-capture" : ""}`} style={{ ["--cols" as string]: axis.length }}>
@@ -109,6 +147,7 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
             </div>
             {axis.map((a, i) => {
               const c = s.columns[a];
+              if (neutral && s.id !== GATE_ID) return neutralCell(s, a, i < shown, a === col);
               const rule = s.rule.axis === a;
               const blocks = s.blocks.axis === a;
               const out = s.outcome.axis === a;
@@ -126,7 +165,7 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
                   {rule && <div className="lanes__tag lanes__tag--rule">rule lives here</div>}
                   {blocks && <div className="lanes__tag lanes__tag--blocks">blocks the merge</div>}
                   {out && <div className={`lanes__tag lanes__tag--${s.outcome.status}`}>{s.outcome.label}</div>}
-                  {a === "production" && s.outcome.status === "caught" && (
+                  {!neutral && a === "production" && s.outcome.status === "caught" && (
                     <div className="lanes__tag lanes__tag--caught">the other teams keep working</div>
                   )}
                 </div>
@@ -146,7 +185,7 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
           <span><i className="sw sw--rule" /> where the rule lives</span>
           <span><i className="sw sw--blocks" /> what blocks the merge</span>
           <span><i className="sw sw--pass" /> caught</span>
-          <span><i className="sw sw--fail" /> reaches the other teams</span>
+          {!neutral && <span><i className="sw sw--fail" /> reaches the other teams</span>}
           <span className="lanes__src">Sources: replay/scenes/SOURCES.md</span>
         </div>
       </footer>
