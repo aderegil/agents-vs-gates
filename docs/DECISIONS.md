@@ -641,3 +641,30 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - A playhead reveals one column every 4.6 s with a one-line caption, then a closing line (~55 s).
   - A stacked-lanes view was chosen over five canvases side by side, which are unreadable at 1080p. The two-pane synchronized compare still works for any two scenes.
 - QA: `docs/qa/night-scene-*`, `docs/qa/night-lanes-*`.
+### C. Console UX: question-first, plain labels, Simple/Expert
+- **Home (`story` plugin, first in the rail).** It has four parts:
+  - What we tested: the company, the codes in plain words, the gates.
+  - What happened: six questions in plain words, each with a one-line answer whose numbers are computed from the records when the page loads, plus links into Results, the filtered runs and the Replay Theater.
+  - See it: the two featured runs, the AI-SDLC lanes, Results.
+  - Talk figures.
+  - Every panel that existed before is still there; only the way in changed.
+- **Talk figures.**
+  - These are the 29 numbers of slides 10, 11, 16, 18 and 20, taken from the design session's storyboard notes. Each shows the value computed from the records, what the storyboard says, a match badge, the query in words, and a "Runs" button that opens the Run Explorer filtered to those runs.
+  - On 13 Oct, 29 of 29 match. That includes the corrected CI figure: 140 of 140 first attempts stopped (P1/P4/P5/P6, V1 excluded); 137 repaired, 2 repaired with the right shape but the wrong meaning (p6-0051, p6-0097), 1 still failing (p6-0107).
+  - Blinded stages count for nothing (`common.analyzable`). p-values come only from the pre-registered tests, through `aggregate`.
+  - The panel says "blind-coded by two independent AI coders" and states that no figure is a test of one agent against the other.
+- **Simple / Expert.**
+  - A status-bar switch, remembered in the browser (`localStorage avg.mode`, default Simple).
+  - Simple puts the story path in the rail: Home, Results, Run Explorer, Replay Theater, Scenario (`"simple": true` in their manifests; the plugin schema gains that optional field). Expert shows every plugin, as before.
+  - Deep links to any plugin still work in Simple.
+  - Results in Simple hides the instrument, the pilots and the exclusions tabs.
+- **Plain labels.**
+  - `console/web/lib/labels.js` is the single glossary: V0 "Own repo", V1 "Own repo + contracts", V2 "All four repos", S0 "No rules", S1 "Architecture prose", S2 "Rule in the spec", the tickets, the outcomes. The Replay app carries a copy (`labels.ts`).
+  - The code stays beside the words as a chip (`V0·S2`), and hovering shows the full meaning. This applies in Run Explorer (cell column, filters, detail head, outcome badges), Results (a codes strip and plain tab names), Run Control (cells, with tooltips) and the Replay Theater top bar.
+  - Chart labels keep their codes, so the exported slides and their tests are unchanged.
+- **Claude Code vs Codex, cell by cell (Results › By agent).**
+  - Descriptive counts only: broke another team on the first try, on the final PR, touched the gate, stopped without a change.
+  - Claude Code + Sonnet sums P1, P2 and P4; Codex is P6, which replicates those parts; Opus is P5. No p-values, with the note that the pre-registration has no test between agents.
+- `console --check` now expects the story plugin. QA: before/after stills `docs/qa/night-console-*`, from private consoles on ports 8781 (main) and 8782 (this branch) over a copy of `results/real` without bundles or replay caches. The console on :8765 was not touched.
+- Tests: `console.tests.test_story` (new), plus the console suites (152 OK, 1 skipped), the JS model and chart tests (60) and the replay app tests (47).
+- **Theater timing fix (found while rendering D).** The player now advances its clock from `performance.now()`, not the frame timestamp, and so does the lanes view. A frame painted for another reason must not move playback.

@@ -22,7 +22,7 @@ import time
 import traceback
 from pathlib import Path
 
-EXPECTED = ["overview", "run-control", "results", "runs", "replay", "teams", "scenario", "readiness", "users"]
+EXPECTED = ["story", "overview", "run-control", "results", "runs", "replay", "teams", "scenario", "readiness", "users"]
 OWNER = ("owner", "check-owner-Password-1")
 VIEWER = ("viewer1", "check-viewer-Password-1")
 USERS_RE = re.compile(r"(?i)[A-Z]:(?:\\\\|\\|/)Users(?:\\\\|\\|/)")

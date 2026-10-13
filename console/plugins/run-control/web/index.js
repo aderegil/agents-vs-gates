@@ -273,7 +273,9 @@ export async function mount(el, shell) {
       body.push(h("div", { class: "rc-cells" }, shown.flatMap((x, i) => [
         x.unit && (i === 0 || shown[i - 1].unit !== x.unit) ? h("div", { class: "rc-cell-unit" }, unitTag(x.unit, { compact: true })) : null,
         h("div", { class: "rc-cell", title: x.cell },
-          h("span", { class: "rc-cell-name" }, cellLabel(x)),
+          h("span", { class: "rc-cell-name", title: `${plainCondition(x.visibility, x.spec, x.wording)}
+${conditionTitle(x.visibility, x.spec, x.wording)}` },
+            cellLabel(x)),
           bar(x.done, x.total, { running: x.running }),
           h("span", { class: "num small" }, `${x.done}/${x.total}`))])));
       if (c.cells.length > 5) body.push(h("button", { type: "button", class: "btn btn-subtle btn-sm rc-more", onclick: () => { S.expanded.has(c.stage) ? S.expanded.delete(c.stage) : S.expanded.add(c.stage); paintCards(); } },

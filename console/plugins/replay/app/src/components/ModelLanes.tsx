@@ -30,9 +30,11 @@ function useClock(autoplay: boolean, total: number) {
   const last = useRef<number | null>(null);
   useEffect(() => {
     let raf = 0;
-    const loop = (ts: number) => {
-      if (last.current !== null && playing) setT((v) => Math.min(total, v + (ts - (last.current as number))));
-      last.current = ts;
+    const loop = () => {
+      // performance.now(), not the frame timestamp (see Player): extra painted frames do not advance the playhead
+      const now = performance.now();
+      if (last.current !== null && playing) setT((v) => Math.min(total, v + (now - (last.current as number))));
+      last.current = now;
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);

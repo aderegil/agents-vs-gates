@@ -196,8 +196,11 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
     let raf = 0;
     let last = 0;
     const loop = (ts: number) => {
-      const dt = last ? Math.min(100, ts - last) : 0;
-      last = ts;
+      // time from performance.now(), not the frame timestamp: a frame the browser paints for another reason (a
+      // screenshot, a recording) must not advance the clock, so a virtual clock drives playback exactly
+      const now = performance.now();
+      const dt = last ? Math.min(100, now - last) : 0;
+      last = now;
       c.tick(dt);
       const pos = tbRef.current.at(c.p);
       follow(engine, pos.a);
