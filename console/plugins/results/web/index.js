@@ -172,7 +172,7 @@ export async function mount(el, shell) {
         onClick: () => doExport(spec, fmt, b) });
       return b;
     };
-    const chart = h("div", { class: `res-chart style-${S.style}`, style: { background: theme.bg }, html: renderChart(spec, { style: S.style }) });
+    const chart = h("div", { class: `res-chart style-${S.style}`, style: { background: theme.bg }, html: renderChart(spec, { style: S.style, width: 680 }) });
     return h("section", { class: "panel res-card", "aria-label": spec.title },
       h("header", { class: "panel-head" }, h("div", { class: "res-card-titles" }, h("h2", {}, spec.title), h("span", { class: "small muted" }, spec.subtitle)),
         h("div", { class: "panel-actions" }, spec.simulated ? badge("MOCK", "neutral") : null, exportBtn("svg", "download"), exportBtn("png", "image"))),
@@ -198,8 +198,10 @@ export async function mount(el, shell) {
 
   // ---- sections
   function sectionHead(sec) {
-    return h("div", { class: "res-qhead" }, h("span", { class: "res-code" }, sec.code), h("h2", {}, sec.question),
-      sec.descriptive ? badge("Descriptive", "neutral") : badge("Confirmatory H2 + descriptive", "accent"));
+    // words first, the code after them (docs/DECISIONS.md, «Plain words»)
+    return h("div", { class: "res-qhead" }, h("h2", {}, sec.question),
+      h("span", { class: "res-chip mono", title: meaningOf(sec.code) || null }, sec.code),
+      sec.descriptive ? badge("Descriptive", "neutral") : badge(`Confirmatory: ${withCode("H2")} + descriptive`, "accent"));
   }
 
   function sectionBody(sec) {
@@ -470,8 +472,7 @@ export async function mount(el, shell) {
       h("span", { class: "small muted" }, "· hover for the full meaning"));
   }
 
-  const TAB_LABEL = { rq1: "RQ1 · Nothing in view", rq2: "RQ2 · Rule or repos", rq3: "RQ3 · What CI does",
-    rq4: "RQ4 · AI reviewer", rq5: "RQ5 · Ticket wording" };
+  const TAB_LABEL = Object.fromEntries(["rq1", "rq2", "rq3", "rq4", "rq5"].map((id) => [id, withCode(id.toUpperCase())]));
 
   function draw() {
     const d = S.data;

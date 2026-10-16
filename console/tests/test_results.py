@@ -212,7 +212,7 @@ class Blinding(unittest.TestCase):
             self.assertEqual(rq["sections"]["rq1"]["status"], "ok")
             for sec in rq["sections"].values():
                 for c in sec["charts"]:
-                    self.assertIn(", P1,", c["source"])
+                    self.assertIn(", Main test (P1),", c["source"])
                     self.assertNotIn("P2", c["source"])
                     self.assertNotIn("P4", c["source"])
             self.assertIn("P2", rq["sections"]["rq3"]["blinded_stages"])
@@ -239,24 +239,25 @@ class Numbers(unittest.TestCase):
 
     def test_rq1_x_of_n_with_clopper_pearson(self):
         rows = {(r["label"], r["sub"]): r for r in self.chart("rq1", "rq1.break")["rows"]}
-        a = rows[("X-rename", "V0·S0")]
+        a = rows[("Rename two fields", "X-rename")]   # words first, the code after (labels.js via console/core/labels.py)
         self.assertEqual((a["x"], a["n"]), (7, 10))
         lo, hi = stats.clopper_pearson(7, 10)
         self.assertAlmostEqual(a["ci"][0], lo, places=3)
         self.assertAlmostEqual(a["ci"][1], hi, places=3)
-        self.assertEqual(a["group"], "P1 · Claude Code + Sonnet")
-        self.assertEqual((rows[("X-remove", "V0·S0")]["x"], rows[("X-remove", "V0·S0")]["n"]), (10, 10))
+        self.assertEqual(a["group"], "Main test (P1) · Claude Code + Sonnet")
+        self.assertEqual((rows[("Remove a field", "X-remove")]["x"], rows[("Remove a field", "X-remove")]["n"]), (10, 10))
         self.assertEqual(len(rows), 2)  # only V0·S0 cells (the contaminated and infra runs are not in N)
 
     def test_three_boxes_add_up(self):
         c = self.chart("rq1", "rq1.boxes")
         self.assertEqual([s["key"] for s in c["series"]], ["done_safe", "done_breaks", "deprecated", "not_done"])
-        row = next(r for r in c["rows"] if r["label"] == "X-rename")
+        row = next(r for r in c["rows"] if r["sub"] == "X-rename")
         vals = {s["key"]: s["value"] for s in row["segments"]}
         self.assertEqual((vals["done_safe"], vals["done_breaks"], vals["not_done"]), (3, 7, 0))
         self.assertTrue(all(sum(s["value"] for s in r["segments"]) == r["n"] for r in c["rows"]))
         box2 = self.chart("rq2", "rq2.boxes")
-        rm = next(r for r in box2["rows"] if r["label"] == "X-remove" and r["sub"] == "V0·S2")
+        rm = next(r for r in box2["rows"] if r["group"].endswith("Remove a field (X-remove)") and r["sub"] == "V0·S2")
+        self.assertEqual(rm["label"], "Own repo · Rule in the spec")
         self.assertEqual({s["key"]: s["value"] for s in rm["segments"]}["deprecated"], 5)
 
     def test_p_values_only_on_pre_registered_tests(self):
@@ -292,17 +293,20 @@ class Numbers(unittest.TestCase):
 
     def test_rq2_descriptive_has_reference_and_contrast_cells(self):
         rows = self.chart("rq2", "rq2.break")["rows"]
-        subs = {(r["label"], r["sub"]) for r in rows}
+        subs = {(r["group"].rsplit("(", 1)[-1].rstrip(")"), r["sub"]) for r in rows}
         self.assertIn(("X-rename", "V0·S0"), subs)
         self.assertIn(("X-rename", "V0·S2"), subs)
         self.assertNotIn(("X-rename", "V1·S0"), subs)
+        r = next(r for r in rows if r["sub"] == "V0·S2")
+        self.assertEqual(r["label"], "Own repo · Rule in the spec")
 
     def test_rq3_outcomes_and_v1(self):
         out = self.chart("rq3", "rq3.outcomes")
         self.assertTrue(all(sum(s["value"] for s in r["segments"]) == r["n"] for r in out["rows"]))
         gate = {(r["group"], r["label"], r["sub"]): r for r in self.chart("rq3", "rq3.gate")["rows"]}
-        self.assertEqual(gate[("P1 · Claude Code + Sonnet", "X-rename", "V0·S0")]["x"], 2)
-        self.assertEqual(gate[("P2 · Claude Code + Sonnet", "X-remove", "V1·S0")]["x"], 2)
+        self.assertEqual(gate[("Main test (P1) · Claude Code + Sonnet · Rename two fields (X-rename)", "Own repo · No rule", "V0·S0")]["x"], 2)
+        self.assertEqual(gate[("Pressure test (P2) · Claude Code + Sonnet · Remove a field (X-remove)",
+                               "Contracts inside the repo · No rule", "V1·S0")]["x"], 2)
         v1 = self.chart("rq3", "rq3.v1")
         self.assertIn("V1", " ".join(r["group"] for r in v1["rows"]))
         self.assertEqual(self.rq["sections"]["rq3"]["tables"][0]["id"], "rq3.coding")
@@ -313,12 +317,12 @@ class Numbers(unittest.TestCase):
 
     def test_source_note(self):
         c = self.chart("rq1", "rq1.break")
-        self.assertEqual(c["source"], "Source: Agents vs. Gates, P1, Claude Code + Sonnet claude-sonnet-x, N=20, 12 Oct 2026")
+        self.assertEqual(c["source"], "Source: Agents vs. Gates, Main test (P1), Claude Code + Sonnet claude-sonnet-x, N=20, 12 Oct 2026")
         self.assertEqual(c["n_runs"], 20)
         self.assertFalse(c["simulated"])
         self.assertIsNone(c["banner"])
         both = self.chart("rq3", "rq3.gate")["source"]
-        self.assertIn("P1, P2", both)
+        self.assertIn("Main test (P1), Pressure test (P2)", both)
 
     def test_excluded_and_infra(self):
         ex = get(self.fx, "/api/results/excluded?ns=real")
@@ -343,8 +347,9 @@ class Numbers(unittest.TestCase):
         r = get(self.fx, "/api/results/reviewer?ns=real")["section"]
         self.assertEqual(r["status"], "ok")
         acc = next(c for c in r["charts"] if c["id"] == "rq4.accuracy")
-        rows = {(x["group"][:4], x["label"]): x for x in acc["rows"]}
-        sens = rows[("R-C ", "Sensitivity")]
+        rows = {(x["group"].rsplit("(", 1)[-1].rstrip(")"), x["label"]): x for x in acc["rows"]}
+        self.assertTrue({x["group"] for x in acc["rows"]} >= {"Reviewer: no rule (R-S0)", "Reviewer: rule and contracts (R-C)"})
+        sens = rows[("R-C", "Sensitivity")]
         self.assertEqual((sens["x"], sens["n"]), (3, 3))
         spec = rows[("R-S0", "Specificity")]
         self.assertEqual((spec["x"], spec["n"]), (0, 1))
@@ -352,10 +357,11 @@ class Numbers(unittest.TestCase):
         self.assertTrue(all(sum(s["value"] for s in x["segments"]) == x["n"] for x in miss["rows"]))
         self.assertTrue(any(x["n"] == 3 for x in miss["rows"]))
         cost = r["tables"][0]
-        self.assertEqual({x["condition"][:4] for x in cost["rows"]}, {"R-S0", "R-S2", "R-C "})
+        self.assertEqual({x["condition"] for x in cost["rows"]},
+                         {"Reviewer: no rule (R-S0)", "Reviewer: rule in the spec (R-S2)", "Reviewer: rule and contracts (R-C)"})
         self.assertIn("ci_mean_duration_ms", cost["footer"])
         self.assertIn("semantic: 10", r["note"])
-        self.assertIn("Source: Agents vs. Gates, P1,", miss["source"])
+        self.assertIn("Source: Agents vs. Gates, Main test (P1),", miss["source"])
 
 
 class MockWatermark(unittest.TestCase):
@@ -409,7 +415,7 @@ class ServerExport(unittest.TestCase):
             self.assertIn("data:font/woff2;base64,", app.text)  # IBM Plex Sans embedded for the PNG path
             self.assertNotIn("MOCK", app.text)
             self.assertIn("7 of 10", app.text)
-            self.assertRegex(app.text, r'<text x="96" y="1034"[^>]*>Source: Agents vs\. Gates, P1, Claude Code \+ Sonnet claude-sonnet-x, N=20, 12 Oct 2026</text>')
+            self.assertRegex(app.text, r'<text x="96" y="1034"[^>]*>Source: Agents vs\. Gates, Main test \(P1\), Claude Code \+ Sonnet claude-sonnet-x, N=20, 12 Oct 2026</text>')
             self.assertIn("rq1-break_app.svg", app.header("Content-Disposition"))
 
     def test_listing_and_errors(self):
@@ -478,7 +484,7 @@ class Rq5AndCsp(unittest.TestCase):
             rq = get(fx, "/api/results/rq?ns=real")
             self.assertEqual(rq["order"][-1], "rq5")
             rows = rq["sections"]["rq5"]["charts"][0]["rows"]
-            self.assertEqual([(r["label"], r["sub"], r["x"], r["n"]) for r in rows], [("W1", "P1", 4, 5), ("W2", "P5", 1, 5)])
+            self.assertEqual([(r["label"], r["sub"], r["x"], r["n"]) for r in rows], [("Ticket as written", "W1 · P1", 4, 5), ("Ticket asks not to break consumers", "W2 · P5", 1, 5)])
 
     def test_rq5_blinded_when_p5_is_not_unblinded(self):
         with fx_for() as fx:

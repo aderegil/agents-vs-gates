@@ -194,3 +194,14 @@ test("text is escaped", () => {
   assert.ok(!svg.includes("<b>"));
   assert.ok(svg.includes("&lt;b&gt;&amp;&quot;x&quot;"));
 });
+
+test("plain-word row labels fit beside their code at the console width (680) and on the slide", () => {
+  const rows = [
+    ["Every repo visible · No rule", "V2·S0"], ["Own repo · Rule in the spec", "V0·S2"],
+    ["Contracts inside the repo · No rule", "V1·S0"], ["Ticket asks not to break consumers", "W2 · P5"],
+  ].map(([label, sub], i) => ({ group: "Main test (P1) · Claude Code + Sonnet · Rename two fields (X-rename)", label, sub, x: i, n: 10, ci: [0, 0.5] }));
+  const spec = interval({ rows });
+  for (const svg of [renderChart(spec, { width: 680 }), renderSlide(spec)]) {
+    for (const [label] of rows.map((r) => [r.label])) assert.ok(svg.includes(`>${label}</text>`), `not truncated: ${label}`);
+  }
+});
