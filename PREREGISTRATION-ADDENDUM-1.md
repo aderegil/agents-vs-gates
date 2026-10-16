@@ -1,8 +1,9 @@
 # Pre-registration addendum 1 — P7 (more runs on the P1 cells) and P8 (a third unit, `agy-flash`)
 
-> Status: **DRAFT, not frozen.** Written 2026-10-15/16 on branch `ext-1016`, before any P7, P8 or C8 run.
+> Status: **final text for freezing** (the freeze is proven by `PREREGISTRATION-ADDENDUM-1.lock`, not by this line). Written 2026-10-15/16 on branch `ext-1016`, before any P7, P8 or C8 run.
 > It is frozen by Alfredo (🔒) with `.venv\Scripts\python.exe -X utf8 -m harness.prereg --freeze-addendum 1`, after
-> the agy smoke test, the C8 calibration and his decision on P8's N (§2). The command writes
+> the agy smoke test (passed 2026-10-16) and before C8: P8's N is fixed here (§2); C8 only decides whether P8
+> starts. The command writes
 > `PREREGISTRATION-ADDENDUM-1.lock` with the UTC time, the SHA-256 of this file and of the files P7 and P8 add
 > (`harness/units-ext.json`, `harness/adapters/agy.py`, `results/real/manifest-ext1.json`), and the hashes of the
 > original lock it extends. The runner starts P7 or P8 only if **both** locks verify.
@@ -27,8 +28,8 @@
 |---|---|---|---|---|
 | C8 calibration (exploratory; not analysed; exempt from both locks) | `agy-flash` | X-rename V0·S0 ×3, V0·S2 ×2 (base text, as P0) | — | 5 |
 | **P7** (extension of P1) | `cc-sonnet` | the 6 P1 cells: {X-rename, X-remove} × {V0·S0, V0·S2, V2·S0} | 40 | 240 |
-| **P7** | `codex` | {X-rename, X-remove} × {V0·S0, V0·S2} | 40 | 160 |
-| **P8** (third unit) | `agy-flash` | the 6 P1 cells | 20 *(Alfredo sets N after C8: 20, fewer, or no P8)* | 120 |
+| **P7** | `codex` | the same 6 cells (V2·S0 added by Alfredo on 2026-10-16, before the freeze) | 40 | 240 |
+| **P8** (third unit) | `agy-flash` | the 6 P1 cells | 20 (fixed by Alfredo on 2026-10-16, before C8) | 120 |
 
 - **Same as P1 and P6:** ticket texts and paraphrases, context texts (S0/S1/S2), scenario (hash `b02008da…`,
   recorded per run), limits (gen 30 turns / 600 s; each repair 15 turns / 360 s; at most 3 repairs), CI feedback text,
@@ -37,10 +38,13 @@
 - **Manifest:** generated once with the new seed **20261016** into the sidecar `results/real/manifest-ext1.json`
   (`python -m harness.manifest --ext1-sidecar --with-p7 --with-p8 [--p8-n N]`), block-randomized by rounds like the
   original (round r holds one replicate of every cell of the stage, shuffled with
-  `random.Random(f"20261016:{stage}:{r}")`; the units of P7 share the rounds). Run ids `p7-0001..0400`,
-  `p8-0001..0120`, `c8-0001..0005`. The frozen `manifest.json` is not touched. The runner runs one unit at a time
-  (`--unit`), in this order: P7 `cc-sonnet`, P7 `codex`, P8 `agy-flash`. They may run in parallel only on different
-  worker folders and within each account's limits.
+  `random.Random(f"20261016:{stage}:{r}")`; the units of P7 share the rounds). Run ids `p7-0001..0480`,
+  `p8-0001..0120`, `c8-0001..0005`. The frozen `manifest.json` is not touched. The runner runs one unit per process
+  (`--unit`). P7 `cc-sonnet`, P7 `codex` and C8 may run at the same time (different accounts, different worker
+  folders); P8 starts after C8, once Alfredo authorizes it.
+- **What C8 decides.** Only whether P8 starts (the CLI works over 5 sessions and the quota readout makes 120 runs
+  before the deadline plausible). It does not change N, cells or analysis. If Alfredo does not start P8, P8 is reported
+  as not run, with the reason.
 - **V0·S0 is the concurrent control.** It already gave 10 of 10 in P1; it is repeated so that a change in the model
   or the CLI since 12 Oct (Claude Code 2.1.296, codex-cli 0.162.1) shows up in the same rounds. Every run records
   `cli_version` and `model_reported`. A change is a **declared deviation** (the runner notes it in
@@ -49,6 +53,10 @@
   are). An infrastructure failure is re-queued with the same id, at most twice, then `infra_failure_final` (original
   §5), as in P6. A rate limit pauses the runner (exit 3) and is resumed later; it is never a reason to stop. There is
   no stop for results. If quota or time runs out, the stage stops after k complete rounds and is reported with k.
+- **P8 quota stop (declared before any P8 run).** If the Google AI Pro quota is exhausted and P8 cannot be completed by
+  **23 Oct 2026, 23:59 Monterrey time**, P8 ends at the last complete round k (each of the 6 cells has k runs) and is
+  reported as "stopped by quota after k of 20 rounds", a deviation caused by quota, not by results. Runs of the
+  incomplete round are listed but not analysed. Nothing is unblinded to make this decision.
 - **Deadline:** P7 and P8 run, unblinded and summarized **by 24 Oct 2026** (the talk is on 27 Oct).
 
 ## 3. Analysis plan (written before any run)
@@ -57,9 +65,10 @@
      X-remove), **Holm over the 2 tickets within each unit**: P7 for `cc-sonnet`, P7 for `codex`, P8 for
      `agy-flash`. Three separate families; no correction across units.
    - **HS-V2** (secondary): V2·S0 vs V0·S0, two-sided Fisher per ticket, **uncorrected**, labelled secondary, as in
-     the original §7: P7 `cc-sonnet` and P8 `agy-flash` (`codex` has no V2·S0 cell in P7).
+     the original §7, for each unit: P7 `cc-sonnet`, P7 `codex` and P8 `agy-flash`. It stays outside the Holm families.
 2. **Descriptive:** P1 + P7 combined for `cc-sonnet`, and P6 (P1 part) + P7 for `codex`: N = 50 per cell, 100 per
-   condition (both tickets). **Counts and 95 % Clopper-Pearson intervals only. No p-values on combined data.**
+   condition (both tickets). P6 had no V2·S0 cell for `codex`, so its V2·S0 figures are P7 only (N = 40 per cell, 80
+   per condition). **Counts and 95 % Clopper-Pearson intervals only. No p-values on combined data.**
    Percentages are allowed only with N ≥ 20 (original §7).
 3. **Units are never compared with each other** (no test, no ranking, no "better/worse"; §5).
 4. Everything else as in the original §5–§7: three boxes (done & safe / done & breaks / not done), CI↔oracle with the
@@ -70,8 +79,9 @@
    without the rule / seeing every repo / rule in the spec; CI caught X of Y breaks; final PR that breaks; gate edits.
 
 ## 4. Parity: how `agy-flash` differs from the other units (declared)
-`agy-flash` = Antigravity CLI (`agy`) 1.3.6 + `gemini-3.8-flash-medium`, signed in with Alfredo's Google account
-(Google AI Pro since 15 Oct; no API key). Adapter: `harness/adapters/agy.py`; smoke: `harness/smoke_agy.py`.
+`agy-flash` = Antigravity CLI (`agy`) + `gemini-3.8-flash-medium`, signed in with Alfredo's Google account
+(Google AI Pro since 15 Oct; no API key). The CLI updated itself from 1.3.6 to 1.4.0 during the smoke on 2026-10-16;
+every run records `cli_version`, and a later change is a declared deviation (as in §2), not a stop. Adapter: `harness/adapters/agy.py`; smoke: `harness/smoke_agy.py`.
 1. **Memory between runs (main risk).** agy keeps memory in `~\.gemini\antigravity-cli\` (`brain\`, `conversations\`,
    `annotations\`, `knowledge\`, `implicit\`, `conversation_summaries.db`, `history.jsonl`, summaries). Each run gets
    its own HOME (`USERPROFILE`/`HOME` = the worker's cfg folder, wiped at every run), seeded only with a copy of the
@@ -85,11 +95,13 @@
    smoke records whether agy also reads a workspace `AGENTS.md` (informational).
 3. **Turn cap.** agy has no `--max-turns`. Its cap is the wall clock only, through `--print-timeout` with the same
    seconds as the other units (600 / 360), plus 45 s of grace for the process watchdog; sessions record
-   `turn_cap: "wall-clock-only"`. (Claude Code: `--max-turns` 30 / 15; Codex: counted by the adapter.)
+   `turn_cap: "wall-clock-only"`. At the limit agy ends with status `SUCCESS` and a tool step still open (smoke); the
+   adapter counts that, or a result within 2 s of the limit, as capped by the wall clock. (Claude Code: `--max-turns` 30 / 15; Codex: counted by the adapter.)
 4. **Permissions and sandbox.** `--dangerously-skip-permissions` (print mode has nobody to ask) and `--sandbox`
    (terminal restrictions). There is no command allowlist like Claude Code's and no exec policy like Codex's, so
    `node`, `curl` or `git commit` are not blocked by a list, and the sandbox can let the agent ask for a bypass that
-   skip-permissions approves. Reads and writes outside the workspace are detected (`out_of_workspace_access`) and
+   skip-permissions approves. The smoke showed that `--sandbox` does **not** stop the file tools: `write_to_file` and
+   `view_file` worked outside the workspace. Reads and writes outside the workspace are detected (`out_of_workspace_access`) and
    reported descriptively, as for the other units (original §5); canary hits exclude the run, as for every unit.
 5. **Tools.** Web search/fetch and subagents cannot be switched off from the CLI; their use is recorded per session
    (`isolation.web_calls`, `isolation.subagent_calls`), not stopped. An MCP tool call is an isolation breach (as with
@@ -104,9 +116,10 @@
 10. **Quota.** Google AI Pro renews every 5 hours, with a weekly cap Google does not publish. A quota error pauses the
     runner (`rate_limited`), never counts as an agent result. `GEMINI_*`, `GOOGLE_*` and `AGY_*` variables are removed
     from agy's environment, so no API key or ADC can be used by accident.
-11. **Stream format.** Only the final `result` event was known before the smoke; the other event names are matched
-    loosely. The smoke saves the raw stream (`results/smoke-agy-stream.jsonl`); if the schema differs, the parser is
-    fixed **before** this addendum is frozen, and the adapter file is in the addendum lock.
+11. **Stream format.** Learned from the smoke (2026-10-16, three tries; raw streams kept): every line is
+    `{"event": X, X: {...}}` with `init`, `step_update` (step types `user_input`, `agent_response` with `text_delta`,
+    `tool` with `tool_info {name, parameters, output}`, `system_message`) and `result`. The parser was fixed between
+    tries, **before** this addendum is frozen, and the adapter file is in the addendum lock.
 12. **Paraphrases** were written by Codex (original §9); `agy-flash` is a third-party reader of them.
 - *Idea, out of scope:* agy also offers `claude-sonnet-5-5-medium`; running the same model through another tool would
   separate the tool's effect from the model's. Noted in `docs/DECISIONS.md`, not run.
@@ -119,5 +132,6 @@
 - Anything about the C8 calibration runs as results.
 
 ## 6. Freeze record
-Frozen on **[FILL by `harness.prereg --freeze-addendum 1`]**, addendum lock hash **[FILL]**, P8 N per cell
-**[FILL after C8]**, by Alfredo De Regil.
+P8 N per cell: **20** (fixed by Alfredo on 2026-10-16, before C8). Frozen by Alfredo De Regil with
+`harness.prereg --freeze-addendum 1`; the UTC time and the hashes are in `PREREGISTRATION-ADDENDUM-1.lock` (a file
+cannot hold its own hash).

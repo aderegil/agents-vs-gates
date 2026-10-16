@@ -83,6 +83,24 @@ class RunnerTest(unittest.TestCase):
                          self.scripts(**{first: {"gen": "X-rename/breaking", "infra": "isolation_breach"}}))
         self.assertEqual(code, 4)
 
+    def test_2b_mixed_units_rate_limit_pauses_only_that_unit(self):
+        manifest.write_ext1("mock", force=True)
+        try:
+            p7 = [r for r in manifest.load("mock")["runs"] if r["stage"] == "P7"]
+            cx = next(r["run_id"] for r in p7 if r["unit"] == "mock-cx")
+            code, out, _ = run(["--stage", "P7", "--ns", "mock", "--batch", "4"], self.fs,
+                               {r["run_id"]: BREAK_FIX for r in p7} | {cx: {"gen": "X-rename/breaking",
+                                                                            "infra": "rate_limited"}})
+            self.assertEqual(code, 3)
+            st = jsonio.read_json(paths.state_path("mock"))
+            self.assertTrue(all(st["runs"][r["run_id"]]["status"] == "pending" for r in p7 if r["unit"] == "mock-cx"))
+            self.assertEqual(sum(st["runs"][r["run_id"]]["status"] == "done" for r in p7), 3)
+            self.assertIn("mock-cx until", st["runner"]["message"])
+            ev = [e for e in jsonio.read_jsonl(paths.runner_log_path("mock")) if e["event"] == "rate_limited"]
+            self.assertEqual((ev[-1]["unit"], ev[-1]["others_continue"]), ("mock-cx", True))
+        finally:
+            manifest.ext1_path("mock").unlink(missing_ok=True)
+
     @SLOW
     def test_3_infra_requeue_then_final(self):
         bad = self.ids["P0"][0]

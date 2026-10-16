@@ -42,8 +42,13 @@ def main():
                                 "home": os.environ.get("HOME"), "env_keys": sorted(os.environ)}) + "\n")
     prompt = arg("-p") or ""
     if prompt == "/usage":
-        out({"quotas": [{"model": "gemini-3.8-flash", "remainingFraction": float(os.environ.get("FAKE_AGY_QUOTA", "0.93")),
-                         "resetTime": "2026-10-16T05:00:00Z"}]})
+        q = float(os.environ.get("FAKE_AGY_QUOTA", "0.93"))      # live shape (smoke 2026-10-16)
+        out({"conversation_id": "", "status": "SUCCESS", "response": "Gemini Models\tFive Hour Limit Remaining\t93%\n",
+             "command": {"name": "usage", "data": {"groups": [{"name": "Gemini Models", "buckets": [
+                 {"id": "gemini-weekly", "window": "weekly", "remaining_fraction": q,
+                  "reset_time": "2026-10-23T10:08:37Z"},
+                 {"id": "gemini-5h", "window": "5h", "remaining_fraction": q,
+                  "reset_time": "2026-10-16T15:08:37Z"}]}]}}})
         return 0
     resume = arg("--conversation")
     if resume and not (cli / "conversations" / f"{resume}.pb").exists():

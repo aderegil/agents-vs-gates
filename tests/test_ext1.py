@@ -18,22 +18,21 @@ class Ext1Generation(unittest.TestCase):
         m = manifest.generate_ext1()
         self.assertEqual(manifest.validate(m), [])
         self.assertEqual(m["seed"], 20261016)
-        self.assertEqual(m["stage_counts"], {"P7": 400, "P8": 120})
-        self.assertEqual(m["units"], {"P7": {"cc-sonnet": 240, "codex": 160}, "P8": {"agy-flash": 120}})
-        for st, n in (("P7", 400), ("P8", 120)):
+        self.assertEqual(m["stage_counts"], {"P7": 480, "P8": 120})
+        self.assertEqual(m["units"], {"P7": {"cc-sonnet": 240, "codex": 240}, "P8": {"agy-flash": 120}})
+        for st, n in (("P7", 480), ("P8", 120)):
             ids = [r["run_id"] for r in m["runs"] if r["stage"] == st]
             self.assertEqual(ids, [f"p{st[1]}-{i:04d}" for i in range(1, n + 1)])
         cells = Counter(r["cell"] for r in m["runs"])
         p1 = {r["cell"].rsplit("|", 1)[0] for r in manifest.generate()["runs"] if r["stage"] == "P1"}
         self.assertEqual({c.rsplit("|", 1)[0] for c in cells if c.endswith("|cc-sonnet")}, p1)
         self.assertEqual({c.rsplit("|", 1)[0] for c in cells if c.endswith("|agy-flash")}, p1)
-        self.assertEqual({c.rsplit("|", 1)[0] for c in cells if c.endswith("|codex")},
-                         {c for c in p1 if "|V0|" in c})
+        self.assertEqual({c.rsplit("|", 1)[0] for c in cells if c.endswith("|codex")}, p1)
         self.assertTrue(all(cells[c] == (40 if not c.endswith("agy-flash") else 20) for c in cells))
 
     def test_rounds_and_paraphrase_slots(self):
         m = manifest.generate_ext1()
-        for st, n_cells, reps in (("P7", 10, 40), ("P8", 6, 20)):
+        for st, n_cells, reps in (("P7", 12, 40), ("P8", 6, 20)):
             by_round = defaultdict(list)
             for r in m["runs"]:
                 if r["stage"] == st:
@@ -56,8 +55,8 @@ class Ext1Generation(unittest.TestCase):
 
     def test_mock_units_are_distinct(self):
         m = manifest.generate_ext1(ns="mock")
-        self.assertEqual(m["units"], {"P7": {"mock": 240, "mock-cx": 160}, "P8": {"mock-agy": 120}})
-        self.assertEqual(len({r["cell"] for r in m["runs"] if r["stage"] == "P7"}), 10)
+        self.assertEqual(m["units"], {"P7": {"mock": 240, "mock-cx": 240}, "P8": {"mock-agy": 120}})
+        self.assertEqual(len({r["cell"] for r in m["runs"] if r["stage"] == "P7"}), 12)
 
     def test_calibration_c8(self):
         runs = manifest.calibration_runs("real")
@@ -103,8 +102,8 @@ class Ext1Sidecar(TempResults):
         self.assertEqual(manifest.sha256(paths.manifest_path("mock")), before)
         loaded = manifest.load("mock")
         st = Counter(r["stage"] for r in loaded["runs"])
-        self.assertEqual((st["P7"], st["P8"], st["C8"]), (400, 120, 5))
-        self.assertEqual(loaded["ext1_sidecar"]["runs"], 520)
+        self.assertEqual((st["P7"], st["P8"], st["C8"]), (480, 120, 5))
+        self.assertEqual(loaded["ext1_sidecar"]["runs"], 600)
         with self.assertRaisesRegex(RuntimeError, "pass --force"):
             manifest.write_ext1("mock")
         manifest.write_ext1("mock", p8_n=10, force=True)
@@ -117,7 +116,7 @@ class Ext1Sidecar(TempResults):
         buf = io.StringIO()
         with redirect_stdout(buf):
             self.assertEqual(manifest.main(["--ext1-sidecar", "--with-p7", "--print"]), 0)
-        self.assertEqual(json.loads(buf.getvalue())["stage_counts"], {"P7": 400})
+        self.assertEqual(json.loads(buf.getvalue())["stage_counts"], {"P7": 480})
         with redirect_stderr(io.StringIO()):
             self.assertEqual(manifest.main(["--ext1-sidecar"]), 2)
 
@@ -143,7 +142,7 @@ class RunnerExt1(TempResults):
         self.assertIn("pass --unit", err)
         code, out, _ = self.run_cli("--stage", "P7", "--unit", "codex", "--dry-run")
         self.assertEqual(code, 0)
-        self.assertIn("160 run(s) would run", out)
+        self.assertIn("240 run(s) would run", out)
         code, out, _ = self.run_cli("--stage", "P8", "--dry-run")
         self.assertIn("120 run(s) would run", out)
         code, out, _ = self.run_cli("--stage", "C8", "--dry-run")

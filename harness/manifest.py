@@ -45,7 +45,7 @@ Ids x2-0001..0010; in the mock namespace x2-* with unit mock. It decides H2_TICK
 Addendum 1 (PREREGISTRATION-ADDENDUM-1.md; branch ext-1016, 2026-10-15). The frozen manifest.json is never touched:
   P7  extension of P1, same cells and scenario, new seed EXT1_SEED; N = 40 new runs per cell:
         cc-sonnet: {X-rename, X-remove} × {V0·S0, V0·S2, V2·S0} × 40 = 240
-        codex:     {X-rename, X-remove} × {V0·S0, V0·S2} × 40          = 160
+        codex:     the same 6 cells × 40                               = 240 (V2·S0 added 2026-10-16, Alfredo)
   P8  third unit agy-flash (Antigravity CLI + Gemini 3.8 Flash): the 6 P1 cells × P8_N (default 20; Alfredo sets it
       after the C8 calibration) = 120
   Both live in the sidecar results/<ns>/manifest-ext1.json (`--ext1-sidecar [--with-p7] [--with-p8] [--p8-n N]`),
@@ -322,12 +322,12 @@ def _ext_unit(unit: str, ns: str) -> str:
 
 
 def ext_cells(stage: str, p8_n: int = P8_N, h2: tuple | None = None) -> list[dict]:
-    """P7: cc-sonnet on the 6 P1 cells and codex on the 4 V0 cells of P1, N = 40 each. P8: agy-flash on the 6 P1
+    """P7: cc-sonnet and codex on the 6 P1 cells, N = 40 each. P8: agy-flash on the 6 P1
     cells, N = p8_n. C8: agy-flash on the P0 cells."""
     p1 = stage_cells("P1", h2)
     if stage == "P7":
         return ([dict(c, n=P7_N, unit="cc-sonnet") for c in p1]
-                + [dict(c, n=P7_N, unit="codex") for c in p1 if c["visibility"] == "V0"])
+                + [dict(c, n=P7_N, unit="codex") for c in p1])
     if stage == "P8":
         return [dict(c, n=p8_n, unit="agy-flash") for c in p1] if p8_n > 0 else []
     if stage == "C8":
@@ -440,7 +440,7 @@ def main(argv=None) -> int:
                          "counts only)")
     ap.add_argument("--ext1-sidecar", action="store_true",
                     help=f"write results/<ns>/{EXT1_NAME}: the addendum-1 runs (P7 and/or P8; with --print: counts only)")
-    ap.add_argument("--with-p7", action="store_true", help="with --ext1-sidecar: include P7 (cc-sonnet 240 + codex 160)")
+    ap.add_argument("--with-p7", action="store_true", help="with --ext1-sidecar: include P7 (cc-sonnet 240 + codex 240)")
     ap.add_argument("--with-p8", action="store_true", help="with --ext1-sidecar: include P8 (agy-flash, 6 cells × --p8-n)")
     ap.add_argument("--p8-n", type=int, default=P8_N, help=f"runs per P8 cell (default {P8_N}; Alfredo's call after C8)")
     a = ap.parse_args(argv)

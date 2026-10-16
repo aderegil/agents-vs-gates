@@ -207,6 +207,8 @@ class Batch:
         self.exit_code = EXIT_OK
         self.lock = threading.Lock()
         self.alive = True
+        self.units = {r["unit"] for r in runs}
+        self.paused_units: dict[str, str | None] = {}     # mixed batch: unit -> rate-limit reset (its runs left pending)
 
     # -- queue
     def _stop_requested(self) -> bool:
@@ -358,8 +360,22 @@ class Batch:
                 r["status"] = "pending"                        # quota, not a fault: no retry counted
                 until = infra.get("reset_at")
                 st.data["runner"]["rate_limited_until"] = until
-                self.stop(f"rate limited until {until or 'unknown'}", EXIT_RATE)
-                log(self.ns, "rate_limited", run_id=rid, until=until)
+                unit = entry.get("unit")
+                if len(self.units) > 1:                        # mixed batch: pause only this unit's queue
+                    with self.lock:
+                        self.paused_units[unit] = until
+                        self.queue = [e for e in self.queue if e.get("unit") != unit]
+                        rest = bool(self.queue)
+                        if not self.exit_code:
+                            self.exit_code = EXIT_RATE
+                    st.data["runner"]["message"] = "rate limited: " + ", ".join(
+                        f"{u} until {t or 'unknown'}" for u, t in sorted(self.paused_units.items()))
+                    log(self.ns, "rate_limited", run_id=rid, until=until, unit=unit, others_continue=rest)
+                    if not rest:
+                        self.stop(st.data["runner"]["message"], EXIT_RATE)
+                else:
+                    self.stop(f"rate limited until {until or 'unknown'}", EXIT_RATE)
+                    log(self.ns, "rate_limited", run_id=rid, until=until)
             elif kind == "isolation_breach":
                 r["status"] = "pending"                        # not re-queued: the batch stops (spec 10.6)
                 self.stop(f"isolation breach in {rid}: {infra.get('detail', '')}", EXIT_BREACH)
@@ -587,11 +603,12 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
             print("--part applies only to --stage P6 (the P1, P2 or P4 part of the Codex replication)", file=sys.stderr)
             return EXIT_GUARD
         runs = [r for r in runs if r.get("part") == a.part]
-    if ns == "real" and a.unit:
-        runs = [r for r in runs if r["unit"] == a.unit]
+    if ns == "real" and a.unit:                          # one unit, or several separated by commas (mixed rounds)
+        wanted = {u.strip() for u in a.unit.split(",") if u.strip()}
+        runs = [r for r in runs if r["unit"] in wanted]
     elif ns == "real" and stage in MULTI_UNIT and len({r["unit"] for r in runs}) > 1:
         print(f"{stage} has runs for several units ({', '.join(sorted({r['unit'] for r in runs}))}); pass --unit "
-              "(they run one after the other, not mixed)", file=sys.stderr)
+              "(one unit, or several separated by commas to mix them in the same rounds)", file=sys.stderr)
         return EXIT_GUARD
     todo = [r for r in runs if st.run(r["run_id"]).get("status", "pending") in ("pending", "infra_failure")]
     limit = min(x for x in (a.batch, a.max_runs) if x is not None) if (a.batch or a.max_runs) else None

@@ -17,6 +17,15 @@ def rec(rid, cell, minutes, inp, out, think, cache, outcome="passed_first_ci"):
                           "usage_extra": {"thinking_tokens": think, "total_tokens": inp + out}}]}
 
 
+def usage(five_h, weekly):
+    """A `/usage` readout in the live shape (smoke 2026-10-16)."""
+    return {"ok": True, "data": {"command": {"name": "usage", "data": {"groups": [
+        {"name": "Gemini Models", "buckets": [
+            {"id": "gemini-weekly", "window": "weekly", "remaining_fraction": weekly},
+            {"id": "gemini-5h", "window": "5h", "remaining_fraction": five_h}]},
+        {"name": "Claude and GPT models", "buckets": [{"id": "3p-5h", "window": "5h", "remaining_fraction": 1}]}]}}}}
+
+
 class CalibReport(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="avg-calib-"))
@@ -30,8 +39,8 @@ class CalibReport(unittest.TestCase):
             jsonio.write_json_atomic(paths.run_dir("real", r["run_id"]) / "record.json",
                                      rec(r["run_id"], r["cell"], 4.0, 200_000, 20_000, 8_000, 150_000,
                                          "passed_first_ci" if ok else "infra_failure"))
-        quota = {r["run_id"]: {"before": {"data": {"quotas": [{"remainingFraction": 1.0 - 0.02 * i}]}},
-                               "after": {"data": {"quotas": [{"remainingFraction": 0.98 - 0.02 * i}]}}}
+        quota = {r["run_id"]: {"before": usage(1.0 - 0.02 * i, 1.0 - 0.005 * i),
+                               "after": usage(0.98 - 0.02 * i, 0.995 - 0.005 * i)}
                  for i, r in enumerate(runs)}
         jsonio.write_json_atomic(paths.ns_dir("real") / "calibration-agy.json", {"quota": quota})
 
@@ -46,13 +55,17 @@ class CalibReport(unittest.TestCase):
         self.assertEqual(s["quota"]["windows_needed_120"], 3)
         self.assertEqual(s["quota"]["windows_until_deadline"], 7 * 24 // 5)
         self.assertEqual(s["hours_120"][3], round(4.0 * 120 / 3 / 60, 1))
+        self.assertEqual(s["quota"]["weekly_used_per_run"], 0.005)
+        self.assertEqual(s["quota"]["weekly_needed_120"], 0.6)
+        self.assertAlmostEqual(s["quota"]["weekly_left"], 0.975)
 
     def test_report_is_spanish_and_short(self):
         out = calib_agy.write_report("real")
         text = out.read_text(encoding="utf-8")
         self.assertIn("**4 de 5** corridas terminaron bien", text)
         self.assertIn("alcanza", text)
-        self.assertIn("Decides tú", text)
+        self.assertIn("¿arranca P8?", text)
+        self.assertIn("Tope semanal", text)
         self.assertLess(len(text.splitlines()), 30)
         self.assertIn("summary", jsonio.read_json(paths.ns_dir("real") / "calibration-agy.json"))
 

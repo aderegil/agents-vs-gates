@@ -46,14 +46,31 @@ def _total_reported(rec: dict) -> int:
     return sum(int((s.get("usage_extra") or {}).get("total_tokens") or 0) for s in rec.get("sessions", []))
 
 
-def _quota_used(q: dict) -> float | None:
-    """Fraction of the window a run used, from the first field that looks like a remaining fraction/percent."""
+def gemini_buckets(snap: dict) -> dict:
+    """{"5h": remaining, "weekly": remaining} (fractions) of the "Gemini Models" group of a `/usage` readout (live
+    shape, smoke 2026-10-16: data.command.data.groups[].buckets[] with window and remaining_fraction)."""
+    groups = ((((snap or {}).get("data") or {}).get("command") or {}).get("data") or {}).get("groups") or []
+    out = {}
+    for g in groups:
+        if "gemini models" in str(g.get("name", "")).lower():
+            for b in g.get("buckets") or []:
+                if b.get("window") in ("5h", "weekly") and isinstance(b.get("remaining_fraction"), (int, float)):
+                    out[b["window"]] = float(b["remaining_fraction"])
+    return out
+
+
+def _quota_used(q: dict) -> dict:
+    """{"5h": used, "weekly": used}: fraction of each Gemini window one run used (before - after). Readouts without
+    the live shape fall back to the first remaining-looking field, counted as the 5-hour window."""
+    b, a = gemini_buckets(q.get("before") or {}), gemini_buckets(q.get("after") or {})
+    if b and a:
+        return {w: round(b[w] - a[w], 4) for w in b if w in a}
     b, a = agy.quota_percents(q.get("before") or {}), agy.quota_percents(q.get("after") or {})
     for k in b:
         if k in a and "remaining" in k.lower():
             scale = 100.0 if max(b[k], a[k]) > 1.0 else 1.0
-            return round((b[k] - a[k]) / scale, 4)
-    return None
+            return {"5h": round((b[k] - a[k]) / scale, 4)}
+    return {}
 
 
 def summarize(ns: str = "real", prices: dict | None = None, today: date | None = None) -> dict:
@@ -72,7 +89,8 @@ def summarize(ns: str = "real", prices: dict | None = None, today: date | None =
                      "input": t.get("input_tokens", 0), "output": t.get("output_tokens", 0),
                      "thinking": _thinking(rec), "cache_read": t.get("cache_read_tokens", 0),
                      "total_reported": _total_reported(rec), "sessions": len(rec.get("sessions", [])),
-                     "quota_used": _quota_used(quota.get(rec["run_id"]) or {})})
+                     "quota_used": _quota_used(quota.get(rec["run_id"]) or {}).get("5h"),
+                     "weekly_used": _quota_used(quota.get(rec["run_id"]) or {}).get("weekly")})
     good = [r for r in rows if r["ok"]]
     out = {"runs": len(rows), "ok": len(good), "rows": rows, "deadline": DEADLINE.isoformat()}
     if not good:
@@ -99,7 +117,18 @@ def summarize(ns: str = "real", prices: dict | None = None, today: date | None =
                         "windows_needed_120": -(-120 // max(1, per_window)), "windows_until_deadline": windows_left}
     else:
         out["quota"] = {"used_per_run": None, "windows_until_deadline": windows_left}
+    weekly = [r["weekly_used"] for r in good if r.get("weekly_used") is not None]
+    last = [gemini_buckets((quota.get(r["run_id"]) or {}).get("after") or {}) for r in s_rows_sorted(out)]
+    left = next((x["weekly"] for x in reversed(last) if "weekly" in x), None)
+    if weekly:
+        out["quota"]["weekly_used_per_run"] = round(statistics.mean(weekly), 4)
+        out["quota"]["weekly_needed_120"] = round(statistics.mean(weekly) * 120, 3)
+        out["quota"]["weekly_left"] = left
     return out
+
+
+def s_rows_sorted(s: dict) -> list[dict]:
+    return sorted(s.get("rows") or [], key=lambda r: r["run_id"])
 
 
 def render(s: dict) -> str:
@@ -109,15 +138,16 @@ def render(s: dict) -> str:
     L.append(f"**{s['ok']} de {s['runs']}** corridas terminaron bien (sin falla de infraestructura). "
              "Son calibración: no son resultados.")
     L += ["", "| Corrida | Celda | Resultado | Turnos | Min | Tokens entrada | Salida (incl. thinking) | Thinking | "
-              "Cuota usada |", "|---|---|---|---|---|---|---|---|---|"]
+              "Cuota 5 h | Cuota semanal |", "|---|---|---|---|---|---|---|---|---|---|"]
+    pct = lambda v: "—" if v is None else f"{v * 100:.1f} %"  # noqa: E731
     for r in s["rows"]:
-        q = "—" if r["quota_used"] is None else f"{r['quota_used'] * 100:.1f} %"
         L.append(f"| {r['run_id']} | {r['cell'].split('|')[1]}·{r['cell'].split('|')[2]} | {r['outcome']} | "
-                 f"{r['turns']} | {r['minutes']} | {r['input']:,} | {r['output']:,} | {r['thinking']:,} | {q} |")
+                 f"{r['turns']} | {r['minutes']} | {r['input']:,} | {r['output']:,} | {r['thinking']:,} | "
+                 f"{pct(r['quota_used'])} | {pct(r.get('weekly_used'))} |")
     if not s.get("avg"):
         return "\n".join(L) + "\n"
     a, q = s["avg"], s["quota"]
-    L += ["", "## Para decidir P8", "",
+    L += ["", "## Para decidir si arranca P8 (N = 20 por celda, 120 corridas, ya fijado en el addendum)", "",
           f"- **Tokens por corrida (promedio):** {a['input']:,.0f} de entrada, {a['output']:,.0f} de salida "
           f"(de ellos {a['thinking']:,.0f} de thinking).",
           f"- **Duración:** {a['minutes']} min por corrida con CI y oráculo; 120 corridas ≈ {s['hours_120'][1]} h con "
@@ -128,16 +158,21 @@ def render(s: dict) -> str:
         L.append(f"- **Cuota de Google AI Pro:** cada corrida usó ≈ {q['used_per_run'] * 100:.1f} % de la ventana de "
                  f"{WINDOW_H} h → ≈ {q['runs_per_window']} corridas por ventana; 120 piden ≈ {q['windows_needed_120']} "
                  f"ventanas y quedan ≈ {q['windows_until_deadline']} antes del 23 oct: "
-                 f"**{'alcanza' if fits else 'no alcanza'}**, si el tope semanal (no publicado) no corta antes.")
+                 f"**{'alcanza' if fits else 'no alcanza'}**.")
+    if q.get("weekly_used_per_run") is not None:
+        wl = q.get("weekly_left")
+        wfits = wl is not None and q["weekly_needed_120"] <= wl
+        L.append(f"- **Tope semanal de Gemini** (se renueva el 23 oct): cada corrida usó ≈ "
+                 f"{q['weekly_used_per_run'] * 100:.2f} %; 120 piden ≈ {q['weekly_needed_120'] * 100:.0f} % y quedan "
+                 f"{'—' if wl is None else f'{wl * 100:.0f} %'}: **{'alcanza' if wfits else 'no alcanza'}**"
+                 + ("" if wfits else " (P8 pararía por cuota en la última ronda completa, regla del addendum)") + ".")
     else:
         L.append("- **Cuota de Google AI Pro:** la lectura de `/usage` no dio una cifra comparable; ver "
                  "calibration-agy.json (lecturas crudas).")
     L += [f"- **Referencia con API key** (Flash USD 0.75 / 3.75 por millón): ≈ USD {s['api_cost_per_run_usd']} por "
           f"corrida, ≈ USD {s['api_cost_120_usd']} las 120"
           + ("" if s.get("cache_in_input") else " (tokens de caché cobrados como entrada: cota alta)") + ".",
-          "", "**Decides tú:** P8 a 20 por celda (120), a menos, o no va. Comandos:",
-          "- 20: `python -m harness.manifest --ext1-sidecar --with-p7 --with-p8 --force`",
-          "- N menor: `... --with-p7 --with-p8 --p8-n N --force`;  sin P8: `... --with-p7 --force`"]
+          "", "**Decides tú:** ¿arranca P8? (sí / no). N no cambia: lo fija el addendum."]
     return "\n".join(L) + "\n"
 
 

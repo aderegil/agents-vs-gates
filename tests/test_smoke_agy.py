@@ -54,7 +54,8 @@ class SmokeAgy(unittest.TestCase):
         self.assertTrue(report["ok"])
         names = {c["name"]: c for c in report["checks"]}
         self.assertEqual(names["AGENTS.md in the workspace is read (MANGO)"]["detail"], "read")
-        self.assertEqual(agy.quota_percents(report["quota"]), {"quotas[0].remainingFraction": 0.93})
+        from harness import calib_agy
+        self.assertEqual(calib_agy.gemini_buckets(report["quota"]), {"weekly": 0.93, "5h": 0.93})
         stream = (self.tmp / "results" / "smoke-agy-stream.jsonl").read_text(encoding="utf-8").splitlines()
         self.assertIn('{"_smoke_call": 1}', stream)
         self.assertTrue((self.tmp / "results" / "smoke-agy-environment.md").exists())
