@@ -69,7 +69,9 @@ class TeamsData(unittest.TestCase):
                         self.assertTrue((REPO / cited).is_file(), cited)
                     elif cited.startswith("fuentes/") and FUENTES.is_dir():
                         self.assertNotIn("restringido", cited)
-                        self.assertTrue((FUENTES / cited).is_file(), cited)
+                        # fuentes/ se movió a 2-produccion/investigacion/ (reorganización del 15 oct 2026)
+                        local = FUENTES / "2-produccion" / "investigacion" / cited.removeprefix("fuentes/")
+                        self.assertTrue(local.is_file(), cited)
 
     def test_ai_sdlc_io_label_and_trace_seeds(self):
         by_id = {m["id"]: m for m in self.api.load_all()}
