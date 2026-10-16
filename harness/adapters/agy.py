@@ -42,6 +42,7 @@ from harness.adapters.base import Limits, SessionResult, event, now_iso
 
 CALLS = 0
 GRACE_S = 45
+CUT_MARGIN_S = 2       # a result this close to --print-timeout counts as cut by it
 RAW_TAP = None          # smoke only: called with (line, ts) for every stdout line (schema capture)
 PRICES = paths.REPO / "harness" / "prices.json"
 _VERSION: str | None = None
@@ -64,7 +65,7 @@ TOOL_MAP = {
     "search_web": "WebSearch", "read_url_content": "WebFetch",
 }
 WEB_TOOLS = {"WebSearch", "WebFetch"}
-STEP_SKIP = {"user_input", "checkpoint", "ephemeral_message"}
+STEP_SKIP = {"user_input", "system_message", "checkpoint", "ephemeral_message"}
 STEP_TEXT = {"agent_response", "planner_response", "model_response", "response"}
 STEP_META = {"event", "conversation_id", "step_index", "state", "step_type", "text_delta", "usage", "duration_seconds",
              "status", "output", "result", "content", "stdout", "response", "exit_code", "exitCode"}
@@ -331,16 +332,20 @@ class StreamParser:
             if isinstance(t, str):
                 self._buf.setdefault("thought", []).append(t)
             return
+        info = msg.get("tool_info") if isinstance(msg.get("tool_info"), dict) else {}   # live: step_type "tool"
         key = f"step-{msg.get('step_index')}"
         if key not in self._steps:
             self._steps.add(key)
-            raw = _pick(msg, ("tool_name", "toolName", "name", "tool"))
+            raw = _pick(msg, ("tool_name", "toolName", "name")) or _pick(info, ("name", "tool_name"))
             raw = raw if isinstance(raw, str) else st
-            args = _as_dict(_pick(msg, ("args", "arguments", "input", "parameters", "params")) or
-                            {k: v for k, v in msg.items() if k not in STEP_META})
+            args = _as_dict(_pick(info, ("parameters", "args", "arguments", "input")) or
+                            _pick(msg, ("args", "arguments", "input", "parameters", "params")) or
+                            {k: v for k, v in msg.items() if k not in STEP_META and k != "tool_info"})
             self._tool_call({"tool_name": raw, "args": args, "id": key}, ts)
         if state in STEP_END:
-            self._tool_result({**msg, "id": key, "status": state}, ts)
+            out = _pick(info, ("output", "result", "error")) or _pick(msg, ("output", "result", "content", "stdout"))
+            self._tool_result({"id": key, "status": state, "exit_code": _pick(info, ("exit_code", "exitCode")),
+                               "output": out if out is not None else ""}, ts)
 
     def feed(self, line: str, ts: str | None = None):
         ts = ts or now_iso()
@@ -423,7 +428,8 @@ def parse_stream(lines, session: str) -> StreamParser:
     return p
 
 
-def classify(parser: StreamParser, rc: int | None, stderr: str, timed_out: bool) -> dict:
+def classify(parser: StreamParser, rc: int | None, stderr: str, timed_out: bool,
+             limit_s: int | None = None) -> dict:
     out = {"subtype": "success", "is_error": False, "capped": False, "turn_cap": "wall-clock-only", "infra": None}
     if parser.breach:
         out.update(subtype="error", is_error=True, infra={"kind": "isolation_breach", "detail": parser.breach,
@@ -432,7 +438,11 @@ def classify(parser: StreamParser, rc: int | None, stderr: str, timed_out: bool)
     res = parser.result or {}
     status = str(res.get("status") or "").lower()
     text = " ".join(parser.errors + parser.plain[-5:] + [stderr or "", str(res.get("error") or "")])
-    if timed_out or status in ("timeout", "timed_out", "deadline_exceeded") or \
+    # live (smoke 2026-10-16): --print-timeout ends with status SUCCESS and a tool step still ACTIVE
+    cut = (parser.result is not None and bool(parser._open)) or (
+        limit_s is not None and isinstance(res.get("duration_seconds"), (int, float))
+        and res["duration_seconds"] >= limit_s - CUT_MARGIN_S)
+    if timed_out or cut or status in ("timeout", "timed_out", "deadline_exceeded") or \
             (status not in ("success", "ok", "completed") and _TIMEOUT.search(text) and not _RATE.search(text)):
         out.update(subtype="wall_clock", capped=True)
         return out
@@ -528,7 +538,7 @@ def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limit
     changed = memory_changes(before, memory_fingerprint())
     if changed and not parser.breach:
         parser.breach = "agy wrote to the real ~\\.gemini\\antigravity-cli memory: " + ", ".join(changed)
-    cls = classify(parser, r["rc"], r["stderr"], r["timed_out"])
+    cls = classify(parser, r["rc"], r["stderr"], r["timed_out"], limits.wall_clock_s)
     usage, extra = parser.usage()
     res = parser.result or {}
     num_turns = res.get("num_turns") if isinstance(res.get("num_turns"), int) else \

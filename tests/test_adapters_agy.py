@@ -267,20 +267,48 @@ class LiveSchema(unittest.TestCase):
                                                      "step_type": "user_input"}},
             {"event": "step_update", "step_update": {"conversation_id": cid, "step_index": 1, "state": "ACTIVE",
                                                      "step_type": "agent_response", "text_delta": "OK. KIWI"}},
-            {"event": "step_update", "step_update": {"conversation_id": cid, "step_index": 2, "state": "ACTIVE",
-                                                     "step_type": "run_command", "CommandLine": "npm test"}},
-            {"event": "step_update", "step_update": {"conversation_id": cid, "step_index": 2, "state": "DONE",
-                                                     "step_type": "run_command", "output": "1 passing"}},
+            self.tool(cid, 2, "ACTIVE", "run_command", {"CommandLine": "npm test"}),
+            self.tool(cid, 2, "DONE", "run_command", {"CommandLine": "npm test"}, output="1 passing"),
+            {"event": "step_update", "step_update": {"conversation_id": cid, "step_index": 4, "state": "DONE",
+                                                     "step_type": "system_message"}},
             {"event": "result", "result": {"conversation_id": cid, "status": "SUCCESS", "response": "OK. KIWI\n",
                                            "duration_seconds": 2.5, "num_turns": 1, "usage": u}})]
         p = agy.parse_stream(lines, "gen")
         self.assertEqual((p.model, p.conversation_id, p.unknown), ("gemini-3.8-flash-medium", cid, {}))
         self.assertEqual(p.messages, ["OK. KIWI"])
         calls = [e for e in p.events if e["kind"] == "tool_call"]
-        self.assertEqual((calls[0]["name"], calls[0]["input"]["command"]), ("Bash", "npm test"))
-        self.assertEqual([e["status"] for e in p.events if e["kind"] == "tool_result"], ["success"])
+        self.assertEqual([(c["name"], c["input"]["command"]) for c in calls], [("Bash", "npm test")])
+        self.assertEqual([(e["status"], e["output"]) for e in p.events if e["kind"] == "tool_result"],
+                         [("success", "1 passing")])
         self.assertEqual(p.usage()[0]["output_tokens"], 160)
-        self.assertEqual(agy.classify(p, 0, "", False)["subtype"], "success")
+        self.assertEqual(agy.classify(p, 0, "", False, 1800)["subtype"], "success")
+
+    @staticmethod
+    def tool(cid, i, state, name, params, **info):
+        return {"event": "step_update", "step_update": {
+            "conversation_id": cid, "step_index": i, "state": state, "step_type": "tool", "tool_name": name,
+            "tool_info": {"name": name, "parameters": params, **info}}}
+
+    def test_print_timeout_cut_reports_success_with_an_open_step(self):
+        cid = "fd1180cc"
+        res = {"event": "result", "result": {"conversation_id": cid, "status": "SUCCESS", "response": "started",
+                                             "duration_seconds": 19.5, "num_turns": 1}}
+        lines = [json.dumps(x) for x in (self.tool(cid, 2, "ACTIVE", "run_command", {"CommandLine": "npm test"}),
+                                         res)]
+        cls = agy.classify(agy.parse_stream(lines, "gen"), 0, "", False, 1800)
+        self.assertEqual((cls["subtype"], cls["capped"], cls["infra"]), ("wall_clock", True, None))
+        near = agy.parse_stream([json.dumps(res)], "gen")                  # no open step, but at the limit
+        self.assertTrue(agy.classify(near, 0, "", False, 20)["capped"])
+        self.assertFalse(agy.classify(near, 0, "", False, 1800)["capped"])
+
+    def test_write_outside_the_workspace_is_flagged(self):
+        from harness import detectors
+        lines = [json.dumps(self.tool("c", 8, "DONE", "write_to_file", {"TargetFile": "C:\\avg\\out\\o.txt"})),
+                 json.dumps(self.tool("c", 10, "DONE", "view_file", {"AbsolutePath": "C:\\avg\\out\\canary.txt"},
+                                      output="2 lines, 24 bytes"))]
+        p = agy.parse_stream(lines, "gen")
+        flagged = detectors.out_of_workspace_access(p.events, Path("C:/avg/ws"))
+        self.assertEqual([f["tool"] for f in flagged], ["Write", "Read"])
 
 
 if __name__ == "__main__":
