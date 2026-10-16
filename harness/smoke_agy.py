@@ -174,16 +174,28 @@ def evaluate(n: int, res, ws: Path, home_names: list[str] | None = None) -> list
     return out
 
 
-def _secrets(home: Path) -> list[str]:
-    """Long token-like strings of the seeded sign-in files (never printed; only compared with the streams)."""
-    vals = []
-    for p in (home / ".gemini").rglob("*"):
-        if p.is_file() and p.name != "settings.json":
-            try:
-                vals += re.findall(r"[A-Za-z0-9_\-./+=]{24,}", p.read_text(encoding="utf-8", errors="ignore"))
-            except OSError:
-                pass
-    return sorted(set(vals))
+def _seeded(home: Path) -> list[Path]:
+    """The per-run copies of the files prepare_home seeds (names listed from the real HOME, never its contents);
+    files agy writes itself (cli.log, caches, conversations) are left out: they echo the stream."""
+    src = agy.real_home()
+    out = []
+    for rel, skip in ((Path(".gemini"), agy.SEED_SKIP_ROOT), (agy.CLI_DIR, agy.SEED_SKIP_CLI)):
+        if (src / rel).is_dir():
+            out += [home / rel / p.name for p in (src / rel).iterdir() if p.is_file() and p.name not in skip]
+    return [p for p in out if p.is_file()]
+
+
+def _secrets(home: Path) -> dict[str, str]:
+    """Long token-like strings of the seeded sign-in files -> the file name (values are never printed; only compared
+    with the streams)."""
+    vals = {}
+    for p in _seeded(home):
+        try:
+            for v in re.findall(r"[A-Za-z0-9_\-./+=]{24,}", p.read_text(encoding="utf-8", errors="ignore")):
+                vals[v] = p.name
+        except OSError:
+            pass
+    return vals
 
 
 def markdown(report: dict) -> str:
@@ -205,7 +217,7 @@ def run_live() -> int:
     raw: list[str] = []
     agy.RAW_TAP = lambda line, ts: raw.append(line)
     mem_before = agy.memory_fingerprint()
-    checks, conv3, model, secrets = [], None, None, set()
+    checks, conv3, model, secrets = [], None, None, {}
     try:
         for call in CALLS:
             ws = prepare(call["ctx"]) if not call.get("resume") else smoke_dir()
@@ -217,7 +229,7 @@ def run_live() -> int:
                 continue
             raw.append(json.dumps({"_smoke_call": call["n"]}))
             res = agy.run_session(wsobj, call["prompt"], resume=resume, unit=u, limits=limits_for(call))
-            secrets |= set(_secrets(smoke_home()))
+            secrets.update(_secrets(smoke_home()))
             model = model or res.model_reported
             if call["n"] == 3:
                 conv3 = res.session_id
@@ -236,8 +248,9 @@ def run_live() -> int:
     checks.append({"call": "all", "name": "real ~\\.gemini\\antigravity-cli memory unchanged", "ok": not changed,
                    "info": False, "detail": ", ".join(changed) or "unchanged"})
     blob = "\n".join(raw)
-    checks.append({"call": "all", "name": "no seeded sign-in value in any stream", "info": False,
-                   "ok": not any(s in blob for s in secrets), "detail": f"{len(secrets)} values checked"})
+    hits = sorted({f for s, f in secrets.items() if s in blob})
+    checks.append({"call": "all", "name": "no seeded sign-in value in any stream", "info": False, "ok": not hits,
+                   "detail": f"{len(secrets)} values checked" + (f"; found from: {', '.join(hits)}" if hits else "")})
     bad = [l for l in raw if l.strip() and "AGY_ERROR" not in l and not _json_ok(l)]
     checks.append({"call": "all", "name": "every stdout line parses as JSON", "ok": not bad, "info": False,
                    "detail": f"{len(bad)} bad lines"})

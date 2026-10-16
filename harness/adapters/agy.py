@@ -64,6 +64,11 @@ TOOL_MAP = {
     "search_web": "WebSearch", "read_url_content": "WebFetch",
 }
 WEB_TOOLS = {"WebSearch", "WebFetch"}
+STEP_SKIP = {"user_input", "checkpoint", "ephemeral_message"}
+STEP_TEXT = {"agent_response", "planner_response", "model_response", "response"}
+STEP_META = {"event", "conversation_id", "step_index", "state", "step_type", "text_delta", "usage", "duration_seconds",
+             "status", "output", "result", "content", "stdout", "response", "exit_code", "exitCode"}
+STEP_END = {"done", "error", "failed", "canceled", "cancelled"}
 SUBAGENT_RE = re.compile(r"(subagent|^agent$|invoke_agent|spawn_agent|browser)", re.I)
 ARG_KEYS = {   # agent argument -> harness key read by detectors.out_of_workspace_access / covariates
     "command": ("CommandLine", "command", "Command", "cmd"),
@@ -255,6 +260,7 @@ class StreamParser:
         self.breach: str | None = None
         self._open: list[str] = []            # tool call ids awaiting a result (results without an id pair FIFO)
         self._buf: dict[str, list[str]] = {}  # "text"/"thought" -> pending deltas
+        self._steps: set[str] = set()         # step_update indexes already emitted as tool calls
         self._n = 0
 
     def _emit(self, ev):
@@ -309,6 +315,33 @@ class StreamParser:
         self._emit(event(self.session, "tool_result", ts=ts, id=tid, status=status,
                          output=out if isinstance(out, str) else json.dumps(out, ensure_ascii=False)))
 
+    def _step(self, msg, ts):
+        """One step_update: user_input is skipped, agent_response carries text_delta, thinking steps go to the reasoning
+        text, and every other step type is a tool step (call on first sight, result when its state ends)."""
+        st = str(msg.get("step_type") or "").lower()
+        state = str(msg.get("state") or "").lower()
+        if st in STEP_SKIP:
+            return
+        if st in STEP_TEXT or any(w in st for w in ("thought", "thinking", "reasoning")):
+            kind = "text" if st in STEP_TEXT else "thought"
+            d = msg.get("text_delta")
+            if isinstance(d, str):
+                self._buf.setdefault(kind, []).append(d)
+            t = _pick(msg, ("thinking_delta", "thought_delta", "reasoning_delta"))
+            if isinstance(t, str):
+                self._buf.setdefault("thought", []).append(t)
+            return
+        key = f"step-{msg.get('step_index')}"
+        if key not in self._steps:
+            self._steps.add(key)
+            raw = _pick(msg, ("tool_name", "toolName", "name", "tool"))
+            raw = raw if isinstance(raw, str) else st
+            args = _as_dict(_pick(msg, ("args", "arguments", "input", "parameters", "params")) or
+                            {k: v for k, v in msg.items() if k not in STEP_META})
+            self._tool_call({"tool_name": raw, "args": args, "id": key}, ts)
+        if state in STEP_END:
+            self._tool_result({**msg, "id": key, "status": state}, ts)
+
     def feed(self, line: str, ts: str | None = None):
         ts = ts or now_iso()
         try:
@@ -321,6 +354,9 @@ class StreamParser:
             return
         if not isinstance(msg, dict):
             return
+        ev0 = msg.get("event") or msg.get("type")
+        if isinstance(ev0, str) and isinstance(msg.get(ev0), dict):   # live schema (smoke 2026-10-16): {"event": X, X: {...}}
+            msg = {**msg[ev0], **{k: v for k, v in msg.items() if k != ev0}}
         cid = msg.get("conversation_id") or msg.get("conversationId")
         if isinstance(cid, str) and cid:
             self.conversation_id = cid
@@ -340,6 +376,8 @@ class StreamParser:
             v = msg.get("cli_version") or msg.get("version")
             if isinstance(v, str):
                 self.version = v
+        elif ev == "step_update":
+            self._step(msg, ts)
         elif "tool" in ev and any(w in ev for w in ("result", "end", "complete", "output", "response", "finish")):
             self._tool_result(msg, ts)
         elif "tool" in ev or ev in ("function_call", "step_start"):

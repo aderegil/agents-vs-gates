@@ -253,5 +253,35 @@ class AgyCycle(unittest.TestCase):
             self.assertEqual(record.validate(jsonio.read_json(d / "record.json")), [])
 
 
+class LiveSchema(unittest.TestCase):
+    """The shape agy 1.3.6 really prints (smoke 2026-10-16): {"event": X, X: {...}} with step_update steps."""
+
+    def test_call_1_of_the_smoke(self):
+        cid = "542ce56e-e53f-40ea-b794-8af45a48d262"
+        u = {"input_tokens": 12892, "output_tokens": 82, "thinking_tokens": 78, "cache_read_tokens": 0,
+             "total_tokens": 12974}
+        lines = [json.dumps(x) for x in (
+            {"event": "init", "conversation_id": cid, "init": {"model": "gemini-3.8-flash-medium", "cwd": "C:/x",
+                                                               "tools": ["run_command"], "permission_mode": "p"}},
+            {"event": "step_update", "step_update": {"conversation_id": cid, "step_index": 0, "state": "DONE",
+                                                     "step_type": "user_input"}},
+            {"event": "step_update", "step_update": {"conversation_id": cid, "step_index": 1, "state": "ACTIVE",
+                                                     "step_type": "agent_response", "text_delta": "OK. KIWI"}},
+            {"event": "step_update", "step_update": {"conversation_id": cid, "step_index": 2, "state": "ACTIVE",
+                                                     "step_type": "run_command", "CommandLine": "npm test"}},
+            {"event": "step_update", "step_update": {"conversation_id": cid, "step_index": 2, "state": "DONE",
+                                                     "step_type": "run_command", "output": "1 passing"}},
+            {"event": "result", "result": {"conversation_id": cid, "status": "SUCCESS", "response": "OK. KIWI\n",
+                                           "duration_seconds": 2.5, "num_turns": 1, "usage": u}})]
+        p = agy.parse_stream(lines, "gen")
+        self.assertEqual((p.model, p.conversation_id, p.unknown), ("gemini-3.8-flash-medium", cid, {}))
+        self.assertEqual(p.messages, ["OK. KIWI"])
+        calls = [e for e in p.events if e["kind"] == "tool_call"]
+        self.assertEqual((calls[0]["name"], calls[0]["input"]["command"]), ("Bash", "npm test"))
+        self.assertEqual([e["status"] for e in p.events if e["kind"] == "tool_result"], ["success"])
+        self.assertEqual(p.usage()[0]["output_tokens"], 160)
+        self.assertEqual(agy.classify(p, 0, "", False)["subtype"], "success")
+
+
 if __name__ == "__main__":
     unittest.main()
