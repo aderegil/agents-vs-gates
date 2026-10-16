@@ -740,7 +740,7 @@ Branch `theater-1016` (worktree `C:\avg\theater-1016`, from `night-1013`), not m
 - **Console: words first, code after** in parentheses or a chip (Run Explorer, Run Control, Results, Home, Overview),
   plus «What the codes mean» (`ui.js codeLegend`, a native `<details>` with one `<dl>` per family) on Home, Run Control,
   Run Explorer and Results. The unblind confirmation still asks for `UNBLIND P1` (the code is the safety word).
-- **Left as codes (not in scope or need a visual check):** the Results chart labels built in
+- **Left as codes (not in scope or need a visual check; the charts, figures, RQs and reviewer conditions were done next, see «Plain words in the charts and figures»):** the Results chart labels built in
   `console/plugins/results/payload.py` (group labels such as «X-rename V0·S0»; exported SVG/PNG figures for the deck
   would change size), the Story figures' captions in `console/plugins/story/figures.py`, RQ1–RQ7 and the reviewer
   conditions R-S0/R-S2/R-C; the talk-draft video scenes (`experiment`, `break*`, `stop*`, `results` in
@@ -748,3 +748,27 @@ Branch `theater-1016` (worktree `C:\avg\theater-1016`, from `night-1013`), not m
 - **Tests:** `app/test/plainwords.test.ts` (map, `plainText`, run names, and no code in any visible text of the 7 demo
   replays, 5 scenes and the two clip replays after `plainReplay`); theater 67/67; console model/chart tests 35/35. Clip
   cards checked in headless Edge (scene pages only, no video): no code in the five changed cards.
+
+## theater-1016 · Plain words in the charts and figures; «Start here» (2026-10-16; builder subagent, Alfredo's request)
+- **Python reads the one map.** `console/core/labels.py` parses the data blocks of `console/web/lib/labels.js` (one
+  entry per line; a line it cannot read is an error, so a code cannot come back on screen silently) and mirrors the
+  helpers (`with_code`, `plain_condition`, `condition_code`, `run_name`). No second copy of the words.
+  `console/tests/test_labels.py` runs Node on labels.js and checks both sides hold the same map and give the same strings.
+- **New families in the map:** `QUESTIONS` (RQ1–RQ5, the tab words already used by Results: «Nothing in view», «Rule or
+  repos», «What CI does», «AI reviewer», «Ticket wording») and `REVIEWERS` (R-S0 «Reviewer: no rule», R-S2 «Reviewer:
+  rule in the spec», R-C «Reviewer: rule and contracts»), both in the «What the codes mean» legend. RQ6 and RQ7 (design
+  spec only) appear nowhere in the console, so they are not in the map.
+- **Results charts:** each row is the words with its code muted at the right («Every repo visible · No rule  V2·S0»);
+  the group header carries stage · unit · ticket in words with the codes in parentheses; rows are grouped so a header
+  is drawn once. The row-label column grew to 40 % of the width (cap 300) and the app draws charts at 680 wide, so the
+  longest words fit (chart test). Titles, subtitles, source notes («Main test (P1)»), the coding table (T1–T3) and the
+  RQ tabs are words first. Figure sizes changed; the deck does not use these figures.
+- **Home figures:** captions, claims, notes (run ids as «Codex repeat · run 31 (p6-0031)») and the «Results ·» links are
+  words first, code in parentheses; the p-value row uses the ticket words on both sides, so «matches» still compares
+  like with like. `test_story` checks that no code shows outside parentheses. The unblind safety word stays `UNBLIND P1`.
+- **«Start here»** (`console/plugins/start`) is the landing page: no hash → `#/start` (`LANDING` in `web/app.js`), deep
+  links still work. Five blocks in simple English, no codes, text served by `GET /api/start` so the test can read it:
+  what we tested (the H2 question, Meridian Retail, the three main-test setups), one line per page (only the pages the
+  role can open; Expert-only ones are marked), the three clicks (Replay Theater → «Select a run…» → Play, checked
+  against App.tsx and Player.tsx), where the results are, and «words first». Plugins renumbered 0–10 so Start here is
+  0 and keeps a `g` key; Users & Audit (10) has no key and stays in the user menu.
