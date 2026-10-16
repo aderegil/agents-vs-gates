@@ -18,6 +18,7 @@
 // (shell.confirm({title, message, confirmLabel, requireText}) is built on modal.)
 import { iconEl } from "../icons.js";
 import { unitInfo, unitGlyph, unitText } from "./units.js";
+import { LEGEND } from "./labels.js";
 
 export { iconEl, unitInfo, unitGlyph, unitText };
 
@@ -88,6 +89,22 @@ export function fmtAgo(iso) {
 
 export function badge(text, tone = "neutral") {
   return h("span", { class: `badge tone-${tone}` }, text);
+}
+
+/**
+ * "What the codes mean": every code family of the experiment (tickets X-…, V0–V2, S0–S2, W1–W2, stages P0–P8 and C8,
+ * the pilots, H2/HS-V2) with its plain words and meaning, from labels.js LEGEND. A native <details> (keyboard and
+ * screen-reader friendly), collapsed by default; a <dl> per family.
+ */
+export function codeLegend({ open = false, families = null } = {}) {
+  const groups = families ? LEGEND.filter((g) => families.some((f) => g.codes.includes(f))) : LEGEND;
+  return h("details", { class: "code-legend", open },
+    h("summary", {}, iconEl("info", 14), " What the codes mean"),
+    h("div", { class: "code-legend-body" }, groups.map((g) => h("section", { class: "code-legend-group", "aria-label": g.title },
+      h("h4", {}, g.title),
+      h("dl", {}, g.items.map((i) => h("div", { class: "code-legend-item" },
+        h("dt", {}, h("span", { class: "code-legend-words" }, i.short), " ", h("code", { class: "mono" }, i.code)),
+        h("dd", {}, i.long))))))));
 }
 
 export function empty(msg) {

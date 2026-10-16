@@ -1,7 +1,7 @@
 // Home (night order 2026-10-13, C.1): question-first. What we tested · What happened · See it, then the Talk figures:
 // every number the deck uses, computed live from the records, with its query and a link to the runs behind it.
 // Data: GET /api/story (figures.py). Plain labels with the code chip beside them (lib/labels.js).
-import { h, table, badge, panel, button, iconEl } from "/web/lib/ui.js";
+import { h, table, badge, panel, button, iconEl, codeLegend } from "/web/lib/ui.js";
 import { GLOSSARY } from "/web/lib/labels.js";
 
 let alive = false;
@@ -61,8 +61,8 @@ function render(d, shell) {
     col("The same gates for every run",
       h("p", {}, "CI on the pull request: tests and the architecture checks ARCH-1…8. A red build goes back to the agent."),
       h("p", {}, "The other teams' own tests also run on the PR, hidden from the agent: they say whether something really broke."),
-      h("p", { class: "muted small" }, "Agents: Claude Code (Sonnet; Opus in P5) and Codex (P6, the replication).")));
-  out.push(panel({ title: "What we tested", body: tested }));
+      h("p", { class: "muted small" }, "Agents: Claude Code with Sonnet (and Opus in the Opus and wording stage, P5) and Codex (the Codex repeat, P6).")));
+  out.push(panel({ title: "What we tested", body: h("div", { class: "stack" }, tested, codeLegend()) }));
 
   // ------------------------------------------------------------ what happened
   const qs = h("ol", { class: "st-questions" }, d.questions.map((q) => h("li", { class: "st-q" },
@@ -76,8 +76,8 @@ function render(d, shell) {
     onclick: () => shell.navigate(plugin, params) }, h("span", { class: "st-card-icon" }, iconEl(icon, 20)),
   h("span", { class: "st-card-title" }, title), h("span", { class: "st-card-text" }, text), h("span", { class: "st-card-go" }, label, " ", iconEl("arrow-right", 14)));
   out.push(panel({ title: "See it", body: h("div", { class: "st-cards" },
-    card("One run, start to finish", "p1-0002: the agent renames two fields, CI turns red, it repairs with aliases, CI turns green.", "Open in the Replay Theater", "replay", { run: "p1-0002", ns: "real" }, "clapperboard"),
-    card("Green CI, broken consumer", "p6-0012: Codex edits the analytics team's contract inside its repo; CI passes; analytics breaks.", "Open in the Replay Theater", "replay", { run: "p6-0012", ns: "real" }, "clapperboard"),
+    card("One run, start to finish", "Main test, run 2 (p1-0002): the agent renames two fields, CI turns red, it repairs with aliases, CI turns green.", "Open in the Replay Theater", "replay", { run: "p1-0002", ns: "real" }, "clapperboard"),
+    card("Green CI, broken consumer", "Codex repeat, run 12 (p6-0012): Codex edits the analytics team's contract inside its repo; CI passes; analytics breaks.", "Open in the Replay Theater", "replay", { run: "p6-0012", ns: "real" }, "clapperboard"),
     card("Five AI-SDLC models, one change", "Illustrations scripted from public documentation: where each model keeps the rule, and what blocks the merge.", "Compare the models", "replay", { lanes: "1" }, "layout-list"),
     card("Every number", "Results per research question, with intervals; p-values only for the pre-registered tests.", "Open Results", "results", {}, "bar-chart-3")) }));
 

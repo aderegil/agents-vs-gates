@@ -2,9 +2,12 @@
 // excluded runs, and slide export (SVG and PNG 1920×1080, App and Deck styles).
 // Data: GET /api/results/{rq,reviewer,mutation,excluded,pilot}?ns=… ; drawing: ./charts.js (pure SVG, no libraries).
 // A stage that is not unblinded arrives without numbers; this page only shows "Blinded until stage complete".
-import { h, table, badge, empty, panel, notice, iconEl, button, tabs, fmtInt, unitTag } from "/web/lib/ui.js";
+import { h, table, badge, empty, panel, notice, iconEl, button, tabs, fmtInt, unitTag, codeLegend } from "/web/lib/ui.js";
 import { markdownViewer, mdViewSwitch } from "/web/lib/markdown.js";
-import { GLOSSARY, plainCondition, conditionTitle, conditionCode } from "/web/lib/labels.js";
+import { GLOSSARY, plainCondition, conditionTitle, conditionCode, withCode, meaningOf } from "/web/lib/labels.js";
+
+/** A ticket in plain words with its code after it ("Rename two fields (X-rename)"), the meaning on hover. */
+const ticketCell = (t) => h("span", { class: "strong", title: meaningOf(t) || null }, withCode(t));
 import { renderChart, renderSlide, dataTable, THEMES, SLIDE, fmtXofN, fmtCI } from "./charts.js";
 
 const BLINDED = "Blinded until stage complete";
@@ -184,7 +187,7 @@ export async function mount(el, shell) {
   // ---- blinding
   function stageLine(stage) {
     const s = S.data.rq.stages.find((x) => x.stage === stage);
-    return s && s.runs_total != null ? `${stage} (${fmtInt(s.runs_done)} of ${fmtInt(s.runs_total)} runs done)` : stage;
+    return s && s.runs_total != null ? `${withCode(stage)}: ${fmtInt(s.runs_done)} of ${fmtInt(s.runs_total)} runs done` : withCode(stage);
   }
   function blindedBlock(stages) {
     return h("div", { class: "res-blind", role: "status" }, iconEl("lock", 20),
@@ -230,11 +233,11 @@ export async function mount(el, shell) {
     const h2 = sec.h2;
     const tbl = h2Table(h2.tickets, "H2 confirmatory contrast");
     return panel({
-      title: titleWithUnit(`H2 · confirmatory contrast · ${h2.stage}`, h2.unit),
+      title: titleWithUnit(`${withCode("H2")} · confirmatory contrast · ${withCode(h2.stage)}`, h2.unit),
       actions: badge("Pre-registered", "accent"),
       flush: true,
       body: h("div", {}, tbl,
-        h("p", { class: "small muted res-pad" }, "staging_break in V0·S0 vs. V0·S2, Fisher exact two-sided per ticket, Holm correction over the two tickets. " +
+        h("p", { class: "small muted res-pad" }, "staging_break in Own repo · No rule (V0·S0) vs. Own repo · Rule in the spec (V0·S2), Fisher exact two-sided per ticket, Holm correction over the two tickets. " +
           "p-values appear only for pre-registered tests: H2 and HS-V2, on the primary unit and on the replication unit."),
         h2.note ? h("p", { class: "small res-pad" }, iconEl("info", 14), " ", h2.note) : null),
     });
@@ -246,9 +249,9 @@ export async function mount(el, shell) {
     return table({
       caption, keyboard: false, empty: "No visible runs in the H2 cells yet.",
       columns: [
-        { key: "ticket", label: "Ticket", render: (r) => h("span", { class: "strong" }, r.ticket) },
-        { key: "s0", label: "V0·S0 (consumers not named)", num: true, render: (r) => cellText(r.s0) },
-        { key: "s2", label: "V0·S2 (consumers named)", num: true, render: (r) => cellText(r.s2) },
+        { key: "ticket", label: "Ticket", render: (r) => ticketCell(r.ticket) },
+        { key: "s0", label: "Own repo · No rule (V0·S0)", num: true, render: (r) => cellText(r.s0) },
+        { key: "s2", label: "Own repo · Rule in the spec (V0·S2)", num: true, render: (r) => cellText(r.s2) },
         { key: "p", label: "Fisher exact p", num: true, render: (r) => fmtP(r.p) },
         { key: "p_holm", label: "Holm-adjusted p", num: true, render: (r) => h("span", { class: "strong" }, fmtP(r.p_holm)) },
       ],
@@ -260,9 +263,9 @@ export async function mount(el, shell) {
     return table({
       caption, keyboard: false, empty: "No V2·S0 runs yet.",
       columns: [
-        { key: "ticket", label: "Ticket", render: (r) => h("span", { class: "strong" }, r.ticket) },
-        { key: "v0", label: "V0·S0 (orders-service only)", num: true, render: (r) => cellText(r.v0) },
-        { key: "v2", label: "V2·S0 (all four repos)", num: true, render: (r) => cellText(r.v2) },
+        { key: "ticket", label: "Ticket", render: (r) => ticketCell(r.ticket) },
+        { key: "v0", label: "Own repo · No rule (V0·S0)", num: true, render: (r) => cellText(r.v0) },
+        { key: "v2", label: "Every repo visible · No rule (V2·S0)", num: true, render: (r) => cellText(r.v2) },
         { key: "p", label: "Fisher exact p (uncorrected)", num: true, render: (r) => fmtP(r.p) },
       ],
       rows,
@@ -272,26 +275,26 @@ export async function mount(el, shell) {
   // HS-V2 on the primary unit: pre-registered secondary, outside the Holm family
   function v2Panel(v) {
     return panel({
-      title: titleWithUnit(`HS-V2 · secondary contrast · ${v.stage}`, v.unit),
+      title: titleWithUnit(`${withCode("HS-V2")} · secondary contrast · ${withCode(v.stage)}`, v.unit),
       actions: badge("Pre-registered · secondary", "neutral"),
       flush: true,
       body: h("div", {}, v.available ? v2Table(v.tickets, "HS-V2 secondary contrast") : h("p", { class: "small muted res-pad" }, v.note || "No V2·S0 runs yet."),
-        h("p", { class: "small muted res-pad" }, "staging_break (gen) in V2·S0 vs. V0·S0: does seeing the consumers' code prevent the break? " +
+        h("p", { class: "small muted res-pad" }, "staging_break (gen) in Every repo visible · No rule (V2·S0) vs. Own repo · No rule (V0·S0): does seeing the consumers' code prevent the break? " +
           "Fisher exact two-sided per ticket, uncorrected, outside the Holm family.")),
     });
   }
 
   // the same two tests on the replication unit (P6's P1 part): its own Holm family, never pooled with the primary unit
   function replicationPanel(r) {
-    const head = titleWithUnit(`Replication · H2 and HS-V2 · ${r.stage}, ${r.part} part`, r.unit);
+    const head = titleWithUnit(`Replication · ${withCode("H2")} and ${withCode("HS-V2")} · ${withCode(r.stage)}, ${withCode(r.part)} part`, r.unit);
     const actions = h("span", { class: "row" }, badge("Replication · not pooled", "accent"));
     let body;
     if (r.blinded) body = h("div", { class: "res-pad" }, blindedBlock([r.stage]));
     else if (!r.available) body = h("p", { class: "small muted res-pad" }, r.note || "No visible runs yet.");
     else {
       body = h("div", {},
-        h("h3", { class: "res-sub res-pad" }, "H2 · V0·S0 vs. V0·S2"), h2Table(r.h2, "H2 on the replication unit"),
-        h("h3", { class: "res-sub res-pad" }, "HS-V2 · V2·S0 vs. V0·S0"), v2Table(r.secondary_v2, "HS-V2 on the replication unit"));
+        h("h3", { class: "res-sub res-pad" }, "Rule vs no rule (H2) · Own repo · No rule vs. Own repo · Rule in the spec"), h2Table(r.h2, "H2 on the replication unit"),
+        h("h3", { class: "res-sub res-pad" }, "Every repo vs own repo (HS-V2) · Every repo visible · No rule vs. Own repo · No rule"), v2Table(r.secondary_v2, "HS-V2 on the replication unit"));
     }
     return panel({ title: head, actions, flush: true, body: h("div", {}, body,
       h("p", { class: "small muted res-pad" }, "The same pre-registered tests, run again on a second agent: Holm over its own two tickets for H2, " +
@@ -306,7 +309,7 @@ export async function mount(el, shell) {
       caption: v.title, keyboard: false,
       columns: [{ key: "measure", label: "Measure" },
         ...v.columns.map((c) => ({ key: c.key, num: true, render: (r) => fmt(r[c.key], r.count),
-          label: h("span", { class: "res-unit-col" }, unitTag(c.unit, { compact: true }), h("span", { class: "muted small" }, `${c.stage} · N = ${c.n}`)) }))],
+          label: h("span", { class: "res-unit-col" }, unitTag(c.unit, { compact: true }), h("span", { class: "muted small", title: meaningOf(c.stage) || null }, `${withCode(c.stage)} · N = ${c.n}`)) }))],
       rows: v.rows,
     });
     return panel({ title: v.title, actions: badge("Descriptive", "neutral"), flush: true,
@@ -354,7 +357,7 @@ export async function mount(el, shell) {
       out.push(chartGrid([co.chart]));
       const rows = Object.entries(co.tickets).map(([t, v]) => ({ ticket: t, ...v }));
       out.push(panel({ title: "Counts per ticket", flush: true, body: table({ caption: "CI and oracle verdicts per ticket", keyboard: false,
-        columns: [{ key: "ticket", label: "Ticket", render: (r) => h("span", { class: "strong" }, r.ticket) },
+        columns: [{ key: "ticket", label: "Ticket", render: (r) => ticketCell(r.ticket) },
           { key: "ci_break_oracle_break", label: "CI breaks · oracle breaks", num: true }, { key: "ci_break_oracle_ok", label: "CI breaks · oracle passes", num: true },
           { key: "ci_ok_oracle_break", label: "CI passes · oracle breaks", num: true }, { key: "ci_ok_oracle_ok", label: "CI passes · oracle passes", num: true },
           { key: "by_construction", label: "Reading", render: (r) => (r.by_construction ? badge("High by construction", "neutral") : badge("Evidence", "accent")) }],
@@ -374,13 +377,13 @@ export async function mount(el, shell) {
       columns: [
         { key: "run_id", label: "Run", mono: true, render: (r) => hasRunsNav
           ? h("a", { href: `#/runs?run=${encodeURIComponent(r.run_id)}`, onclick: (e) => { e.preventDefault(); shell.navigate("runs", { run: r.run_id }); } }, r.run_id) : r.run_id },
-        { key: "stage", label: "Stage" },
+        { key: "stage", label: "Stage", render: (r) => withCode(r.stage) },
         { key: "reasons", label: "Reason", render: (r) => r.reasons.join("; ") },
       ], rows: excluded }) }));
     const kinds = Object.entries(infra.by_stage).flatMap(([stage, c]) => Object.entries(c).map(([kind, n]) => ({ stage, kind, n })));
     out.push(panel({ title: `Infrastructure failures · ${fmtInt(kinds.reduce((a, k) => a + k.n, 0))}`, flush: true, body: h("div", {},
       table({ caption: "Infrastructure failures", keyboard: false, empty: "None archived.",
-        columns: [{ key: "stage", label: "Stage" }, { key: "kind", label: "Kind" }, { key: "n", label: "Runs", num: true }], rows: kinds }),
+        columns: [{ key: "stage", label: "Stage", render: (r) => withCode(r.stage) }, { key: "kind", label: "Kind" }, { key: "n", label: "Runs", num: true }], rows: kinds }),
       h("p", { class: "small muted res-pad" }, `Retries recorded in state: ${fmtInt(infra.retries_total)}. Final failures (given up): ${infra.final.length ? infra.final.join(", ") : "none"}.`)) }));
     return out;
   }
@@ -409,12 +412,12 @@ export async function mount(el, shell) {
           { m: "Ran the checks in gen", v0: a.ran_tests ? `${a.ran_tests.x} of ${a.ran_tests.n}` : "—", v2: b.ran_tests ? `${b.ran_tests.x} of ${b.ran_tests.n}` : "—" },
           { m: "Shell commands denied (runs with any / total)", v0: a.shell_denials ? `${a.shell_denials.runs} / ${a.shell_denials.total}` : "—", v2: b.shell_denials ? `${b.shell_denials.runs} / ${b.shell_denials.total}` : "—" },
         ];
-        out.push(panel({ title: `${ticket} · V0 vs V2 · ${unit} · S0 · W1 base text`,
+        out.push(panel({ title: `${withCode(ticket)} · Own repo (V0) vs Every repo visible (V2) · ${unit} · No rule (S0) · ticket as written (W1), base text`,
           body: h("div", { class: "stack" },
             table({ keyboard: false, caption: `${ticket} ${unit}`, columns: [
               { key: "m", label: "Measure", render: (r) => r.key ? h("strong", {}, r.m) : r.m },
-              { key: "v0", label: "V0 (orders-service only)" }, { key: "v2", label: "V2 (all four repos)" }], rows }),
-            h("p", { class: "small muted" }, `Fisher exact V0 vs V2, two-sided, uncorrected (exploratory): first attempt broke a consumer p = ${pv(g.fisher_staging_break)}; passed the first CI p = ${pv(g.fisher_passed_first_ci)}.`)) }));
+              { key: "v0", label: "Own repo (V0)" }, { key: "v2", label: "Every repo visible (V2)" }], rows }),
+            h("p", { class: "small muted" }, `Fisher exact own repo (V0) vs every repo visible (V2), two-sided, uncorrected (exploratory): first attempt broke a consumer p = ${pv(g.fisher_staging_break)}; passed the first CI p = ${pv(g.fisher_passed_first_ci)}.`)) }));
       }
     }
     if (p.excluded.length) out.push(notice(`Excluded: ${p.excluded.map((e) => `${e.run_id} (${e.reasons.join(", ")})`).join("; ")}`, "", "info"));
@@ -425,7 +428,7 @@ export async function mount(el, shell) {
   // ---- page
   function toolbar() {
     const st = S.data.rq.stages;
-    const chips = st.length ? st.map((s) => badge(`${s.stage} · ${s.visible ? (["P0", "X1", "X2", "selftest"].includes(s.stage) ? "always visible" : "unblinded") : BLINDED}`, s.visible ? "accent" : "neutral"))
+    const chips = st.length ? st.map((s) => badge(`${withCode(s.stage)} · ${s.visible ? (["P0", "X1", "X2", "selftest"].includes(s.stage) ? "always visible" : "unblinded") : BLINDED}`, s.visible ? "accent" : "neutral"))
       : [h("span", { class: "small muted" }, "No stage has runs in this namespace yet.")];
     const seg = h("div", { class: "res-seg", role: "group", "aria-label": "Export style" },
       ["app", "deck"].map((id) => h("button", { type: "button", "aria-pressed": String(S.style === id), title: id === "app" ? "App: the console's light style" : "Deck: black, deck purple, cyan = pass, pink = fail",
@@ -447,9 +450,9 @@ export async function mount(el, shell) {
         caption: m.label, keyboard: false,
         columns: [
           { key: "cell", label: "Cell", render: (r) => h("span", { title: conditionTitle(r.V, r.S, r.W) },
-            h("span", { class: "strong" }, r.ticket), " · ", plainCondition(r.V, r.S, r.W), " ", h("span", { class: "res-chip mono" }, conditionCode(r.V, r.S, r.W))) },
+            h("span", { class: "strong" }, GLOSSARY[r.ticket]?.short ?? r.ticket), " · ", plainCondition(r.V, r.S, r.W), " ", h("span", { class: "res-chip mono" }, `${r.ticket} ${conditionCode(r.V, r.S, r.W)}`)) },
           ...units.map((u) => ({ key: u.unit, num: true,
-            label: h("span", { class: "res-unit-col" }, unitTag(u.unit, { compact: true }), h("span", { class: "muted small" }, u.stages.join(" + "))),
+            label: h("span", { class: "res-unit-col" }, unitTag(u.unit, { compact: true }), h("span", { class: "muted small" }, u.stages.map((x) => withCode(x)).join(" + "))),
             render: (r) => { const v = r.units[u.unit]; return v ? `${v[m.key].x} of ${v[m.key].n}` : "—"; } })),
         ],
         rows: ba.rows,
@@ -463,7 +466,7 @@ export async function mount(el, shell) {
     return h("div", { class: "res-gloss", "aria-label": "What the codes mean" },
       h("span", { class: "small muted" }, "Codes:"),
       ["V0", "V1", "V2", "S0", "S1", "S2"].map((c) => h("span", { class: "res-gloss-item", title: `${c}: ${GLOSSARY[c].long}` },
-        h("span", { class: "res-chip mono" }, c), GLOSSARY[c].short)),
+        GLOSSARY[c].short, h("span", { class: "res-chip mono" }, c))),
       h("span", { class: "small muted" }, "· hover for the full meaning"));
   }
 
@@ -482,15 +485,15 @@ export async function mount(el, shell) {
     // Simple mode keeps the story path; the instrument, the pilots and the exclusions are in Expert mode
     if (expert) {
       items.push({ id: "instrument", label: "CI vs. oracle", render: () => h("div", { class: "stack" }, instrumentSection()) });
-      if (d.pilot && d.pilot.runs) items.push({ id: "pilot", label: "Pilot X1 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot)) });
-      if (d.pilot2 && d.pilot2.runs) items.push({ id: "pilot2", label: "Pilot X2 · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot2)) });
+      if (d.pilot && d.pilot.runs) items.push({ id: "pilot", label: "Pilot 1 (X1) · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot)) });
+      if (d.pilot2 && d.pilot2.runs) items.push({ id: "pilot2", label: "Pilot 2 (X2) · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot2)) });
       items.push({ id: "excluded", label: "Excluded", count: d.excluded.excluded.length || null, render: () => h("div", { class: "stack" }, excludedSection()) });
     }
     if (!items.some((i) => i.id === S.tab)) S.tab = "rq1";
     const t = tabs({ items, active: S.tab, onChange: (id) => { S.tab = id; store.set("tab", id); } });
     body.replaceChildren(...[
       d.rq.simulated ? notice(h("span", {}, h("strong", {}, d.rq.banner), ". Every figure exported from this namespace carries the MOCK watermark; it cannot be switched off."), "", "info") : null,
-      toolbar(), glossaryStrip(), t].filter(Boolean));
+      toolbar(), glossaryStrip(), codeLegend(), t].filter(Boolean));
   }
 
   const soon = (data) => {

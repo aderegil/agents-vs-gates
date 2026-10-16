@@ -1,5 +1,6 @@
 // Overview (spec §22.1): where are we and what comes next. Data: GET /api/overview?ns=…
 import { h, table, badge, bar, facts, panel, fmtInt, fmtDate, fmtTime, empty, iconEl, button } from "/web/lib/ui.js";
+import { withCode, meaningOf } from "/web/lib/labels.js";
 
 let timer = null;
 let alive = false;
@@ -79,7 +80,7 @@ function render(d, shell) {
   const stages = table({
     caption: "Progress per stage",
     columns: [
-      { key: "stage", label: "Stage", render: (r) => h("span", { class: "strong" }, r.stage) },
+      { key: "stage", label: "Stage", render: (r) => h("span", { class: "strong", title: meaningOf(r.stage) || null }, withCode(r.stage)) },
       { key: "name", label: "What" },
       { key: "bar", label: "Progress", width: "22%", render: (r) => r.in_manifest ? bar(r.done, r.total, { running: r.running }) : h("span", { class: "small muted" }, r.stage === "P3" ? "reviewer calls, not runs" : "not in manifest") },
       { key: "done", label: "Done", num: true, render: (r) => r.in_manifest ? `${fmtInt(r.done)} of ${fmtInt(r.total)}` : "—" },
@@ -95,7 +96,7 @@ function render(d, shell) {
 
   const heads = d.headlines.length
     ? h("ul", { class: "stack-sm", style: { margin: 0, paddingLeft: "18px" } },
-      d.headlines.map((x) => h("li", {}, x.stage ? h("span", { class: "muted" }, `${x.stage} · `) : null, x.text)))
+      d.headlines.map((x) => h("li", {}, x.stage ? h("span", { class: "muted" }, `${withCode(x.stage)} · `) : null, x.text)))
     : empty("No stage is unblinded yet. Outcomes stay hidden until a stage is complete and unblinded.");
 
   return [
