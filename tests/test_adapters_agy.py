@@ -206,7 +206,15 @@ class AgySession(unittest.TestCase):
         fix = self.run_session("rename_fix", resume=gen.session_id, session="fix1")
         self.assertIsNone(fix.infra, fix.infra)
         self.assertEqual(fix.session_id, gen.session_id)
-        calls = [json.loads(l) for l in self.log.read_text(encoding="utf-8").splitlines()]
+        # agy reports a resumed conversation's usage and duration summed over its sessions: only this session's share
+        self.assertEqual((fix.usage["input_tokens"], fix.usage["output_tokens"]), (1200, 500))
+        self.assertEqual((fix.usage_extra["cli_duration_s"], fix.usage_extra["cumulative"]["duration_seconds"]),
+                         (3.5, 7.0))
+        share = agy.own_share({"usage": {"input_tokens": 5, "output_tokens": 9}, "duration_seconds": 9.0},
+                              {"usage": {"input_tokens": 7, "output_tokens": 4}, "duration_seconds": 4.0})
+        self.assertEqual((share["usage"]["input_tokens"], share["usage"]["output_tokens"], share["duration_seconds"]),
+                         (0, 5, 5.0))
+        calls =[json.loads(l) for l in self.log.read_text(encoding="utf-8").splitlines()]
         self.assertEqual([c["userprofile"] for c in calls], [str(self.ws.cfg)] * 2)
         self.assertNotIn("--conversation", calls[0]["argv"])
         self.assertEqual(calls[1]["argv"][calls[1]["argv"].index("--conversation") + 1], gen.session_id)

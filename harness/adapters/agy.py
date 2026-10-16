@@ -43,6 +43,8 @@ from harness.adapters.base import Limits, SessionResult, event, now_iso
 
 CALLS = 0
 GRACE_S = 45
+MEMO = ".avg-agy-last.json"     # in the run's HOME: the conversation's cumulative usage/duration after the last session
+USAGE_RAW_KEYS = ("input_tokens", "output_tokens", "thinking_tokens", "cache_read_tokens", "total_tokens")
 WIPE_TRIES, WIPE_WAIT_S = 8, 3   # agy's background updater can hold a file for a few seconds after exit (C8)
 CUT_MARGIN_S = 2       # a result this close to --print-timeout counts as cut by it
 RAW_TAP = None          # smoke only: called with (line, ts) for every stdout line (schema capture)
@@ -518,6 +520,34 @@ def quota_percents(snap: dict) -> dict:
 
 # ---------------------------------------------------------------- session -----------------------------------------
 
+def own_share(result: dict, prev: dict | None) -> dict:
+    """agy's `result` of a resumed conversation reports usage and duration_seconds summed over the whole conversation
+    (C8, 2026-10-16: a repair's figures included the gen session's). Returns a copy with this session's share only:
+    the cumulative figures minus the previous session's (never below 0)."""
+    out = dict(result or {})
+    if not prev:
+        return out
+    u, pu = dict(out.get("usage") or {}), prev.get("usage") or {}
+    for k in USAGE_RAW_KEYS:
+        try:
+            u[k] = max(0, int(u.get(k) or 0) - int(pu.get(k) or 0))
+        except (TypeError, ValueError):
+            pass
+    out["usage"] = u
+    d, pd = out.get("duration_seconds"), prev.get("duration_seconds")
+    if isinstance(d, (int, float)) and isinstance(pd, (int, float)):
+        out["duration_seconds"] = max(0.0, d - pd)
+    return out
+
+
+def _memo(home: Path, conversation: str | None) -> dict | None:
+    try:
+        m = json.loads((home / MEMO).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return m if conversation and m.get("conversation_id") == conversation else None
+
+
 def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limits: Limits, on_event=None) -> SessionResult:
     global CALLS
     started = now_iso()
@@ -541,6 +571,16 @@ def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limit
     r = proc.run_streaming(argv, cwd=ws.root, env=build_env(home), stdin_text="",
                            wall_clock_s=limits.wall_clock_s + GRACE_S, on_line=on_line)
     parser.close()
+    cumulative = dict(parser.result or {}) if parser.result else None
+    if cumulative is not None:
+        parser.result = own_share(cumulative, _memo(home, resume) if resume else None)
+        try:
+            (home / MEMO).write_text(json.dumps({"conversation_id": parser.conversation_id or resume,
+                                                 "usage": cumulative.get("usage") or {},
+                                                 "duration_seconds": cumulative.get("duration_seconds")}),
+                                     encoding="utf-8")
+        except OSError:
+            pass
     changed = memory_changes(before, memory_fingerprint())
     if changed and not parser.breach:
         parser.breach = "agy wrote to the real ~\\.gemini\\antigravity-cli memory: " + ", ".join(changed)
@@ -556,6 +596,8 @@ def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limit
     final_text = parser.messages[-1] if parser.messages else None
     if isinstance(res.get("duration_seconds"), (int, float)):
         extra["cli_duration_s"] = res["duration_seconds"]
+    if resume and cumulative is not None:
+        extra["cumulative"] = {"usage": cumulative.get("usage"), "duration_seconds": cumulative.get("duration_seconds")}
     final = event(limits.session, "final", text=final_text, subtype=cls["subtype"], is_error=cls["is_error"],
                   num_turns=num_turns, duration_ms=r["duration_ms"], usage=dict(usage), cost_usd=cost)
     parser._emit(final)

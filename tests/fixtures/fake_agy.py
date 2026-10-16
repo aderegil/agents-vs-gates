@@ -79,6 +79,8 @@ def main():
     events = ws / "src" / "core" / "events.ts"
     usage = {"input_tokens": 1200, "output_tokens": 300, "thinking_tokens": 200, "cache_read_tokens": 800,
              "total_tokens": 1700}
+    if resume:   # live agy (C8): a resumed conversation reports usage and duration summed over all its sessions
+        usage = {k: 2 * v for k, v in usage.items()}
     if mode == "smoke":
         return smoke(prompt, cid, ws, usage, resume)
     if mode == "rename_fix" and events.exists():
@@ -103,7 +105,7 @@ def main():
              "output": "tests pass"})
         out({"event": "message", "conversation_id": cid, "text": msg})
         out({"event": "result", "conversation_id": cid, "status": "success", "response": msg,
-             "duration_seconds": 3.5, "num_turns": 4, "usage": usage})
+             "duration_seconds": 7.0 if resume else 3.5, "num_turns": 4, "usage": usage})
         return 0
     if mode == "timeout":
         out({"event": "result", "conversation_id": cid, "status": "timeout", "response": "",

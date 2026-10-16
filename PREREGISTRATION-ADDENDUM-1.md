@@ -112,7 +112,10 @@ every run records `cli_version`, and a later change is a declared deviation (as 
    same ticket or CI-feedback text the other units receive on stdin.
 8. **Effort.** The model variant `gemini-3.8-flash-medium` carries the medium thinking level; no `--effort` flag.
 9. **Tokens.** `output_tokens` = output + thinking tokens (as Claude's and OpenAI's output counts include thinking);
-   the raw split is kept in `sessions[].usage_extra`.
+   the raw split is kept in `sessions[].usage_extra`. On a resumed conversation (the repairs) agy reports usage and
+   duration summed over the whole conversation (seen in C8); the adapter keeps only that session's share and
+   stores the cumulative figures in `usage_extra.cumulative`. Turns are agent turns (tool steps + the answer), as
+   Claude Code counts them; agy's own `num_turns` counts user turns and is kept as `usage_extra.agy_num_turns`.
 10. **Quota.** Google AI Pro renews every 5 hours, with a weekly cap Google does not publish. A quota error pauses the
     runner (`rate_limited`), never counts as an agent result. `GEMINI_*`, `GOOGLE_*` and `AGY_*` variables are removed
     from agy's environment, so no API key or ADC can be used by accident.
