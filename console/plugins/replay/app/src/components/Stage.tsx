@@ -614,7 +614,7 @@ function drawZoneTitles(ctx: CanvasRenderingContext2D, zones: SceneZone[], c: St
 }
 
 /** The glass between the agent's side (Build, Verify) and the teams in Production: frosted in V0/V1, clear in V2. */
-function drawGlass(ctx: CanvasRenderingContext2D, clear: boolean, v: string, c: StageColors, layout: Layout) {
+function drawGlass(ctx: CanvasRenderingContext2D, clear: boolean, _v: string, c: StageColors, layout: Layout) {
   const b0 = aerialToPixel(GLASS_X, GLASS_Y0);
   const b1 = aerialToPixel(GLASS_X, GLASS_Y1);
   const h0 = 54 * b0.scale;
@@ -664,8 +664,8 @@ function drawGlass(ctx: CanvasRenderingContext2D, clear: boolean, v: string, c: 
   const mid = aerialToPixel(GLASS_X, (GLASS_Y0 + GLASS_Y1) / 2 + 0.06);
   layout.glass = {
     lines: clear
-      ? [`Clear glass (${v})`, "the teams' repos are in", "the agent's workspace"]
-      : [`Frosted glass (${v})`, "the teams' repos are not", "in the agent's workspace"],
+      ? ["Clear glass", "the teams' repos are in", "the agent's workspace"]
+      : ["Frosted glass", "the teams' repos are not", "in the agent's workspace"],
     x: mid.px - 14, y: mid.py - 70 * mid.scale, scale: mid.scale,
   };
 }
@@ -1182,12 +1182,31 @@ function drawHeader(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Stag
   ctx.fillText(title, MARGIN_X - 16, HEADER_H / 2 + 2);
   const tw = ctx.measureText(title).width;
   // which AI-SDLC model the floor shows (and, for a re-cast, that it is the same run with another roster)
-  const life = lifecycleLabel(engine.replay);
+  // the clock on the right keeps its room: the box drops the phase first, then shortens its own text with "…"
+  const clock = `${fmtClock(engine.clock)} / ${fmtClock(engine.end)}`;
+  let right = engine.state.phase ? `Phase: ${engine.state.phase}   ${clock}` : clock;
+  let life = lifecycleLabel(engine.replay);
   if (life) {
     const recast = !!engine.replay.meta["recast"];
+    ctx.font = `500 ${fz(13)}px ${FONT}`;
+    const roomFor = (text: string) => STAGE_W - MARGIN_X + 16 - ctx.measureText(text).width - 16;
+    let limit = roomFor(right);
     ctx.font = `600 ${fz(13)}px ${FONT}`;
-    const lw = ctx.measureText(life).width + 16;
-    const lx = Math.max(MARGIN_X - 16 + tw + 16, STAGE_W / 2 - lw / 2 - 40);
+    let lw = ctx.measureText(life).width + 16;
+    const lx0 = MARGIN_X - 16 + tw + 16;
+    let lx = Math.max(lx0, STAGE_W / 2 - lw / 2 - 40);
+    if (lx + lw > limit && right !== clock) {
+      right = clock;
+      ctx.font = `500 ${fz(13)}px ${FONT}`;
+      limit = roomFor(right);
+      ctx.font = `600 ${fz(13)}px ${FONT}`;
+    }
+    if (lx + lw > limit) {
+      lx = lx0;
+      while (life.length > 1 && lx + ctx.measureText(`${life}…`).width + 16 > limit) life = life.slice(0, -1);
+      life = `${life.trimEnd()}…`;
+      lw = ctx.measureText(life).width + 16;
+    }
     ctx.fillStyle = recast ? c.ink : c.surface;
     ctx.fillRect(lx, 8, lw, 24);
     ctx.strokeStyle = c.ink;
@@ -1200,9 +1219,7 @@ function drawHeader(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Stag
   ctx.textAlign = "right";
   ctx.font = `500 ${fz(13)}px ${FONT}`;
   ctx.fillStyle = c.ink2;
-  const phase = engine.state.phase ? `Phase: ${engine.state.phase}` : "";
-  ctx.fillText(`${phase}${phase ? "   " : ""}${fmtClock(engine.clock)} / ${fmtClock(engine.end)}`,
-    STAGE_W - MARGIN_X + 16, HEADER_H / 2 + 2);
+  ctx.fillText(right, STAGE_W - MARGIN_X + 16, HEADER_H / 2 + 2);
   ctx.restore();
 }
 
