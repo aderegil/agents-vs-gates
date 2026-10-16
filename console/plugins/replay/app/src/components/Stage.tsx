@@ -21,6 +21,7 @@ import {
 import { lifecycleLabel, recastCitation } from "../engine/recast";
 import { placeToFloor, projectFloorPoint, standingSpot } from "../engine/spatial";
 import { unitText } from "./UnitTag";
+import type { QaBox, QaKind } from "../engine/overlap";
 
 export const STAGE_W = 1280;
 export const STAGE_H = 720;
@@ -47,6 +48,14 @@ let present = false;
  * projected 1080p frame). */
 function fz(n: number): number {
   return present ? Math.round(Math.max(12, n * 1.18)) : n;
+}
+/** QA (theater-1016): every text box and figure drawn in the last frame, for the overlap sweep and tests. */
+let qaBoxes: QaBox[] = [];
+export function stageQaBoxes(): QaBox[] {
+  return qaBoxes;
+}
+function qa(kind: QaKind, r: { x: number; y: number; w: number; h: number }, owner?: string, text?: string) {
+  qaBoxes.push({ kind, x: r.x, y: r.y, w: r.w, h: r.h, owner, text });
 }
 /** Characters are about this wide at the front of the floor (scale 1), snapped to whole device pixels per grid pixel. */
 const ACTOR_W = 124;
@@ -189,6 +198,8 @@ interface BubbleAnchor {
   side?: "up" | "right";
   /** the speaker's own figure, kept clear when the bubble goes beside it */
   self?: Rect;
+  /** who speaks ("actor:<id>" or "place:<id>") */
+  owner?: string;
 }
 
 interface PlaceLabel {
@@ -281,6 +292,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   const { replay, state, clock } = engine;
   const placeById = new Map(replay.places.map((p) => [p.id, p]));
   present = bigSubs;
+  qaBoxes = [];
   crowdScale = replay.actors.filter((a) => a.actor_type !== "system").length > 12 ? 0.74 : 1;
   ctx.clearRect(0, 0, STAGE_W, STAGE_H);
   ctx.fillStyle = c.wall;
@@ -313,6 +325,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
     const spot = { x: f.x, y: f.y - OWNER_BEHIND };
     const fig = figureGeometry({ ...spot, walking: false, facing: 1 }, clock, null);
     layout.figures.push(fig.rect);
+    qa("figure", fig.rect, `place:${k.desk}`);
     drawables.push({ depth: spot.y, draw: () => drawOwner(ctx, engine, k, fig, desk, c, layout) });
   }
 
@@ -338,6 +351,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
     if (!pos) continue;
     const fig = figureGeometry(pos, clock, ci);
     layout.figures.push(fig.rect);
+    qa("figure", fig.rect, `actor:${a.id}`);
     drawables.push({ depth: pos.y, draw: () => drawActor(ctx, a, v, fig, clock, ci, c, layout) });
   }
 
@@ -395,6 +409,7 @@ function drawLegend(ctx: CanvasRenderingContext2D, c: StageColors) {
   const h = size + 12;
   const x = STAGE_W - w - 8;
   const y = STAGE_H - h - 11;
+  qa("chrome", { x, y, w, h }, "legend");
   ctx.fillStyle = c.surface;
   ctx.fillRect(x, y, w, h);
   ctx.strokeStyle = c.line;
@@ -421,6 +436,7 @@ function drawCitation(ctx: CanvasRenderingContext2D, text: string, c: StageColor
   const w = ctx.measureText(t).width + 14;
   const x = STAGE_W - w - 8;
   const y = STAGE_H - 30 - fz(12) - 18;
+  qa("chrome", { x, y, w, h: 20 }, "citation");
   ctx.fillStyle = c.surface;
   ctx.fillRect(x, y, w, 20);
   ctx.strokeStyle = c.lineStrong;
@@ -512,6 +528,7 @@ function drawZoneTitles(ctx: CanvasRenderingContext2D, zones: SceneZone[], c: St
     const w = Math.min(x1 - x0 - 8, Math.max(ctx.measureText(title).width, rw) + 16);
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.fillRect(cx - w / 2, TITLE_Y - 2, w, ts + rs + 10);
+    qa("chrome", { x: cx - w / 2, y: TITLE_Y - 2, w, h: ts + rs + 10 }, "zones", title);
     ctx.fillStyle = ZONE_TINTS[z.id] ?? c.floor;
     ctx.fillRect(cx - w / 2, TITLE_Y - 2, w, 3);
     ctx.fillStyle = c.ink;
@@ -542,6 +559,7 @@ function drawZoneTitles(ctx: CanvasRenderingContext2D, zones: SceneZone[], c: St
     const tw = ctx.measureText(text).width + 12;
     ctx.fillStyle = c.wall;
     ctx.fillRect((x0 + x1) / 2 - tw / 2, bandY() - fz(11) / 2 - 1, tw, fz(11) + 3);
+    qa("chrome", { x: (x0 + x1) / 2 - tw / 2, y: bandY() - fz(11) / 2 - 1, w: tw, h: fz(11) + 3 }, "zones", text);
     ctx.fillStyle = c.ink2;
     ctx.textBaseline = "middle";
     ctx.fillText(text, (x0 + x1) / 2, bandY() + 0.5);
@@ -634,6 +652,7 @@ function drawGlassCaption(ctx: CanvasRenderingContext2D, g: NonNullable<Layout["
     haloText(ctx, l, tx, r.y + 2 + i * lh);
   });
   layout.obstacles.push(r);
+  qa("caption", r, "glass", g.lines[0]);
   ctx.restore();
 }
 
@@ -644,7 +663,7 @@ function drawTicketOrigin(ctx: CanvasRenderingContext2D, engine: ReplayEngine, p
   const p = o ? places.get(o.place) : undefined;
   if (!o || !p) return;
   const { px, py } = placePixel(p);
-  const r = pill(ctx, px, py + 2, o.label, c.surface, c.ink, layout, 11);
+  const r = pill(ctx, px, py + 2, o.label, c.surface, c.ink, layout, 11, `place:${o.place}`);
   ctx.save();
   ctx.strokeStyle = c.lineStrong;
   ctx.lineWidth = 1;
@@ -670,7 +689,7 @@ function shortPath(p: string): string {
 }
 
 function pill(ctx: CanvasRenderingContext2D, cx: number, y: number, text: string, fill: string, ink: string,
-  layout: Layout, size = 11): Rect {
+  layout: Layout, size = 11, owner?: string): Rect {
   ctx.save();
   size = fz(size);
   ctx.font = `600 ${size}px ${FONT}`;
@@ -686,6 +705,7 @@ function pill(ctx: CanvasRenderingContext2D, cx: number, y: number, text: string
   ctx.restore();
   const r = { x, y, w, h };
   layout.obstacles.push(r);
+  qa("pill", r, owner, text);
   return r;
 }
 
@@ -711,7 +731,7 @@ function drawConsumerMarks(ctx: CanvasRenderingContext2D, engine: ReplayEngine, 
     const parts = (reads.last ?? "").replace(/\\/g, "/").split("/").filter(Boolean);
     const label = `read ${parts.slice(-2).join("/")}${reads.count > 1 ? ` +${reads.count - 1}` : ""}`;
     // the file label only while the read is fresh; the dotted line stays as the trace of it
-    if (reads.flash) pill(ctx, (agent.x + px) / 2, (agent.y + top) / 2 - 9, label, "#ffffff", ACCENT, layout);
+    if (reads.flash) pill(ctx, (agent.x + px) / 2, (agent.y + top) / 2 - 9, label, "#ffffff", ACCENT, layout, 11, `place:${k.desk}`);
   }
   const edits = editsAt(k, engine.clock);
   if (edits.length) {
@@ -722,7 +742,7 @@ function drawConsumerMarks(ctx: CanvasRenderingContext2D, engine: ReplayEngine, 
     ctx.strokeRect(px - w / 2, top - 6 * scale, w, py - top + 4 * scale);
     ctx.restore();
     const text = `edited by the agent: ${shortPath(edits[0])}${edits.length > 1 ? ` +${edits.length - 1}` : ""}`;
-    pill(ctx, px, py + 2, text, FAIL, "#ffffff", layout);
+    pill(ctx, px, py + 2, text, FAIL, "#ffffff", layout, 11, `place:${k.desk}`);
   }
 }
 
@@ -758,6 +778,7 @@ function drawResting(ctx: CanvasRenderingContext2D, engine: ReplayEngine, places
     ctx.textBaseline = "middle";
     haloText(ctx, text, x + 12 * scale, y + 2);
     layout.obstacles.push(r);
+    qa("sheet", r, `place:${s.to}`, text);
     ctx.restore();
   }
 }
@@ -926,6 +947,7 @@ function drawOwnerTags(ctx: CanvasRenderingContext2D, k: SceneConsumer, owner: N
   ctx.fillStyle = c.ink2;
   haloText(ctx, sub, px, ly + nameSize + 2);
   layout.obstacles.push(r);
+  qa("tag", r, `place:${desk.id}`, name);
   ctx.restore();
 
   if (view.alert) {
@@ -935,10 +957,10 @@ function drawOwnerTags(ctx: CanvasRenderingContext2D, k: SceneConsumer, owner: N
     // under the team's name: what broke, in the oracle's own words, then the verdict
     let ay = dp.py + 6 + fz(12) + fz(11) + 8;
     if (!pass && view.alert.impact) {
-      const r = pill(ctx, px, ay, view.alert.impact, FAIL, "#ffffff", layout, 12);
+      const r = pill(ctx, px, ay, view.alert.impact, FAIL, "#ffffff", layout, 12, `place:${desk.id}`);
       ay += r.h + 3;
     }
-    const r = pill(ctx, px, ay, text, pass ? "#ffffff" : FAIL, pass ? "#0e7490" : "#ffffff", layout, 11);
+    const r = pill(ctx, px, ay, text, pass ? "#ffffff" : FAIL, pass ? "#0e7490" : "#ffffff", layout, 11, `place:${desk.id}`);
     if (pass) {
       ctx.save();
       ctx.strokeStyle = PASS;
@@ -1017,6 +1039,7 @@ function drawDiffCard(ctx: CanvasRenderingContext2D, engine: ReplayEngine, card:
   }
   ctx.restore();
   layout.obstacles.push({ x, y, w, h });
+  qa("card", { x, y, w, h }, `actor:${engine.replay.scene?.agent ?? ""}`, title);
 }
 
 function drawOverlay(ctx: CanvasRenderingContext2D, o: StageOverlay, c: StageColors) {
@@ -1031,6 +1054,7 @@ function drawOverlay(ctx: CanvasRenderingContext2D, o: StageOverlay, c: StageCol
   const h = 30 + lines.length * 19;
   const x = (STAGE_W - w) / 2;
   const y = HEADER_H + 6;
+  qa("chrome", { x, y, w, h }, "overlay", o.title);
   ctx.fillStyle = c.surface;
   ctx.strokeStyle = c.ink;
   ctx.lineWidth = 1.5;
@@ -1234,6 +1258,7 @@ function drawIllustrationCallouts(ctx: CanvasRenderingContext2D, engine: ReplayE
     lines.forEach((l, i) => ctx.fillText(l, r.x + 9, r.y + hs + 9 + i * (ts + 3)));
     ctx.restore();
     layout.obstacles.push(r);
+    qa("callout", r, `place:${placeId}`, head);
   };
   if (flagAt(engine, "rule")) callout(ill.rule.place, "WHERE THE RULE LIVES", ill.rule.label, "rule");
   if (flagAt(engine, "blocks")) callout(ill.blocks.place, "WHAT BLOCKS THE MERGE", ill.blocks.label, "block");
@@ -1396,12 +1421,13 @@ function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, 
       ctx.fillText(gateText, cx, yy + (gs + 5) / 2 + 0.5);
     }
     layout.obstacles.push(r);
+    qa("name", r, `actor:${a.id}`, shown);
     ctx.restore();
   });
 
   ctx.restore();
   if (bubbleVisible(v, clock) && v.bubble) {
-    layout.bubbles.push({ x: px, y: y + 4 * gridPx, bubble: v.bubble, self: fig.rect });
+    layout.bubbles.push({ x: px, y: y + 4 * gridPx, bubble: v.bubble, self: fig.rect, owner: `actor:${a.id}` });
   }
 }
 
@@ -1432,6 +1458,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
     const lx = Math.min(px, STAGE_W - 8 - lw / 2);
     haloText(ctx, legend, lx, py + 2, 3);
     layout.obstacles.push({ x: lx - lw / 2 - 2, y: py + 1, w: lw + 4, h: us + 3 });
+    qa("label", { x: lx - lw / 2 - 2, y: py + 1, w: lw + 4, h: us + 3 }, "place:users", legend);
   } else if (place.id === "pr-tray") {
     top = drawTray(ctx, px, py, scale, trayCount(replay, clock), c);
     note = place.note ?? null;
@@ -1459,6 +1486,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
         haloText(ctx, id, px - 34 * scale, ly, 3);
         const tw = ctx.measureText(id).width;
         layout.obstacles.push({ x: px - 34 * scale - tw - 2, y: ly - fs / 2 - 1, w: tw + 4, h: fs + 2 });
+        qa("label", { x: px - 34 * scale - tw - 2, y: ly - fs / 2 - 1, w: tw + 4, h: fs + 2 }, "place:ci-tower", id);
       });
       ctx.restore();
     }
@@ -1482,6 +1510,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
       py + 1 + (rows > 1 && i % 2 ? ls + 2 : 0), 3));
     ctx.restore();
     layout.obstacles.push({ x: px - 65 * scale - 8, y: top, w: 130 * scale + 16, h: py - top + 1 + rows * (ls + 2) });
+    qa("label", { x: px - 65 * scale - 8, y: py + 1, w: 130 * scale + 16, h: rows * (ls + 2) }, "place:staging-bench", "consumers");
     if (state.staging.state) note = `hidden from the agent · ${state.staging.state}`;
     else if (present) note = null; // the users' legend says it in presentation mode
   } else if (place.id === "dispatch") {
@@ -1512,6 +1541,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
         ctx.textBaseline = "middle";
         haloText(ctx, text, r.x + 2, r.y + th / 2, 3);
         layout.obstacles.push(r);
+        qa("label", r, `place:${place.id}`, text);
         ctx.restore();
       });
     }
@@ -1533,8 +1563,8 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
 
   if (owner && bubbleVisible(owner, clock) && owner.bubble) {
     layout.bubbles.push(place.id === "ci-tower"
-      ? { x: px + 36 * scale, y: top + 50 * scale, bubble: owner.bubble, side: "right" }
-      : { x: px, y: top - 8, bubble: owner.bubble });
+      ? { x: px + 36 * scale, y: top + 50 * scale, bubble: owner.bubble, side: "right", owner: `place:${place.id}` }
+      : { x: px, y: top - 8, bubble: owner.bubble, owner: `place:${place.id}` });
   }
 }
 
@@ -1612,6 +1642,7 @@ function drawPlaceLabel(ctx: CanvasRenderingContext2D, l: PlaceLabel, c: StageCo
   noteLines(ctx, l).forEach((n, i) => haloText(ctx, n, cx, top + l.size + 2 + i * (l.noteSize + 2)));
   ctx.restore();
   layout.obstacles.push(r);
+  qa("label", r, `place:${l.place ?? l.text}`, l.text);
 }
 
 function actorFor(actors: ReplayActor[], views: Record<string, ActorView>, role: string): ActorView | undefined {
@@ -1689,7 +1720,9 @@ function drawTray(ctx: CanvasRenderingContext2D, px: number, py: number, s: numb
     ctx.fillStyle = c.ink;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    haloText(ctx, count === 1 ? "PR" : `PR v${count}`, px + 20 * s, ty - 8 * s, 3);
+    const prText = count === 1 ? "PR" : `PR v${count}`;
+    haloText(ctx, prText, px + 20 * s, ty - 8 * s, 3);
+    qa("label", { x: px + 20 * s, y: ty - 8 * s - 8, w: ctx.measureText(prText).width, h: 16 }, "place:pr-tray", prText);
   }
   ctx.restore();
   return ty - 4 * s - n * 3 * s;
@@ -1893,6 +1926,7 @@ function layoutBubbles(ctx: CanvasRenderingContext2D, layout: Layout, c: StageCo
       }
     });
     placed.push(best);
+    qa("bubble", best, b.owner, b.bubble.text);
     drawBubble(ctx, b, box, best, c);
   }
 }
@@ -1956,6 +1990,7 @@ function drawSubtitle(ctx: CanvasRenderingContext2D, text: string, c: StageColor
   const h = lines.length * lh + 16;
   const x = (STAGE_W - w) / 2;
   const y = STAGE_H - 44 - h;
+  qa("subtitle", { x, y, w, h }, "subtitle", lines[0]);
   ctx.fillStyle = c.subtitleBg;
   ctx.globalAlpha = 0.9;
   ctx.fillRect(x, y, w, h);
@@ -1987,6 +2022,7 @@ function drawWatermark(ctx: CanvasRenderingContext2D, meta: ReplayEngine["replay
     let t2 = tail;
     while (t2.length > 12 && hw + ctx.measureText(t2).width + 24 > STAGE_W * 0.62) t2 = `${t2.slice(0, -2)}…`;
     const w = hw + ctx.measureText(t2).width + 20;
+    qa("chrome", { x, y: y + 3, w, h: h - 6 }, "watermark");
     ctx.fillStyle = c.surface;
     ctx.fillRect(x, y + 3, w, h - 6);
     ctx.strokeStyle = c.ink;
@@ -2006,6 +2042,7 @@ function drawWatermark(ctx: CanvasRenderingContext2D, meta: ReplayEngine["replay
     const inner = ctx.measureText(legend).width + 20;
     const stripe = 26;
     const w = inner + stripe * 2;
+    qa("chrome", { x, y, w: w + 10 + ctx.measureText(`${meta.run_id} · ${unitText(meta.unit)} · ${meta.date}`).width, h }, "watermark");
     // amber/ink diagonal stripes = "attention: simulated"
     ctx.save();
     ctx.beginPath();
@@ -2035,6 +2072,7 @@ function drawWatermark(ctx: CanvasRenderingContext2D, meta: ReplayEngine["replay
     ctx.font = `500 ${fz(13)}px ${FONT}`;
     const text = `Replay of a real run · ${meta.run_id} · ${unitText(meta.unit)} · ${meta.date}`;
     const w = ctx.measureText(text).width + 20;
+    qa("chrome", { x, y: y + 3, w, h: h - 6 }, "watermark");
     ctx.fillStyle = c.surface;
     ctx.fillRect(x, y + 3, w, h - 6);
     ctx.strokeStyle = c.lineStrong;

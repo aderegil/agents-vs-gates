@@ -12,7 +12,7 @@ import { EventsPanel } from "./EventsPanel";
 import { Icon } from "./Icons";
 import "./presenter.css";
 import { SpeedControl } from "./SpeedControl";
-import { Stage, type StageHandle } from "./Stage";
+import { Stage, stageQaBoxes, type StageHandle } from "./Stage";
 import { Timeline, fmt } from "./Timeline";
 import { plainCondition } from "./labels";
 import { UnitTag } from "./UnitTag";
@@ -229,6 +229,25 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
     c.seek(tbRef.current.fromA(t));
     apply();
   }, [c, apply]);
+
+  // ?qa=1: a hook for the headless overlap sweep (video/qa-overlap.mjs): seek pane A, draw now, return what was drawn
+  useEffect(() => {
+    if (query().get("qa") !== "1") return;
+    const w = window as unknown as { __avgQa?: unknown };
+    w.__avgQa = {
+      end: engine.end,
+      at: (t: number) => {
+        c.pause();
+        c.seek(tbRef.current.fromA(t));
+        follow(engine, tbRef.current.at(c.p).a);
+        stageRef.current?.draw();
+        return { clock: engine.clock, boxes: stageQaBoxes() };
+      },
+    };
+    return () => {
+      delete w.__avgQa;
+    };
+  }, [c, engine]);
 
   const stepEvent = useCallback((dir: 1 | -1) => {
     c.pause();
