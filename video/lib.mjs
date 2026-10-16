@@ -32,6 +32,7 @@ export function mounts() {
     "/shots/": path.join(WORK, "shots"),
     "/scenes/": path.join(VIDEO, "scenes"),
     "/fonts/": path.join(REPO, "console", "web", "fonts"),
+    "/labels/": path.join(REPO, "console", "web", "lib"),   // the one label map (labels.js) for the clip cards
   };
 }
 

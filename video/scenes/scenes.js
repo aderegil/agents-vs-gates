@@ -1,6 +1,10 @@
 // Talk video scenes. Each scene is a pure function of time: build() once, then render(tMs) for every frame, so the
 // capture is deterministic and needs no real-time playback. Data comes from video/work/*.json (prepare.py), which is
 // built from the scenario and the real run records; nothing here is typed in by hand except connective wording.
+// The one label map (console/web/lib/labels.js, mounted at /labels/): the clip cards show plain words, never the codes
+// (X-rename, V0·S0, P1, p1-0002…). Decision 2026-10-16, docs/DECISIONS.md "Plain words".
+import { detectorLabel, outcomeLabel, plainCondition, runName, ticketLabel } from "/labels/labels.js";
+
 const q = new URLSearchParams(location.search);
 const stage = document.getElementById("stage");
 const J = async (p) => { const r = await fetch(p); if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); };
@@ -481,8 +485,8 @@ async function oneIntro() {
     .filter((x) => x.keys.length);
   const D = sec(24);
   const card = el("div", { class: "title-card", style: { top: "150px" } },
-    el("div", { class: "eyebrow" }, `A real run · ${b.run_id} · ${UNIT_NAME[b.unit] || b.unit} (${b.model}) · stage ${b.stage}`),
-    el("h2", {}, `${b.ticket} · ${b.V} · ${b.S}`),
+    el("div", { class: "eyebrow" }, `A real run · ${runName(b.run_id)} · ${UNIT_NAME[b.unit] || b.unit} (${b.model})`),
+    el("h2", {}, `${ticketLabel(b.ticket)} · ${plainCondition(b.V, b.S)}`),
     el("p", {}, "Its workspace holds only orders-service. Its spec says nothing about architecture."),
     el("div", { class: "quote", style: { marginTop: "34px" } }, `“${b.ticket_text}”`),
     el("p", { style: { marginTop: "30px", fontSize: "30px" } }, "What it cannot see: ",
@@ -523,12 +527,12 @@ async function oneOutro() {
   const facts = [
     ["fail", `First pull request: CI blocked it (${(first.failing || []).map((x) => x.id).join(", ")})`,
       (first.failing || []).flatMap((x) => x.lines).map((l) => el("div", { class: "mono" }, l))],
-    [last.ok ? "pass" : "fail", `Repair after reading CI's output (${(b.repair_diff || "").replace(".diff", "")}): CI ${last.ok ? "passed" : "failed"}`,
+    [last.ok ? "pass" : "fail", `Repair after reading CI's output: CI ${last.ok ? "passed" : "failed"}`,
       (b.deprecated_lines || []).map((l) => el("div", { class: "mono" }, l))],
     [finalOk ? "pass" : "fail", `Final pull request: ${finalOk ? "every team's tests pass" : "a team's tests still fail"}`,
-      [el("div", {}, `outcome ${b.outcome} · ticket ${b.ticket_done} · ${b.turns} turns · ${b.minutes} min`)]],
+      [el("div", {}, `${outcomeLabel(b.outcome)} · ticket ${String(b.ticket_done || "").replace(/_/g, " ")} · ${b.turns} turns · ${b.minutes} min`)]],
   ];
-  const head = topbar(`What the record of ${b.run_id} says`, "record.json · CI verdicts · the other teams' tests · diffs", [["REAL", "accent"]]);
+  const head = topbar("What the run's record says", `${runName(b.run_id)} · CI verdicts · the other teams' tests · diffs`, [["REAL", "accent"]]);
   const box = el("div", { class: "card", style: { left: "80px", top: "170px", width: "1760px", padding: "8px 34px" } },
     facts.map(([k, t, d]) => el("div", { class: "fact" }, el("div", { class: `dot ${k}` }), el("div", {}, el("div", { class: "t" }, t), el("div", { class: "d" }, d)))));
   stage.append(box);
@@ -543,8 +547,8 @@ async function codexIntro() {
   const x = f.codex;
   const D = sec(10);
   const card = el("div", { class: "title-card", style: { top: "220px" } },
-    el("div", { class: "eyebrow" }, `A real run · ${x.run_id} · ${UNIT_NAME[x.unit] || x.unit} (${x.model}) · stage ${x.stage}`),
-    el("h2", {}, `${x.ticket} · ${x.V} · ${x.S}`),
+    el("div", { class: "eyebrow" }, `A real run · ${runName(x.run_id)} · ${UNIT_NAME[x.unit] || x.unit} (${x.model})`),
+    el("h2", {}, `${ticketLabel(x.ticket)} · ${plainCondition(x.V, x.S)}`),
     el("p", {}, "The other teams' contracts are copied into its repo, and CI checks them."),
     el("div", { class: "quote", style: { marginTop: "34px" } }, `“${x.ticket_text}”`));
   stage.append(card);
@@ -560,11 +564,11 @@ async function codexOutro() {
   const facts = [
     [x.ci_first_ok ? "pass" : "fail", `CI on the first pull request: ${x.ci_first_ok ? "passed" : "failed"}`, []],
     ["fail", "Gate flags: it edited files the gate depends on",
-      (x.flags || []).map((g) => el("div", { class: "mono" }, `${g.detector} · ${g.path} · ${g.summary}`))],
+      (x.flags || []).map((g) => el("div", { class: "mono", title: g.detector }, `${g.path} · ${g.summary || detectorLabel(g.detector)}`))],
     [broke.length ? "fail" : "pass", broke.length ? broke.map(([k, v]) => `${k}: ${v.tests} · ${v.impact}`).join(" · ") : "every team's tests pass",
       broke.map(([, v]) => el("div", { class: "mono" }, v.detail))],
   ];
-  const head = topbar(`What the record of ${x.run_id} says`, "record.json · CI verdict · gate detectors · the other teams' tests", [["REAL", "accent"]]);
+  const head = topbar("What the run's record says", `${runName(x.run_id)} · CI verdict · gate checks · the other teams' tests`, [["REAL", "accent"]]);
   const box = el("div", { class: "card", style: { left: "80px", top: "170px", width: "1760px", padding: "8px 34px" } },
     facts.map(([k, t, d]) => el("div", { class: "fact" }, el("div", { class: `dot ${k}` }), el("div", {}, el("div", { class: "t" }, t), el("div", { class: "d" }, d)))));
   stage.append(box);
@@ -580,16 +584,16 @@ async function design() {
   const condCol = (x, title, rows) => {
     const n = el("div", { class: "card", style: { left: `${x}px`, top: "170px", width: "860px", padding: "22px 28px" } },
       el("div", { style: { fontSize: "30px", fontWeight: 600, marginBottom: "8px" } }, title),
-      rows.map(([code, text]) => el("div", { style: { display: "grid", gridTemplateColumns: "90px 1fr", alignItems: "center",
-        padding: "14px 0", borderTop: "1px solid var(--linea)" } },
-        el("span", { style: { fontSize: "34px", fontWeight: 600, color: "var(--acento)" } }, code),
-        el("span", { style: { fontSize: "27px" } }, text))));
+      // plain words only: the condition's short name (labels.js) and what it means; the code stays in data-code
+      rows.map(([code, text]) => el("div", { "data-code": code, style: { padding: "12px 0", borderTop: "1px solid var(--linea)" } },
+        el("div", { style: { fontSize: "30px", fontWeight: 600, color: "var(--acento)" } }, plainCondition(code)),
+        el("div", { style: { fontSize: "25px" } }, text))));
     stage.append(n);
     return n;
   };
-  const cv = condCol(80, "What the agent can see · V", [["V0", "only its own repo (orders-service)"],
+  const cv = condCol(80, "What the agent can see", [["V0", "only its own repo (orders-service)"],
     ["V1", "its repo + the other teams' contracts"], ["V2", "all four repos in its workspace"]]);
-  const cs = condCol(980, "What its spec says · S", [["S0", "the ticket + the service README"],
+  const cs = condCol(980, "What its spec says", [["S0", "the ticket + the service README"],
     ["S1", "+ architecture prose"], ["S2", "+ the rules ARCH-1…8 in the spec"]]);
   const gate = el("div", { class: "card", style: { left: "80px", top: "560px", width: "1760px", padding: "22px 28px", fontSize: "27px", lineHeight: "1.45" } },
     el("div", { style: { fontSize: "30px", fontWeight: 600, marginBottom: "6px" } }, "The same gates judge every run"),
@@ -597,10 +601,10 @@ async function design() {
     el("div", { class: "muted" }, "The other teams' own tests run on the PR too. The agent never sees them: they measure real breaks."));
   stage.append(gate);
   const units = el("div", { class: "abs", style: { left: "80px", top: "820px", fontSize: "25px", color: "var(--tinta-2)" } },
-    "Agents: Claude Code (Sonnet; Opus in P5) and Codex (the replication, P6). Each run starts from a clean workspace.");
+    "Agents: Claude Code with Sonnet (some runs with Opus) and Codex (a repeat of the main runs). Each run starts from a clean workspace.");
   stage.append(units);
   const cap = captions([
-    [0.3, 10, "The experiment varies what the agent can see (V) and what its spec says (S)."],
+    [0.3, 10, "The experiment varies what the agent can see and what its spec says."],
     [10, 20, "Then the same gates judge every run: CI on the pull request, and the other teams' own tests."],
     [20, 30, "Every number in the talk comes from these runs' records."],
   ]);
