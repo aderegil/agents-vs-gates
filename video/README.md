@@ -71,3 +71,12 @@ every slow screenshot pushed the replay ahead (the first night renders ran ~3× 
 - Disk: the build stops if C: has less than 5 GB free. Frames are piped, never written to disk.
 - Light palette; cyan = pass, pink = fail only. Fictional people only (the theater's owners are labelled fictional).
 - `video/work`, `video/out` and `node_modules` are gitignored; the MP4 stays out of git.
+
+## Theater QA (theater-1016)
+```
+node qa-stills.mjs --tag after                 # fixed-moment stills -> docs/qa/theater-1016-<shot>-<tag>.png
+node qa-overlap.mjs --tag after                # overlap sweep, every 250 ms of 8 replays -> docs/qa/theater-1016-overlap-<tag>.txt
+node qa-avatars.mjs --tag after                # portrait contact sheet (pure pixel code, no browser)
+```
+`--dist <folder>` points the first two at another theater build (e.g. a saved copy for "before"). They need
+`work/replays/` from `prepare_clips.py` for the two real runs.
