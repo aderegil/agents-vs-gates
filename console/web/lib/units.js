@@ -22,6 +22,7 @@ const UNITS = {
   codex: { mono: "CX", product: "Codex", model: null },
   mock: { mono: "M", product: "Mock agent", model: null, mock: true },
   gemini: { mono: "?", product: "Gemini", model: null },   // configured, never run: no monogram of its own
+  "agy-flash": { mono: "?", product: "Antigravity CLI", model: "Gemini 3.8 Flash" },   // P8, the third agent (addendum 1)
 };
 
 /** {unit, mono, product, model, mock, label} for a unit id; unknown ids keep their own name. */
