@@ -35,6 +35,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from harness import authenv, gitutil, paths, proc
@@ -42,6 +43,7 @@ from harness.adapters.base import Limits, SessionResult, event, now_iso
 
 CALLS = 0
 GRACE_S = 45
+WIPE_TRIES, WIPE_WAIT_S = 8, 3   # agy's background updater can hold a file for a few seconds after exit (C8)
 CUT_MARGIN_S = 2       # a result this close to --print-timeout counts as cut by it
 RAW_TAP = None          # smoke only: called with (line, ts) for every stdout line (schema capture)
 PRICES = paths.REPO / "harness" / "prices.json"
@@ -139,11 +141,15 @@ def prepare_home(home, ws_root, source: Path | None = None) -> dict:
     """Wipe the per-run HOME and seed it with the sign-in files only (never memory, rules, config or settings).
     Returns {"seeded": n, "home": str}."""
     home = Path(home)
-    if home.exists():
-        try:
-            gitutil.rmtree(home)
-        except OSError:
-            pass
+    for attempt in range(WIPE_TRIES):
+        if home.exists():
+            try:
+                gitutil.rmtree(home)
+            except OSError:
+                pass
+        if not home.exists() or not any(home.iterdir()):
+            break
+        time.sleep(WIPE_WAIT_S)
     home.mkdir(parents=True, exist_ok=True)
     left = sorted(p.name for p in home.iterdir())
     if left:
@@ -541,8 +547,11 @@ def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limit
     cls = classify(parser, r["rc"], r["stderr"], r["timed_out"], limits.wall_clock_s)
     usage, extra = parser.usage()
     res = parser.result or {}
-    num_turns = res.get("num_turns") if isinstance(res.get("num_turns"), int) else \
-        (parser.tool_calls + 1 if (parser.messages or parser.tool_calls) else 0)
+    # agy's own num_turns counts user turns (1 per call, C8); agent turns = tool steps + the final answer, which is
+    # what Claude Code's num_turns counts. agy's figure is kept in usage_extra.
+    num_turns = parser.tool_calls + 1 if (parser.messages or parser.tool_calls) else 0
+    if isinstance(res.get("num_turns"), int):
+        extra["agy_num_turns"] = res["num_turns"]
     cost = price_cost(unit.get("model"), usage)
     final_text = parser.messages[-1] if parser.messages else None
     if isinstance(res.get("duration_seconds"), (int, float)):
