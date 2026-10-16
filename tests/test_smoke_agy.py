@@ -59,6 +59,16 @@ class SmokeAgy(unittest.TestCase):
         self.assertIn('{"_smoke_call": 1}', stream)
         self.assertTrue((self.tmp / "results" / "smoke-agy-environment.md").exists())
 
+    def test_no_sign_in_stops_after_call_1(self):
+        log = self.tmp / "calls.log"
+        with mock.patch.dict(os.environ, {"FAKE_AGY_MODE": "auth", "FAKE_AGY_LOG": str(log)}), \
+                mock.patch.object(agy, "entry_argv", return_value=[sys.executable, str(FAKE)]), \
+                redirect_stdout(io.StringIO()):
+            self.assertEqual(smoke.main(["--unit", "agy-flash", "--i-am-authorized"]), 1)
+        self.assertEqual(len(log.read_text(encoding="utf-8").splitlines()), 2)    # call 1 + the quota readout
+        report = json.loads((self.tmp / "results" / "smoke-agy.json").read_text(encoding="utf-8"))
+        self.assertTrue(any(c["name"].startswith("stopped after call 1") for c in report["checks"]))
+
     def test_leak_fails_the_smoke(self):
         with mock.patch.dict(os.environ, {"FAKE_AGY_MODE": "leak",
                                           "FAKE_AGY_REAL_HOME": os.environ["AVG_AGY_REAL_HOME"]}), \

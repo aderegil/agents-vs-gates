@@ -224,6 +224,11 @@ def run_live() -> int:
             names = sorted(p.relative_to(smoke_home()).as_posix() for p in smoke_home().rglob("*")
                            if len(p.relative_to(smoke_home()).parts) <= 3) if call["n"] == 1 else None
             checks += evaluate(call["n"], res, ws, names)
+            if call["n"] == 1 and (res.infra or res.subtype != "success"):
+                checks.append({"call": "all", "name": "stopped after call 1 (no sign-in or no result): calls 2-6 "
+                               "not made, to spare the quota", "ok": False, "info": False,
+                               "detail": (res.infra or {}).get("detail", res.subtype)})
+                break
         quota = agy.quota_snapshot(smoke_home())
     finally:
         agy.RAW_TAP = None
