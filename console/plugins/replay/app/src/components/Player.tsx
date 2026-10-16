@@ -14,7 +14,7 @@ import "./presenter.css";
 import { SpeedControl } from "./SpeedControl";
 import { Stage, stageQaBoxes, type StageHandle } from "./Stage";
 import { Timeline, fmt } from "./Timeline";
-import { plainCondition } from "./labels";
+import { GLOSSARY, outcomeLabel, plainConditionOf, runHeadline, ticketLabel } from "./labels";
 import { UnitTag } from "./UnitTag";
 
 interface Props {
@@ -32,10 +32,20 @@ interface Props {
 
 type DiffPart = ReturnType<typeof conditionDiff>[number];
 
-function condition(r: Replay): string {
-  const c = r.meta.condition ?? {};
-  return [c.V, c.S, c.W].filter(Boolean).join("·");
+/** The compare heads in plain words: the ticket's label and each condition part's (the default wording W1 only when
+ * one side differs). The codes stay in `key` and in the title. */
+function plainHeads(parts: DiffPart[]): DiffPart[] {
+  return parts
+    .filter((p) => !(p.key === "W" && !p.differs && p.a === "W1"))
+    .map((p) => {
+      const word = (v: string) => (p.key === "ticket" ? ticketLabel(v) : GLOSSARY[v]?.short ?? v);
+      return { ...p, a: word(p.a), b: word(p.b) };
+    });
 }
+
+const PART_NAME: Record<string, string> = {
+  ticket: "the ticket", V: "what the agent can see", S: "what its spec says", W: "how the ticket is worded",
+};
 
 // ------------------------------------------------------------------------------------------------ clip format
 
@@ -471,7 +481,8 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
   const slideList = tb.slides;
   const slideIdx = currentSlide(slideList, c.p);
   const slide = slideList[slideIdx];
-  const heads = compare ? conditionDiff(replay, compare) : null;
+  const heads = compare ? plainHeads(conditionDiff(replay, compare)) : null;
+  const cond = plainConditionOf(m.condition);
   const shared = compare ? tb.momentAt(c.p) : null;
   const sharedLabel = shared ? momentLabel(shared) : null;
   composeInfo.current = {
@@ -496,7 +507,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
         {heads?.map((p, i) => (
           <span key={p.key}>
             {i > 0 && <span className="compare-head__sep"> · </span>}
-            <span className={p.differs ? "is-diff" : ""} title={p.differs ? `${p.key} differs` : undefined}>
+            <span className={p.differs ? "is-diff" : ""} title={p.differs ? `${PART_NAME[p.key] ?? p.key} differs` : undefined}>
               {side ? p.b : p.a}
             </span>
           </span>
@@ -514,16 +525,18 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
             {picker}
             {tools}
             <div className="meta" aria-label="Run">
-              <strong>{m.source === "illustration" ? String(m["title"] ?? m.run_id) : m.ticket ?? m.run_id}</strong>
-              {condition(replay) && (
-                <span className="cond" title={plainCondition(m.condition ?? {}).title}>
-                  {plainCondition(m.condition ?? {}).text} <code className="cond__code">{condition(replay)}</code>
+              <strong title={m.source === "illustration" ? undefined : m.ticket ?? m.run_id}>
+                {m.source === "illustration" ? String(m["title"] ?? "") : runHeadline({ ticket: m.ticket, run_id: m.run_id })}
+              </strong>
+              {cond.text && (
+                <span className="cond" title={cond.title} data-code={[m.condition?.V, m.condition?.S, m.condition?.W].filter(Boolean).join("·")}>
+                  {cond.text}
                 </span>
               )}
               <UnitTag unit={m.unit} />
               {m.model && m.model !== m.unit && <span>{m.model}</span>}
               <span className="num">{m.date}</span>
-              {m.outcome && <span className="chip">{m.outcome.replace(/_/g, " ")}</span>}
+              {m.outcome && <span className="chip">{outcomeLabel(m.outcome)}</span>}
               {m.ticket_done && <span className="chip">ticket {m.ticket_done.replace(/_/g, " ")}</span>}
               {m.source === "mock" ? <span className="chip chip--sim">SIMULATED</span>
                 : m.source === "illustration"
@@ -589,11 +602,11 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
               <div className="compare">
                 <div className="compare__pane">
                   <Stage ref={stageRef} engine={engine} largeSubtitles={presenting} overlay={overlayFor(0)}
-                    label={`${m.run_id} · ${m.ticket ?? ""} ${condition(replay)}`} />
+                    label={runHeadline(m)} />
                 </div>
                 <div className="compare__pane">
                   <Stage ref={stageBRef} engine={engineB} largeSubtitles={presenting} overlay={overlayFor(1)}
-                    label={`${compare.meta.run_id} · ${compare.meta.ticket ?? ""} ${condition(compare)}`} />
+                    label={runHeadline(compare.meta)} />
                   <button type="button" className="btn btn--quiet compare__close" onClick={onCloseCompare}>
                     <Icon name="close" /> Close compare
                   </button>

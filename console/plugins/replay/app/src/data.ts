@@ -4,6 +4,7 @@
 // demo replays (exported from replay/fixtures, all mock, all watermarked SIMULATED).
 import type { TeamModel } from "./engine/recast";
 import type { Replay } from "./engine/replay";
+import { plainReplay, plainText, runName, runHeadline, stageLabel } from "./components/labels";
 
 export interface Hello {
   type: "avg:hello";
@@ -201,8 +202,9 @@ export async function listScenes(): Promise<RunEntry[]> {
     label: `ILLUSTRATION · ${s.title}` }));
 }
 
+/** A replay with its on-screen text in plain words (components/labels.ts: no codes on screen). */
 export function loadReplay(url: string): Promise<Replay> {
-  return getJson<Replay>(url);
+  return getJson<Replay>(url).then(plainReplay);
 }
 
 export function navigateShell(plugin: string, params: Record<string, string>): void {
@@ -211,12 +213,12 @@ export function navigateShell(plugin: string, params: Record<string, string>): v
   }
 }
 
-/** "REAL · p0-0002 · X-rename V0·S0·W1 · P0" or "SIMULATED · st-0014 · …": source, run, its cell, stage. */
+/** "Real · Main test · run 2 · Rename two fields · Own repo · No rule" or "Simulated · Simulated run 14 · …": the
+ * source, the run in words and what it is. No codes on screen (the run id stays in the option's value and title). */
 export function runLabel(r: RunEntry): string {
-  if (r.label) return r.label;
-  const c = r.condition ?? {};
-  const cond = [c.V, c.S, c.W].filter(Boolean).join("·");
-  const cell = [r.ticket, cond].filter(Boolean).join(" ");
-  const src = r.source === "mock" ? "SIMULATED" : "REAL";
-  return [src, r.run_id, cell, r.stage].filter(Boolean).join(" · ");
+  if (r.label) return plainText(r.label);
+  const src = r.source === "mock" ? "Simulated" : "Real";
+  const named = runName(r.run_id);
+  const where = named !== r.run_id ? named : stageLabel(r.stage ?? null);
+  return [src, where, runHeadline({ ticket: r.ticket, condition: r.condition })].filter(Boolean).join(" · ");
 }

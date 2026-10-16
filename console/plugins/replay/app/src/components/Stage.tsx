@@ -21,6 +21,7 @@ import {
 import { lifecycleLabel, recastCitation } from "../engine/recast";
 import { placeToFloor, projectFloorPoint, standingSpot } from "../engine/spatial";
 import { unitText } from "./UnitTag";
+import { runHeadline, runSource } from "./labels";
 import type { QaBox, QaKind } from "../engine/overlap";
 import { dimAmount, focusAt, type FocusFrame } from "../engine/focus";
 import { OLDER_BUBBLE_ALPHA, bubbleAlpha, figureGridScale, shownBubbles } from "../engine/stagePolicy";
@@ -192,7 +193,7 @@ export const Stage = forwardRef<StageHandle, Props>(function Stage({ engine, lar
       ref={canvasRef}
       className="stage-canvas"
       role="img"
-      aria-label={`Replay stage: ${engine.replay.meta.legend}, run ${engine.replay.meta.run_id}`}
+      aria-label={`Replay stage: ${engine.replay.meta.legend}, ${runSource(engine.replay.meta)}`}
     />
   );
 });
@@ -1165,7 +1166,6 @@ function drawFloor(ctx: CanvasRenderingContext2D, c: StageColors) {
 
 function drawHeader(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: StageColors, label?: string) {
   const m = engine.replay.meta;
-  const cond = ["V", "S", "W"].map((k) => m.condition?.[k as "V" | "S" | "W"]).filter(Boolean).join("·");
   ctx.save();
   ctx.fillStyle = c.ink;
   ctx.font = `600 ${fz(15)}px ${FONT}`;
@@ -1177,7 +1177,8 @@ function drawHeader(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Stag
     ctx.restore();
     return;
   }
-  const title = label ?? `AI-SDLC Office · ${m.ticket ?? m.run_id}${cond ? ` · ${cond}` : ""}`;
+  // plain words only: "AI-SDLC Office · Rename two fields · Own repo · No rule" (no ticket or condition codes)
+  const title = label ?? `AI-SDLC Office · ${runHeadline(m)}`;
   ctx.fillText(title, MARGIN_X - 16, HEADER_H / 2 + 2);
   const tw = ctx.measureText(title).width;
   // which AI-SDLC model the floor shows (and, for a re-cast, that it is the same run with another roster)
@@ -1627,7 +1628,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
       layout.obstacles.push({ x: sx - 8, y: sy - 18, w: 22, h: 26 });
       layout.late.push(() => {
         ctx.save();
-        const text = "consumer contracts (V1)";
+        const text = "the other teams' contracts";
         ctx.font = `500 ${fz(11)}px ${FONT}`;
         const tw = ctx.measureText(text).width;
         const th = fz(11) + 4;
@@ -2151,7 +2152,7 @@ function drawWatermark(ctx: CanvasRenderingContext2D, meta: ReplayEngine["replay
     const inner = ctx.measureText(legend).width + 20;
     const stripe = 26;
     const w = inner + stripe * 2;
-    qa("chrome", { x, y, w: w + 10 + ctx.measureText(`${meta.run_id} · ${unitText(meta.unit)} · ${meta.date}`).width, h }, "watermark");
+    qa("chrome", { x, y, w: w + 10 + ctx.measureText(`${runSource(meta)} · ${unitText(meta.unit)} · ${meta.date}`).width, h }, "watermark");
     // amber/ink diagonal stripes = "attention: simulated"
     ctx.save();
     ctx.beginPath();
@@ -2176,10 +2177,10 @@ function drawWatermark(ctx: CanvasRenderingContext2D, meta: ReplayEngine["replay
     ctx.fillText(legend, x + stripe + 10, y + h / 2 + 0.5);
     ctx.font = `500 12px ${FONT}`;
     ctx.fillStyle = c.ink2;
-    ctx.fillText(`${meta.run_id} · ${unitText(meta.unit)} · ${meta.date}`, x + w + 10, y + h / 2 + 0.5);
+    ctx.fillText(`${runSource(meta)} · ${unitText(meta.unit)} · ${meta.date}`, x + w + 10, y + h / 2 + 0.5);
   } else {
     ctx.font = `500 ${fz(13)}px ${FONT}`;
-    const text = `Replay of a real run · ${meta.run_id} · ${unitText(meta.unit)} · ${meta.date}`;
+    const text = `Replay of a real run · ${runSource(meta)} · ${unitText(meta.unit)} · ${meta.date}`;
     const w = ctx.measureText(text).width + 20;
     qa("chrome", { x, y: y + 3, w, h: h - 6 }, "watermark");
     ctx.fillStyle = c.surface;

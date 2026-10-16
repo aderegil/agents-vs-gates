@@ -145,7 +145,7 @@ function App() {
   }, [replay, source, teams.length]);
 
   const option = (r: RunEntry) => (
-    <option key={r.url} value={r.url} disabled={r.blinded}>
+    <option key={r.url} value={r.url} disabled={r.blinded} title={r.run_id} data-run={r.run_id}>
       {runLabel(r)}{r.blinded ? " — blinded" : ""}
     </option>
   );
@@ -196,7 +196,7 @@ function App() {
         aria-label="Compare with another run">
         <option value="">Compare…</option>
         {runs.filter((r) => r.url !== selected && !r.blinded).map((r) => (
-          <option key={r.url} value={r.url}>{runLabel(r)}</option>
+          <option key={r.url} value={r.url} title={r.run_id} data-run={r.run_id}>{runLabel(r)}</option>
         ))}
       </select>
     </label>

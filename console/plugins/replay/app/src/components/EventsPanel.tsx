@@ -4,6 +4,7 @@
 // follow; "Follow" resumes it. Clicking an event seeks the stage there (and follows again).
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { eventSteps, type Replay, type ReplayStep } from "../engine/replay";
+import { detectorLabel } from "./labels";
 import { fmt } from "./Timeline";
 
 interface Props {
@@ -42,7 +43,8 @@ function rowsOf(s: ReplayStep): [string, string][] {
   add("Tool", d["tool_name"]);
   add("Status", d["status"]);
   add("Interaction", d["interaction_type"]);
-  add("Detector", d["detector"]);
+  // plain words (the detector's code, D1…D8, stays in the data)
+  add("Gate check", typeof d["detector"] === "string" ? detectorLabel(d["detector"] as string) : d["detector"]);
   add("Path", d["path"]);
   add("Oracle state", d["state"]);
   if (d["hidden_from_agent"]) add("Visibility", "hidden from the agent");
@@ -81,7 +83,7 @@ function Detail({ s }: { s: ReplayStep }) {
 
 /** What matters about the current step while the stage plays it: the file, command, CI line or message in full. */
 function Current({ s }: { s: ReplayStep }) {
-  const keep = new Set(["Tool", "Path", "Check", "Detector", "Diff", "Failed checks", "Visibility", "Contradicts CI",
+  const keep = new Set(["Tool", "Path", "Check", "Gate check", "Diff", "Failed checks", "Visibility", "Contradicts CI",
     "Oracle state"]);
   const rows = rowsOf(s).filter(([k]) => keep.has(k));
   const full = longOf(s, 0);

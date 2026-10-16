@@ -34,7 +34,7 @@ test("Maya's sheets: S0 only the fitness functions to CI; S2 also the rules to t
   const s2 = load("m1-xrename-v0s2-additive.json");
   const sheets = architectSheets(s2);
   assert.deepEqual(sheets.map((t) => t.to), ["desk-orders", "ci-tower"]);
-  assert.match(sheets[0].label, /S2 rules$/);
+  assert.match(sheets[0].label, / · the rules$/);
   assert.equal(sheets[1].label, "ARCH-1…ARCH-8 · fitness functions");
   assert.equal(restingSheets(s2, sheets[0].t0 + SHEET_MS - 1).length, 0);
   assert.equal(restingSheets(s2, sheets[0].t0 + SHEET_MS).length, 2);

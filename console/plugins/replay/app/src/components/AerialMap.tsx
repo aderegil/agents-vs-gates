@@ -5,6 +5,8 @@ import type { ReplayEngine } from "../engine/replay";
 import { isActive, walkProgress } from "../engine/replay";
 import { hashString } from "../engine/rng";
 import { AvatarCanvas } from "./AvatarCanvas";
+import { runSource } from "./labels";
+import { unitText } from "./UnitTag";
 
 interface Props {
   engine: ReplayEngine;
@@ -97,7 +99,7 @@ export function AerialMap({ engine, onOpenPlace }: Props) {
       <div className={`dom-watermark ${replay.meta.source === "mock" ? "dom-watermark--mock" : ""}`}>
         {replay.meta.source === "mock"
           ? <span>{replay.meta.legend}</span>
-          : <span>Replay of a real run · {replay.meta.run_id} · {replay.meta.unit} · {replay.meta.date}</span>}
+          : <span>Replay of a real run · {runSource(replay.meta)} · {unitText(replay.meta.unit)} · {replay.meta.date}</span>}
       </div>
     </div>
   );

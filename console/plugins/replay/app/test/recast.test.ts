@@ -45,7 +45,7 @@ test("single-ticket DEFINE: the ticket sheet travels from Product when the task 
   const sheet = ticketSheet(r);
   assert.ok(sheet);
   assert.equal(sheet.from, "product-desk");
-  assert.equal(sheet.label, "ticket X-rename");
+  assert.equal(sheet.label, "ticket: rename two fields");
   assert.equal(sheet.t0, r.scene?.ticket_origin?.t_ms);
   assert.ok(travels(r).includes(sheet) || travels(r).some((t) => t.from === "product-desk"));
   assert.equal(ticketSheet(load("m2b-sprint-f1.json")), null, "the sprint has its own product people");
