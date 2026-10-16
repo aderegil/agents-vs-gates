@@ -101,6 +101,24 @@ class RunnerTest(unittest.TestCase):
         finally:
             manifest.ext1_path("mock").unlink(missing_ok=True)
 
+    def test_2c_refuses_while_another_runner_is_alive(self):
+        import subprocess
+        import sys
+        exe = getattr(sys, "_base_executable", None) or sys.executable    # not the venv launcher: no grandchild
+        other = subprocess.Popen([exe, "-c", "import time; time.sleep(60)"], stdin=subprocess.DEVNULL,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            paths.runner_lock_path("mock").write_text(str(other.pid), encoding="utf-8")
+            code, _, err = run(["--stage", "P1", "--unit", "mock", "--batch", "1"], self.fs, self.scripts())
+            self.assertEqual(code, 2)
+            self.assertIn("another runner is alive", err)
+        finally:
+            other.kill()
+            other.wait()
+        code, _, _ = run(["--stage", "P1", "--unit", "mock", "--batch", "1"], self.fs, self.scripts())
+        self.assertEqual(code, 0)                                       # a dead pid in the lock does not block
+        self.assertFalse(paths.runner_lock_path("mock").exists())
+
     @SLOW
     def test_3_infra_requeue_then_final(self):
         bad = self.ids["P0"][0]

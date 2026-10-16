@@ -94,6 +94,22 @@ class State:
         return self.data["runs"].setdefault(rid, {"status": "pending"})
 
 
+def other_runner(ns: str) -> int | None:
+    """PID of another live runner of this namespace (its lock file, or state.json's runner.pid), else None. Two
+    runners would share state.json and the worker folders (2026-10-16 overlap, DECISIONS)."""
+    from console.core.runner_ctl import pid_alive
+    pids = []
+    try:
+        pids.append(int(paths.runner_lock_path(ns).read_text(encoding="utf-8").strip() or 0))
+    except (OSError, ValueError):
+        pass
+    pids.append(((jsonio.read_json(paths.state_path(ns)) or {}).get("runner") or {}).get("pid"))
+    for pid in pids:
+        if pid and pid != os.getpid() and pid_alive(pid):
+            return int(pid)
+    return None
+
+
 def log(ns: str, event: str, **kw) -> None:
     jsonio.append_jsonl(paths.runner_log_path(ns), {"ts": now(), "event": event, **kw})
 
@@ -638,10 +654,25 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
         if missing and pipeline is None:
             print("refused: WP1 pieces missing: " + ", ".join(missing), file=sys.stderr)
             return EXIT_GUARD
+    busy = other_runner(ns)
+    if busy:
+        print(f"refused: another runner is alive in namespace {ns} (pid {busy}); one runner at a time "
+              "(stop it with the control file or wait)", file=sys.stderr)
+        return EXIT_GUARD
+    lock = paths.runner_lock_path(ns)
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    lock.write_text(str(os.getpid()), encoding="utf-8")
     batch = Batch(ns, stage, todo, st, manifest, workers=a.workers, max_runs=limit, max_minutes=a.max_minutes,
                   unit_label=a.unit or ("mock" if ns == "mock" else None), pipeline=pipeline,
                   mock_scripts=mock_scripts, quiet=a.quiet)
-    code = batch.run()
+    try:
+        code = batch.run()
+    finally:
+        try:
+            if lock.read_text(encoding="utf-8").strip() == str(os.getpid()):
+                lock.unlink()
+        except OSError:
+            pass
     if stage in manifest_mod.PILOTS:
         try:
             from analysis import pilot_x1

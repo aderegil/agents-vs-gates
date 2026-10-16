@@ -51,6 +51,10 @@ def control_path(ns: str) -> Path:
     return ns_dir(ns) / "control.json"
 
 
+def runner_lock_path(ns: str) -> Path:
+    return ns_dir(ns) / "runner.lock"
+
+
 def worker_dir(ns: str, k: int) -> Path:
     """Worker k: own node_modules + r\\ (the run in progress). Real: w<k>; mock: wm<k>; selftest: wst."""
     prefix = {"real": "w", "mock": "wm", "selftest": "wst"}[ns]
