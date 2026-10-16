@@ -4,6 +4,8 @@ export const GLOSSARY: Record<string, Meaning>;
 export const STAGES: Record<string, Meaning>;
 export const HYPOTHESES: Record<string, Meaning>;
 export const DETECTORS: Record<string, Meaning>;
+export const QUESTIONS: Record<string, Meaning>;
+export const REVIEWERS: Record<string, Meaning>;
 export const OUTCOME_LABEL: Record<string, string>;
 export function plainCondition(V?: string | null, S?: string | null, W?: string | null): string;
 export function conditionTitle(V?: string | null, S?: string | null, W?: string | null): string;
