@@ -717,3 +717,34 @@ Branch `theater-1016` (worktree `C:\avg\theater-1016`, from `night-1013`), not m
 - **Clips.** Regenerated with the same file names in `video/out` (see BUILD-STATUS); `exp-company-design.mp4` was not re-rendered (scene pages only, no theater). The previous clips are kept in `C:\avg\agents-vs-gates\video\out-backup-2026-10-15\`.
 - **Not run:** `python -m console --check` (the lead was running mock harness runs on the shared workers; the check launches mock runs).
 - Tests: theater `npm test` 61/61 (14 new in `test/theater1016.test.ts`: focus, bubble cap and fade, avatar scale, overlap rules, lanes timeline and neutral variant); `node --test console/plugins/*/web/*.test.mjs` 51/51; replay python tests 53 OK (1 skipped).
+
+## theater-1016 · Plain words instead of codes (2026-10-16; builder subagent, Alfredo: «Pero sí aparecen y por eso confunden»)
+- **One label map:** `console/web/lib/labels.js` (types in `labels.d.ts`). The console plugins import it as before; the
+  theater re-exports it (`app/src/components/labels.ts`, no copy any more) and the clip cards load it from the new
+  `/labels/` mount (`video/lib.mjs`). Meanings checked against PREREGISTRATION.md §6/§7, the addendum on `ext-1016`
+  (P7, P8, C8), `scenario/tasks/X-*.md`, `harness/detectors.py`.
+- **Wording.** Tickets: X-rename «Rename two fields», X-remove «Remove a field», X-add «Add an optional field», X-api
+  «Rename a field in the API», X-dep «Call another team's API», X-units «Total in dollars». V0 «Own repo», V1
+  «Contracts inside the repo» (plural: every consumer contract is copied in; Alfredo's example said «Contract»), V2
+  «Every repo visible». S0 «No rule», S1 «Architecture notes» (prose without rule IDs or consumers), S2 «Rule in the
+  spec». W1 «Ticket as written» (never shown: it is the default), W2 «Ticket asks not to break consumers». Stages: P0
+  «Trial runs», P1 «Main test», P2 «Pressure test», P3 «Reviewer test», P4 «More tickets», P5 «Opus and wording», P6
+  «Codex repeat», P7 «More main-test runs», P8 «Third agent», C8 «Third-agent trial runs», X1/X2 «Pilot 1/2». H2
+  «Rule vs no rule», HS-V2 «Every repo vs own repo». Detectors D1–D8 get short words (D6 «Consumer contract changed»).
+  Run ids read «Main test · run 2» (p1-0002), «Codex repeat · run 12» (p6-0012), «Simulated run 14» (st-0014).
+- **Theater and clips: words only.** `plainReplay` (on load) rewrites the free text of a replay that reaches the
+  screen (step text, subtitles, markers, title, context sheet, ticket origin, events-panel text); header, compare
+  heads, picker, canvas title, watermark, V1 desk label («the other teams' contracts»), sheets and the events panel's
+  detector row use the map. Codes stay in the data, in `<option title>`/`data-run`/`data-code`, and in file names.
+  ARCH-n rule names, file paths, contract names and model ids stay: they are what the audience reads in the code.
+- **Console: words first, code after** in parentheses or a chip (Run Explorer, Run Control, Results, Home, Overview),
+  plus «What the codes mean» (`ui.js codeLegend`, a native `<details>` with one `<dl>` per family) on Home, Run Control,
+  Run Explorer and Results. The unblind confirmation still asks for `UNBLIND P1` (the code is the safety word).
+- **Left as codes (not in scope or need a visual check):** the Results chart labels built in
+  `console/plugins/results/payload.py` (group labels such as «X-rename V0·S0»; exported SVG/PNG figures for the deck
+  would change size), the Story figures' captions in `console/plugins/story/figures.py`, RQ1–RQ7 and the reviewer
+  conditions R-S0/R-S2/R-C; the talk-draft video scenes (`experiment`, `break*`, `stop*`, `results` in
+  `video/scenes/scenes.js`, used by `build.mjs`, not by the deck clips). No meaning was unclear.
+- **Tests:** `app/test/plainwords.test.ts` (map, `plainText`, run names, and no code in any visible text of the 7 demo
+  replays, 5 scenes and the two clip replays after `plainReplay`); theater 67/67; console model/chart tests 35/35. Clip
+  cards checked in headless Edge (scene pages only, no video): no code in the five changed cards.
