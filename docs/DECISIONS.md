@@ -610,3 +610,12 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
 - **My mistake: two runners for 2 min 22 s.** The builder's resume script was meant to wait for the batch to end and then relaunch it with both units. It read `state.json` while the runner was atomically replacing it, got nothing, took "no pid" for "batch ended" and started a second runner at 14:54:00 UTC. The first one stopped at 14:56:22 on an isolation breach in p7-0194: the second runner had re-prepared that worker's Claude Code config, so the built-in plugins showed up at session start, and the check stopped the run before any work, as designed. Both runners shared `w1..w3`.
 - **Repair.** I rebuilt the timeline from `runner.log.jsonl`. Three runs executed in the window: p7-0187, p7-0188 and p7-0190, the last of them in both runners. They were moved unchanged to `results/real/attempts/<id>/overlap-2026-10-16/` with a `reclassified.json` (kind `runner_overlap`), set back to pending with the same id and `infra_failures` reset to 0 (the fault was the builder's, not the run's), and logged as `reclassified`. p7-0194's kept record is the clean re-run (14:57:03–14:58:40, after the window). p7-0110/0111/0113 were Codex runs that only hit the rate limit; they stay pending. No outcome was looked at: the three were chosen by time window only, and P7 stays blinded.
 - **Guard so it cannot happen again.** The runner now refuses to start while another runner of the same namespace is alive (`results/<ns>/runner.lock` holding the pid, plus `state.json`'s pid; checked with the console's `pid_alive`), and removes the lock when it ends. Test `test_2c_refuses_while_another_runner_is_alive`. The resume step now relies on that refusal instead of reading `state.json`.
+
+### P8 starts while Codex waits for its quota (2026-10-16, ~17:16 Monterrey)
+- Alfredo's «sí» for P8 came before P7 ended ("we can run agy while we wait for codex"). Nothing in the addendum ties
+  P8's start to P7's end; the order "P8 after P7" was only the builder's plan.
+- Still one runner at a time (runner.lock). A driver script runs P8 first. When a batch ends rate-limited, that unit
+  waits for its own reset and the other one runs if it is free. Exit 0 = that stage is finished; any other exit stops both.
+- Consequence: P7's last 79 Codex runs may resume after P8's batch, not right at Codex's 21:02 reset. Run order inside
+  each stage stays the manifest's; blinding is unchanged for both stages.
+
