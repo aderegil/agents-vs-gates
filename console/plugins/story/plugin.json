@@ -2,7 +2,7 @@
   "id": "story",
   "name": "Home",
   "icon": "home",
-  "order": 0,
+  "order": 1,
   "description": "What we tested, what happened, and where to see it.",
   "roles": ["owner", "operator", "presenter", "viewer"],
   "kind": "module",

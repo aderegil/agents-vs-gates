@@ -2,7 +2,7 @@
   "id": "results",
   "name": "Results",
   "icon": "bar-chart-3",
-  "order": 3,
+  "order": 4,
   "description": "Results per research question, with charts that export to the slides.",
   "roles": ["owner", "operator", "presenter", "viewer"],
   "kind": "module",

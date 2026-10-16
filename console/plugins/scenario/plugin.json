@@ -2,7 +2,7 @@
   "id": "scenario",
   "name": "Scenario",
   "icon": "boxes",
-  "order": 7,
+  "order": 8,
   "description": "Meridian Retail: repos, ARCH rules, catalog, tickets, S0/S1/S2 contexts and consumer contracts.",
   "roles": ["owner", "operator", "presenter", "viewer"],
   "kind": "module",

@@ -2,7 +2,7 @@
   "id": "users",
   "name": "Users & Audit",
   "icon": "user-cog",
-  "order": 9,
+  "order": 10,
   "description": "Local accounts, roles and the audit log.",
   "roles": ["owner"],
   "kind": "module",

@@ -145,7 +145,7 @@ class RoutesAndRoles(unittest.TestCase):
         with fx_for() as fx:
             seed_results(fx.results)
             plugins = {p["id"]: p for p in fx.owner.get("/api/plugins").json["plugins"]}
-            self.assertEqual(plugins["results"]["order"], 3)
+            self.assertEqual(plugins["results"]["order"], 4)
             self.assertEqual(plugins["results"]["name"], "Results")
             for role in ("viewer", "presenter"):
                 c = fx.client(f"u-{role}", role)
