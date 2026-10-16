@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-ALWAYS_VISIBLE = {"P0", "X1", "X2", "selftest"}   # X1, X2: exploratory pilots, watched live (DECISIONS)
+ALWAYS_VISIBLE = {"P0", "X1", "X2", "C8", "selftest"}   # X1, X2: exploratory pilots, watched live (DECISIONS);
+#                                                        C8: agy-flash calibration (addendum 1), like P0
 TERMINAL = {"done", "infra_failure_final"}
 
 

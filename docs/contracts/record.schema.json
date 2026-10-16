@@ -48,7 +48,7 @@
     },
     "stage": {
       "type": "string",
-      "description": "P0..P6, or 'selftest'"
+      "description": "P0..P8, C8, X1, X2, or 'selftest'"
     },
     "unit": {
       "type": "string"
@@ -58,6 +58,7 @@
         "claude_code",
         "codex",
         "gemini",
+        "agy",
         "mock"
       ]
     },

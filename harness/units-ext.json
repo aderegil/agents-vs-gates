@@ -1,0 +1,6 @@
+{
+  "agy-flash": { "adapter": "agy", "model": "gemini-3.8-flash-medium", "effort": "medium", "effort_flag": false,
+                 "sandbox": true, "context_file": "GEMINI.md" },
+  "mock-cx":   { "adapter": "mock" },
+  "mock-agy":  { "adapter": "mock" }
+}

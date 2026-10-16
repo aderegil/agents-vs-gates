@@ -45,7 +45,7 @@
         "properties": {
           "run_id": {
             "type": "string",
-            "pattern": "^(p[0-6]|x1c?|x2)-[0-9]{4}$"
+            "pattern": "^(p[0-8]|x1c?|x2|c8)-[0-9]{4}$"
           },
           "stage": {
             "enum": [
@@ -55,6 +55,9 @@
               "P4",
               "P5",
               "P6",
+              "P7",
+              "P8",
+              "C8",
               "X1",
               "X2"
             ]

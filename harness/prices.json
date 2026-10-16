@@ -1,5 +1,12 @@
 {
   "_date": "2026-10-10",
   "_source": "empty until a Codex account exists; fill per model as {\"input_per_mtok\", \"cached_input_per_mtok\", \"output_per_mtok\"} in USD with the source URL and date",
-  "models": {}
+  "models": {
+    "gemini-3.8-flash-medium": {
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.75,
+      "output_per_mtok": 3.75,
+      "_source": "Alfredo's figure in the addendum-1 brief (2026-10-15): Flash USD 0.75 / 3.75 per million; cached input priced as input (upper bound, cache price not given). Reference only: the unit runs on the Google AI Pro sign-in, not an API key."
+    }
+  }
 }

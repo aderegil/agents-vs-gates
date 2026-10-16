@@ -13,7 +13,8 @@ PARAPHRASED = ("X-rename", "X-remove", "X-api")
 CONSUMERS = ("billing-service", "analytics-ingest", "web-storefront")
 V2_LINE = ("You are working on orders-service. The other folders are other teams' repositories, "
            "checked out read-only for reference.")
-CONTEXT_NAMES = {"claude_code": "CLAUDE.md", "mock": "CLAUDE.md", "codex": "AGENTS.md", "gemini": "GEMINI.md"}
+CONTEXT_NAMES = {"claude_code": "CLAUDE.md", "mock": "CLAUDE.md", "codex": "AGENTS.md", "gemini": "GEMINI.md",
+                 "agy": "GEMINI.md"}
 
 
 def _read(p: Path) -> str:

@@ -78,6 +78,7 @@ CONTEXT = SCENARIO / "context"
 NODE_MODULES = REPO / "node_modules"
 EMPTY_GITCONFIG = REPO / "harness" / "empty.gitconfig"
 UNITS = REPO / "harness" / "units.json"
+UNITS_EXT = REPO / "harness" / "units-ext.json"     # addendum 1 units (harness.unitsio)
 CANARIES = REPO / "harness" / "canaries.json"
 PREREG_LOCK = REPO / "PREREGISTRATION.lock"
 TRACE_SCHEMA = REPO / "trace" / "schema" / "simulation-log-event-2.1.0.json"

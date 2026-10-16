@@ -13,6 +13,10 @@
                                                                   exploratory; writes results/<ns>/x2-summary.md)
   python -X utf8 -m harness.runner --stage P6 --part P1 --workers 3   the P1 part of P6 (codex; needs the sidecar
                                                                   results/<ns>/manifest-p6.json, harness.manifest --p6-sidecar)
+  python -X utf8 -m harness.runner --stage C8 --workers 1          agy-flash calibration (addendum 1; exploratory and
+                                                                  visible like P0; needs results/smoke-agy.json) -> report
+  python -X utf8 -m harness.runner --stage P7 --unit cc-sonnet --workers 3   addendum 1 (needs both locks to verify:
+                                                                  PREREGISTRATION.lock and PREREGISTRATION-ADDENDUM-1.lock)
 Options: --workers 1..3, --max-runs N (alias of --batch; the smaller wins), --ns real|mock, --unit U, --part P1|P2|P4.
 Exit codes: 0 ok, 2 usage/guard refusal (lock missing, smoke not passed, model drift), 3 rate-limited, 4 isolation
 breach. While running: state.json rewritten atomically at least every second, PID in state.runner.pid,
@@ -38,8 +42,10 @@ from harness import manifest as manifest_mod
 
 EXIT_OK, EXIT_GUARD, EXIT_RATE, EXIT_BREACH = 0, 2, 3, 4
 MAX_INFRA_RETRIES = 2
-STAGES = ("P0", "P1", "P2", "P4", "P5", "P6") + manifest_mod.PILOTS
-EXPLORATORY = ("P0",) + manifest_mod.PILOTS      # exempt from the pre-registration lock (calibration, pilots)
+STAGES = ("P0", "P1", "P2", "P4", "P5", "P6") + manifest_mod.EXT_STAGES + manifest_mod.PILOTS + manifest_mod.CAL_STAGES
+EXPLORATORY = ("P0",) + manifest_mod.PILOTS + manifest_mod.CAL_STAGES   # exempt from the locks (calibration, pilots)
+MULTI_UNIT = manifest_mod.PILOTS + ("P7",)       # stages whose real runs belong to several units: --unit required
+DRIFT_NOTED = manifest_mod.EXT_STAGES + manifest_mod.CAL_STAGES   # addendum 1: model drift is recorded, not a stop
 
 
 def now() -> str:
@@ -68,6 +74,9 @@ def load_state(ns: str, manifest: dict | None) -> dict:
     p6_sha = manifest_mod.sha256(manifest_mod.p6_path(ns))
     if p6_sha:
         st["p6_manifest_sha256"] = p6_sha
+    ext_sha = manifest_mod.sha256(manifest_mod.ext1_path(ns))
+    if ext_sha:
+        st["ext1_manifest_sha256"] = ext_sha
     return st
 
 
@@ -124,6 +133,8 @@ def smoke_files(units_used) -> dict:
         adapter = (table.get(u) or {}).get("adapter")
         if adapter == "codex":
             out["smoke-codex.json"] = " --unit codex"
+        elif adapter == "agy":
+            out["smoke-agy.json"] = " --unit agy-flash"
         elif adapter != "mock":
             out["smoke.json"] = ""
     return out or {"smoke.json": ""}
@@ -143,6 +154,10 @@ def guard_errors(ns: str, stage: str, units_used: set[str]) -> list[str]:
         ok, problems = prereg.verify()
         if not ok:
             errs.append("pre-registration lock missing or does not match: " + "; ".join(problems[:5]))
+        if stage in manifest_mod.EXT_STAGES:
+            ok, problems = prereg.verify_addendum(1)
+            if not ok:
+                errs.append("addendum-1 lock missing or does not match: " + "; ".join(problems[:5]))
     for u in units_used:
         if u == "mock":
             errs.append("unit mock in the real namespace")
@@ -317,6 +332,15 @@ class Batch:
         seen = self.state.data.setdefault("models_seen", {})
         expected = configured if _full_model_id(configured) else seen.get(unit)
         if reported and expected and reported != expected:
+            if rec.get("stage") in DRIFT_NOTED:   # addendum 1: a declared deviation, never a reason to stop
+                notes = self.state.data.setdefault("drift_notes", [])
+                note = {"stage": rec.get("stage"), "unit": unit, "reported": reported, "expected": expected,
+                        "cli_version": rec.get("cli_version")}
+                if note not in notes:
+                    notes.append(dict(note, first_run=rec.get("run_id"), at=now()))
+                    log(self.ns, "model_drift_noted", run_id=rec.get("run_id"), unit=unit, reported=reported,
+                        expected=expected)
+                return None
             return f"model drift for {unit}: reported {reported}, expected {expected}; batch stopped"
         if reported and unit not in seen:
             seen[unit] = reported
@@ -565,7 +589,7 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
         runs = [r for r in runs if r.get("part") == a.part]
     if ns == "real" and a.unit:
         runs = [r for r in runs if r["unit"] == a.unit]
-    elif ns == "real" and stage in manifest_mod.PILOTS and len({r["unit"] for r in runs}) > 1:
+    elif ns == "real" and stage in MULTI_UNIT and len({r["unit"] for r in runs}) > 1:
         print(f"{stage} has runs for several units ({', '.join(sorted({r['unit'] for r in runs}))}); pass --unit "
               "(they run one after the other, not mixed)", file=sys.stderr)
         return EXIT_GUARD

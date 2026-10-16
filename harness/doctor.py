@@ -17,7 +17,7 @@ from pathlib import Path
 
 from harness import paths
 
-CONTEXT_NAMES = ("CLAUDE.md", "AGENTS.md", "GEMINI.md", ".claude", ".codex")
+CONTEXT_NAMES = ("CLAUDE.md", "AGENTS.md", "GEMINI.md", ".claude", ".codex", ".agents", ".agent")   # .agents/.agent: agy workspace rules
 
 
 def _run(argv: list[str], cwd: Path | None = None, timeout: int = 60) -> tuple[int, str]:
@@ -121,6 +121,8 @@ def checks(workers: int = 2) -> list[dict]:
     add("codex --version", ok, v)
     entry = codex_native_entry()
     add("codex native entry", bool(entry), entry or "not found", required=False)
+    ok, v = _version("agy")
+    add("agy --version (addendum 1, unit agy-flash)", ok, v, required=False)
     for tool, rel in (("typescript", "typescript/package.json"), ("dependency-cruiser", "dependency-cruiser/package.json")):
         p = paths.NODE_MODULES / rel
         ver = json.loads(p.read_text(encoding="utf-8"))["version"] if p.exists() else None
@@ -128,7 +130,7 @@ def checks(workers: int = 2) -> list[dict]:
     add("package-lock.json", (paths.REPO / "package-lock.json").exists(), "versioned lockfile")
     probe = paths.workspace_dir("real", 1)
     ok, hits = ancestors_clean(probe)
-    add(f"no context files above {probe}", ok, ", ".join(hits) or "CLAUDE.md/AGENTS.md/GEMINI.md/.claude/.codex absent in ancestors")
+    add(f"no context files above {probe}", ok, ", ".join(hits) or "CLAUDE.md/AGENTS.md/GEMINI.md/.claude/.codex/.agents/.agent absent in ancestors")
     g = paths.EMPTY_GITCONFIG
     add("GIT_CONFIG_GLOBAL file empty", g.exists() and g.stat().st_size == 0, str(g.relative_to(paths.REPO)))
     for k in range(1, workers + 1):

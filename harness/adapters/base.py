@@ -53,6 +53,7 @@ class SessionResult:
     isolation: dict | None = None                        # from system/init
     started_at: str | None = None
     ended_at: str | None = None
+    usage_extra: dict | None = None                      # adapter-specific raw counters (agy: thinking/total tokens)
 
     def record_entry(self) -> dict:
         """The `sessions[]` item of record.json."""
@@ -65,6 +66,7 @@ class SessionResult:
             "cost_usd_nominal": self.cost_usd, "subtype": self.subtype, "is_error": self.is_error,
             "capped": bool(self.capped), "turn_cap": self.turn_cap,
             "started_at": self.started_at, "ended_at": self.ended_at,
+            **({"usage_extra": dict(self.usage_extra)} if self.usage_extra else {}),
         }
 
 

@@ -160,7 +160,9 @@ def _v1_extras(service: Path, notes: list) -> None:
 
 def materialize(ns: str, worker: int, unit: str, ticket: str | None, V: str, S: str, *,
                 units: dict | None = None) -> Workspace:
-    units = units or json.loads(paths.UNITS.read_text(encoding="utf-8"))
+    if units is None:
+        from harness import unitsio
+        units = unitsio.load_units()
     adapter = units[unit]["adapter"]
     wdir = paths.worker_dir(ns, worker)
     root = paths.workspace_dir(ns, worker)
@@ -169,7 +171,7 @@ def materialize(ns: str, worker: int, unit: str, ticket: str | None, V: str, S: 
     wipe(cfg)
     for p in wdir.glob("snap-*"):
         gitutil.rmtree(p)
-    ctx_name = scenario_io.context_name(adapter)
+    ctx_name = units[unit].get("context_file") or scenario_io.context_name(adapter)
     ws = Workspace(ns=ns, worker=worker, unit=unit, adapter=adapter, ticket=ticket, V=V, S=S, root=root, cfg=cfg,
                    worker_dir=wdir, context_file=ctx_name, service_prefix="orders-service/" if V == "V2" else "")
     ctx = scenario_io.context_text(S)

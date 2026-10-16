@@ -46,7 +46,8 @@ def wp1_missing() -> list[str]:
 
 
 def load_units() -> dict:
-    return json.loads(paths.UNITS.read_text(encoding="utf-8"))
+    from harness import unitsio
+    return unitsio.load_units()
 
 
 def execute_run(entry: dict, *, ns: str, worker_ns: str, worker: int, units: dict | None = None,
