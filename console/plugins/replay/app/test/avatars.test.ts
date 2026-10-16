@@ -35,10 +35,11 @@ test("same seed → identical pixel hash (every Teams member, every pose)", () =
   }
 });
 
+// re-pinned in theater-1016: shorter, wider necks (human head 2 px lower, neck 8–9 px; agent neck 10 px)
 test("pinned hashes: the same seed paints the same pixels in every process", () => {
-  assert.equal(portraitHash({ style: "human", seed: "architect", role: "architect" }), "ecebfdf2");
-  assert.equal(portraitHash({ style: "agent", seed: "code-orders", role: "code_agent", badge: "Mock" }), "9c13e600");
-  assert.equal(portraitHash({ style: "agent", seed: "anthropic:claude-code", role: "code_agent", family: "anthropic" }), "1d18139f");
+  assert.equal(portraitHash({ style: "human", seed: "architect", role: "architect" }), "ee4af653");
+  assert.equal(portraitHash({ style: "agent", seed: "code-orders", role: "code_agent", badge: "Mock" }), "c089a702");
+  assert.equal(portraitHash({ style: "agent", seed: "anthropic:claude-code", role: "code_agent", family: "anthropic" }), "1a543303");
 });
 
 test("the 25 Teams humans are 25 different portraits", () => {

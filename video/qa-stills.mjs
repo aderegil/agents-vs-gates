@@ -35,6 +35,7 @@ const SHOTS = [
   ["p6-0012-t39", "p6-0012", 39000],
   ["m2b-sprint-t40", "m2b-sprint", 40000],
   ["lanes-t14", "lanes", 14000],
+  ["lanes-t30", "lanes", 30000],
   ["lanes-t33", "lanes", 33000],
   ["lanes-t44", "lanes", 44000],
   ["lanes-t50", "lanes", 50000],

@@ -22,6 +22,8 @@ import { lifecycleLabel, recastCitation } from "../engine/recast";
 import { placeToFloor, projectFloorPoint, standingSpot } from "../engine/spatial";
 import { unitText } from "./UnitTag";
 import type { QaBox, QaKind } from "../engine/overlap";
+import { dimAmount, focusAt, type FocusFrame } from "../engine/focus";
+import { OLDER_BUBBLE_ALPHA, bubbleAlpha, figureGridScale, shownBubbles } from "../engine/stagePolicy";
 
 export const STAGE_W = 1280;
 export const STAGE_H = 720;
@@ -57,8 +59,21 @@ export function stageQaBoxes(): QaBox[] {
 function qa(kind: QaKind, r: { x: number; y: number; w: number; h: number }, owner?: string, text?: string) {
   qaBoxes.push({ kind, x: r.x, y: r.y, w: r.w, h: r.h, owner, text });
 }
-/** Characters are about this wide at the front of the floor (scale 1), snapped to whole device pixels per grid pixel. */
-const ACTOR_W = 124;
+/** Characters are about this wide at the front of the floor (scale 1), snapped to whole device pixels per grid pixel.
+ * theater-1016: 25% smaller than before (124 → 93), so the floor has room for the labels and the bubbles. */
+// ACTOR_W and figureGridScale live in engine/stagePolicy.ts (tested in node)
+/** The light of the current beat (engine/focus.ts), set per frame. */
+let focus: FocusFrame = { level: 0, lit: new Map() };
+/** Opacity for something that belongs to `key` ("actor:<id>", "place:<id>"): `floor` when fully out of focus. */
+function fa(key: string | undefined, floor = 0.4): number {
+  if (!key) return 1;
+  return 1 - dimAmount(focus, key) * (1 - floor);
+}
+/** Out of focus, people also lose most of their colour (a calm grey, not a flash). */
+function dimFilter(key: string): string {
+  const d = dimAmount(focus, key);
+  return d > 0.02 ? `saturate(${(1 - 0.75 * d).toFixed(3)})` : "none";
+}
 /** Smaller figures when the floor is crowded (the M2b sprint has ~20 people and agents); set per frame. */
 let crowdScale = 1;
 
@@ -89,6 +104,10 @@ const DIM_ALPHA = 0.32;
 /** The consumer teams sit behind their service's counter (floor y offset). */
 const OWNER_BEHIND = 0.045;
 const DIFF_ADD_BG = "#e0e7ff";
+/** Where the rule lives as context (read before generation; probabilistic): the deck's purple, dashed. */
+const RULE = "#7500c0";
+/** Text on a cyan (pass / deterministic) surface. */
+const PASS_INK = "#0e7490";
 const DIFF_DEL_BG = "#eef0f3";
 
 export interface StageHandle {
@@ -231,6 +250,8 @@ interface Layout {
   late: (() => void)[];
   /** places where somebody of the run stands now (presentation mode drops their place label: the names say it) */
   occupied?: Set<string>;
+  /** never covered by a label or a bubble (the subtitle of this frame) */
+  reserved: Rect[];
 }
 
 /** Text with a halo in the surface color, so a label stays readable over lines, props and people. */
@@ -250,17 +271,18 @@ function haloText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
  * Collision avoidance for labels: of the candidate boxes (in order of preference), the one that covers the least.
  * Off the floor is out; other labels, pills and name tags weigh most, then people, then `extra` boxes.
  */
-function bestRect(cands: Rect[], layout: Layout, extra: Rect[] = []): Rect {
+function bestRect(cands: Rect[], layout: Layout, extra: Rect[] = [], figW = 3, obstW = 4): Rect {
   let best = cands[0];
   let bestScore = Infinity;
   const pad = 5;
   cands.forEach((r, i) => {
     let score = i * 3;
     if (r.x < 4 || r.x + r.w > STAGE_W - 4 || r.y < HEADER_H + 2 || r.y + r.h > STAGE_H - 4) score += 1e6;
+    for (const o of layout.reserved) if (overlap(r, o) > 0) score += 1e5;
     // a little air around every label: boxes that only touch still read as one block
     const q = { x: r.x - pad, y: r.y - pad, w: r.w + 2 * pad, h: r.h + 2 * pad };
-    for (const o of layout.obstacles) score += overlap(q, o) * 4;
-    for (const f of layout.figures) score += overlap(r, f) * 3;
+    for (const o of layout.obstacles) score += overlap(q, o) * obstW;
+    for (const f of layout.figures) score += overlap(r, f) * figW;
     for (const o of extra) score += overlap(q, o) * 2;
     if (score < bestScore) {
       bestScore = score;
@@ -268,6 +290,21 @@ function bestRect(cands: Rect[], layout: Layout, extra: Rect[] = []): Rect {
     }
   });
   return best;
+}
+
+/**
+ * More places to try around an anchor, nearest first: rings of 8 directions at growing distances. Callers put their
+ * preferred spots first; these are the fallbacks when every preferred spot covers somebody.
+ */
+function ring(cx: number, cy: number, w: number, h: number, radii = [40, 80, 120, 170, 230, 300]): Rect[] {
+  const out: Rect[] = [];
+  for (const r of radii) {
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2;
+      out.push({ x: cx + Math.cos(a) * r * 1.4 - w / 2, y: cy + Math.sin(a) * r * 0.8 - h / 2, w, h });
+    }
+  }
+  return out;
 }
 
 function overlap(a: Rect, b: Rect): number {
@@ -293,7 +330,8 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   const placeById = new Map(replay.places.map((p) => [p.id, p]));
   present = bigSubs;
   qaBoxes = [];
-  crowdScale = replay.actors.filter((a) => a.actor_type !== "system").length > 12 ? 0.74 : 1;
+  focus = focusAt(replay, clock);
+  crowdScale = replay.actors.filter((a) => a.actor_type !== "system").length > 12 ? 0.82 : 1;
   ctx.clearRect(0, 0, STAGE_W, STAGE_H);
   ctx.fillStyle = c.wall;
   ctx.fillRect(0, 0, STAGE_W, STAGE_H);
@@ -303,7 +341,10 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   drawHeader(ctx, engine, c, label);
 
   const drawables: Drawable[] = [];
-  const layout: Layout = { obstacles: [], figures: [], bubbles: [], labels: [], late: [] };
+  const layout: Layout = { obstacles: [], figures: [], bubbles: [], labels: [], late: [], reserved: [] };
+  // the subtitle's box is known before anything is placed: labels, callouts and bubbles stay out of it
+  const sub = narrationAt(state, clock, engine.end);
+  if (sub) layout.reserved.push(subtitleBox(ctx, sub, bigSubs).rect);
   if (zones.length) {
     layout.obstacles.push(...zoneTitleRects(ctx, zones));
     layout.zones = true;
@@ -366,6 +407,10 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   // the diff card first (a fixed corner), then everything that is placed around what is already there
   const card = cardAt(replay, clock);
   if (card) drawDiffCard(ctx, engine, card, placeById, c, layout);
+  // the illustration callouts are the message of a scene: placed first (clear of every person), and the name tags,
+  // labels and bubbles then go around them
+  const ill = replay.scene?.illustration;
+  if (ill) drawIllustrationCallouts(ctx, engine, ill, placeById, c, layout);
   for (const f of layout.late) f();
 
   // what the scene adds on top of the floor: reads and edits in another team's folder, sheets and packets
@@ -379,12 +424,10 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   for (const l of layout.labels) drawPlaceLabel(ctx, l, c, layout);
   if (layout.glass) drawGlassCaption(ctx, layout.glass, c, layout);
   if (zones.length) drawZoneTitles(ctx, zones, c);
-  const ill = replay.scene?.illustration;
-  if (ill) drawIllustrationCallouts(ctx, engine, ill, placeById, c, layout);
   // a bubble said by the same step as the subtitle would say it twice: the subtitle wins
   const narr = state.narration;
   if (narr && narrationAt(state, clock, engine.end)) layout.bubbles = layout.bubbles.filter((b) => b.bubble.at !== narr.at);
-  layoutBubbles(ctx, layout, c);
+  layoutBubbles(ctx, layout, c, clock);
 
   if (overlay) drawOverlay(ctx, overlay, c);
   const narration = narrationAt(state, clock, engine.end);
@@ -692,6 +735,7 @@ function pill(ctx: CanvasRenderingContext2D, cx: number, y: number, text: string
   layout: Layout, size = 11, owner?: string): Rect {
   ctx.save();
   size = fz(size);
+  ctx.globalAlpha *= fa(owner, 0.5);
   ctx.font = `600 ${size}px ${FONT}`;
   const w = ctx.measureText(text).width + 12;
   const h = size + 7;
@@ -719,6 +763,7 @@ function drawConsumerMarks(ctx: CanvasRenderingContext2D, engine: ReplayEngine, 
   const reads = readsAt(k, engine.clock);
   if (reads.count && agent) {
     ctx.save();
+    ctx.globalAlpha = fa(`place:${k.desk}`, 0.45);
     ctx.strokeStyle = ACCENT;
     ctx.lineWidth = reads.flash ? 2.5 : 1.5;
     ctx.setLineDash([3, 5]);
@@ -736,6 +781,7 @@ function drawConsumerMarks(ctx: CanvasRenderingContext2D, engine: ReplayEngine, 
   const edits = editsAt(k, engine.clock);
   if (edits.length) {
     ctx.save();
+    ctx.globalAlpha = fa(`place:${k.desk}`, 0.5);
     ctx.strokeStyle = FAIL;
     ctx.lineWidth = 3;
     const w = 140 * scale;
@@ -756,6 +802,7 @@ function drawResting(ctx: CanvasRenderingContext2D, engine: ReplayEngine, places
     if (!p) continue;
     const { px, py, scale } = placePixel(p);
     ctx.save();
+    ctx.globalAlpha = fa(`place:${s.to}`, 0.45);
     ctx.font = `500 ${fz(11)}px ${FONT}`;
     const text = s.to === "ci-tower" ? s.label.split(" · ")[0] : s.label.split(" · ").slice(-1)[0];
     const tw = ctx.measureText(text).width;
@@ -769,7 +816,8 @@ function drawResting(ctx: CanvasRenderingContext2D, engine: ReplayEngine, places
         box(px + 30 * scale, py - 86 * scale), box(px - bw / 2 + 8, py + 44)]
       : [box(px - 58 * scale, py - 52 * scale), box(px + 66 * scale, py - 40 * scale),
         box(px - 58 * scale - bw / 2, py - 20 * scale), box(px - bw / 2 + 8, py - 84 * scale)];
-    const r = bestRect(cands, layout, labels);
+    cands.push(...ring(px, py - 40 * scale, bw, bh, [50, 80, 110]));
+    const r = bestRect(cands, layout, labels, 6);
     const x = r.x + 8;
     const y = r.y + 10;
     drawSheetIcon(ctx, x, y, 0.8 * scale, c);
@@ -905,6 +953,8 @@ function drawOwner(ctx: CanvasRenderingContext2D, engine: ReplayEngine, k: Scene
   }
   const { px, py, w, h, x, y } = fig;
   ctx.save();
+  ctx.globalAlpha = fa(`place:${k.desk}`);
+  ctx.filter = dimFilter(`place:${k.desk}`);
   ctx.fillStyle = "rgba(17,24,39,0.14)";
   ctx.beginPath();
   ctx.ellipse(px, py, w * 0.36, w * 0.09, 0, 0, Math.PI * 2);
@@ -921,6 +971,7 @@ function drawOwnerTags(ctx: CanvasRenderingContext2D, k: SceneConsumer, owner: N
   view: ReturnType<typeof ownerView>, px: number, desk: ReplayPlace, c: StageColors, layout: Layout) {
   void k;
   ctx.save();
+  ctx.globalAlpha = fa(`place:${desk.id}`, 0.5);
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   // under the counter: the team, not a user and not the oracle ("Billing team (consumer)"), then the service it
@@ -951,6 +1002,8 @@ function drawOwnerTags(ctx: CanvasRenderingContext2D, k: SceneConsumer, owner: N
   ctx.restore();
 
   if (view.alert) {
+    ctx.save();
+    ctx.globalAlpha = fa(`place:${desk.id}`, 0.55);
     const pass = view.alert.status === "pass";
     const version = view.alert.state === "gen" ? "first PR" : "final PR";
     const text = `${pass ? "✓" : "!"} ${version}: ${view.alert.text || (pass ? "pass" : "fail")}`;
@@ -968,6 +1021,7 @@ function drawOwnerTags(ctx: CanvasRenderingContext2D, k: SceneConsumer, owner: N
       ctx.strokeRect(r.x + 0.5, Math.round(r.y) + 0.5, Math.round(r.w) - 1, r.h - 1);
       ctx.restore();
     }
+    ctx.restore();
   }
 }
 
@@ -978,6 +1032,7 @@ function drawDiffCard(ctx: CanvasRenderingContext2D, engine: ReplayEngine, card:
   if (!desk) return;
   const { px, py, scale } = placePixel(desk);
   ctx.save();
+  ctx.globalAlpha = fa(`actor:${engine.replay.scene?.agent ?? ""}`, 0.5);
   const lh = 17;
   ctx.font = `400 12px ${MONO}`;
   // no wider than the DEFINE column it sits over, so it never covers the agent's desk
@@ -1207,41 +1262,57 @@ function flagAt(engine: ReplayEngine, key: string): boolean {
  */
 function drawIllustrationCallouts(ctx: CanvasRenderingContext2D, engine: ReplayEngine, ill: Illustration,
   places: Map<string, ReplayPlace>, c: StageColors, layout: Layout) {
-  const callout = (placeId: string, head: string, text: string, style: "rule" | "block" | "quiet") => {
+  // rule = purple dashed (context: the agent reads it, probabilistic); gate = cyan (a check in CI, deterministic);
+  // block = ink (what blocks the merge otherwise); quiet = grey dashed ("no architecture check in CI")
+  const callout = (placeId: string, head: string, text: string, style: "rule" | "block" | "quiet" | "gate",
+    foot?: string) => {
     const p = places.get(placeId);
     if (!p) return;
     const { px, py, scale } = placePixel(p);
     ctx.save();
+    ctx.globalAlpha = fa(`place:${placeId}`, 0.6);
     const hs = fz(10);
     const ts = fz(12);
     ctx.font = `500 ${ts}px ${FONT}`;
-    const lines = wrap(ctx, text, present ? 230 : 210, 3);
+    const lines = wrap(ctx, text, present ? 220 : 200, 3);
     ctx.font = `700 ${hs}px ${FONT}`;
     const hw = ctx.measureText(head).width;
     ctx.font = `500 ${ts}px ${FONT}`;
     const w = Math.max(hw, ...lines.map((l) => ctx.measureText(l).width)) + 18;
-    const h = hs + 6 + lines.length * (ts + 3) + 8;
+    const fs = fz(10);
+    ctx.font = `600 ${fs}px ${FONT}`;
+    const footW = foot ? ctx.measureText(foot).width + 18 : 0;
+    ctx.font = `500 ${ts}px ${FONT}`;
+    const w2 = Math.max(w, footW);
+    const h = hs + 6 + lines.length * (ts + 3) + 8 + (foot ? fs + 6 : 0);
     const top = py - 60 * scale;
     const cands: Rect[] = [
-      { x: px - w / 2, y: top - h - 6, w, h }, { x: px - w / 2, y: py + 30, w, h },
-      { x: px + 60 * scale, y: top - h / 2, w, h }, { x: px - 60 * scale - w, y: top - h / 2, w, h },
-      { x: px - w / 2, y: top - h - 46, w, h }, { x: px - w / 2, y: py + 70, w, h },
-      { x: px + 60 * scale, y: py + 10, w, h }, { x: px - 60 * scale - w, y: py + 10, w, h },
-      { x: px + 60 * scale, y: top - h - 20, w, h }, { x: px - 60 * scale - w, y: top - h - 20, w, h },
+      { x: px - w2 / 2, y: top - h - 6, w: w2, h }, { x: px - w2 / 2, y: py + 30, w: w2, h },
+      { x: px + 60 * scale, y: top - h / 2, w: w2, h }, { x: px - 60 * scale - w2, y: top - h / 2, w: w2, h },
+      { x: px - w2 / 2, y: top - h - 46, w: w2, h }, { x: px - w2 / 2, y: py + 70, w: w2, h },
+      { x: px + 60 * scale, y: py + 10, w: w2, h }, { x: px - 60 * scale - w2, y: py + 10, w: w2, h },
+      { x: px + 60 * scale, y: top - h - 20, w: w2, h }, { x: px - 60 * scale - w2, y: top - h - 20, w: w2, h },
+      { x: px + 90 * scale, y: py - h / 2, w: w2, h }, { x: px - 90 * scale - w2, y: py - h / 2, w: w2, h },
+      { x: px - w2 / 2, y: py + 110, w: w2, h }, { x: px + 90 * scale, y: py + 60, w: w2, h }, { x: px - 90 * scale - w2, y: py + 60, w: w2, h },
+      { x: px + 120 * scale, y: top - h - 40, w: w2, h }, { x: px - 120 * scale - w2, y: top - h - 40, w: w2, h },
     ];
-    const r = bestRect(cands, layout);
-    const fill = style === "block" ? c.ink : c.surface;
+    cands.push(...ring(px, py - 30 * scale, w2, h));
+    // a callout is big: it may sit over the floor and props, never over a person
+    const r = bestRect(cands, layout, [], 16, 12);
+    const fill = style === "block" ? c.ink : style === "gate" ? "#e6f8fb" : c.surface;
     const ink = style === "block" ? "#ffffff" : c.ink;
+    const edge = style === "rule" ? RULE : style === "gate" ? PASS : style === "block" ? c.ink : c.lineStrong;
     ctx.fillStyle = fill;
     ctx.fillRect(r.x, r.y, r.w, r.h);
-    ctx.strokeStyle = style === "rule" ? ACCENT : style === "block" ? c.ink : c.lineStrong;
-    ctx.lineWidth = style === "rule" ? 2.5 : 1.5;
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = style === "rule" || style === "gate" ? 2.5 : 1.5;
     if (style === "quiet") ctx.setLineDash([4, 3]);
+    if (style === "rule") ctx.setLineDash([7, 4]);
     ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
     ctx.setLineDash([]);
     // a hairline to the place
-    ctx.strokeStyle = style === "rule" ? ACCENT : c.ink2;
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = style === "rule" ? RULE : style === "gate" ? PASS : c.ink2;
+    ctx.lineWidth = style === "rule" || style === "gate" ? 1.5 : 1;
     ctx.beginPath();
     const ex = Math.max(r.x + 6, Math.min(r.x + r.w - 6, px));
     const ey = r.y > py ? r.y : r.y + r.h;
@@ -1251,21 +1322,35 @@ function drawIllustrationCallouts(ctx: CanvasRenderingContext2D, engine: ReplayE
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.font = `700 ${hs}px ${FONT}`;
-    ctx.fillStyle = style === "rule" ? ACCENT : style === "block" ? "#c7d2fe" : c.ink2;
+    ctx.fillStyle = style === "rule" ? RULE : style === "gate" ? PASS_INK : style === "block" ? "#d9c2f0" : c.ink2;
     ctx.fillText(head, r.x + 9, r.y + 5);
     ctx.font = `500 ${ts}px ${FONT}`;
     ctx.fillStyle = ink;
     lines.forEach((l, i) => ctx.fillText(l, r.x + 9, r.y + hs + 9 + i * (ts + 3)));
+    if (foot) {
+      ctx.font = `600 ${fs}px ${FONT}`;
+      ctx.fillStyle = style === "rule" ? RULE : style === "gate" ? PASS_INK : style === "block" ? "#d9c2f0" : c.ink2;
+      ctx.fillText(foot, r.x + 9, r.y + hs + 9 + lines.length * (ts + 3) + 3);
+    }
     ctx.restore();
     layout.obstacles.push(r);
     qa("callout", r, `place:${placeId}`, head);
   };
-  if (flagAt(engine, "rule")) callout(ill.rule.place, "WHERE THE RULE LIVES", ill.rule.label, "rule");
-  if (flagAt(engine, "blocks")) callout(ill.blocks.place, "WHAT BLOCKS THE MERGE", ill.blocks.label, "block");
+  if (flagAt(engine, "rule")) {
+    callout(ill.rule.place, "WHERE THE RULE LIVES", ill.rule.label, "rule",
+      "BEFORE GENERATION · CONTEXT · NO GUARANTEE");
+  }
+  if (flagAt(engine, "blocks")) {
+    const inCi = ill.ci_arch && ill.blocks.place === "ci-tower";
+    callout(ill.blocks.place, inCi ? "WHAT BLOCKS THE MERGE · IN CI" : "WHAT BLOCKS THE MERGE", ill.blocks.label,
+      inCi ? "gate" : "block", inCi ? "AFTER GENERATION · A CHECK · DETERMINISTIC" : undefined);
+  }
   const pr = engine.replay.steps.slice(0, engine.state.applied).some((s) => s.key === "pr_opened");
-  if (pr && !ill.ci_arch && places.has("ci-tower")) {
-    const ciUsed = engine.replay.steps.slice(0, engine.state.applied).some((s) => s.place === "ci-tower");
-    callout("ci-tower", "CI", ciUsed ? "no architecture check in CI" : "no CI step in this model's docs", "quiet");
+  // CI that runs says "no architecture check in CI" in the tower's own label (drawPlace); a model whose docs describe
+  // no CI step gets the quiet callout at the idle tower
+  const ciUsed = engine.replay.steps.slice(0, engine.state.applied).some((s) => s.place === "ci-tower");
+  if (pr && !ill.ci_arch && places.has("ci-tower") && !ciUsed) {
+    callout("ci-tower", "CI", "no CI step in this model's docs", "quiet");
   }
 }
 
@@ -1315,7 +1400,7 @@ function figureGeometry(pos: { x: number; y: number; walking: boolean; facing: 1
   ci: CiReaction | null): Figure {
   const { px, py, scale } = floorToPixel(pos.x, pos.y);
   // whole device pixels per grid pixel keeps the pixel art crisp at every depth
-  const k = Math.max(1, Math.round((ACTOR_W * crowdScale * scale * device) / PORTRAIT_W));
+  const k = figureGridScale(scale, crowdScale, device);
   const w = (k * PORTRAIT_W) / device;
   const h = (w * PORTRAIT_H) / PORTRAIT_W;
   const gridPx = k / device;
@@ -1336,7 +1421,8 @@ function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, 
   const isAgent = a.avatar.style === "agent";
   // re-cast view: a role the chosen model has no member for stays in place, dimmed
   ctx.save();
-  if (a.recast_missing) ctx.globalAlpha = 0.3;
+  const key = `actor:${a.id}`;
+  ctx.globalAlpha = (a.recast_missing ? 0.3 : 1) * fa(key);
 
   // feet shadow, or the pink ring when this actor touched the gate (spec 13.2: "marked in pink")
   ctx.save();
@@ -1359,6 +1445,7 @@ function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, 
   const grid = portraitGrid(spec, poseFor(a.id, v, clock, fig.walking, ci));
   ctx.save();
   ctx.imageSmoothingEnabled = false;
+  ctx.filter = dimFilter(key);
   if (fig.walking && fig.facing < 0) {
     ctx.translate(x + w, y);
     ctx.scale(-1, 1);
@@ -1370,7 +1457,7 @@ function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, 
 
   let ny = py + 6;
   if (isAgent) {
-    const bs = Math.max(fig.scale, 0.8);
+    const bs = Math.max(fig.scale, 0.8) * 0.85;
     const badgeY = y + h - 2 * gridPx;
     drawBadge(ctx, px, badgeY, a.avatar.badge, bs, FONT);
     ny = Math.max(ny, badgeY + Math.max(13, 15 * bs) + 3);
@@ -1380,8 +1467,11 @@ function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, 
   // the name tag is placed after every figure is drawn, where it covers least (two people at one desk side by side)
   const ny0 = ny;
   layout.late.push(() => {
+    // a crowded floor (the sprint) keeps only the names of the people in the current beat: the others fade out
+    const crowdDim = crowdScale < 1 ? dimAmount(focus, key) : 0;
+    if (crowdDim > 0.5) return;
     ctx.save();
-    if (a.recast_missing) ctx.globalAlpha = 0.3;
+    ctx.globalAlpha = (a.recast_missing ? 0.3 : 1) * fa(key, 0.5) * Math.max(0, 1 - 2 * crowdDim);
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     const nameSize = fz(Math.round(13 * Math.max(fig.scale, 0.9)));
@@ -1399,7 +1489,10 @@ function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, 
     const bh = nameSize + 3 + (a.simulated ? s2 + 2 : 0) + (gateText ? gs + 5 : 0);
     const at = (cx: number, top: number): Rect => ({ x: cx - bw / 2, y: top - 1, w: bw, h: bh });
     const r = bestRect([at(px, ny0), at(px - bw * 0.55 - 6, ny0), at(px + bw * 0.55 + 6, ny0),
-      at(px, ny0 + nameSize + 4)], layout);
+      at(px, ny0 + bh + 3), at(px - bw * 0.5, ny0 + bh + 3), at(px + bw * 0.5, ny0 + bh + 3), at(px, ny0 + 2 * bh + 6),
+      // above the head, when the floor under the person is taken (the subtitle, a neighbour's name)
+      at(px, y - bh - 2), at(px - bw * 0.6, y + h * 0.3), at(px + bw * 0.6, y + h * 0.3)],
+    layout);
     const cx = r.x + bw / 2;
     let yy = r.y + 1;
     ctx.font = `${present ? 600 : 500} ${nameSize}px ${FONT}`;
@@ -1427,7 +1520,7 @@ function drawActor(ctx: CanvasRenderingContext2D, a: ReplayActor, v: ActorView, 
 
   ctx.restore();
   if (bubbleVisible(v, clock) && v.bubble) {
-    layout.bubbles.push({ x: px, y: y + 4 * gridPx, bubble: v.bubble, self: fig.rect, owner: `actor:${a.id}` });
+    layout.bubbles.push({ x: px, y: y + 4 * gridPx, bubble: v.bubble, self: fig.rect, owner: key });
   }
 }
 
@@ -1441,7 +1534,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
   let note = place.note && place.kind === "stage" ? place.note : null;
   const dim = isDimmed(replay, place.id);
   ctx.save();
-  if (dim) ctx.globalAlpha = DIM_ALPHA;
+  ctx.globalAlpha = (dim ? DIM_ALPHA : 1) * fa(`place:${place.id}`, 0.4);
 
   if (place.id === "users") {
     top = drawUsers(ctx, px, py, scale, c);
@@ -1486,12 +1579,17 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
         haloText(ctx, id, px - 34 * scale, ly, 3);
         const tw = ctx.measureText(id).width;
         layout.obstacles.push({ x: px - 34 * scale - tw - 2, y: ly - fs / 2 - 1, w: tw + 4, h: fs + 2 });
+        // which rule failed is the point of the frame: nothing may cover it
+        layout.reserved.push({ x: px - 34 * scale - tw - 2, y: ly - fs / 2 - 1, w: tw + 4, h: fs + 2 });
         qa("label", { x: px - 34 * scale - tw - 2, y: ly - fs / 2 - 1, w: tw + 4, h: fs + 2 }, "place:ci-tower", id);
       });
       ctx.restore();
     }
     layout.obstacles.push({ x: px - 34 * scale, y: top, w: 68 * scale, h: py - top });
     if (state.ci.attempts > 0) note = `attempt ${state.ci.attempt ?? state.ci.attempts - 1}${state.ci.running ? " · running" : ""}`;
+    // an illustration whose model has no architecture check in CI says so under the tower (one label, not a callout)
+    const ill = replay.scene?.illustration;
+    if (ill && !ill.ci_arch && state.ci.attempts > 0) note = `${note} · no architecture check in CI`;
   } else if (place.id === "staging-bench") {
     const consumers = state.staging.consumers.length ? state.staging.consumers : DEFAULT_CONSUMERS;
     const lights: LightState[] = consumers.map((k) => state.staging.results[k] ?? "idle");
@@ -1535,7 +1633,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
         const th = fz(11) + 4;
         const at = (x: number, y: number): Rect => ({ x, y: y - th / 2, w: tw + 4, h: th });
         const r = bestRect([at(sx + 14, sy + 14 * scale), at(sx - tw / 2, sy + 22 * scale), at(sx + 14, sy - 16 * scale),
-          at(sx - tw - 18, sy + 14 * scale)], layout);
+          at(sx - tw - 18, sy + 14 * scale), ...ring(sx, sy, tw + 4, th, [40, 70, 100, 140])], layout, [], 8);
         ctx.fillStyle = c.ink2;
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
@@ -1616,11 +1714,12 @@ function drawPlaceLabel(ctx: CanvasRenderingContext2D, l: PlaceLabel, c: StageCo
     if (overlap(home, f) > 0) cands.push(at(0, f.y - h - 3), at(0, f.y + f.h + 3));
   }
   for (const dx of [-(bw * 0.6 + 18), bw * 0.6 + 18]) cands.push(at(dx, box.top), at(dx, box.top + (l.anchor === "bottom" ? -step : step)));
-  const r = bestRect(cands, layout);
+  cands.push(...ring(l.x, box.top + h / 2, bw, h, [45, 80, 120]));
+  const r = bestRect(cands, layout, [], 6);
   const cx = r.x + bw / 2;
   const top = r.y + 1;
   ctx.save();
-  if (l.dim) ctx.globalAlpha = 0.5;
+  ctx.globalAlpha = (l.dim ? 0.5 : 1) * fa(l.place ? `place:${l.place}` : undefined, 0.5);
   // a label that moved away from its place keeps a hairline to it
   const ay = l.anchor === "bottom" ? l.y + 2 : l.y - 2;
   const edge = r.y > ay ? r.y : r.y + r.h;
@@ -1850,8 +1949,6 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number, maxLine
 }
 
 
-/** Speech bubbles on screen at once; the newest win (presentation mode keeps one fewer label on screen too). */
-const MAX_BUBBLES = 2;
 
 interface BubbleBox {
   lines: string[];
@@ -1861,12 +1958,12 @@ interface BubbleBox {
   code: boolean;
 }
 
-function measureBubble(ctx: CanvasRenderingContext2D, b: Bubble): BubbleBox | null {
+function measureBubble(ctx: CanvasRenderingContext2D, b: Bubble, collapsed = false): BubbleBox | null {
   const code = b.tone === "code" || b.tone === "pass" || b.tone === "fail";
   const fontSize = present ? 15 : 13;
   ctx.font = `400 ${fontSize}px ${code ? MONO : FONT}`;
-  const maxW = code ? 330 : 300;
-  const lines = wrap(ctx, b.text, maxW, code ? 4 : 3);
+  const maxW = collapsed ? 220 : code ? 330 : 300;
+  const lines = wrap(ctx, b.text, maxW, collapsed ? 1 : 3);
   if (!lines.length) return null;
   const lh = fontSize + 4;
   return { lines, code, lh, w: Math.min(maxW, Math.max(...lines.map((l) => ctx.measureText(l).width))) + 20,
@@ -1877,17 +1974,18 @@ function measureBubble(ctx: CanvasRenderingContext2D, b: Bubble): BubbleBox | nu
  * Places every bubble where it covers the fewest labels, names, figures and earlier bubbles: above the speaker
  * first (sliding sideways and upwards), then beside it. Deterministic: candidates are tried in a fixed order.
  */
-function layoutBubbles(ctx: CanvasRenderingContext2D, layout: Layout, c: StageColors) {
+function layoutBubbles(ctx: CanvasRenderingContext2D, layout: Layout, c: StageColors, clock: number) {
   const placed: Rect[] = [];
   // with lifecycle zones, bubbles stay below the zone titles and the sub-band
   const minY = layout.zones ? bandY() + 10 : HEADER_H + 4;
   const maxY = STAGE_H - 96;
   // no stacking: at most MAX_BUBBLES speak at once (the newest), laid out oldest first
-  const shown = [...layout.bubbles].sort((p, q) => q.bubble.at - p.bubble.at || q.bubble.seq - p.bubble.seq)
-    .slice(0, MAX_BUBBLES).sort((p, q) => p.bubble.at - q.bubble.at || p.bubble.seq - q.bubble.seq);
-  for (const b of shown) {
+  const shown = shownBubbles(layout.bubbles);
+  for (const [i, b] of shown.entries()) {
+    // the older of two bubbles steps back: one line, half the light (the newest one is the one to read)
+    const older = i < shown.length - 1;
     ctx.save();
-    const box = measureBubble(ctx, b.bubble);
+    const box = measureBubble(ctx, b.bubble, older);
     ctx.restore();
     if (!box) continue;
     const { w, h } = box;
@@ -1912,12 +2010,14 @@ function layoutBubbles(ctx: CanvasRenderingContext2D, layout: Layout, c: StageCo
       cands.push(beside(1, dy));
       cands.push(beside(-1, dy));
     }
+    for (const r of ring(b.x, b.y - h / 2 - 20, w, h, [70, 120, 180])) cands.push({ x: clampX(r.x), y: clampY(r.y), w, h });
     let best = cands[0];
     let bestScore = Infinity;
     cands.forEach((r, i) => {
       let score = i * 0.5; // prefer earlier candidates on a tie
-      for (const o of layout.obstacles) score += overlap(r, o) * 4;
-      for (const f of layout.figures) if (f !== b.self) score += overlap(r, f) * 1.5;
+      for (const o of layout.obstacles) score += overlap(r, o) * 8;
+      for (const o of layout.reserved) if (overlap(r, o) > 0) score += 1e5;
+      for (const f of layout.figures) if (f !== b.self) score += overlap(r, f) * 4;
       if (b.self) score += overlap(r, b.self) * 6;
       for (const p of placed) score += overlap(r, p) * 8;
       if (score < bestScore) {
@@ -1927,14 +2027,16 @@ function layoutBubbles(ctx: CanvasRenderingContext2D, layout: Layout, c: StageCo
     });
     placed.push(best);
     qa("bubble", best, b.owner, b.bubble.text);
-    drawBubble(ctx, b, box, best, c);
+    drawBubble(ctx, b, box, best, c, bubbleAlpha(b.bubble, clock) * (older ? OLDER_BUBBLE_ALPHA : 1) * fa(b.owner, 0.5));
   }
 }
 
-function drawBubble(ctx: CanvasRenderingContext2D, b: BubbleAnchor, box: BubbleBox, r: Rect, c: StageColors) {
+function drawBubble(ctx: CanvasRenderingContext2D, b: BubbleAnchor, box: BubbleBox, r: Rect, c: StageColors,
+  alpha = 1) {
   const tone = b.bubble.tone;
   const { x, y, w, h } = r;
   ctx.save();
+  ctx.globalAlpha = alpha;
   ctx.font = `400 ${present ? 15 : 13}px ${box.code ? MONO : FONT}`;
   const border = tone === "pass" ? PASS : tone === "fail" ? FAIL : c.lineStrong;
   ctx.fillStyle = c.surface;
@@ -1980,7 +2082,7 @@ function drawBubble(ctx: CanvasRenderingContext2D, b: BubbleAnchor, box: BubbleB
   ctx.restore();
 }
 
-function drawSubtitle(ctx: CanvasRenderingContext2D, text: string, c: StageColors, big: boolean) {
+function subtitleBox(ctx: CanvasRenderingContext2D, text: string, big: boolean) {
   ctx.save();
   const size = big ? 26 : 18;
   ctx.font = `500 ${size}px ${FONT}`;
@@ -1988,8 +2090,15 @@ function drawSubtitle(ctx: CanvasRenderingContext2D, text: string, c: StageColor
   const lh = size + 8;
   const w = Math.max(...lines.map((l) => ctx.measureText(l).width)) + 32;
   const h = lines.length * lh + 16;
-  const x = (STAGE_W - w) / 2;
-  const y = STAGE_H - 44 - h;
+  ctx.restore();
+  return { lines, lh, size, rect: { x: (STAGE_W - w) / 2, y: STAGE_H - 44 - h, w, h } };
+}
+
+function drawSubtitle(ctx: CanvasRenderingContext2D, text: string, c: StageColors, big: boolean) {
+  const { lines, lh, size, rect } = subtitleBox(ctx, text, big);
+  const { x, y, w, h } = rect;
+  ctx.save();
+  ctx.font = `500 ${size}px ${FONT}`;
   qa("subtitle", { x, y, w, h }, "subtitle", lines[0]);
   ctx.fillStyle = c.subtitleBg;
   ctx.globalAlpha = 0.9;

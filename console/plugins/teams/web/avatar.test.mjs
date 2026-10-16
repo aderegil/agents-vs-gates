@@ -20,9 +20,9 @@ test("avatar.js exports the shared avatar API", () => {
 });
 
 test("avatar.js paints the pinned pixels of the theater (it is up to date)", () => {
-  assert.equal(portraitHash({ style: "human", seed: "architect", role: "architect" }), "ecebfdf2");
-  assert.equal(portraitHash({ style: "agent", seed: "code-orders", role: "code_agent", badge: "Mock" }), "9c13e600");
-  assert.equal(portraitHash({ style: "agent", seed: "anthropic:claude-code", role: "code_agent", family: "anthropic" }), "1d18139f");
+  assert.equal(portraitHash({ style: "human", seed: "architect", role: "architect" }), "ee4af653");
+  assert.equal(portraitHash({ style: "agent", seed: "code-orders", role: "code_agent", badge: "Mock" }), "c089a702");
+  assert.equal(portraitHash({ style: "agent", seed: "anthropic:claude-code", role: "code_agent", family: "anthropic" }), "1a543303");
 });
 
 test("every human and agent in the Teams data has a distinct portrait", () => {
