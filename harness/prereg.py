@@ -148,7 +148,8 @@ def freeze_addendum(n: int, repo: Path | None = None, *, commit: bool = True) ->
     original = json.loads((repo / LOCK_NAME).read_text(encoding="utf-8"))
     data = {"schema": "prereg-addendum-lock/1", "addendum": n,
             "frozen_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "extends": {"lock": LOCK_NAME, "aggregate_sha256": original.get("aggregate_sha256")},
+            "extends": {"lock": LOCK_NAME, "aggregate_sha256": original.get("aggregate_sha256"),
+                        "lock_file_sha256": _sha(repo / LOCK_NAME)},
             "aggregate_sha256": _aggregate(files), "files": dict(sorted(files.items()))}
     lock.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n")
     if commit:
@@ -177,7 +178,8 @@ def verify_addendum(n: int, repo: Path | None = None) -> tuple[bool, list[str]]:
         original = json.loads((repo / LOCK_NAME).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         original = {}
-    if (data.get("extends") or {}).get("aggregate_sha256") != original.get("aggregate_sha256"):
+    ext = data.get("extends") or {}
+    if ext.get("aggregate_sha256") != original.get("aggregate_sha256") or             ext.get("lock_file_sha256") not in (None, _sha(repo / LOCK_NAME)):
         problems.append(f"{lock.name} extends a different {LOCK_NAME}")
     have = {rel: _sha(p) for rel, p in addendum_files(n, repo).items()}
     for rel, sha in sorted((data.get("files") or {}).items()):

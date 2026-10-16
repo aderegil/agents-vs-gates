@@ -1,0 +1,128 @@
+"""The deck table for addendum 1 (P7, P8): exact numerators and denominators per unit and condition.
+
+    python -m analysis.deck_numbers_ext --ns real|mock     -> results/<ns>/deck-numbers-ext.md
+
+Per unit, for each condition (no rule V0·S0 / sees every repo V2·S0 / rule in the spec V0·S2), both tickets pooled
+and per ticket:
+  breaks      the first attempt broke a consumer (oracle on `gen`, `staging_break`): x of N [95% CP]
+  CI caught   of those breaks, how many the first CI failed (`consumer_break_ci`): x of y
+  final PR    the PR as it ends still breaks a consumer (`staging_break_final`): x of N
+  gate edits  runs that edited the gate (`gate_flagged`), and of them the blind-coded T2/T3 (manipulation)
+Two blocks per P7 unit: the new runs only (P7) and earlier runs + P7 combined (descriptive); P8 has the new runs only.
+Blinded stages print "blinded". Units are never compared: one table per unit, no cross-unit row.
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+from analysis import common
+from analysis.stats import x_of_n
+from analysis.summarize import CONDITIONS, H2_TICKETS
+from harness import blinding, paths
+
+UNIT_LABEL = {"cc-sonnet": "Claude Code + Sonnet 5.5", "codex": "Codex CLI + gpt-5.6-terra",
+              "agy-flash": "Antigravity CLI + Gemini 3.8 Flash", "mock": "mock (simulated)",
+              "mock-cx": "mock-cx (simulated)", "mock-agy": "mock-agy (simulated)"}
+
+
+def _m(r, k):
+    return (r.get("metrics") or {}).get(k)
+
+
+def _final_break(r):
+    v = _m(r, "staging_break_final")
+    return _m(r, "staging_break") if v is None else v
+
+
+def row(recs: list[dict], labels: dict) -> dict:
+    n = len(recs)
+    br = [r for r in recs if _m(r, "staging_break")]
+    caught = [r for r in br if _m(r, "consumer_break_ci")]
+    fin = [r for r in recs if _final_break(r)]
+    gate = [r for r in recs if _m(r, "gate_flagged")]
+    manip = [r for r in gate if labels.get(r["run_id"]) in ("T2", "T3")]
+    uncoded = [r for r in gate if r["run_id"] not in labels]
+    return {"n": n, "breaks": len(br), "caught": len(caught), "final": len(fin), "gate": len(gate),
+            "t2t3": len(manip), "uncoded": len(uncoded)}
+
+
+def _fmt(d: dict) -> list[str]:
+    if not d["n"]:
+        return ["—"] * 4
+    gate = f"{d['gate']} of {d['n']}"
+    if d["gate"]:
+        gate += f" (T2/T3 {d['t2t3']}" + (f", {d['uncoded']} not coded yet" if d["uncoded"] else "") + ")"
+    return [x_of_n(d["breaks"], d["n"]), f"{d['caught']} of {d['breaks']}" if d["breaks"] else "0 of 0",
+            x_of_n(d["final"], d["n"]), gate]
+
+
+def _table(pool: list[dict], labels: dict) -> list[str]:
+    L = ["| Condition | Ticket | Breaks (first attempt) | CI caught | Final PR breaks | Gate edits |",
+         "|---|---|---|---|---|---|"]
+    for V, S, label in CONDITIONS:
+        rows = [r for r in pool if r.get("visibility") == V and r.get("spec") == S]
+        if not rows:
+            continue
+        L.append(f"| **{label}** | both | " + " | ".join(_fmt(row(rows, labels))) + " |")
+        for t in H2_TICKETS:
+            sel = [r for r in rows if r.get("ticket") == t]
+            if sel:
+                L.append(f"| | {t} | " + " | ".join(_fmt(row(sel, labels))) + " |")
+    return L + [""]
+
+
+def build(ns: str) -> str:
+    records = common.load_records(ns)
+    state, manifest = common.load_state(ns), common.load_manifest(ns)
+    labels = (common.load_labels(ns) or {}).get("gate", {})
+    main = [r for r in records if common.analyzable(r, state) and r.get("wording", "W1") == "W1"]
+    part_of = {r["run_id"]: r.get("part") for r in (manifest or {}).get("runs", [])}
+    L = [f"# Deck numbers — addendum 1 ({ns})", "",
+         f"Generated {datetime.now(timezone.utc).isoformat(timespec='seconds')}. Exact counts \"x of N [95% "
+         "Clopper-Pearson]\" (percentages only when N ≥ 20). One table per unit; **units are never compared**. "
+         "Breaks = the oracle on the first attempt (`gen`); CI caught = of those breaks, the first CI failed; final "
+         "PR = the PR as it ends; gate edits = runs that touched the gate, with the blind-coded T2/T3 (manipulation).",
+         ""]
+    if ns == "mock":
+        L += [f"> **{common.SIM_BANNER}**", ""]
+    for stage, units in common.EXT1_UNITS[ns].items():
+        for unit in units:
+            L += [f"## {UNIT_LABEL.get(unit, unit)} (`{unit}`)", ""]
+            if not blinding.is_visible(state, stage):
+                L += [f"{stage}: blinded until the stage is complete.", ""]
+                continue
+            new = [r for r in main if r["stage"] == stage and r.get("unit") == unit]
+            L += [f"### {stage} — new runs only", ""] + (_table(new, labels) if new else ["No runs.", ""])
+            base = common.EXT1_BASE[ns].get(unit)
+            if stage == "P7" and base:
+                bstage, bpart = base
+                if not blinding.is_visible(state, bstage):
+                    continue
+                cells = {(r.get("ticket"), r.get("visibility"), r.get("spec")) for r in new}
+                old = [r for r in main if r["stage"] == bstage and r.get("unit") == unit
+                       and (bpart is None or part_of.get(r["run_id"]) == bpart)
+                       and (r.get("ticket"), r.get("visibility"), r.get("spec")) in cells]
+                L += [f"### {bstage}{f' ({bpart} part)' if bpart else ''} + P7 — combined (descriptive, no p-values)",
+                      ""] + _table(old + new, labels)
+    return "\n".join(L)
+
+
+def write(ns: str) -> Path:
+    out = paths.ns_dir(ns) / "deck-numbers-ext.md"
+    out.write_text(build(ns) + "\n", encoding="utf-8", newline="\n")
+    return out
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(prog="python -m analysis.deck_numbers_ext")
+    ap.add_argument("--ns", choices=paths.NAMESPACES, default="real")
+    a = ap.parse_args(argv)
+    print(f"wrote {write(a.ns)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

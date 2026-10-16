@@ -4,6 +4,7 @@
   python -m harness.smoke --i-am-authorized       run them in C:\\avg\\smoke\\ → results/smoke.json + results/smoke-environment.md
 
   python -m harness.smoke --unit codex [--dry-run | --i-am-authorized]   the Codex unit's smoke (harness/smoke_codex.py)
+  python -m harness.smoke --unit agy-flash [--dry-run | --i-am-authorized]   agy's smoke (harness/smoke_agy.py; addendum 1)
 
 All 5 calls use --model sonnet and the isolation flags of 10.3-10.4 (same argv builder as the agent sessions).
 """
@@ -206,12 +207,16 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m harness.smoke")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--i-am-authorized", action="store_true", help="Alfredo authorized the 5 live calls (spec 10.8)")
-    ap.add_argument("--unit", choices=["cc-sonnet", "codex"], default="cc-sonnet",
-                    help="codex: the Codex unit's smoke (6 calls, results/smoke-codex.json)")
+    ap.add_argument("--unit", choices=["cc-sonnet", "codex", "agy-flash"], default="cc-sonnet",
+                    help="codex: the Codex unit's smoke (6 calls, results/smoke-codex.json); agy-flash: the Antigravity "
+                         "CLI unit's smoke (6 calls + 1 quota readout, results/smoke-agy.json; addendum 1)")
     a = ap.parse_args(argv)
     if a.unit == "codex":
         from harness import smoke_codex
         return smoke_codex.main(a.dry_run, a.i_am_authorized)
+    if a.unit == "agy-flash":
+        from harness import smoke_agy
+        return smoke_agy.main(a.dry_run, a.i_am_authorized)
     if a.dry_run:
         return dry_run()
     if not a.i_am_authorized:

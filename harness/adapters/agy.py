@@ -42,6 +42,7 @@ from harness.adapters.base import Limits, SessionResult, event, now_iso
 
 CALLS = 0
 GRACE_S = 45
+RAW_TAP = None          # smoke only: called with (line, ts) for every stdout line (schema capture)
 PRICES = paths.REPO / "harness" / "prices.json"
 _VERSION: str | None = None
 
@@ -421,6 +422,46 @@ def price_cost(model: str | None, usage: dict, prices: dict | None = None) -> fl
     return _pc(model, usage, prices) if prices is not None else _pc(model, usage)
 
 
+# ---------------------------------------------------------------- quota -------------------------------------------
+
+QUOTA_ARGV = ["-p", "/usage", "--output-format", "json"]   # changelog 1.2.x: `-p "/usage"`; --json output in UTC
+
+
+def quota_snapshot(home, timeout_s: int = 60) -> dict:
+    """`agy -p "/usage" --output-format json` in the given (seeded) HOME: the Google AI Pro quota as agy reports it.
+    A slash command, not a prompt to the model (to be confirmed by the smoke). Returns {"ok", "at", "data"|"text"}."""
+    global CALLS
+    CALLS += 1
+    at = now_iso()
+    try:
+        p = subprocess.run(entry_argv() + QUOTA_ARGV, capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=timeout_s, env=build_env(home), cwd=str(home))
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return {"ok": False, "at": at, "text": f"{type(e).__name__}: {e}"[:300]}
+    text = (p.stdout or "").strip()
+    try:
+        return {"ok": p.returncode == 0, "at": at, "data": json.loads(text)}
+    except ValueError:
+        return {"ok": p.returncode == 0, "at": at, "text": (text or p.stderr or "")[:2000]}
+
+
+def quota_percents(snap: dict) -> dict:
+    """Flatten every numeric field whose key mentions percent/remaining/used/limit in a /usage snapshot."""
+    out = {}
+
+    def walk(v, path):
+        if isinstance(v, dict):
+            for k, x in v.items():
+                walk(x, f"{path}.{k}" if path else str(k))
+        elif isinstance(v, list):
+            for i, x in enumerate(v):
+                walk(x, f"{path}[{i}]")
+        elif isinstance(v, (int, float)) and not isinstance(v, bool) and                 re.search(r"(percent|remaining|used|limit|fraction|quota)", path, re.I):
+            out[path] = v
+    walk(snap.get("data"), "")
+    return out
+
+
 # ---------------------------------------------------------------- session -----------------------------------------
 
 def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limits: Limits, on_event=None) -> SessionResult:
@@ -434,6 +475,8 @@ def run_session(ws, prompt: str, *, resume: str | None = None, unit: dict, limit
     parser = StreamParser(limits.session, on_event)
 
     def on_line(line, ts):
+        if RAW_TAP:
+            RAW_TAP(line, ts)
         parser.feed(line, ts)
         if parser.breach:
             return "kill"

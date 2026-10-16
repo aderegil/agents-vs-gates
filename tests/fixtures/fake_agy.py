@@ -40,6 +40,11 @@ def main():
         with open(log, "a", encoding="utf-8") as f:
             f.write(json.dumps({"argv": sys.argv[1:], "cwd": os.getcwd(), "userprofile": os.environ.get("USERPROFILE"),
                                 "home": os.environ.get("HOME"), "env_keys": sorted(os.environ)}) + "\n")
+    prompt = arg("-p") or ""
+    if prompt == "/usage":
+        out({"quotas": [{"model": "gemini-3.8-flash", "remainingFraction": float(os.environ.get("FAKE_AGY_QUOTA", "0.93")),
+                         "resetTime": "2026-10-16T05:00:00Z"}]})
+        return 0
     resume = arg("--conversation")
     if resume and not (cli / "conversations" / f"{resume}.pb").exists():
         sys.stdout.write(f"AGY_ERROR conversation {resume} not found\n")
@@ -69,6 +74,8 @@ def main():
     events = ws / "src" / "core" / "events.ts"
     usage = {"input_tokens": 1200, "output_tokens": 300, "thinking_tokens": 200, "cache_read_tokens": 800,
              "total_tokens": 1700}
+    if mode == "smoke":
+        return smoke(prompt, cid, ws, usage, resume)
     if mode == "rename_fix" and events.exists():
         out({"event": "tool_call", "conversation_id": cid, "id": "t1", "tool": "view_file",
              "args": {"AbsolutePath": str(events)}})
@@ -109,6 +116,45 @@ def main():
     out({"event": "result", "conversation_id": cid, "status": "success", "response": "OK", "duration_seconds": 1.0,
          "num_turns": 1, "usage": usage})
     return 0
+
+
+def smoke(prompt, cid, ws, usage, resume):
+    """Answers the six prompts of harness/smoke_agy.py the way a well-behaved agy would."""
+    def done(text, status="success", rc=0):
+        out({"event": "message", "conversation_id": cid, "text": text})
+        out({"event": "result", "conversation_id": cid, "status": status, "response": text, "duration_seconds": 2.0,
+             "num_turns": 2, "usage": usage})
+        return rc
+    if "twenty times" in prompt:
+        out({"event": "tool_call", "conversation_id": cid, "id": "t1", "tool": "run_command",
+             "args": {"CommandLine": "npm test", "Cwd": str(ws)}})
+        out({"event": "result", "conversation_id": cid, "status": "timeout", "response": "", "duration_seconds": 20,
+             "num_turns": 3, "usage": usage})
+        return 1
+    if "RESUMED" in prompt:
+        return done("RESUMED KIWI" if resume else "no conversation")
+    if "npm test" in prompt:
+        out({"event": "tool_call", "conversation_id": cid, "id": "t1", "tool": "run_command",
+             "args": {"CommandLine": "npm test", "Cwd": str(ws)}})
+        out({"event": "tool_result", "conversation_id": cid, "id": "t1", "status": "success", "exit_code": 0,
+             "output": "SMOKE_TEST_OK"})
+        return done("It printed SMOKE_TEST_OK. KIWI")
+    if "Append a line" in prompt:
+        with open(ws / "notes.txt", "a", encoding="utf-8") as f:
+            f.write("edited\n")
+        out({"event": "tool_call", "conversation_id": cid, "id": "t1", "tool": "write_to_file",
+             "args": {"TargetFile": str(ws / "notes.txt")}})
+        out({"event": "tool_result", "conversation_id": cid, "id": "t1", "status": "success", "output": "ok"})
+        out({"event": "tool_call", "conversation_id": cid, "id": "t2", "tool": "write_to_file",
+             "args": {"TargetFile": str(ws.parent / "smoke-agy-outside" / "outside.txt")}})
+        out({"event": "tool_result", "conversation_id": cid, "id": "t2", "status": "error",
+             "output": "Access is denied (sandbox)"})
+        out({"event": "tool_call", "conversation_id": cid, "id": "t3", "tool": "view_file",
+             "args": {"AbsolutePath": str(ws.parent / "smoke-agy-outside" / "canary.txt")}})
+        out({"event": "tool_result", "conversation_id": cid, "id": "t3", "status": "error", "output": "denied"})
+        return done("Edited notes.txt; the outside write and read were refused. KIWI")
+    ctx = "KIWI" if (ws / "GEMINI.md").exists() else ("MANGO" if (ws / "AGENTS.md").exists() else "")
+    return done(f"OK {ctx}".strip())
 
 
 if __name__ == "__main__":

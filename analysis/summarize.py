@@ -70,7 +70,13 @@ BY_CONSTRUCTION = ("X-rename", "X-remove", "X-api")
 CONCORDANCE_NOTE = ("Pre-registered note: for X-rename, X-remove and X-api, CI↔oracle concordance is high by "
                     "construction (both derive from the same consumer model) and does not count as evidence. "
                     "Evidence about the limits of CI is the mutation test (spec 8.4) and X-units.")
-STAGE_ORDER = ("selftest", "P0", "P1", "P2", "P4", "P5", "P6")
+STAGE_ORDER = ("selftest", "P0", "P1", "P2", "P4", "P5", "P6", "P7", "P8", "C8")
+EXT1_NOTE = ("Addendum 1 (PREREGISTRATION-ADDENDUM-1.md). Confirmatory per unit, on the new runs only: H2 (V0·S0 vs "
+             "V0·S2, Fisher two-sided, Holm over that unit's 2 tickets) and HS-V2 (V2·S0 vs V0·S0, uncorrected, "
+             "secondary). Each unit is its own family; units are never compared with each other. The combined view "
+             "(earlier runs + P7) is descriptive: counts and 95% Clopper-Pearson intervals, no p-values.")
+CONDITIONS = (("V0", "S0", "no rule (V0·S0)"), ("V2", "S0", "sees every repo (V2·S0)"),
+              ("V0", "S2", "rule in the spec (V0·S2)"))
 
 
 def _xnci(x: int, n: int) -> dict:
@@ -225,6 +231,53 @@ def _replication(ns, main, stages, manifest) -> dict:
     out["available"] = any(v["s0"]["n"] or v["s2"]["n"] for v in out["h2"].values())
     if not out["available"]:
         out["note"] = f"no visible {unit} runs in the {part} part of {stage}"
+    return out
+
+
+def _ext1(ns, main, stages, manifest) -> dict:
+    """Addendum 1: per stage and unit, H2 and HS-V2 on the new runs only; per extended unit, the earlier runs + P7
+    combined per cell and per condition (descriptive). Blinded stages carry no numbers."""
+    out = {"note": EXT1_NOTE, "units": {}, "combined": {}}
+    part_of = {r["run_id"]: r.get("part") for r in (manifest or {}).get("runs", [])}
+    for stage, units in common.EXT1_UNITS[ns].items():
+        for unit in units:
+            u = {"stage": stage, "blinded": False, "available": False, "h2": {}, "secondary_v2": {}}
+            if stage not in stages:
+                u["note"] = f"no {stage} runs in the manifest (harness.manifest --ext1-sidecar)"
+            elif not stages[stage]["visible"]:
+                u.update(blinded=True, note="Blinded until stage complete")
+            else:
+                u["h2"] = _h2_tickets(main, stage, unit)
+                u["secondary_v2"] = _v2_tickets(main, stage, unit)
+                u["available"] = any(v["s0"]["n"] or v["s2"]["n"] for v in u["h2"].values())
+                u["has_v2"] = any(v["v2"]["n"] for v in u["secondary_v2"].values())
+            out["units"][unit] = u
+    for unit, (base_stage, base_part) in common.EXT1_BASE[ns].items():
+        c = {"stages": [f"{base_stage}" + (f" ({base_part} part)" if base_part else ""), "P7"], "blinded": False,
+             "cells": [], "conditions": []}
+        if "P7" not in stages or base_stage not in stages:
+            c["note"] = "no P7 (or base) runs yet"
+        elif not (stages["P7"]["visible"] and stages[base_stage]["visible"]):
+            c.update(blinded=True, note="Blinded until stage complete")
+        else:
+            pool = [r for r in main if r.get("unit") == unit and r.get("wording", "W1") == "W1" and
+                    (r["stage"] == "P7" or (r["stage"] == base_stage and
+                                            (base_part is None or part_of.get(r["run_id"]) == base_part)))]
+            p7_cells = {(r.get("ticket"), r.get("visibility"), r.get("spec")) for r in pool if r["stage"] == "P7"}
+            pool = [r for r in pool if (r.get("ticket"), r.get("visibility"), r.get("spec")) in p7_cells]
+            for V, S, label in CONDITIONS:
+                rows = [r for r in pool if r.get("visibility") == V and r.get("spec") == S]
+                if not rows:
+                    continue
+                for t in H2_TICKETS:
+                    sel = [r for r in rows if r.get("ticket") == t]
+                    c["cells"].append({"ticket": t, "V": V, "S": S, "label": label,
+                                       "base": _count([r for r in sel if r["stage"] != "P7"], _metric("staging_break")),
+                                       "p7": _count([r for r in sel if r["stage"] == "P7"], _metric("staging_break")),
+                                       "combined": _count(sel, _metric("staging_break"))})
+                c["conditions"].append({"V": V, "S": S, "label": label,
+                                        "combined": _count(rows, _metric("staging_break"))})
+        out["combined"][unit] = c
     return out
 
 
@@ -390,6 +443,7 @@ def aggregate(ns: str) -> dict:
         "rq3": {"outcomes": outcomes, "v1_vs_v0s2": v1rows,
                 "human_confirmation": _human_confirmation(main, gate_labels),
                 "coding": {k: coding.get(k, 0) for k in ("T1", "T2", "T3", "honest_escalation", "none", "uncoded")}},
+        "ext1": _ext1(ns, main, stages, manifest),
         "rq4": _rq4(ns, state, {r["run_id"]: r for r in records}, labels),
         "concordance": conc, "concordance_note": CONCORDANCE_NOTE,
         "calibration": _calibration(records),
@@ -447,6 +501,36 @@ def _replication_md(rep: dict | None) -> list[str]:
                           for t, v in rep["secondary_v2"].items()])
 
 
+def _ext1_md(ext: dict | None) -> list[str]:
+    if not ext or not (ext.get("units") or ext.get("combined")):
+        return []
+    L = ["## Addendum 1 — P7 (more runs on the P1 cells) and P8 (third unit)", "", ext["note"], ""]
+    for unit, u in ext["units"].items():
+        L += [f"### {u['stage']} · `{unit}` — confirmatory, new runs only", ""]
+        if u.get("blinded") or not u.get("available"):
+            L += [f"_{u.get('note') or 'no data'}_", ""]
+            continue
+        L += _md_table(["Ticket", "V0·S0", "V0·S2", "p", "p (Holm, this unit)"],
+                       [[t, _fmt(v["s0"]), _fmt(v["s2"]), "—" if v["p"] is None else f"{v['p']:.4g}",
+                         "—" if v["p_holm"] is None else f"{v['p_holm']:.4g}"] for t, v in u["h2"].items()])
+        if u.get("has_v2"):
+            L += [f"HS-V2 ({SECONDARY_LABEL}, uncorrected):", ""]
+            L += _md_table(["Ticket", "V0·S0", "V2·S0", "p (uncorrected)"],
+                           [[t, _fmt(v["v0"]), _fmt(v["v2"]), "—" if v["p"] is None else f"{v['p']:.4g}"]
+                            for t, v in u["secondary_v2"].items()])
+    for unit, c in ext.get("combined", {}).items():
+        L += [f"### `{unit}` — {' + '.join(c['stages'])} combined (descriptive, no p-values)", ""]
+        if c.get("blinded") or not c.get("cells"):
+            L += [f"_{c.get('note') or 'no data'}_", ""]
+            continue
+        L += _md_table(["Condition", "Ticket", "earlier runs", "P7", "combined"],
+                       [[r["label"], r["ticket"], _fmt(r["base"]), _fmt(r["p7"]), _fmt(r["combined"])]
+                        for r in c["cells"]])
+        L += _md_table(["Condition (both tickets)", "combined"], [[r["label"], _fmt(r["combined"])]
+                                                                  for r in c["conditions"]])
+    return L
+
+
 def render_md(agg: dict) -> str:
     L = [f"# Agents vs. Gates — summary ({agg['ns']})", ""]
     if agg["banner"]:
@@ -475,6 +559,7 @@ def render_md(agg: dict) -> str:
                          "—" if v["p_holm"] is None else f"{v['p_holm']:.4g}"] for t, v in h2["tickets"].items()])
     L += _secondary_md(agg["rq2"].get("secondary_v2"))
     L += _replication_md(agg["rq2"].get("replication"))
+    L += _ext1_md(agg.get("ext1"))
     if agg["rq2"]["descriptive"]:
         L += ["Descriptive (no p-values):", ""]
         L += _md_table(["Stage", "Cell", "staging_break"], [[r["stage"], r["cell"], _fmt(r)] for r in agg["rq2"]["descriptive"]])
