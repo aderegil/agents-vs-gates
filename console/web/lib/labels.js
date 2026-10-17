@@ -200,6 +200,11 @@ const TICKET = String.raw`X-(rename|remove|add|api|dep|units)\b`;
 export function plainText(s) {
   if (s == null) return s;
   let t = String(s);
+  // a run's end marker: "End: fixed_code · ticket done" → "End: Fixed after CI failed · ticket done"
+  t = t.replace(/\bEnd: ([a-z][a-z_ ]*?)(?=\s*·|\.|$)/g, (m, o) => {
+    const k = o.trim().replace(/ /g, "_");
+    return OUTCOME_LABEL[k] ? `End: ${OUTCOME_LABEL[k]}` : m;
+  });
   if (!VISIBLE_CODE_RE.test(t) && !/\bfix\d\b/.test(t)) return t;
   // run ids: "PR p1-0002" is just "PR"; elsewhere the run's plain name
   t = t.replace(new RegExp(String.raw`\bPR ${RUN_ID}`, "g"), "PR");
