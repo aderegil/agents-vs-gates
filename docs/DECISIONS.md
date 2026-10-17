@@ -619,3 +619,15 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
 - Consequence: P7's last 79 Codex runs may resume after P8's batch, not right at Codex's 21:02 reset. Run order inside
   each stage stays the manifest's; blinding is unchanged for both stages.
 
+### P7 complete and unblinded; blind-coding batch 5 starts while P8 runs (2026-10-17)
+- P7 480 of 480 (cc-sonnet 240, codex 240). One unit at a time; Codex paused on its quota several times, and Claude
+  Code stopped the driver twice for low memory (runs cut in the middle go back to pending, as the runner already does).
+- To unblind P7 while P8 was running, P8 was stopped after its current runs (control file), `--unblind P7` ran
+  (17:48:36 UTC, not forced), and P8 was relaunched. Reason: the runner keeps state.json in memory and would have
+  overwritten the unblinding.
+- `analysis.coding_export` did not check blinding; it now leaves out runs of a stage that is still blinded (test added).
+  Before, every export ran after its stages were unblinded, so no earlier sheet is affected.
+- Batch 5: the previous coding files are archived in `results/real/coding/archive-2026-10-17-batch4/`; the 743 earlier
+  labels are carried over by run id / review id; 93 new gate rows (P7 92, C8 1) go to the two blind LLM coders (A = Opus,
+  B = Sonnet), the same procedure and declared deviation as batches 1–4.
+

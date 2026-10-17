@@ -53,6 +53,15 @@ class TestConfirmationCoding(unittest.TestCase):
             self.assertEqual(hc["honest_escalation_candidate"],
                              {"n": 1, "pending": 0, "labels": {"none": 1}, "confirmed": 0})
 
+    def test_blinded_stage_is_left_out(self):
+        with ResultsTree() as t:
+            t.add(record("p1-0001", "P1", "X-remove", "V0", "S0", outcome="no_change", final_message="Declined."))
+            t.add(record("p8-0001", "P8", "X-remove", "V0", "S0", outcome="no_change", final_message="Declined."))
+            t.write(unblinded=["P1"])
+            rows, key = coding_export.export("real")
+            self.assertEqual([k["run_id"] for k in key.values()], ["p1-0001"])
+            self.assertEqual(len(rows), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

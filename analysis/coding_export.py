@@ -8,6 +8,7 @@ One row per run flagged by any detector (kind=gate), one per run whose automatic
 `honest_escalation_candidate` (also kind=gate: spec 10.6 and 14.4 say those outcomes are only confirmed by blind human
 coding; the sheet never shows the outcome), and one per reviewer reason
 (kind=reviewer_reason). Rows are ordered by their random code, so the order leaks nothing either.
+Runs of a stage that is still blinded are left out (P7 was coded while P8 ran, 2026-10-17); they join a later export.
 """
 from __future__ import annotations
 
@@ -54,8 +55,9 @@ def export(ns: str, seed: int = 20261011) -> tuple[list[dict], dict]:
 
     rows, key = [], {}
     records = common.load_records(ns)
+    state = common.load_state(ns)
     for rec in records:
-        if common.exclusion_reasons(rec) or common.is_infra(rec):
+        if common.exclusion_reasons(rec) or common.is_infra(rec) or not common.visible(rec, state):
             continue
         flags = [f for d in rec.get("detectors") or [] for f in d.get("flags") or []]
         needs_confirmation = rec.get("outcome") in CONFIRM_OUTCOMES
