@@ -59,6 +59,7 @@ H.264, 30 fps, no audio, short English subtitles in frame.
 | `exp-company-design.mp4` | Meridian Retail (fictional), the design and the gates | `scenario/` |
 | `aisdlc-<model>.mp4` | The scripted AI-SDLC scenes (anthropic, aws, kiro, speckit, gate): **Illustration · scripted from public documentation** on every frame | `replay/scenes` |
 | `aisdlc-compare.mp4` | The five scenes on one phase axis (the theater's lanes view) | `public/scenes/index.json` |
+| `console-tour.mp4` | The console itself, 82 s: sign in → Start here → Results → one run in the Theater → the lanes (see "Console tour") | `work/results` snapshot |
 
 `prepare_clips.py` builds the two real replays in memory (never written to `results/`), the card facts
 (`work/clip-facts.json`, from the records) and freezes the theater build in `work/theater`. Theater segments run on a
@@ -81,22 +82,42 @@ node qa-avatars.mjs --tag after                # portrait contact sheet (pure pi
 `--dist <folder>` points the first two at another theater build (e.g. a saved copy for "before"). They need
 `work/replays/` from `prepare_clips.py` for the two real runs.
 
-## Console tour (planned, after P7 ends; not built yet)
-A 60–90 s silent clip, `out/console-tour.mp4`, with an entry in `out/manifest.json`: sign in → Start here → Results →
-one run in the Replay Theater → the AI-SDLC lanes. Real namespace, from the read-only snapshot of `results/real`; no
-mock runs, no made-up numbers (a stage still sealed shows its lock).
-- **Code to add:** `video/console-tour.mjs` with `captureTour(context, enc)`. It reuses `console-shots.mjs`'s private
-  console (`python -m console --port 8793 --data-dir video/work/console-data`, `AVG_RESULTS_ROOT=video/work/results`,
-  empty `AVG_ROOT`, a throwaway owner; it stops only its own PID; never `:8765`) and `clips.mjs`'s paused virtual clock
-  (`context.clock.install` + `pauseAt`, so the Theater iframe follows it too; one `runFor(1000 / FPS)` per frame, frames
-  through `lib.mjs` `shot` and `encoder`). In `clips.mjs`: one entry in `clips()` (`file: "console-tour.mp4"`,
-  `segments: [{ kind: "console" }]`, `label: "Console tour"`) and one branch in `renderSegment`, so the manifest merge
-  is the one already there.
-- **Beats (≈ 80 s), one short subtitle each** (same overlay style as the theater chip): sign in on the real form
-  (8 s, «Sign in») · Start here, slow scroll through the five blocks (18 s, «Start here: the experiment in five short
-  parts») · Results, tab «Nothing in view (RQ1)» (16 s, «Results: one tab per question») · Replay Theater: pick «Main
-  test · run 2» in «Select a run…», Play at 1× (24 s, «Watch one run: pick it, press Play») · «Compare AI-SDLC models»
-  (16 s, «Five ways of working, one change»).
-- **Commands** (from the main checkout after the merge; the worktree has no `.venv`):
-  `.venv\Scripts\python.exe -X utf8 video\prepare.py` (refreshes `video/work/results`), then
-  `cd video` and `node clips.mjs --fps 30 --skip-prepare --only console-tour`.
+## Console tour (built 2026-10-17, theater-1016)
+`out/console-tour.mp4`: 82 s, 1920×1080, H.264, 30 fps, silent (~4.5 MB), with its entry in `out/manifest.json`
+(`label: "Console tour"`): sign in → Start here → Results → one run in the Replay Theater → the AI-SDLC lanes. Real
+namespace, from the read-only snapshot of `results/real`; no mock runs, no made-up numbers (a stage still sealed shows
+its lock: "Third agent · Blinded until stage complete").
+- **Code:** `video/console-tour.mjs`, `captureTour(context, enc, { fps, port })`. The private console now lives in
+  `console-shots.mjs` as `startPrivateConsole()` + `createOwner()` (shared with the stills): `python -m console --port
+  8793 --data-dir video/work/console-data`, `AVG_RESULTS_ROOT=video/work/results`, `AVG_ROOT=video/work/avg-empty`, a
+  throwaway owner `demo`; it stops only its own PID and refuses `:8765`. The interpreter is the repo's `.venv`, or
+  `AVG_PYTHON` (a worktree has no `.venv`; the console still runs the worktree's code: cwd = repo, `-m console`).
+  `clips.mjs` has the entry (`segments: [{ kind: "console" }]`) and the `renderSegment` branch; `--port` is passed on.
+- **How it films:** `context.clock.install` + `pauseAt` (the Theater iframe follows it), one `runFor(1000 / FPS)` +
+  `lib.mjs` `shot` per frame. Each beat ends on the click that opens the next page; the load is waited for off camera
+  (the clock steps on until the page is ready), so every beat opens on a finished page. A grey ring marks what is about
+  to be clicked (headless has no visible pointer) and the pointer is parked off the page after each click.
+- **Subtitles** sit in an 84 px white band under the console (the console's `.app`/`.main` are shortened by the band,
+  so a subtitle never covers page text), in the theater chip's style. For the film only, an init script in the top
+  document takes codes off screen as `labels.js` asks of the clips: a code in brackets ("Main test (P1)", "(V0-S0)",
+  "(staging_break)") is dropped, text that is only a code ("X-remove", "RQ1") is hidden, and the "What the codes mean"
+  legends are hidden. The Theater iframe is left as it is, except its lanes view, drawn at 90 % so the grid fits.
+- **Beats (82 s):** sign in on the real form, typed (8 s, «Sign in») · Start here, slow scroll through the five blocks
+  (18 s, «Start here: the experiment in five short parts») · Results, tab «Nothing in view» (16 s, «Results: one tab
+  per question») · Replay Theater: pick «Main test · run 2», 1×, Play (24 s, «Watch one run: pick it, press Play»;
+  off camera the theater is first set to another main-test run with no rule, because the run it opens on by default
+  has a label overlap at its first moment) · «Compare AI-SDLC models», Play 8 s, then End (16 s, «Five ways of
+  working, one change»).
+- **Commands that built it** (Git Bash, from the worktree, 2026-10-17; the copy step reads the main checkout's
+  `results/` read-only, writes only `video/work/`):
+  ```
+  cd /c/avg/theater-1016
+  AVG_RESULTS_ROOT='C:\avg\agents-vs-gates\results' AVG_ROOT='C:\avg\theater-1016\video\work\avg-empty' \
+    /c/avg/agents-vs-gates/.venv/Scripts/python.exe -X utf8 video/prepare.py
+  cd video
+  AVG_PYTHON='C:\avg\agents-vs-gates\.venv\Scripts\python.exe' node clips.mjs --fps 30 --skip-prepare --only console-tour
+  ```
+  From the main checkout after the merge: `.venv\Scripts\python.exe -X utf8 video\prepare.py`, then `cd video` and
+  `node clips.mjs --fps 30 --skip-prepare --only console-tour` (no `AVG_PYTHON` needed). Render: ~4 min wall; it
+  stops if free RAM < 6 GB. Stills for QA: `node_modules/ffmpeg-static/ffmpeg.exe -ss <s> -i out/console-tour.mp4
+  -frames:v 1 work/tour-frames/<name>.png`.

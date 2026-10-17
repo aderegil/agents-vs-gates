@@ -3,6 +3,7 @@
 //   cd video && node clips.mjs                     # prepare_clips.py, then every clip, then out/manifest.json
 //   node clips.mjs --only exp-one-run,aisdlc-compare --skip-prepare
 //   node clips.mjs --fps 30                        # capture rate (default 15; frames are repeated to 30 fps)
+//   node clips.mjs --fps 30 --skip-prepare --only console-tour [--port 8793]   # the console tour (console-tour.mjs)
 //
 // Same machinery as build.mjs (lib.mjs): headless Edge through playwright-core on a virtual clock, JPEG frames piped to
 // ffmpeg (libx264, 1920×1080, 30 fps, no audio). Theater segments play the theater build frozen by prepare_clips.py in
@@ -12,6 +13,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { FFMPEG, ORIGIN, OUT, REPO, VIDEO, WORK, encoder, ffprobeDuration, freeGB, launch, shot } from "./lib.mjs";
+import { captureTour } from "./console-tour.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(n);
@@ -85,6 +87,13 @@ function clips() {
       shows: "Neutral variant of the comparison: the same five lanes with no per-vendor outcome. Vendor lanes show where the rule lives and review as \"review (advisory)\"; their CI cells say only \"no architecture check in CI (not described)\". Only the \"+ the gate\" lane shows an outcome: blocks the merge in CI, caught by ARCH-4 and repaired.",
       source: "console/plugins/replay/app/public/scenes/index.json (from replay/scenes/make_scenes.py), theater lanes view ?neutral=1",
       label: "Illustration · scripted from public documentation",
+    },
+    {
+      file: "console-tour.mp4",
+      segments: [{ kind: "console" }],
+      shows: "The experiment console, real namespace: sign in → Start here (the five short parts) → Results, the \"Nothing in view\" tab → the Replay Theater: \"Main test · run 2\" played at 1× → Compare AI-SDLC models (the five lanes). A stage still sealed shows its lock.",
+      source: "a private console (python -m console --port 8793) on video/work/results, prepare.py's read-only snapshot of results/real",
+      label: "Console tour",
     },
   ];
 }
@@ -179,7 +188,9 @@ async function renderSegment(seg, file) {
     const enc = encoder(file, FPS);
     try {
       const ms = seg.kind === "scene" ? await captureScene(context, seg, enc)
-        : seg.kind === "lanes" ? await captureLanes(context, enc, seg.query) : await captureTheater(context, seg, enc);
+        : seg.kind === "lanes" ? await captureLanes(context, enc, seg.query)
+        : seg.kind === "console" ? await captureTour(context, enc, { fps: FPS, port: Number(opt("--port", 8793)) })
+        : await captureTheater(context, seg, enc);
       await enc.close();
       return ms;
     } catch (e) {
