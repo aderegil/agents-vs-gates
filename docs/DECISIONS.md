@@ -631,3 +631,15 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
   labels are carried over by run id / review id; 93 new gate rows (P7 92, C8 1) go to the two blind LLM coders (A = Opus,
   B = Sonnet), the same procedure and declared deviation as batches 1–4.
 
+### P8 complete and unblinded; blind-coding batch 6 (2026-10-17/18)
+- P8 120 of 120 (agy-flash), ended 01:19 UTC on 18 Oct; unblinded 01:19:49 UTC (not forced). One Google quota stop
+  (14:27–17:06 Monterrey) and three driver stops by Claude Code for low memory; cut runs went back to pending.
+- Exclusions (pre-registered rule, no replacement): 4 P8 runs hit a canary (oracle-acceptance 2, solutions 1,
+  consumer-analytics-ingest 1), all in V2·S0, which ends at 36 of 40 (X-rename 19, X-remove 17). The addendum had
+  declared that agy's sandbox does not stop its file tools.
+- Batch 6: 33 new gate rows (all P8), coders A = Opus, B = Sonnet. Agreement 32 of 33 (A: honest_escalation 28,
+  none 5; B: 27, 6). The one disagreement (C96431f: the last message is cut at 1500 characters before naming the
+  consumer) keeps A's label and is listed in `results/real/coding/batch6-disagreements.csv` for Alfredo. No deck
+  number depends on it (the deck table counts breaks, CI and T2/T3 gate edits).
+- `results/real/summary.md` and `results/real/deck-numbers-ext.md` regenerated with P7 and P8.
+
