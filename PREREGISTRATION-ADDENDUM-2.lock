@@ -1,0 +1,15 @@
+{
+  "schema": "prereg-addendum-lock/1",
+  "addendum": 2,
+  "frozen_at": "2026-10-18T19:59:10+00:00",
+  "extends": {
+    "lock": "PREREGISTRATION.lock",
+    "aggregate_sha256": "3bc8017e6ac88c72f921a573902c609dbddc585822fbb5e0699801b2379f3c43",
+    "lock_file_sha256": "a9e01cfc1bd3094ec5bb06daa37fa69154c6ba7751382f19e09bccf3eb13df6a"
+  },
+  "aggregate_sha256": "a172ba3cd6c1b74a6c6af11cc0bb6c684ee9b6c5f7e84884da427acbd796e790",
+  "files": {
+    "PREREGISTRATION-ADDENDUM-2.md": "110808aac81ca97e641be898c0649a4861d814a4787e86fb3120cf571d937541",
+    "results/real/manifest-ext2.json": "cecb474fe2c1b888e4f9c91b2ed3337d7255b6c84b88ef0bf092eb6b2cc5efe2"
+  }
+}
