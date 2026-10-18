@@ -37,6 +37,8 @@ export const REPLAYS = {
   "p1-0002": "/replays/p1-0002.json",
   "p6-0012": "/replays/p6-0012.json",
   "m2b-sprint": "/qa/demo/m2b-sprint-f1.json",
+  "m1-v0s2": "/qa/demo/m1-xrename-v0s2-additive.json",
+  "x1-0002": "/replays/x1-0002.json",
 };
 
 /** Opens a replay in the theater, paused, presentation mode by default, on a paused virtual clock. */

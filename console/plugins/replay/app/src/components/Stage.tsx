@@ -419,10 +419,11 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   for (const k of consumers) drawConsumerMarks(ctx, engine, k, agentPos, placeById, c, layout);
   drawResting(ctx, engine, placeById, c, layout);
   drawTicketOrigin(ctx, engine, placeById, c, layout);
-  for (const f of travelsAt(travelsOf(replay), clock)) drawTravel(ctx, f, placeById, c);
 
   // place labels first (they belong to an object); the glass caption takes whatever room is left beside the glass
   for (const l of layout.labels) drawPlaceLabel(ctx, l, c, layout);
+  // what is in flight passes in front of the place labels (a label drawn over it read "ticket:Dispatch,board,")
+  for (const f of travelsAt(travelsOf(replay), clock)) drawTravel(ctx, f, placeById, c);
   if (layout.glass) drawGlassCaption(ctx, layout.glass, c, layout);
   if (zones.length) drawZoneTitles(ctx, zones, c);
   // a bubble said by the same step as the subtitle would say it twice: the subtitle wins
@@ -898,12 +899,17 @@ function drawTravel(ctx: CanvasRenderingContext2D, f: TravelFrame, places: Map<s
   const s = 1;
   if (tr.kind === "sheet" || tr.kind === "pickup") {
     drawSheetIcon(ctx, pos.x, pos.y, s, c);
-    if (tr.kind === "sheet") {
+    // the label shows only in flight: once the sheet has left its shelf or desk (at rest it sat on the people beside
+    // it) and until just before it lands (where the place's own label is); a halo keeps it readable over a figure
+    const ramp = (v: number) => Math.min(1, Math.max(0, v));
+    const shown = progress <= 1 ? Math.min(ramp((progress - 0.12) / 0.15), ramp((0.8 - progress) / 0.25)) : 0;
+    if (tr.kind === "sheet" && shown > 0) {
       ctx.font = `500 11px ${FONT}`;
+      ctx.globalAlpha = alpha * shown;
       ctx.fillStyle = c.ink;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText(tr.label, pos.x + 12, pos.y);
+      haloText(ctx, tr.label, pos.x + 12, pos.y);
     }
   } else if (tr.kind === "envelope") {
     drawEnvelopeIcon(ctx, pos.x, pos.y, s, c);
