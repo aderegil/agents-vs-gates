@@ -88,25 +88,32 @@ def build(ns: str) -> str:
          ""]
     if ns == "mock":
         L += [f"> **{common.SIM_BANNER}**", ""]
-    for stage, units in common.EXT1_UNITS[ns].items():
-        for unit in units:
+    planned = {r["stage"] for r in (manifest or {}).get("runs", [])}
+    # addendum 1 (P7 extends P1 / P6; P8 is new), then addendum 2 (P9 extends P8) once its manifest exists
+    entries = ([(s, u, common.EXT1_BASE[ns].get(u) if s == "P7" else None)
+                for s, units in common.EXT1_UNITS[ns].items() for u in units]
+               + [(s, u, common.EXT2_BASE[ns].get(u))
+                  for s, units in common.EXT2_UNITS[ns].items() if s in planned for u in units])
+    shown = set()
+    for stage, unit, base in entries:
+        if unit not in shown:
             L += [f"## {UNIT_LABEL.get(unit, unit)} (`{unit}`)", ""]
-            if not blinding.is_visible(state, stage):
-                L += [f"{stage}: blinded until the stage is complete.", ""]
+            shown.add(unit)
+        if not blinding.is_visible(state, stage):
+            L += [f"{stage}: blinded until the stage is complete.", ""]
+            continue
+        new = [r for r in main if r["stage"] == stage and r.get("unit") == unit]
+        L += [f"### {stage} — new runs only", ""] + (_table(new, labels) if new else ["No runs.", ""])
+        if base:
+            bstage, bpart = base
+            if not blinding.is_visible(state, bstage):
                 continue
-            new = [r for r in main if r["stage"] == stage and r.get("unit") == unit]
-            L += [f"### {stage} — new runs only", ""] + (_table(new, labels) if new else ["No runs.", ""])
-            base = common.EXT1_BASE[ns].get(unit)
-            if stage == "P7" and base:
-                bstage, bpart = base
-                if not blinding.is_visible(state, bstage):
-                    continue
-                cells = {(r.get("ticket"), r.get("visibility"), r.get("spec")) for r in new}
-                old = [r for r in main if r["stage"] == bstage and r.get("unit") == unit
-                       and (bpart is None or part_of.get(r["run_id"]) == bpart)
-                       and (r.get("ticket"), r.get("visibility"), r.get("spec")) in cells]
-                L += [f"### {bstage}{f' ({bpart} part)' if bpart else ''} + P7 — combined (descriptive, no p-values)",
-                      ""] + _table(old + new, labels)
+            cells = {(r.get("ticket"), r.get("visibility"), r.get("spec")) for r in new}
+            old = [r for r in main if r["stage"] == bstage and r.get("unit") == unit
+                   and (bpart is None or part_of.get(r["run_id"]) == bpart)
+                   and (r.get("ticket"), r.get("visibility"), r.get("spec")) in cells]
+            L += [f"### {bstage}{f' ({bpart} part)' if bpart else ''} + {stage} — combined (descriptive, no p-values)",
+                  ""] + _table(old + new, labels)
     return "\n".join(L)
 
 

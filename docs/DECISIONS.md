@@ -643,3 +643,18 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
   number depends on it (the deck table counts breaks, CI and T2/T3 gate edits).
 - `results/real/summary.md` and `results/real/deck-numbers-ext.md` regenerated with P7 and P8.
 
+
+### Addendum 2: P9, `agy-flash` up to 50 runs per cell (2026-10-18)
+- Alfredo's decision (relayed by the deck session, confirmed by him in this terminal): Gemini gets the same depth as
+  Claude and Codex, 100 runs per condition. P9 = 30 new runs per P8 cell plus that cell's P8 shortfall (canary
+  exclusions: X-rename V2·S0 1, X-remove V2·S0 3) = 184 runs, seed 20261018, sidecar `results/real/manifest-ext2.json`.
+- Declared in the addendum: decided after P8 was seen, so the confirmatory tests use P9's new runs only; P8 + P9 is
+  descriptive. P9's own exclusions are not made up. Quota stop: 24 Oct 2026 12:00 Monterrey, last complete round.
+- Code: `harness.manifest --ext2-sidecar` (shortfall from exclusion flags, never outcomes; refused before P8 is
+  complete), `prereg` addendum 2 (`PREREGISTRATION-ADDENDUM-2.md` + the sidecar), runner stage P9 (needs the original
+  lock and both addendum locks), summary `ext2` block and the deck table's P9 and P8 + P9 sections.
+- The auto-mode safety check blocked the first edits of the addendum and of the analysis stage list because the
+  request came from another session; they were made after Alfredo confirmed in this terminal.
+- `test_analysis_tools` fixed: its sheet export needs the stages unblinded since the 17 Oct blinding fix. The 3 errors
+  in `test_ext1.RunnerExt1` come from its setUp writing the addendum-1 sidecar while the real lock exists (since
+  16 Oct); not related to P9.

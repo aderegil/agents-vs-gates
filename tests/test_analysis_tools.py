@@ -31,7 +31,8 @@ class TestCoding(unittest.TestCase):
     def test_export_is_blind_and_import_roundtrip(self):
         with ResultsTree() as t:
             standard_tree(t)
-            t.write(reviews=[{"review_id": "rv1", "pr_id": "pr-001", "run_id": "p1-0001", "condition": "R-C",
+            t.write(unblinded=["P1", "P2"],                  # the export leaves out blinded stages (2026-10-17)
+                    reviews=[{"review_id": "rv1", "pr_id": "pr-001", "run_id": "p1-0001", "condition": "R-C",
                               "rep": 1, "verdict": "request_changes",
                               "reasons": ["billing reads totalCents", "style"]}],
                     pr_set={"prs": [{"pr_id": "pr-001", "run_id": "p1-0001", "ticket": "X-rename",

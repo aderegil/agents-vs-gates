@@ -13,6 +13,8 @@ Addendum 1 (P7, P8; PREREGISTRATION-ADDENDUM-1.md). The original lock is never e
 The addendum lock holds the UTC time, the SHA-256 of the addendum and of the files P7/P8 add (ADDENDUM_FILES), and the
 aggregate hash of the original lock it extends. Freezing it requires the original lock to verify; verifying it checks
 both. Freezing the addendum is Alfredo's step (🔒).
+Addendum 2 (P9; PREREGISTRATION-ADDENDUM-2.md) works the same way with N = 2; the runner checks both addendum locks
+for P9, since it runs addendum 1's unit and adapter.
 """
 from __future__ import annotations
 
@@ -106,7 +108,9 @@ def verify(repo: Path | None = None) -> tuple[bool, list[str]]:
 # ---------------------------------------------------------------- addendum ---------------------------------------
 
 ADDENDUM_FILES = {1: ("PREREGISTRATION-ADDENDUM-1.md", "harness/units-ext.json", "harness/adapters/agy.py",
-                      "results/real/manifest-ext1.json")}
+                      "results/real/manifest-ext1.json"),
+                  # addendum 2 (P9) reuses addendum 1's unit, adapter and prices, which stay frozen by that lock
+                  2: ("PREREGISTRATION-ADDENDUM-2.md", "results/real/manifest-ext2.json")}
 
 
 def addendum_lock_name(n: int) -> str:

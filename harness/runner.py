@@ -17,6 +17,8 @@
                                                                   visible like P0; needs results/smoke-agy.json) -> report
   python -X utf8 -m harness.runner --stage P7 --unit cc-sonnet --workers 3   addendum 1 (needs both locks to verify:
                                                                   PREREGISTRATION.lock and PREREGISTRATION-ADDENDUM-1.lock)
+  python -X utf8 -m harness.runner --stage P9 --workers 3          addendum 2, agy-flash (needs the original lock and
+                                                                  both addendum locks; sidecar manifest-ext2.json)
 Options: --workers 1..3, --max-runs N (alias of --batch; the smaller wins), --ns real|mock, --unit U, --part P1|P2|P4.
 Exit codes: 0 ok, 2 usage/guard refusal (lock missing, smoke not passed, model drift), 3 rate-limited, 4 isolation
 breach. While running: state.json rewritten atomically at least every second, PID in state.runner.pid,
@@ -42,10 +44,12 @@ from harness import manifest as manifest_mod
 
 EXIT_OK, EXIT_GUARD, EXIT_RATE, EXIT_BREACH = 0, 2, 3, 4
 MAX_INFRA_RETRIES = 2
-STAGES = ("P0", "P1", "P2", "P4", "P5", "P6") + manifest_mod.EXT_STAGES + manifest_mod.PILOTS + manifest_mod.CAL_STAGES
+STAGES = (("P0", "P1", "P2", "P4", "P5", "P6") + manifest_mod.EXT_STAGES + manifest_mod.EXT2_STAGES
+          + manifest_mod.PILOTS + manifest_mod.CAL_STAGES)
 EXPLORATORY = ("P0",) + manifest_mod.PILOTS + manifest_mod.CAL_STAGES   # exempt from the locks (calibration, pilots)
 MULTI_UNIT = manifest_mod.PILOTS + ("P7",)       # stages whose real runs belong to several units: --unit required
-DRIFT_NOTED = manifest_mod.EXT_STAGES + manifest_mod.CAL_STAGES   # addendum 1: model drift is recorded, not a stop
+DRIFT_NOTED = (manifest_mod.EXT_STAGES + manifest_mod.EXT2_STAGES   # addenda 1 and 2: model drift is recorded,
+               + manifest_mod.CAL_STAGES)                                # not a stop
 
 
 def now() -> str:
@@ -77,6 +81,9 @@ def load_state(ns: str, manifest: dict | None) -> dict:
     ext_sha = manifest_mod.sha256(manifest_mod.ext1_path(ns))
     if ext_sha:
         st["ext1_manifest_sha256"] = ext_sha
+    ext2_sha = manifest_mod.sha256(manifest_mod.ext2_path(ns))
+    if ext2_sha:
+        st["ext2_manifest_sha256"] = ext2_sha
     return st
 
 
@@ -170,10 +177,14 @@ def guard_errors(ns: str, stage: str, units_used: set[str]) -> list[str]:
         ok, problems = prereg.verify()
         if not ok:
             errs.append("pre-registration lock missing or does not match: " + "; ".join(problems[:5]))
-        if stage in manifest_mod.EXT_STAGES:
+        if stage in manifest_mod.EXT_STAGES + manifest_mod.EXT2_STAGES:
             ok, problems = prereg.verify_addendum(1)
             if not ok:
                 errs.append("addendum-1 lock missing or does not match: " + "; ".join(problems[:5]))
+        if stage in manifest_mod.EXT2_STAGES:          # P9 runs addendum 1's unit and adapter under addendum 2
+            ok, problems = prereg.verify_addendum(2)
+            if not ok:
+                errs.append("addendum-2 lock missing or does not match: " + "; ".join(problems[:5]))
     for u in units_used:
         if u == "mock":
             errs.append("unit mock in the real namespace")

@@ -7,7 +7,7 @@ from harness import blinding, paths
 from harness import manifest as manifest_mod
 from harness.jsonio import read_json, read_jsonl
 
-MAIN_STAGES = ("P1", "P2", "P4", "P5", "P6", "P7", "P8", "selftest")   # P7, P8: addendum 1
+MAIN_STAGES = ("P1", "P2", "P4", "P5", "P6", "P7", "P8", "P9", "selftest")   # P7, P8: addendum 1; P9: addendum 2
 CALIBRATION = "P0"
 PRIMARY_UNIT = {"real": "cc-sonnet", "mock": "mock"}
 REPLICATION_UNIT = {"real": "codex", "mock": "mock"}   # P6's P1 part: H2 and HS-V2 again, never pooled with PRIMARY
@@ -17,6 +17,9 @@ EXT1_UNITS = {"real": {"P7": ("cc-sonnet", "codex"), "P8": ("agy-flash",)},
 # the earlier runs of the same unit and cells that P7 extends (descriptive combination only, never a p-value)
 EXT1_BASE = {"real": {"cc-sonnet": ("P1", None), "codex": ("P6", "P1")},
              "mock": {"mock": ("P1", None), "mock-cx": ("P6", "P1")}}
+# addendum 2: P9, agy-flash again on the P8 cells; confirmatory on the new runs only, P8 + P9 combined descriptively
+EXT2_UNITS = {"real": {"P9": ("agy-flash",)}, "mock": {"P9": ("mock-agy",)}}
+EXT2_BASE = {"real": {"agy-flash": ("P8", None)}, "mock": {"mock-agy": ("P8", None)}}
 SIM_BANNER = "SIMULATED (mock agent) — not a real run"
 
 
@@ -34,10 +37,11 @@ def load_records(ns: str) -> list[dict]:
 
 
 def load_manifest(ns: str) -> dict | None:
-    """manifest.json plus the P6 sidecar's runs (manifest-p6.json) and the addendum-1 sidecar (manifest-ext1.json),
-    if any; not the pilots or the C8 calibration."""
+    """manifest.json plus the P6 sidecar's runs (manifest-p6.json) and the addendum sidecars (manifest-ext1.json,
+    manifest-ext2.json), if any; not the pilots or the C8 calibration."""
     m = read_json(paths.manifest_path(ns))
-    return manifest_mod.with_ext1(manifest_mod.with_p6(m, ns), ns) if m is not None else None
+    return (manifest_mod.with_ext2(manifest_mod.with_ext1(manifest_mod.with_p6(m, ns), ns), ns)
+            if m is not None else None)
 
 
 def load_state(ns: str) -> dict | None:

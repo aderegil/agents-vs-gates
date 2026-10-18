@@ -96,6 +96,11 @@ CAL_STAGES = ("C8",)               # exploratory calibration of agy-flash, compu
 EXT1_NAME = "manifest-ext1.json"   # P7/P8 sidecar beside the frozen manifest.json (frozen by the addendum lock)
 P7_N = 40
 P8_N = 20
+EXT2_SEED = 20261018               # addendum 2 (P9)
+EXT2_STAGES = ("P9",)
+EXT2_NAME = "manifest-ext2.json"   # P9 sidecar (frozen by the addendum-2 lock)
+P9_NEW = 30                        # new runs per P8 cell, plus the cell's P8 shortfall (see p9_cells)
+P9_TARGET_P8 = P8_N                # the P8 runs each cell was meant to have; excluded or failed ones are made up in P9
 MOCK_UNITS = {"cc-sonnet": "mock", "codex": "mock-cx", "agy-flash": "mock-agy"}
 
 # The single switch for the confirmatory H2 tickets (P1 and the stages derived from it; analysis.summarize reads it).
@@ -290,7 +295,8 @@ def load(ns: str) -> dict | None:
 
 
 def _merged(m: dict | None, ns: str) -> dict | None:
-    return with_calibration(with_pilots(with_ext1(with_p6(m, ns), ns), ns), ns) if m is not None else None
+    return (with_calibration(with_pilots(with_ext2(with_ext1(with_p6(m, ns), ns), ns), ns), ns)
+            if m is not None else None)
 
 
 def validate(manifest: dict) -> list[str]:
@@ -336,7 +342,7 @@ def ext_cells(stage: str, p8_n: int = P8_N, h2: tuple | None = None) -> list[dic
 
 
 def _ext_runs(stage: str, cells: list[dict], seed: int, ns: str, para: dict, paraphrased: bool,
-              prefix: str) -> list[dict]:
+              prefix: str, rotate_all: bool = False) -> list[dict]:
     runs, pos = [], 0
     if not cells:
         return runs
@@ -347,8 +353,8 @@ def _ext_runs(stage: str, cells: list[dict], seed: int, ns: str, para: dict, par
             pos += 1
             unit = _ext_unit(c["unit"], ns)
             p = None
-            if (paraphrased and c["wording"] == "W1" and c["n"] % 5 == 0 and c["ticket"] in scenario_io.PARAPHRASED
-                    and para.get(c["ticket"])):
+            if (paraphrased and c["wording"] == "W1" and (rotate_all or c["n"] % 5 == 0)
+                    and c["ticket"] in scenario_io.PARAPHRASED and para.get(c["ticket"])):
                 p = f"p{(r - 1) % 5 + 1}"
             runs.append({"run_id": f"{prefix}-{pos:04d}", "stage": stage, "unit": unit, "ticket": c["ticket"],
                          "wording": c["wording"], "paraphrase": p, "visibility": c["visibility"], "spec": c["spec"],
@@ -415,6 +421,99 @@ def with_ext1(m: dict, ns: str) -> dict:
                               "seed": side.get("seed"), "p8_n": side.get("p8_n")})
 
 
+# ---------------------------------------------------------------- addendum 2: P9 -----------------------------------
+
+def p8_shortfall(ns: str) -> dict[str, int]:
+    """Per P8 cell: how many of its P9_TARGET_P8 planned runs are not in the main analysis (canary hits, exposed
+    token, isolation breach, final infra failure, or not run). Read from the records once P8 is complete."""
+    side = jsonio.read_json(ext1_path(ns)) or {}
+    planned = Counter(r["cell"] for r in side.get("runs", []) if r["stage"] == "P8")
+    good = Counter()
+    for r in side.get("runs", []):
+        if r["stage"] != "P8":
+            continue
+        rec = jsonio.read_json(paths.run_dir(ns, r["run_id"]) / "record.json") or {}
+        bad = ((rec.get("contamination") or {}).get("flag") or rec.get("token_exposed")
+               or (rec.get("infra_failure") or {}).get("kind") == "isolation_breach"
+               or rec.get("outcome") in (None, "infra_failure"))
+        if not bad:
+            good[r["cell"]] += 1
+    return {cell: max(0, n - good[cell]) for cell, n in sorted(planned.items())}
+
+
+def p9_cells(ns: str, shortfall: dict[str, int] | None = None, h2: tuple | None = None) -> list[dict]:
+    """P9: agy-flash on the 6 P1 cells again; N = P9_NEW + that cell's P8 shortfall, so that P8 + P9 reach
+    P9_TARGET_P8 + P9_NEW analysable runs per cell unless P9 itself loses runs (not made up again)."""
+    short = p8_shortfall(ns) if shortfall is None else shortfall
+    out = []
+    for c in stage_cells("P1", h2):
+        unit = _ext_unit("agy-flash", ns)
+        key = cell_key(dict(c, unit=unit))
+        out.append(dict(c, unit="agy-flash", n=P9_NEW + short.get(key, 0)))
+    return out
+
+
+def generate_ext2(seed: int = EXT2_SEED, ns: str = "real", shortfall: dict[str, int] | None = None,
+                  h2: tuple | None = None) -> dict:
+    para = paraphrase_status()
+    short = p8_shortfall(ns) if shortfall is None else shortfall
+    cells = p9_cells(ns, short, h2)
+    runs = _ext_runs("P9", cells, seed, ns, para, True, "p9", rotate_all=True)
+    return {"schema": "manifest/1", "seed": seed, "namespace": ns,
+            "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "sidecar_of": "manifest.json", "addendum": 2, "p9_new": P9_NEW,
+            "p8_shortfall": short, "p9_n": {cell_key(dict(c, unit=_ext_unit(c["unit"], ns))): c["n"] for c in cells},
+            "paraphrases": {t: ("p1..p5 rotating by round" if ok else "base text (paraphrase files missing)")
+                            for t, ok in para.items()},
+            "stage_counts": {"P9": len(runs)}, "units": {"P9": dict(Counter(r["unit"] for r in runs))},
+            "runs": runs}
+
+
+def ext2_path(ns: str) -> Path:
+    return paths.manifest_path(ns).with_name(EXT2_NAME)
+
+
+def write_ext2(ns: str, seed: int = EXT2_SEED, *, force: bool = False) -> tuple[Path, dict]:
+    """Write results/<ns>/manifest-ext2.json. Refused once addendum 2 is frozen (real ns), before P8 is complete, or
+    if it exists and (no --force, or a P9 run has started)."""
+    out = ext2_path(ns)
+    if not paths.manifest_path(ns).exists():
+        raise RuntimeError(f"no {paths.manifest_path(ns)}: generate the manifest first")
+    if ns == "real":
+        from harness import prereg
+        if prereg.addendum_lock_path(2).exists():
+            raise RuntimeError("addendum 2 is frozen (PREREGISTRATION-ADDENDUM-2.lock): the P9 manifest cannot change")
+    state = jsonio.read_json(paths.state_path(ns)) or {}
+    side1 = jsonio.read_json(ext1_path(ns)) or {}
+    p8 = [r["run_id"] for r in side1.get("runs", []) if r["stage"] == "P8"]
+    unfinished = [rid for rid in p8 if state.get("runs", {}).get(rid, {}).get("status") not in ("done",
+                                                                                              "infra_failure_final")]
+    if not p8 or unfinished:
+        raise RuntimeError(f"P8 is not complete ({len(unfinished)} of {len(p8)} runs open): its shortfall is not known")
+    if out.exists():
+        started = [rid for rid, r in state.get("runs", {}).items()
+                   if rid.startswith("p9-") and r.get("status", "pending") != "pending"]
+        if not force or started:
+            raise RuntimeError(f"{out} exists" + (f" and {len(started)} P9 run(s) have started" if started
+                                                  else "; pass --force to overwrite"))
+    m = generate_ext2(seed, ns)
+    errs = validate(m)
+    if errs:
+        raise RuntimeError(f"addendum-2 sidecar does not match the contract schema: {errs[:3]}")
+    jsonio.write_json_atomic(out, m)
+    return out, m
+
+
+def with_ext2(m: dict, ns: str) -> dict:
+    side = jsonio.read_json(ext2_path(ns))
+    if side is None:
+        return m
+    known = {r["run_id"] for r in m.get("runs", [])}
+    return dict(m, runs=list(m.get("runs", [])) + [r for r in side["runs"] if r["run_id"] not in known],
+                ext2_sidecar={"file": EXT2_NAME, "sha256": sha256(ext2_path(ns)), "runs": len(side["runs"]),
+                              "seed": side.get("seed"), "p9_n": side.get("p9_n")})
+
+
 def calibration_runs(ns: str) -> list[dict]:
     """C8: the agy-flash calibration (like P0: base text, never analysed as results)."""
     return [dict(r, calibration=True) for r in _ext_runs("C8", ext_cells("C8"), EXT1_SEED, ns, {}, False, "c8")]
@@ -443,7 +542,24 @@ def main(argv=None) -> int:
     ap.add_argument("--with-p7", action="store_true", help="with --ext1-sidecar: include P7 (cc-sonnet 240 + codex 240)")
     ap.add_argument("--with-p8", action="store_true", help="with --ext1-sidecar: include P8 (agy-flash, 6 cells × --p8-n)")
     ap.add_argument("--p8-n", type=int, default=P8_N, help=f"runs per P8 cell (default {P8_N}; Alfredo's call after C8)")
+    ap.add_argument("--ext2-sidecar", action="store_true",
+                    help=f"write results/<ns>/{EXT2_NAME}: the addendum-2 runs (P9: agy-flash, {P9_NEW} per P1 cell plus "
+                         "the cell's P8 shortfall; with --print: counts only)")
     a = ap.parse_args(argv)
+    if a.ext2_sidecar:
+        seed = a.seed if a.seed != SEED else EXT2_SEED
+        if a.print:
+            m = generate_ext2(seed, a.ns)
+            print(json.dumps({"seed": seed, "stage_counts": m["stage_counts"], "p8_shortfall": m["p8_shortfall"],
+                              "p9_n": m["p9_n"]}))
+            return 0
+        try:
+            out, m = write_ext2(a.ns, seed, force=a.force)
+        except RuntimeError as e:
+            print(str(e), file=sys.stderr)
+            return 2
+        print(f"wrote {out}: {m['stage_counts']} {m['p9_n']}  seed {seed}  sha256 {sha256(out)}")
+        return 0
     if a.ext1_sidecar:
         if not (a.with_p7 or a.with_p8):
             print("--ext1-sidecar needs --with-p7 and/or --with-p8", file=sys.stderr)
