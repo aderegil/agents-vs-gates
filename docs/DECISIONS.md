@@ -664,3 +664,10 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
   runner now accepts `--workers` up to 6, only if every worker folder is ready (w4–w6 set up with
   `doctor.setup_worker`, without touching w1–w3 in use). The 3-worker batch was stopped after its current runs
   (control file) and P9 relaunched with 6.
+- **Isolation-breach stop and 8 workers (2026-10-18 14:32–14:40 Monterrey).** Alfredo had an interactive agy CLI
+  session open (started 13:45 from his own PowerShell); closing it wrote his real
+  `~\.gemini\antigravity-cli\history.jsonl` at 14:31:47. The guard saw the change during three P9 sessions
+  (p9-0012, p9-0016, p9-0018), marked them `isolation_breach` and stopped the batch (spec 10.6). No P9 run wrote there:
+  the runs stay pending, are never data, and are re-run. Alfredo then asked for 8 workers to recover the time: the
+  runner accepts up to 8 (w7, w8 set up), and P9 was relaunched at 14:40. Rule for the rest of P9: no agy CLI on this
+  machine while it runs.

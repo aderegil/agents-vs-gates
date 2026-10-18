@@ -19,7 +19,7 @@
                                                                   PREREGISTRATION.lock and PREREGISTRATION-ADDENDUM-1.lock)
   python -X utf8 -m harness.runner --stage P9 --workers 3          addendum 2, agy-flash (needs the original lock and
                                                                   both addendum locks; sidecar manifest-ext2.json)
-Options: --workers 1..6 (above 3 only with every worker folder ready), --max-runs N (alias of --batch; the smaller wins), --ns real|mock, --unit U, --part P1|P2|P4.
+Options: --workers 1..8 (above 3 only with every worker folder ready), --max-runs N (alias of --batch; the smaller wins), --ns real|mock, --unit U, --part P1|P2|P4.
 Exit codes: 0 ok, 2 usage/guard refusal (lock missing, smoke not passed, model drift), 3 rate-limited, 4 isolation
 breach. While running: state.json rewritten atomically at least every second, PID in state.runner.pid,
 runner.log.jsonl events (run_finished never carries the outcome), control.json polled between runs,
@@ -595,9 +595,9 @@ def main(argv=None, *, pipeline=None, mock_scripts: dict | None = None) -> int:
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args(argv)
     ns = a.ns or ("mock" if a.unit == "mock" else "real")
-    # 3 by default; up to 6 since P9 (2026-10-18, Alfredo, Google AI Ultra): only if every worker folder is ready
-    if not 1 <= a.workers <= 6:
-        print("--workers must be 1..6 (parallel runs don't add quota; they spend it faster)", file=sys.stderr)
+    # 3 by default; up to 8 since P9 (2026-10-18, Alfredo, Google AI Ultra): only if every worker folder is ready
+    if not 1 <= a.workers <= 8:
+        print("--workers must be 1..8 (parallel runs don't add quota; they spend it faster)", file=sys.stderr)
         return EXIT_GUARD
     if a.workers > 3 and not a.status and not a.unblind and not a.dry_run:
         from harness import doctor
