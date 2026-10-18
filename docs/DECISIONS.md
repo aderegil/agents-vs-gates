@@ -658,3 +658,9 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
 - `test_analysis_tools` fixed: its sheet export needs the stages unblinded since the 17 Oct blinding fix. The 3 errors
   in `test_ext1.RunnerExt1` come from its setUp writing the addendum-1 sidecar while the real lock exists (since
   16 Oct); not related to P9.
+- **P9 at 6 workers (2026-10-18 ~14:05 Monterrey, Alfredo: "reduce time to half").** The frozen addendum says 3
+  workers; this is an operational deviation, recorded here: it changes neither N, cells, seed, run order nor the
+  analysis (each run has its own worker folder and HOME). With Google AI Ultra the quota is not the limit. The
+  runner now accepts `--workers` up to 6, only if every worker folder is ready (w4–w6 set up with
+  `doctor.setup_worker`, without touching w1–w3 in use). The 3-worker batch was stopped after its current runs
+  (control file) and P9 relaunched with 6.
