@@ -534,26 +534,38 @@ async function oneOracle() {
 async function oneOutro() {
   const f = await J("/data/clip-facts.json");
   const b = f.one;
-  const D = sec(18);
+  const D = sec(14);
   const first = (b.ci || []).find((c) => c.attempt === 0) || {};
   const last = (b.ci || []).at(-1) || {};
   const finalOk = Object.values(b.oracle_final || {}).every((v) => v.ok);
-  const facts = [
-    ["fail", `First pull request: CI blocked it (${(first.failing || []).map((x) => x.id).join(", ")})`,
-      (first.failing || []).flatMap((x) => x.lines).map((l) => el("div", { class: "mono" }, l))],
-    [last.ok ? "pass" : "fail", `Repair after reading CI's output: CI ${last.ok ? "passed" : "failed"}`,
-      (b.deprecated_lines || []).map((l) => el("div", { class: "mono" }, l))],
-    [finalOk ? "pass" : "fail", `Final pull request: ${finalOk ? "every team's tests pass" : "a team's tests still fail"}`,
-      [el("div", {}, `${outcomeLabel(b.outcome)} · ticket ${String(b.ticket_done || "").replace(/_/g, " ")} · ${b.turns} turns · ${b.minutes} min`)]],
+  const o = b.oracle_gen || {};
+  const broke = ["billing-service", "analytics-ingest", "web-storefront"].filter((k) => o[k] && !o[k].ok);
+  const fact = (k, t, d) => el("div", { class: "fact" }, el("div", { class: `dot ${k}` }), el("div", {}, el("div", { class: "t" }, t), el("div", { class: "d" }, d)));
+  // before and after, split by one clear line (Alfredo's review, 2026-10-19): the first PR, then the repair
+  const before = [
+    el("div", { class: "phase-label fail" }, "Before · first pull request"),
+    fact("fail", `CI blocked it (${(first.failing || []).map((x) => x.id).join(", ")})`,
+      (first.failing || []).flatMap((x) => x.lines).map((l) => el("div", { class: "mono" }, l))),
+    fact(broke.length ? "fail" : "pass", broke.length ? `The other teams' tests: ${broke.length} of ${Object.keys(o).length} broke` : "The other teams' tests: all pass",
+      broke.map((k) => el("div", {}, `${k}: ${o[k].tests}${o[k].impact ? ` · ${o[k].impact}` : ""}`))),
+  ];
+  const after = [
+    el("div", { class: "phase-label pass" }, "After · the repair"),
+    fact(last.ok ? "pass" : "fail", `Repair after reading CI's output: CI ${last.ok ? "passed" : "failed"}`,
+      (b.deprecated_lines || []).map((l) => el("div", { class: "mono" }, l))),
+    fact(finalOk ? "pass" : "fail", `The other teams' tests: ${finalOk ? "every team's tests pass" : "a team's tests still fail"}`,
+      [el("div", {}, `${outcomeLabel(b.outcome)} · ticket ${String(b.ticket_done || "").replace(/_/g, " ")} · ${b.turns} turns · ${b.minutes} min`)]),
   ];
   const head = topbar("What the run's record says", `${runName(b.run_id)} · CI verdicts · the other teams' tests · diffs`, [["REAL", "accent"]]);
-  const box = el("div", { class: "card", style: { left: "80px", top: "170px", width: "1760px", padding: "8px 34px" } },
-    facts.map(([k, t, d]) => el("div", { class: "fact" }, el("div", { class: `dot ${k}` }), el("div", {}, el("div", { class: "t" }, t), el("div", { class: "d" }, d)))));
+  const rule = el("div", { class: "phase-rule" });
+  const box = el("div", { class: "card record", style: { left: "80px", top: "170px", width: "1760px", padding: "14px 34px 8px" } },
+    before, rule, after);
   stage.append(box);
-  const rows = [...box.querySelectorAll(".fact")];
-  const cap = captions([[0.3, 9, "The repair kept the old names as @deprecated aliases. CI passed."],
-    [9, 18, "CI's contract check stopped the break before the merge; the agent fixed it on its own."]]);
-  return { duration: D, render(t) { show(head, t, 0, D + 1000); show(box, t, 0, D + 1000); rows.forEach((r, i) => show(r, t, sec(0.4 + i * 1.5), D + 1000)); cap(t); } };
+  const parts = [...before, rule, ...after];
+  const cap = captions([[0.3, 7, "The repair kept the old names as @deprecated aliases. CI passed."],
+    [7, 14, "CI's contract check stopped the break before the merge; the agent fixed it on its own."]]);
+  const at = [0.2, 0.5, 1.3, 2.3, 2.3, 2.7, 3.5];
+  return { duration: D, render(t) { show(head, t, 0, D + 1000); show(box, t, 0, D + 1000); parts.forEach((r, i) => show(r, t, sec(at[i]), D + 1000)); cap(t); } };
 }
 
 async function codexIntro() {

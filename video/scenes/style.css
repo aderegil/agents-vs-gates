@@ -112,3 +112,11 @@ html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; backgro
 .ticket .tag { font-size: 23px; border: 1.5px solid var(--linea-fuerte); background: var(--suave); border-radius: 5px; padding: 4px 14px; }
 .unseen { position: absolute; left: 280px; width: 1360px; top: 720px; display: flex; align-items: center; gap: 18px;
   font-size: 36px; font-weight: 500; color: var(--tinta); }
+
+/* exp-one-run's record card: before and after the repair, split by one clear line (2026-10-19) */
+.record .phase-label { font-size: 21px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 0 2px; }
+.record .phase-label.fail { color: var(--fail-tinta); }
+.record .phase-label.pass { color: var(--pass-tinta); }
+.record .phase-label + .fact { border-top: 0; }
+.record .fact { padding: 12px 0; }
+.record .phase-rule { height: 0; border-top: 3px solid var(--tinta); margin: 14px -34px 4px; }

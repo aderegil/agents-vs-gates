@@ -87,17 +87,21 @@ function clips() {
   return [
     {
       file: "exp-one-run.mp4",
-      // three chapters fixed at the top left; the slow stretches (the agent at work, CI failing again) at ×3, marked;
-      // speech bubbles only for the ticket and the PR (Alfredo's review, 2026-10-19). The clean map at 16.0 s is the
-      // deck's poster frame: the first 3.2 s of the run stay at 0.5× with the run's title and the "CLAUDE.md · loaded
-      // as context" bubble as before, so it does not move or change; chapter 1's label covers the title from there on.
+      // three chapters fixed at the top left; the agent at work at ×3, marked; speech bubbles only for the ticket, the
+      // context file and the PR (Alfredo's review, 2026-10-19). The clean map at 16.0 s is the deck's poster frame: the
+      // first 3.2 s of the run stay at 0.5× with the run's title and the "CLAUDE.md · loaded as context" bubble as
+      // before; chapter 1's label covers the title from there on. Around "Meanwhile" (second review, same day) the
+      // pace is calm: CI's red result holds 2.5 s before the card, the theater holds 1 s when it comes back, the red
+      // build reaching the agent plays at 0.5× and holds 2 s (the CI output envelope lands at 23.9 s of the run).
       segments: [scene("oneIntro", CH1),
-        { ...theater(`replays/${one}.json`, 0, 23200, 0.5, null), chipBase: "Real run", query: ONE_BUBBLES,
+        { ...theater(`replays/${one}.json`, 0, 22800, 0.5, null, 2500), chipBase: "Real run", query: ONE_BUBBLES,
           parts: [{ to: 3200, rate: 1, chapter: null }, { to: 17500, rate: 3, chapter: CH1 }, { to: 19300, rate: 1 },
-            { to: 23200, rate: 1, chapter: CH2 }] },
+            { to: 22800, rate: 1, chapter: CH2 }] },
         scene("oneOracle", CH2),
         { ...theater(`replays/${one}.json`, 22600, 42800, 0.5, null, 3000), chipBase: "Real run", query: ONE_BUBBLES,
-          parts: [{ to: 30600, rate: 3, chapter: CH2 }, { to: 42800, rate: 1, chapter: CH3 }] },
+          holdBefore: 1000,
+          parts: [{ to: 23900, rate: 1, chapter: CH2, holdAfter: 2000 }, { to: 30600, rate: 1 },
+            { to: 42800, rate: 1, chapter: CH3 }] },
         scene("oneOutro", CH3)],
       shows: `One real run (${one}, poll-PR rule): ticket → rename → its own tests pass → PR → CI red (ARCH-4: billing needs totalCents, analytics needs placedAt) → the billing team's own tests fail on that first PR → the red build goes back to the agent → it keeps the old names as @deprecated aliases → CI green.`,
       source: `results/real/runs/${one} (events.jsonl → replay, record.json, diffs/fix1.diff); scenario/ contracts`,
@@ -188,16 +192,32 @@ async function captureTheater(context, seg, enc) {
   await page.clock.runFor(3000); // presentation chrome hides after 2.5 s
   if (seg.chip) await setBox(page, "clip-chip", seg.chip, CHIP_CSS);
   await page.keyboard.press(SPEED_KEY[seg.speed] || "2");
-  await page.keyboard.press("Space");
-  // parts: stretches of the replay played `rate` times faster than seg.speed (the clock runs rate × per frame)
+  // parts: stretches of the replay played `rate` times faster than seg.speed (the clock runs rate × per frame); a
+  // part's holdAfter, and the segment's holdBefore, film the paused theater for that many ms
   const parts = seg.parts || [{ to: seg.to, rate: 1, chapter: seg.chapter }];
   const step = 1000 / FPS;
-  let at = seg.from;
   let wall = 0;
-  for (const part of parts) {
+  const still = async (ms) => {
+    const m = Math.round((ms / 1000) * FPS);
+    for (let i = 0; i < m; i++) {
+      await page.clock.runFor(step);
+      await enc.push(await shot(page));
+    }
+    wall += m * step;
+  };
+  const dress = async (part) => {
     if (part.chapter !== undefined) await setChapter(page, part.chapter, THEATER_BG);
     if (seg.chipBase) await setBox(page, "clip-chip", `${seg.chipBase} · ${fmtSpeed(seg.speed * part.rate)}× speed`, CHIP_CSS);
     await setBox(page, "clip-mark", part.rate > 1 ? `×${fmtSpeed(part.rate)}` : null, MARK_CSS);
+  };
+  if (seg.holdBefore) {           // a breath on the first frame before it plays (e.g. after a card)
+    await dress(parts[0]);
+    await still(seg.holdBefore);
+  }
+  await page.keyboard.press("Space");
+  let at = seg.from;
+  for (const part of parts) {
+    await dress(part);
     const n = Math.round(((part.to - at) / seg.speed / part.rate / 1000) * FPS);
     for (let i = 0; i < n; i++) {
       await page.clock.runFor(step * part.rate);
@@ -205,6 +225,11 @@ async function captureTheater(context, seg, enc) {
     }
     wall += n * step;
     at = part.to;
+    if (part.holdAfter) {
+      await page.keyboard.press("Space");
+      await still(part.holdAfter);
+      await page.keyboard.press("Space");
+    }
   }
   await setBox(page, "clip-mark", null, MARK_CSS);
   // a still hold on the last frame (playback paused), e.g. to let green CI sink in before the next card
@@ -217,7 +242,7 @@ async function captureTheater(context, seg, enc) {
     }
   }
   await page.close();
-  return wall + (seg.hold || 0);
+  return wall + (seg.hold || 0);   // wall includes holdBefore and every holdAfter
 }
 
 async function captureLanes(context, enc, query = "") {
