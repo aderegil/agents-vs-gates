@@ -136,3 +136,12 @@ test("no code on screen: the bundled demo list reads as words", () => {
   const idx = JSON.parse(readFileSync(pub("demo/index.json"), "utf8")) as { runs: { label: string }[] };
   for (const r of idx.runs) assert.equal(VISIBLE_CODE_RE.test(plainText(r.label)), false, plainText(r.label));
 });
+
+test("the hidden staging check reads as the other teams' tests, never 'oracle' (subtitles, markers, place label)", () => {
+  assert.equal(plainText("Staging oracle, hidden from the agent: the other teams run their own tests on the first pull request. 2 of 3 break."),
+    "Hidden from the agent: the other teams run their own tests on the first pull request. 2 of 3 break.");
+  assert.equal(plainText("Oracle (gen): 2 of 3 consumers fail"), "Other teams' tests, first PR: 2 of 3 consumers fail");
+  assert.equal(plainText("Oracle (final): all 3 consumers pass"), "Other teams' tests, final PR: all 3 consumers pass");
+  assert.equal(plainText("Staging oracle"), "Other teams' tests");
+  assert.equal(plainText("Run finished: CI green, staging oracle red."), "Run finished: CI green, the other teams' tests red.");
+});

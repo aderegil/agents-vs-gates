@@ -208,9 +208,9 @@ export function plainText(s) {
   });
   // the hidden staging check reads as what it is, the other teams' own tests (public wording, 2026-10-18); the
   // oracle/ folder and the record fields keep their names
-  t = t.replace(/Staging oracle, hidden from the agent: /g, "Hidden from the agent: ");
-  t = t.replace(/Oracle \(gen\): /g, "Other teams' tests, first PR: ").replace(/Oracle \(final\): /g, "Other teams' tests, final PR: ");
-  t = t.replace(/([Ss])taging oracle/g, (_, s) => (s === "S" ? "Other teams' tests" : "the other teams' tests"));
+  t = t.replace(/\bStaging oracle, hidden from the agent: /g, "Hidden from the agent: ");
+  t = t.replace(/\bOracle \(gen\): /g, "Other teams' tests, first PR: ").replace(/\bOracle \(final\): /g, "Other teams' tests, final PR: ");
+  t = t.replace(/\b([Ss])taging oracle\b/g, (_, s) => (s === "S" ? "Other teams' tests" : "the other teams' tests"));
   if (!VISIBLE_CODE_RE.test(t) && !/\bfix\d\b/.test(t)) return t;
   // run ids: "PR p1-0002" is just "PR"; elsewhere the run's plain name
   t = t.replace(new RegExp(String.raw`\bPR ${RUN_ID}`, "g"), "PR");
