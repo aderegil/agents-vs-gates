@@ -1,10 +1,18 @@
 // Run Control (spec §22.2): stage cards, launch / stop / workers / dry run, live view of the runner.
 // Data: GET /api/run-control/{stages,status,log}; actions POST …/{dry-run,start,stop,workers,resume-at,unblind}.
 // Live: shell.subscribe("runner.progress" | "runner.run_started" | "runner.run_finished" | "runner.stopped" | "runner.rate_limited").
-import { h, table, badge, bar, button, panel, notice, empty, field, fmtInt, fmtDuration, fmtTime, fmtDate, iconEl, unitTag, unitSeg } from "/web/lib/ui.js";
+import { h, table, badge, bar, button, panel, notice, empty, field, fmtInt, fmtDuration, fmtTime, fmtDate, iconEl, unitTag, unitSeg, codeLegend } from "/web/lib/ui.js";
 import {
   fmtElapsed, fmtCompact, cellLabel, cellKeyLabel, cellUnit, stageBadges, outcomeEntries, launchBody, validAmount, reasonFor, launchSignature, hhmm,
 } from "./model.js";
+import { plainCondition, conditionTitle, parseCell, ticketLabel, stageLabel, meaningOf } from "/web/lib/labels.js";
+
+/** A cell key in plain words first ("Rename two fields · Own repo · No rule"), the codes after it, the glossary on hover. */
+function cellPlain(cell) {
+  const p = parseCell(cell);
+  return h("span", { title: conditionTitle(p.V, p.S, p.W) }, `${ticketLabel(p.ticket)} · ${plainCondition(p.V, p.S, p.W)}`, " ",
+    h("span", { class: "muted small mono" }, cellKeyLabel(cell, { unit: false })));
+}
 import { outputPanel } from "./output.js";
 
 const unitCell = (cell) => (cellUnit(cell) ? unitTag(cellUnit(cell), { compact: true }) : "—");
@@ -130,7 +138,7 @@ export async function mount(el, shell) {
     const body = launchBody(S.form, { calibrate });
     const plan = await shell.api.post("run-control/start", { ...body, preview: true });
     if (plan.blocking.length) { shell.toast(plan.blocking[0].message, "error"); return; }
-    const title = calibrate ? "Calibrate (P0) in the REAL namespace?" : `Run ${plan.stage} batch in the REAL namespace?`;
+    const title = calibrate ? "Calibrate (P0) in the REAL namespace?" : `Run ${stageLabel(plan.stage)} (${plan.stage}) batch in the REAL namespace?`;
     if (!(await confirmReal(title, plan, calibrate ? "Calibrate" : "Run batch"))) return;
     const r = await shell.api.post("run-control/start", { ...body, confirmed: shell.ns === "real" });
     shell.toast(`Runner started (pid ${r.pid})`, "ok");
@@ -142,7 +150,7 @@ export async function mount(el, shell) {
   const stopNow = () => guarded(async () => {
     const st = S.status;
     const plan = { summary: [`Namespace: ${shell.ns.toUpperCase()}`, `Stop after the current run${st.workers_count > 1 ? "s" : ""}.`,
-      st.stage ? `Stage ${st.stage}: ${st.runner.done ?? 0} of ${st.runner.planned ?? "?"} done in this batch.` : "",
+      st.stage ? `${stageLabel(st.stage)} (${st.stage}): ${st.runner.done ?? 0} of ${st.runner.planned ?? "?"} done in this batch.` : "",
       "The runner finishes what is in progress, writes its state and exits."].filter(Boolean) };
     if (!(await confirmReal("Stop the real batch after the current run?", plan, "Stop after current"))) return;
     await shell.api.post("run-control/stop", { confirmed: shell.ns === "real" });
@@ -176,8 +184,8 @@ export async function mount(el, shell) {
 
   const unblind = (card) => guarded(async () => {
     const ok = await shell.confirm({
-      title: `Unblind ${card.stage}?`, confirmLabel: "Unblind", requireText: `UNBLIND ${card.stage}`,
-      message: h("div", { class: "stack-sm" }, h("div", {}, `Outcomes of ${card.stage} (${card.done} of ${card.total} runs) become visible in Results and Run Explorer.`),
+      title: `Unblind ${stageLabel(card.stage)} (${card.stage})?`, confirmLabel: "Unblind", requireText: `UNBLIND ${card.stage}`,
+      message: h("div", { class: "stack-sm" }, h("div", {}, `Outcomes of ${stageLabel(card.stage)} (${card.stage}; ${card.done} of ${card.total} runs) become visible in Results and Run Explorer.`),
         h("div", { class: "small muted" }, "This is recorded in the audit log and cannot be undone.")),
     });
     if (!ok) return;
@@ -247,7 +255,7 @@ export async function mount(el, shell) {
     const d = S.stages;
     if (!d) return;
     cards.replaceChildren(h("div", { class: "section-title" }, h("h2", {}, "Stages"), h("span", { class: "small muted" }, `${shell.ns} namespace · updated ${fmtTime(d.generated_at)}`)),
-      h("div", { class: "rc-cards" }, d.stages.map(stageCard)));
+      codeLegend(), h("div", { class: "rc-cards" }, d.stages.map(stageCard)));
   }
 
   function stageCard(c) {
@@ -265,7 +273,10 @@ export async function mount(el, shell) {
       body.push(h("div", { class: "rc-cells" }, shown.flatMap((x, i) => [
         x.unit && (i === 0 || shown[i - 1].unit !== x.unit) ? h("div", { class: "rc-cell-unit" }, unitTag(x.unit, { compact: true })) : null,
         h("div", { class: "rc-cell", title: x.cell },
-          h("span", { class: "rc-cell-name" }, cellLabel(x)),
+          h("span", { class: "rc-cell-name", title: `${plainCondition(x.visibility, x.spec, x.wording)}
+${conditionTitle(x.visibility, x.spec, x.wording)}` },
+            `${ticketLabel(x.ticket)} · ${plainCondition(x.visibility, x.spec, x.wording)}${x.control ? " · control" : ""} `,
+            h("span", { class: "muted small mono" }, cellLabel(x))),
           bar(x.done, x.total, { running: x.running }),
           h("span", { class: "num small" }, `${x.done}/${x.total}`))])));
       if (c.cells.length > 5) body.push(h("button", { type: "button", class: "btn btn-subtle btn-sm rc-more", onclick: () => { S.expanded.has(c.stage) ? S.expanded.delete(c.stage) : S.expanded.add(c.stage); paintCards(); } },
@@ -295,7 +306,8 @@ export async function mount(el, shell) {
       actions.push(button({ label: "Unblind…", icon: "eye", small: true, onClick: () => unblind(c) }));
     }
     return h("section", { class: ["panel", "rc-card", c.status === "running" ? "is-running" : null, !c.in_manifest ? "is-off" : null], "aria-label": `${c.stage} ${c.name}` },
-      h("header", { class: "rc-card-head" }, h("span", { class: "strong rc-stage" }, c.stage), h("span", { class: "muted" }, c.name), h("span", { class: "grow" }), ...badges),
+      h("header", { class: "rc-card-head", title: meaningOf(c.stage) || null }, h("span", { class: "strong rc-stage" }, stageLabel(c.stage)),
+        h("span", { class: "muted mono" }, `(${c.stage})`), h("span", { class: "muted" }, c.name), h("span", { class: "grow" }), ...badges),
       h("div", { class: "rc-card-body" }, ...body),
       actions.length ? h("footer", { class: "rc-card-actions" }, ...actions) : null);
   }
@@ -318,7 +330,7 @@ export async function mount(el, shell) {
     const rDry = reasonFor("dry", common);
 
     const stageSel = h("select", { class: "select", "aria-label": "Stage", onchange: (e) => { S.form.stage = e.target.value; S.dry = null; S.launchSig = null; paintLaunch(); } },
-      d.stages.filter((x) => x.runnable).map((x) => h("option", { value: x.stage, selected: x.stage === S.form.stage }, `${x.stage} · ${x.name}`)));
+      d.stages.filter((x) => x.runnable).map((x) => h("option", { value: x.stage, selected: x.stage === S.form.stage }, `${stageLabel(x.stage)} (${x.stage}) · ${x.name}`)));
     const amount = h("input", { class: "input", type: "number", min: "1", step: S.form.mode === "minutes" ? "any" : "1", value: S.form.amount, "aria-label": S.form.mode === "minutes" ? "Minutes" : "Number of runs", style: { width: "90px" },
       oninput: (e) => { S.form.amount = e.target.value; S.dry = null; } });
     const modeSel = h("select", { class: "select", "aria-label": "Limit", style: { minWidth: "110px" }, onchange: (e) => { S.form.mode = e.target.value; S.launchSig = null; paintLaunch(); } },
@@ -370,14 +382,14 @@ export async function mount(el, shell) {
     liveEls = { cols: colsEl };
     liveBuilt = true;
     const queue = table({ caption: "Next queued runs", keyboard: false, empty: s.alive ? "The queue is empty." : "No batch is running.",
-      columns: [{ key: "run_id", label: "Run", mono: true }, { key: "ticket", label: "Ticket" }, { key: "cell", label: "Cell", render: (r) => cellKeyLabel(r.cell, { unit: false }) },
+      columns: [{ key: "run_id", label: "Run", mono: true }, { key: "ticket", label: "Ticket" }, { key: "cell", label: "Cell", render: (r) => cellPlain(r.cell) },
         { key: "unit", label: "Unit", render: (r) => unitCell(r.cell) }],
       rows: s.queue });
     const fin = table({ caption: "Finished runs", keyboard: true, empty: "No finished runs yet.",
       onRowClick: (r) => shell.navigate("runs", { run: r.run_id, ns: shell.ns }),
       columns: [
         { key: "run_id", label: "Run", mono: true },
-        { key: "cell", label: "Cell", render: (r) => cellKeyLabel(r.cell, { unit: false }) },
+        { key: "cell", label: "Cell", render: (r) => cellPlain(r.cell) },
         { key: "unit", label: "Unit", render: (r) => unitCell(r.cell) },
         { key: "turns", label: "Turns", num: true },
         { key: "duration_ms", label: "Duration", num: true, render: (r) => r.duration_ms == null ? "—" : fmtDuration(r.duration_ms) },
@@ -401,7 +413,7 @@ export async function mount(el, shell) {
       h("dl", { class: "kv" },
         h("dt", {}, "Run"), h("dd", { class: "mono" }, r.run_id),
         h("dt", {}, "Ticket"), h("dd", {}, r.ticket || "—"),
-        h("dt", {}, "Cell"), h("dd", {}, cellKeyLabel(r.cell, { unit: false })),
+        h("dt", {}, "Cell"), h("dd", {}, cellPlain(r.cell)),
         h("dt", {}, "Unit"), h("dd", {}, unitCell(r.cell)),
         h("dt", {}, "Attempt"), h("dd", {}, r.attempt || "hidden while the stage is blinded"),
         h("dt", {}, "Elapsed"), h("dd", { class: "num" }, h("span", { "data-since": r.started_at || "" }, fmtElapsed(r.started_at ? (Date.now() - Date.parse(r.started_at)) / 1000 : null))),

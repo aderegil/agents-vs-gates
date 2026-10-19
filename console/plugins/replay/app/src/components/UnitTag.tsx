@@ -17,6 +17,7 @@ const UNITS: Record<string, { mono: string; product: string; model: string | nul
   "cc-opus": { mono: "CC", product: "Claude Code", model: "Opus" },
   codex: { mono: "CX", product: "Codex", model: null },
   mock: { mono: "M", product: "Mock agent", model: null },
+  "agy-flash": { mono: "?", product: "Antigravity CLI", model: "Gemini 3.8 Flash" },   // P8 (addendum 1)
 };
 
 export function unitInfo(unit?: string | null) {
@@ -28,7 +29,7 @@ export function unitInfo(unit?: string | null) {
 }
 
 /** "CC Claude Code · Sonnet": for places that can only hold text (the canvas legend). */
-export const unitText = (unit?: string | null) => { const i = unitInfo(unit); return `${i.mono} ${i.label}`; };
+export const unitText = (unit?: string | null) => { const i = unitInfo(unit); return `${i.mono === "?" ? "" : `${i.mono} `}${i.label}`; };
 
 export function UnitTag({ unit, size = 16 }: { unit?: string | null; size?: number }): ReactElement {
   const i = unitInfo(unit);

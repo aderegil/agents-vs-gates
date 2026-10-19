@@ -239,8 +239,9 @@ function paintChassis(g: PixelGrid, b: Bot): void {
 
 function paintNeck(g: PixelGrid, b: Bot, oy: number): void {
   const n = ramp(mix(b.body.base, [140, 146, 160], 0.35));
-  g.shape((px, py) => Math.abs(px - CX) <= 3.4 && py > 26 + oy && py < 35.5, (px) => (px > CX + 1 ? n.mid : n.base), n.line);
-  for (const y of [30, 32]) for (let x = 17; x <= 22; x++) g.over(x, y, n.lo);
+  // theater-1016: a wider, stockier neck (was 3.4 half-width with two rings)
+  g.shape((px, py) => Math.abs(px - CX) <= 5 && py > 26 + oy && py < 35.5, (px) => (px > CX + 2 ? n.mid : n.base), n.line);
+  for (let x = 16; x <= 23; x++) g.over(x, 31, n.lo);
 }
 
 function paintAntenna(g: PixelGrid, b: Bot, h: HeadGeo): void {

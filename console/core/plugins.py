@@ -45,6 +45,7 @@ class Plugin:
             "entry_url": f"/plugins/{m['id']}/{entry}",
             "style_url": f"/plugins/{m['id']}/web/style.css" if (self.dir / "web" / "style.css").exists() else None,
             "has_api": bool(m.get("api")),
+            "simple": bool(m.get("simple")),
             "api_ok": self.api_error is None,
         }
         if role is not None:

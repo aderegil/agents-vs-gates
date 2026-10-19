@@ -1,0 +1,1439 @@
+{
+ "meta": {
+  "run_id": "aisdlc-anthropic",
+  "source": "illustration",
+  "unit": "illustration",
+  "model": null,
+  "date": "2026-10-13",
+  "started_at": "2026-10-13T09:00:00.000Z",
+  "ticket": "X-rename",
+  "condition": {},
+  "outcome": null,
+  "ticket_done": null,
+  "session_outcome": "success",
+  "stage": null,
+  "title": "Meridian Retail · rename on OrderPlaced · Anthropic playbook",
+  "scenario": "meridian-retail/illustration",
+  "trace_sha256": "95dc870b29752909340452ce585a18839f64222340c5ad6b41cd392587810e2d",
+  "schema": "replay/1",
+  "exporter_version": 4,
+  "legend": "Illustration · scripted from public documentation",
+  "duration_ms": 68900,
+  "duration_real_ms": 64400,
+  "event_count": 38,
+  "extras_sha256": "9df133529e3dfe710529db48f000891a5e4c5366fc695b53574330530d5ae475",
+  "illustration_source": "Anthropic, The AI-native SDLC playbook (21 Aug 2026)"
+ },
+ "places": [
+  {
+   "id": "product-desk",
+   "label": "Product",
+   "kind": "desk",
+   "x": 0.07,
+   "y": 0.18,
+   "note": "product owner",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "planning-room",
+   "label": "Delivery · planning",
+   "kind": "room",
+   "x": 0.16,
+   "y": 0.33,
+   "note": "scrum master / delivery",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "analysis-desk",
+   "label": "Analysis",
+   "kind": "desk",
+   "x": 0.06,
+   "y": 0.5,
+   "note": "analyst",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "architecture-library",
+   "label": "Architecture library",
+   "kind": "library",
+   "x": 0.14,
+   "y": 0.7,
+   "note": "ARCH-n rules, catalog, ADRs",
+   "zone": "define",
+   "used": false
+  },
+  {
+   "id": "dispatch",
+   "label": "Dispatch board",
+   "kind": "system",
+   "x": 0.34,
+   "y": 0.16,
+   "note": "flow engine",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "desk-orders",
+   "label": "Checkout · orders",
+   "kind": "desk",
+   "x": 0.33,
+   "y": 0.42,
+   "note": "orders-service",
+   "zone": "build",
+   "used": true
+  },
+  {
+   "id": "tester-desk",
+   "label": "Testing",
+   "kind": "desk",
+   "x": 0.34,
+   "y": 0.86,
+   "note": "tester / verifier",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "review-desk",
+   "label": "Review desk",
+   "kind": "desk",
+   "x": 0.52,
+   "y": 0.17,
+   "note": "reviewers",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "review-table",
+   "label": "Review table",
+   "kind": "room",
+   "x": 0.54,
+   "y": 0.45,
+   "note": "pull request",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "ci-tower",
+   "label": "CI Tower",
+   "kind": "system",
+   "x": 0.6,
+   "y": 0.36,
+   "note": "one light per check",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "merge-gate",
+   "label": "Merge gate · release",
+   "kind": "gate",
+   "x": 0.58,
+   "y": 0.72,
+   "note": "release manager",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "staging-bench",
+   "label": "The other teams' tests",
+   "kind": "stage",
+   "x": 0.93,
+   "y": 0.17,
+   "note": "illustration: what happens downstream",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-billing",
+   "label": "billing-service",
+   "kind": "desk",
+   "x": 0.76,
+   "y": 0.3,
+   "note": "Billing team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-analytics",
+   "label": "analytics-ingest",
+   "kind": "desk",
+   "x": 0.93,
+   "y": 0.47,
+   "note": "Analytics team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-storefront",
+   "label": "web-storefront",
+   "kind": "desk",
+   "x": 0.78,
+   "y": 0.66,
+   "note": "Storefront team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "users",
+   "label": "Users",
+   "kind": "stage",
+   "x": 0.88,
+   "y": 0.88,
+   "note": "illustrative",
+   "zone": "production",
+   "used": true
+  }
+ ],
+ "actors": [
+  {
+   "id": "originator",
+   "role": "originator",
+   "actor_type": "human",
+   "display_name": "Priya · Originator",
+   "avatar": {
+    "style": "human",
+    "seed": "originator",
+    "badge": null
+   },
+   "home": "product-desk"
+  },
+  {
+   "id": "product-owner",
+   "role": "product_owner",
+   "actor_type": "human",
+   "display_name": "Tomás · Product Owner",
+   "avatar": {
+    "style": "human",
+    "seed": "product-owner",
+    "badge": null
+   },
+   "home": "product-desk"
+  },
+  {
+   "id": "claude-spec",
+   "role": "requirements_agent",
+   "actor_type": "agent",
+   "display_name": "Claude · spec session",
+   "avatar": {
+    "style": "agent",
+    "seed": "claude-spec",
+    "badge": null
+   },
+   "home": "analysis-desk"
+  },
+  {
+   "id": "engineer",
+   "role": "engineer",
+   "actor_type": "human",
+   "display_name": "Lena · Engineer",
+   "avatar": {
+    "style": "human",
+    "seed": "engineer",
+    "badge": null
+   },
+   "home": "planning-room"
+  },
+  {
+   "id": "claude-code",
+   "role": "code_agent",
+   "actor_type": "agent",
+   "display_name": "Claude Code · orders-service",
+   "avatar": {
+    "style": "agent",
+    "seed": "claude-code",
+    "badge": null
+   },
+   "home": "desk-orders"
+  },
+  {
+   "id": "code-review",
+   "role": "review_agent",
+   "actor_type": "agent",
+   "display_name": "Code Review",
+   "avatar": {
+    "style": "agent",
+    "seed": "code-review",
+    "badge": null
+   },
+   "home": "review-desk"
+  },
+  {
+   "id": "code-owner",
+   "role": "code_owner",
+   "actor_type": "human",
+   "display_name": "Omar · Code Owner",
+   "avatar": {
+    "style": "human",
+    "seed": "code-owner",
+    "badge": null
+   },
+   "home": "review-desk"
+  },
+  {
+   "id": "release-manager",
+   "role": "release_manager",
+   "actor_type": "human",
+   "display_name": "Ravi · Release Manager",
+   "avatar": {
+    "style": "human",
+    "seed": "release-manager",
+    "badge": null
+   },
+   "home": "merge-gate"
+  },
+  {
+   "id": "ci",
+   "role": "ci",
+   "actor_type": "system",
+   "display_name": "CI",
+   "avatar": {
+    "style": "system",
+    "seed": "ci",
+    "badge": null
+   },
+   "home": "ci-tower"
+  },
+  {
+   "id": "staging",
+   "role": "staging",
+   "actor_type": "system",
+   "display_name": "The other teams' tests",
+   "avatar": {
+    "style": "system",
+    "seed": "staging",
+    "badge": null
+   },
+   "home": "staging-bench"
+  }
+ ],
+ "steps": [
+  {
+   "t_ms": 0,
+   "t_real_ms": 0,
+   "seq": 0,
+   "actor": "originator",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "Meridian Retail · rename on OrderPlaced · Anthropic playbook",
+   "key": null,
+   "narration": "Anthropic · AI-native SDLC playbook · Rename totalCents/placedAt on OrderPlaced at Meridian Retail (fictional).",
+   "detail": {
+    "event_type": "SESSION_STARTED",
+    "event_id": "evt-0000",
+    "phase": "discovery",
+    "to_phase": "discovery",
+    "scenario": "meridian-retail/illustration",
+    "condition": ""
+   }
+  },
+  {
+   "t_ms": 2600,
+   "t_real_ms": 2600,
+   "seq": 1,
+   "actor": "originator",
+   "action": "work",
+   "target": null,
+   "place": "product-desk",
+   "text": "intent/orderplaced-rename.md · Rename totalCents → amountCents and placedAt → createdAt on OrderPlaced",
+   "key": null,
+   "narration": "Plan: Priya describes the change to Claude and commits intent.md.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0001",
+    "phase": "discovery",
+    "artifact_id": "art-intent",
+    "artifact_type": "intent",
+    "stage": "Plan",
+    "axis": "intent",
+    "handoff_to": "product-desk"
+   }
+  },
+  {
+   "t_ms": 5000,
+   "t_real_ms": 5000,
+   "seq": 2,
+   "actor": "product-owner",
+   "action": "speak",
+   "target": null,
+   "place": "product-desk",
+   "text": "Intent accepted into Design",
+   "key": null,
+   "narration": "Tomás, the product owner, accepts intent.md.",
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0002",
+    "phase": "discovery",
+    "decision": "approved",
+    "subject_artifact_id": "art-intent",
+    "stage": "Plan",
+    "axis": "intent"
+   }
+  },
+  {
+   "t_ms": 6200,
+   "t_real_ms": 6200,
+   "seq": 3,
+   "actor": "product-owner",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "intent.md accepted",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0003",
+    "phase": "planning",
+    "from_phase": "discovery",
+    "to_phase": "planning",
+    "stage": "Design",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 8800,
+   "t_real_ms": 8800,
+   "seq": 4,
+   "actor": "claude-spec",
+   "action": "work",
+   "target": null,
+   "place": "analysis-desk",
+   "text": "spec.md · Requirements and design for the rename, concerns flagged",
+   "key": null,
+   "narration": "Design: Claude turns intent.md into spec.md, guided by the organization's skills.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0004",
+    "phase": "planning",
+    "artifact_id": "art-spec",
+    "artifact_type": "spec",
+    "stage": "Design",
+    "axis": "spec",
+    "handoff_to": "product-desk"
+   }
+  },
+  {
+   "t_ms": 11200,
+   "t_real_ms": 11200,
+   "seq": 5,
+   "actor": "product-owner",
+   "action": "speak",
+   "target": null,
+   "place": "product-desk",
+   "text": "Spec signed off; build may start",
+   "key": null,
+   "narration": "Tomás signs off spec.md. Accepting the spec starts plan mode.",
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0005",
+    "phase": "planning",
+    "decision": "approved",
+    "subject_artifact_id": "art-spec",
+    "stage": "Design",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 12400,
+   "t_real_ms": 12400,
+   "seq": 6,
+   "actor": "engineer",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "spec.md accepted",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0006",
+    "phase": "implementation",
+    "from_phase": "planning",
+    "to_phase": "implementation",
+    "stage": "Build",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 15000,
+   "t_real_ms": 15000,
+   "seq": 7,
+   "actor": "engineer",
+   "action": "work",
+   "target": null,
+   "place": "planning-room",
+   "text": "CLAUDE.md · ## Architecture: Kafka events are defined in schemas/; published event fields are never renamed or removed without keeping the old ones",
+   "key": null,
+   "narration": "The architecture rule lives in CLAUDE.md: context Claude Code reads at the start of every session.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0007",
+    "phase": "implementation",
+    "artifact_id": "art-claude",
+    "artifact_type": "context_file",
+    "stage": "Build",
+    "axis": "plan",
+    "rule": true
+   }
+  },
+  {
+   "t_ms": 16600,
+   "t_real_ms": 16600,
+   "seq": 8,
+   "actor": "claude-code",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "CLAUDE.md · session context",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_READ",
+    "event_id": "evt-0008",
+    "phase": "implementation",
+    "artifact_id": "art-claude",
+    "stage": "Build",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 19200,
+   "t_real_ms": 19200,
+   "seq": 9,
+   "actor": "claude-code",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "plan.md · Files that change, order of work, tests that prove it",
+   "key": null,
+   "narration": "In plan mode, Claude Code writes plan.md without touching any file.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0009",
+    "phase": "implementation",
+    "artifact_id": "art-plan",
+    "artifact_type": "plan",
+    "stage": "Build",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 21600,
+   "t_real_ms": 21600,
+   "seq": 10,
+   "actor": "engineer",
+   "action": "speak",
+   "target": null,
+   "place": "planning-room",
+   "text": "Plan accepted",
+   "key": null,
+   "narration": "Lena, the engineer, accepts plan.md and lets Claude implement.",
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0010",
+    "phase": "implementation",
+    "decision": "approved",
+    "subject_artifact_id": "art-plan",
+    "stage": "Build",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 23600,
+   "t_real_ms": 23600,
+   "seq": 11,
+   "actor": "claude-code",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "Edit · src/core/events.ts",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0011",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "input_summary": "src/core/events.ts",
+    "correlation_id": "call-0011",
+    "stage": "Build",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 25200,
+   "t_real_ms": 25200,
+   "seq": 12,
+   "actor": "claude-code",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+   "key": null,
+   "narration": "Same scripted case in every model: the first attempt renames the fields and drops the old names, although the rule is in the agent's context.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0012",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "status": "success",
+    "output_summary": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+    "correlation_id": "call-0011",
+    "stage": "Build",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 27200,
+   "t_real_ms": 27200,
+   "seq": 13,
+   "actor": "claude-code",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "Bash · make test",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0013",
+    "phase": "implementation",
+    "tool_name": "Bash",
+    "input_summary": "make test",
+    "correlation_id": "call-0013",
+    "stage": "Test",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 28800,
+   "t_real_ms": 28800,
+   "seq": 14,
+   "actor": "claude-code",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "all tests passed",
+   "key": null,
+   "narration": "Test: Claude runs its own tests. They pass: they are orders-service's tests.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0014",
+    "phase": "implementation",
+    "tool_name": "Bash",
+    "status": "success",
+    "output_summary": "all tests passed",
+    "correlation_id": "call-0013",
+    "stage": "Test",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 30000,
+   "t_real_ms": 30000,
+   "seq": 15,
+   "actor": "claude-code",
+   "action": "phase",
+   "target": null,
+   "place": "desk-orders",
+   "text": "PR opened",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0015",
+    "phase": "review",
+    "from_phase": "implementation",
+    "to_phase": "review",
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 32600,
+   "t_real_ms": 32600,
+   "seq": 16,
+   "actor": "claude-code",
+   "action": "move",
+   "target": null,
+   "place": "review-table",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 32600,
+   "t_real_ms": 32600,
+   "seq": 16,
+   "actor": "claude-code",
+   "action": "handoff",
+   "target": "review-table",
+   "place": "review-table",
+   "text": "PR #412 · 3 files changed",
+   "key": "pr_opened",
+   "narration": null,
+   "caption": "Claude Code · orders-service opens a pull request (3 files changed) and leaves it on the review table.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "artifact_id": "art-pr",
+    "diff": null,
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 34400,
+   "t_real_ms": 34400,
+   "seq": 17,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "caption": "CI picks up the pull request and runs 2 deterministic checks.",
+   "detail": {
+    "event_type": "CI_RUN_STARTED",
+    "event_id": "evt-0017",
+    "phase": "review",
+    "run_attempt": 0,
+    "subject_artifact_id": "art-pr",
+    "stage": "Deploy",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 35100,
+   "t_real_ms": 35100,
+   "seq": 18,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "make lint: zero warnings",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "lint",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0018",
+    "phase": "review",
+    "category": "build",
+    "duration_ms": 900,
+    "output": "make lint: zero warnings",
+    "stage": "Deploy",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 35800,
+   "t_real_ms": 35800,
+   "seq": 19,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "make test: all green",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "tests",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0019",
+    "phase": "review",
+    "category": "test",
+    "duration_ms": 900,
+    "output": "make test: all green",
+    "stage": "Deploy",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 36700,
+   "t_real_ms": 36700,
+   "seq": 20,
+   "actor": "ci",
+   "action": "ci_result",
+   "target": null,
+   "place": "ci-tower",
+   "text": "CI runs lint and tests. Both pass. No check in CI reads the consumers' contracts.",
+   "key": "ci_pass",
+   "narration": "CI runs lint and tests. Both pass. No check in CI reads the consumers' contracts.",
+   "caption": "CI passes: all 2 checks pass.",
+   "check": {
+    "id": "attempt-0",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CI_RUN_COMPLETED",
+    "event_id": "evt-0020",
+    "phase": "review",
+    "run_attempt": 0,
+    "ok": true,
+    "failed_checks": [],
+    "stage": "Deploy",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 39100,
+   "t_real_ms": 39100,
+   "seq": 21,
+   "actor": "code-review",
+   "action": "speak",
+   "target": null,
+   "place": "review-desk",
+   "text": "Important (Compliance): renames published OrderPlaced fields; CLAUDE.md says keep the old ones",
+   "key": null,
+   "narration": "Code Review's compliance pass flags it. A finding is advice: it does not block the PR on its own.",
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0021",
+    "phase": "review",
+    "decision": "changes_requested",
+    "subject_artifact_id": "art-pr",
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 41300,
+   "t_real_ms": 41300,
+   "seq": 22,
+   "actor": "engineer",
+   "action": "speak",
+   "target": "claude-code",
+   "place": "planning-room",
+   "text": "@claude address the Important finding",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "MESSAGE_EXCHANGED",
+    "event_id": "evt-0022",
+    "phase": "review",
+    "interaction_type": "feedback_request",
+    "content": "@claude address the Important finding",
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 41300,
+   "t_real_ms": 41300,
+   "seq": 22,
+   "actor": "claude-code",
+   "action": "move",
+   "target": null,
+   "place": "desk-orders",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "MESSAGE_EXCHANGED",
+    "event_id": "evt-0022",
+    "phase": "review",
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 43900,
+   "t_real_ms": 43900,
+   "seq": 23,
+   "actor": "claude-code",
+   "action": "move",
+   "target": null,
+   "place": "review-table",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_UPDATED",
+    "event_id": "evt-0023",
+    "phase": "review",
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 43900,
+   "t_real_ms": 43900,
+   "seq": 23,
+   "actor": "claude-code",
+   "action": "handoff",
+   "target": "review-table",
+   "place": "review-table",
+   "text": "PR #412 · keeps totalCents and placedAt as @deprecated aliases",
+   "key": "repair",
+   "narration": "Claude keeps the old names as @deprecated aliases and pushes the fix.",
+   "caption": "Claude Code · orders-service pushes repair 1 (keeps totalCents and placedAt as @deprecated aliases).",
+   "detail": {
+    "event_type": "ARTIFACT_UPDATED",
+    "event_id": "evt-0023",
+    "phase": "review",
+    "artifact_id": "art-pr",
+    "version": 2,
+    "diff": {
+     "files_changed": 2,
+     "lines_added": 8,
+     "lines_removed": 0
+    },
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 45700,
+   "t_real_ms": 45700,
+   "seq": 24,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "caption": "CI picks up the pull request and runs 2 deterministic checks (attempt 2).",
+   "detail": {
+    "event_type": "CI_RUN_STARTED",
+    "event_id": "evt-0024",
+    "phase": "review",
+    "run_attempt": 1,
+    "subject_artifact_id": "art-pr",
+    "stage": "Deploy",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 46400,
+   "t_real_ms": 46400,
+   "seq": 25,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "make lint: zero warnings",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "lint",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0025",
+    "phase": "review",
+    "category": "build",
+    "duration_ms": 900,
+    "output": "make lint: zero warnings",
+    "stage": "Deploy",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 47100,
+   "t_real_ms": 47100,
+   "seq": 26,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "make test: all green",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "tests",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0026",
+    "phase": "review",
+    "category": "test",
+    "duration_ms": 900,
+    "output": "make test: all green",
+    "stage": "Deploy",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 48000,
+   "t_real_ms": 48000,
+   "seq": 27,
+   "actor": "ci",
+   "action": "ci_result",
+   "target": null,
+   "place": "ci-tower",
+   "text": "CI passed",
+   "key": "ci_pass",
+   "narration": null,
+   "caption": "CI passes: all 2 checks pass.",
+   "check": {
+    "id": "attempt-1",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CI_RUN_COMPLETED",
+    "event_id": "evt-0027",
+    "phase": "review",
+    "run_attempt": 1,
+    "ok": true,
+    "failed_checks": [],
+    "stage": "Deploy",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 50400,
+   "t_real_ms": 50400,
+   "seq": 28,
+   "actor": "code-review",
+   "action": "speak",
+   "target": null,
+   "place": "review-desk",
+   "text": "No Important findings",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0028",
+    "phase": "review",
+    "decision": "commented",
+    "subject_artifact_id": "art-pr",
+    "stage": "Deploy",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 52800,
+   "t_real_ms": 52800,
+   "seq": 29,
+   "actor": "code-owner",
+   "action": "speak",
+   "target": null,
+   "place": "review-desk",
+   "text": "Approved",
+   "key": null,
+   "narration": "Omar, the code owner, approves. Branch protection is what blocks the merge.",
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0029",
+    "phase": "review",
+    "decision": "approved",
+    "subject_artifact_id": "art-pr",
+    "stage": "Deploy",
+    "axis": "review",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 54000,
+   "t_real_ms": 54000,
+   "seq": 30,
+   "actor": "code-owner",
+   "action": "phase",
+   "target": null,
+   "place": "review-desk",
+   "text": "PR merged",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0030",
+    "phase": "deployment",
+    "from_phase": "review",
+    "to_phase": "deployment",
+    "stage": "Deploy",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 56000,
+   "t_real_ms": 56000,
+   "seq": 31,
+   "actor": "claude-code",
+   "action": "handoff",
+   "target": "release-manager",
+   "place": "review-table",
+   "text": "Deploy PR #412 to production?",
+   "key": null,
+   "narration": "A hook stops the production deploy until the release manager authorizes it.",
+   "detail": {
+    "event_type": "APPROVAL_REQUESTED",
+    "event_id": "evt-0031",
+    "phase": "deployment",
+    "gate": "production-release",
+    "request_id": "rel-1",
+    "stage": "Deploy",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 58400,
+   "t_real_ms": 58400,
+   "seq": 32,
+   "actor": "release-manager",
+   "action": "speak",
+   "target": null,
+   "place": "merge-gate",
+   "text": "approved · Release authorized",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "APPROVAL_DECIDED",
+    "event_id": "evt-0032",
+    "phase": "deployment",
+    "request_id": "rel-1",
+    "decision": "approved",
+    "stage": "Deploy",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 59600,
+   "t_real_ms": 59600,
+   "seq": 33,
+   "actor": "release-manager",
+   "action": "phase",
+   "target": null,
+   "place": "merge-gate",
+   "text": "released",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0033",
+    "phase": "maintenance",
+    "from_phase": "deployment",
+    "to_phase": "maintenance",
+    "stage": "Maintain",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 61000,
+   "t_real_ms": 61000,
+   "seq": 34,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "billing-service (final): all tests passed",
+   "key": "oracle",
+   "narration": "The other teams' services keep working: the old names are still there.",
+   "caption": "Staging oracle, hidden from the agent: the other teams run their own tests on the final pull request. All 3 pass.",
+   "check": {
+    "id": "billing-service",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0034",
+    "phase": "maintenance",
+    "consumer": "billing-service",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "Maintain",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 61500,
+   "t_real_ms": 61500,
+   "seq": 35,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "analytics-ingest (final): all tests passed",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "analytics-ingest",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0035",
+    "phase": "maintenance",
+    "consumer": "analytics-ingest",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "Maintain",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 62000,
+   "t_real_ms": 62000,
+   "seq": 36,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "web-storefront (final): all tests passed",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "web-storefront",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0036",
+    "phase": "maintenance",
+    "consumer": "web-storefront",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "Maintain",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 64400,
+   "t_real_ms": 64400,
+   "seq": 37,
+   "actor": "originator",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "Caught at review by an LLM pass that reads CLAUDE.md, then a human approval",
+   "key": "session_end",
+   "narration": "Caught here at review: an advisory LLM pass plus a human. Nothing deterministic checked the rule.",
+   "caption": "Caught at review by an LLM pass that reads CLAUDE.md, then a human approval",
+   "detail": {
+    "event_type": "SESSION_ENDED",
+    "event_id": "evt-0037",
+    "phase": "maintenance",
+    "outcome": "success",
+    "stats": {
+     "events": 38
+    }
+   }
+  }
+ ],
+ "markers": [
+  {
+   "t_ms": 32600,
+   "label": "PR opened · 3 files changed",
+   "kind": "pr_opened"
+  },
+  {
+   "t_ms": 36700,
+   "label": "CI passed",
+   "kind": "ci_pass"
+  },
+  {
+   "t_ms": 43900,
+   "label": "Repair 1 pushed · keeps totalCents and placedAt as @deprecated aliases",
+   "kind": "repair"
+  },
+  {
+   "t_ms": 48000,
+   "label": "CI passed",
+   "kind": "ci_pass"
+  },
+  {
+   "t_ms": 61000,
+   "label": "Oracle (final): all 3 consumers pass",
+   "kind": "oracle"
+  },
+  {
+   "t_ms": 64400,
+   "label": "End: success",
+   "kind": "session_end"
+  }
+ ],
+ "scene": {
+  "layout": "review",
+  "visibility": null,
+  "spec": null,
+  "agent": "claude-code",
+  "context": {
+   "file": "CLAUDE.md",
+   "summary": "## Architecture: Kafka events are defined in schemas/; published event fields are never renamed or removed without keeping the old ones",
+   "seq": 7,
+   "t_ms": 15000
+  },
+  "fitness_functions": [],
+  "consumers": [
+   {
+    "id": "billing-service",
+    "desk": "desk-billing",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 34,
+      "t_ms": 61000
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Noor",
+     "title": "Billing team (consumer)",
+     "seed": "cast:noor:billing",
+     "fictional": true
+    }
+   },
+   {
+    "id": "analytics-ingest",
+    "desk": "desk-analytics",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 35,
+      "t_ms": 61500
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Kenji",
+     "title": "Analytics team (consumer)",
+     "seed": "cast:kenji:analytics",
+     "fictional": true
+    }
+   },
+   {
+    "id": "web-storefront",
+    "desk": "desk-storefront",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 36,
+      "t_ms": 62000
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Lucía",
+     "title": "Storefront team (consumer)",
+     "seed": "cast:lucia:storefront",
+     "fictional": true
+    }
+   }
+  ],
+  "diff_cards": [],
+  "sources": [
+   "events.jsonl"
+  ],
+  "lifecycle_model": {
+   "label": "Anthropic · AI-native SDLC playbook",
+   "detail": "8 roles on the floor (AISDLC-Trace 2.1 role set)",
+   "source": "SESSION_STARTED.payload.frameworks",
+   "kind": "illustration"
+  },
+  "zones": [
+   {
+    "id": "define",
+    "label": "Define",
+    "x0": 0.0,
+    "x1": 0.22,
+    "roles": "product owner · delivery · analyst · architect",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "build",
+    "label": "Build",
+    "x0": 0.22,
+    "x1": 0.46,
+    "roles": "code agents · tester",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "verify",
+    "label": "Verify & release",
+    "x0": 0.46,
+    "x1": 0.68,
+    "roles": "CI · review · merge gate · release manager",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   },
+   {
+    "id": "production",
+    "label": "Production",
+    "x0": 0.68,
+    "x1": 1.0,
+    "roles": "running services · their teams · users",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   }
+  ],
+  "illustration": {
+   "id": "anthropic",
+   "model": "Anthropic · AI-native SDLC playbook",
+   "short": "Anthropic",
+   "source": "Anthropic, The AI-native SDLC playbook (21 Aug 2026)",
+   "date": "2026-08-21",
+   "url": "https://claude.com/resources/articles/the-ai-native-sdlc-playbook",
+   "stages": [
+    "Plan",
+    "Design",
+    "Build",
+    "Test",
+    "Deploy",
+    "Maintain"
+   ],
+   "rule": {
+    "axis": "plan",
+    "place": "desk-orders",
+    "label": "CLAUDE.md · Architecture (context the agent reads)"
+   },
+   "blocks": {
+    "axis": "review",
+    "place": "review-desk",
+    "label": "Code owner approval (branch protection)"
+   },
+   "ci_arch": false,
+   "outcome": {
+    "status": "caught",
+    "axis": "review",
+    "label": "Caught at review: LLM pass + human"
+   }
+  }
+ }
+}

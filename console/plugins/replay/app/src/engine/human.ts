@@ -269,7 +269,8 @@ function paintNeck(g: PixelGrid, L: Look, f: Face): void {
   const o = L.outfit;
   const deep = o === "tee" || o === "hoodie" || o === "blazer" ? 2.4 : 1.4;
   g.shape(
-    (px, py) => (Math.abs(px - CX) <= 3.1 && py > f.cy + 4 && py < 36) || (py >= 33.5 && inEllipse(px, py, CX, 33.6, 4.4, deep)),
+    // a wider neck (8–9 px, was 6) that meets the collar in a soft curve
+    (px, py) => (Math.abs(px - CX) <= 4.2 && py > f.cy + 4 && py < 36) || (py >= 33.5 && inEllipse(px, py, CX, 33.6, 5.4, deep)),
     (px, py) => (py < f.cy + f.ry + 2.2 ? s.lo : px - CX > 1.4 ? s.lo : s.mid),
     (_x, y) => (y >= 34 ? L.cloth.line : s.line),
   );
@@ -747,7 +748,8 @@ function paintTyping(g: PixelGrid, L: Look, frame: 1 | 2): void {
 
 // ---------------------------------------------------------------------------------------------------- entry
 export function paintHuman(g: PixelGrid, spec: IdentitySpec, pose: Pose = {}): void {
-  const cy = 18 - (pose.breath === 1 ? 1 : 0);
+  // theater-1016: the head sits 2 px lower than v2 (a shorter neck; Alfredo: "cuello muy angosto y alto")
+  const cy = 20 - (pose.breath === 1 ? 1 : 0);
   const L = chooseLook(spec, cy);
   const f = L.face;
   if (L.hairStyle === "hijab") {

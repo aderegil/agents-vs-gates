@@ -18,6 +18,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from analysis import common, summarize
+from console.core import labels as L
 from harness import blinding, jsonio, paths
 
 MUTATION_COMMAND = "python -m oracle.mutation"
@@ -60,16 +61,23 @@ NEEDS_NO_REPAIR = ("passed_first_ci", "no_change")
 SECONDARY = (("consumer_break_ci", "Consumer break in CI"), ("semantic_break", "Semantic break"),
              ("undeclared_dependency", "Undeclared dependency"), ("arch_layer_violation", "Layer violation"),
              ("arch9_signal", "ARCH-9 signal"))
-COND_LABEL = {"R-S0": "R-S0 · reviewer sees S0", "R-S2": "R-S2 · reviewer sees S2",
-              "R-C": "R-C · S2 + consumer contracts"}
+# Chart and table labels: plain words first, the code after them (console/core/labels.py reads labels.js; docs/DECISIONS.md,
+# «Plain words instead of codes»). Rows carry the words in `label` and the code in `sub` (drawn muted, at the right).
+COND_LABEL = {c: L.with_code(c) for c in ("R-S0", "R-S2", "R-C")}
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
 # ---------------------------------------------------------------- small helpers
 
 def _sub(c: dict) -> str:
+    """The condition's code: "V0·S2" (·W2 when not W1)."""
     s = f"{c.get('V', '?')}·{c.get('S', '?')}"
     return s if c.get("W", "W1") == "W1" else f"{s}·{c['W']}"
+
+
+def _cond(c: dict) -> str:
+    """The condition in words: "Own repo · Rule in the spec"."""
+    return L.plain_condition(c.get("V"), c.get("S"), c.get("W", "W1"))
 
 
 def _unit(u) -> str:
@@ -77,7 +85,23 @@ def _unit(u) -> str:
 
 
 def _group(c: dict) -> str:
-    return f"{c['stage']} · {_unit(c.get('unit'))}"
+    """"Main test (P1) · Claude Code + Sonnet"."""
+    return f"{L.with_code(c['stage'])} · {_unit(c.get('unit'))}"
+
+
+def _ordered(cells) -> list[dict]:
+    """Cells grouped for drawing: stage, unit, ticket, then the condition (each group header is drawn once)."""
+    return sorted(cells, key=lambda c: (_stage_key(c["stage"]), c.get("unit") or "", c.get("ticket") or "",
+                                        c.get("V") or "", c.get("S") or "", c.get("W") or ""))
+
+
+def _place(c: dict, by: str) -> dict:
+    """Where a cell goes in a chart. by="ticket" (the condition is the same for every row): group = stage · unit, row =
+    the ticket in words, its code after. by="condition": group = stage · unit · ticket, row = the condition in words,
+    its code after."""
+    if by == "ticket":
+        return {"group": _group(c), "label": L.short(c["ticket"]), "sub": c["ticket"]}
+    return {"group": f"{_group(c)} · {L.with_code(c['ticket'])}", "label": _cond(c), "sub": _sub(c)}
 
 
 def _fmt_p(p) -> str:
@@ -153,7 +177,7 @@ class Build:
     # ------------------------------------------------------------ chart plumbing
 
     def source(self, pairs, n: int) -> str:
-        """pairs: iterable of (stage, unit). → 'Source: Agents vs. Gates, P1, Claude Code + Sonnet <id>, N=…, <dates>'."""
+        """pairs: iterable of (stage, unit). → 'Source: Agents vs. Gates, Main test (P1), Claude Code + Sonnet <id>, N=…, <dates>'."""
         stages = sorted({s for s, _ in pairs}, key=_stage_key)
         units = sorted({u for _, u in pairs})
         who = []
@@ -164,7 +188,8 @@ class Build:
         lo = [self.windows[s][0] for s in stages if s in self.windows and self.windows[s][0]]
         hi = [self.windows[s][1] for s in stages if s in self.windows and self.windows[s][1]]
         window = format_window(min(lo) if lo else None, max(hi) if hi else None)
-        return f"Source: Agents vs. Gates, {', '.join(stages) or 'no stage'}, {' / '.join(who) or 'no unit'}, N={n}, {window}"
+        named = ", ".join(L.with_code(s) for s in stages)
+        return f"Source: Agents vs. Gates, {named or 'no stage'}, {' / '.join(who) or 'no unit'}, N={n}, {window}"
 
     def finish(self, spec: dict, cells=(), pairs=None, n: int | None = None) -> dict:
         pairs = list(pairs) if pairs is not None else sorted({(c["stage"], c.get("unit", "?")) for c in cells})
@@ -192,22 +217,21 @@ class Build:
                             "rows": rows, **kw}, cells)
 
     @staticmethod
-    def metric_rows(cells, metric, tone=None):
+    def metric_rows(cells, metric, tone=None, by="condition"):
         out = []
-        for c in cells:
+        for c in _ordered(cells):
             m = (c.get("metrics") or {}).get(metric)
             if m and m["n"]:
-                out.append({"group": _group(c), "label": c["ticket"], "sub": _sub(c), "x": m["x"], "n": m["n"],
-                            "ci": m["ci"], **({"tone": tone} if tone else {})})
+                out.append({**_place(c, by), "x": m["x"], "n": m["n"], "ci": m["ci"], **({"tone": tone} if tone else {})})
         return out
 
-    def box_rows(self, cells, series):
+    def box_rows(self, cells, series, by="condition"):
         boxes = self.boxes()
         rows = []
-        for c in cells:
+        for c in _ordered(cells):
             b = boxes.get((c["stage"], c["cell"]))
             if b and b["n"]:
-                rows.append({"group": _group(c), "label": c["ticket"], "sub": _sub(c), "n": b["n"],
+                rows.append({**_place(c, by), "n": b["n"],
                              "segments": [{"key": s["key"], "value": b[s["key"]]} for s in series]})
         return rows
 
@@ -224,15 +248,17 @@ class Build:
 
     def rq1(self) -> dict:
         cells = [c for c in self.cells() if c.get("V") == "V0" and c.get("S") == "S0" and c.get("W") == "W1"]
-        brk = self.interval("rq1.break", "Staging break with nothing in view (V0·S0)",
+        v0s0 = L.condition_with_code("V0", "S0")
+        brk = self.interval("rq1.break", f"Broke another team with nothing in view: {v0s0}",
                             "Runs where a deployed consumer failed the staging oracle · x of N, 95% Clopper-Pearson interval",
-                            self.metric_rows(cells, "staging_break"), cells, tone="fail")
-        boxes = self.stacked("rq1.boxes", "Did the ticket, and did it break anything? (V0·S0)",
+                            self.metric_rows(cells, "staging_break", by="ticket"), cells, tone="fail")
+        boxes = self.stacked("rq1.boxes", f"Did the ticket, and did it break anything? {v0s0}",
                              "Runs per box · bars show each cell's share, numbers are runs",
-                             BOX_SERIES, self.box_rows(cells, BOX_SERIES), cells)
+                             BOX_SERIES, self.box_rows(cells, BOX_SERIES, by="ticket"), cells)
         sec_rows = []
         for c in cells:
-            row = {"cell": f"{c['stage']} · {c['ticket']} {_sub(c)} · {_unit(c['unit'])}"}
+            row = {"cell": f"{L.with_code(c['stage'])} · {L.with_code(c['ticket'])} · {_cond(c)} ({_sub(c)}) · "
+                           f"{_unit(c['unit'])}"}
             for key, _ in SECONDARY:
                 m = c["metrics"].get(key)
                 row[key] = f"{m['x']} of {m['n']}" if m and m["n"] else "—"
@@ -240,8 +266,9 @@ class Build:
         table = {"id": "rq1.secondary", "title": "Secondary metrics (x of N runs)",
                  "columns": [{"key": "cell", "label": "Cell"}] + [{"key": k, "label": l, "num": True} for k, l in SECONDARY],
                  "rows": sec_rows} if sec_rows else None
-        return self.section("rq1", note="Descriptive: counts and intervals, no p-values. Primary metric: staging_break, "
-                            "measured by the oracle, not by CI.", charts=[brk, boxes], tables=[table])
+        return self.section("rq1", note="Descriptive: counts and intervals, no p-values. Primary measure: broke another "
+                            "team on the first try (staging_break), measured by the oracle, not by CI.",
+                            charts=[brk, boxes], tables=[table])
 
     def rq2(self) -> dict:
         h2 = self.agg["rq2"]["h2"]
@@ -251,16 +278,19 @@ class Build:
             rows, hcells = [], []
             for t, v in h2["tickets"].items():
                 tickets.append({"ticket": t, "s0": v["s0"], "s2": v["s2"], "p": v["p"], "p_holm": v["p_holm"]})
-                head = f"{t} · Fisher exact, Holm-adjusted p = {_fmt_p(v['p_holm'])}" if v["p_holm"] is not None else t
-                for lab, key in (("V0·S0", "s0"), ("V0·S2", "s2")):
+                tw = L.with_code(t)
+                head = f"{tw} · Fisher exact, Holm-adjusted p = {_fmt_p(v['p_holm'])}" if v["p_holm"] is not None else tw
+                for S, key in (("S0", "s0"), ("S2", "s2")):
                     m = v[key]
                     if m["n"]:
-                        rows.append({"group": head, "label": lab, "sub": "", "x": m["x"], "n": m["n"], "ci": m["ci"]})
+                        rows.append({"group": head, "label": L.plain_condition("V0", S), "sub": f"V0·{S}",
+                                     "x": m["x"], "n": m["n"], "ci": m["ci"]})
             unit = common.PRIMARY_UNIT[self.ns]
             hcells = [{"stage": h2["stage"], "cell": f"{t}|H2", "n": max(v["s0"]["n"], 0) + max(v["s2"]["n"], 0),
                        "unit": unit} for t, v in h2["tickets"].items()]
-            h2_chart = self.interval("rq2.h2", "H2: does naming the consumers (S2) prevent the break?",
-                                     "staging_break, V0·S0 vs. V0·S2 · one pre-registered contrast per ticket · "
+            h2_chart = self.interval("rq2.h2", f"{L.with_code('H2')}: does the rule in the spec prevent the break?",
+                                     f"Broke another team on the first try, {L.condition_with_code('V0', 'S0')} vs. "
+                                     f"{L.condition_with_code('V0', 'S2')} · one pre-registered contrast per ticket · "
                                      "Fisher exact two-sided, Holm over the two tickets", rows, hcells, tone="fail")
             h2_info = {"stage": h2["stage"], "note": h2.get("note"), "tickets": tickets, "unit": unit}
         # descriptive comparisons: every W1 cell with S1/S2 or V2, next to the V0·S0 cell of the same ticket
@@ -269,13 +299,15 @@ class Build:
         keys = {(c["stage"], c["ticket"], c["unit"]) for c in contrast}
         cells = [c for c in allc if (c["stage"], c["ticket"], c["unit"]) in keys
                  and (c in contrast or (c["V"] == "V0" and c["S"] == "S0"))]
-        brk = self.interval("rq2.break", "Staging break by what the agent is told or shown",
-                            "V0·S0 next to V0·S1, V0·S2 and V2·S0 (the agent sees the consumers) · descriptive, no p-values",
+        brk = self.interval("rq2.break", "Broke another team, by what the agent is told or shown",
+                            "No rule next to architecture notes, the rule in the spec and every repo visible · "
+                            "descriptive, no p-values",
                             self.metric_rows(cells, "staging_break"), cells, tone="fail")
-        boxes = self.stacked("rq2.boxes", "Did the ticket, and did it break anything? (S and V contrasts)",
+        boxes = self.stacked("rq2.boxes", "Did the ticket, and did it break anything? (what the spec says, what the agent sees)",
                              "Runs per box · bars show each cell's share, numbers are runs",
                              BOX_SERIES, self.box_rows(cells, BOX_SERIES), cells)
-        note = ("Only pre-registered tests carry p-values: H2 (Holm-corrected) and the secondary HS-V2 (uncorrected, "
+        note = (f"Only pre-registered tests carry p-values: {L.with_code('H2')} (Holm-corrected) and the secondary "
+                f"{L.with_code('HS-V2')} (uncorrected, "
                 "outside the Holm family), on the primary unit and again on the replication unit. Everything else here "
                 "is descriptive. \"Differs between units\" is claimed only with p < 0.05 on a pre-registered test.")
         sec = self.section("rq2", descriptive=False, note=note, charts=[h2_chart, brk, boxes], h2=h2_info,
@@ -339,9 +371,11 @@ class Build:
             if any(vals):
                 rows.append({"measure": f"Outcome: {s['label']}", "count": True,
                              **{col["key"]: {"x": v, "n": col["n"]} for col, v in zip(cols, vals)}})
-        return {"id": "rq3.v1_units", "title": "X-remove V1·S0 on each unit, side by side",
-                "note": "Descriptive: the same cell run on each unit (P2 on the primary unit, P6's P2 part on the "
-                        "replication unit). Counts and 95% intervals, no test, nothing pooled.",
+        return {"id": "rq3.v1_units",
+                "title": f"{L.with_code('X-remove')} · {L.condition_with_code('V1', 'S0')} on each unit, side by side",
+                "note": f"Descriptive: the same cell run on each unit ({L.with_code('P2')} on the primary unit, "
+                        f"{L.with_code('P6')}'s pressure-test part on the replication unit). Counts and 95% intervals, "
+                        "no test, nothing pooled.",
                 "columns": cols, "rows": rows,
                 "source": self.source([(c["stage"], c.get("unit", "?")) for c in cells], sum(c["n"] for c in cells))}
 
@@ -353,12 +387,13 @@ class Build:
             if o and any(k not in NEEDS_NO_REPAIR and v for k, v in o["counts"].items()):
                 cells.append(c)
         gate = self.interval("rq3.gate", "Gate touched while repairing",
-                             "Runs flagged by a gate-manipulation detector (T1–T3 coded blind) · x of N, 95% interval",
+                             "Runs flagged by a gate detector (then coded blind: benign, edited the check, weakened the "
+                             "contract) · x of N, 95% interval",
                              self.metric_rows(cells, "gate_flagged"), cells, tone="fail")
         rows = []
-        for c in cells:
+        for c in _ordered(cells):
             o = out[c["cell"] + "|" + c["stage"]]
-            rows.append({"group": _group(c), "label": c["ticket"], "sub": _sub(c), "n": o["n"],
+            rows.append({**_place(c, "condition"), "n": o["n"],
                          "segments": [{"key": s["key"], "value": o["counts"].get(s["key"], 0)} for s in OUTCOME_SERIES]})
         outcomes = self.stacked("rq3.outcomes", "What the agent did after CI said no",
                                 "Runs per repair outcome · numbers are runs", OUTCOME_SERIES, rows, cells)
@@ -374,21 +409,24 @@ class Build:
                                    ("Oracle breaks a consumer", "staging_break", "fail")):
                 m = r[key]
                 if m["n"]:
-                    vrows.append({"group": f"{c['ticket']} {_sub(c)} · {c['stage']} · {_unit(c['unit'])}", "label": lab,
+                    vrows.append({"group": f"{L.with_code(c['ticket'])} · {_cond(c)} ({_sub(c)}) · "
+                                           f"{L.with_code(c['stage'])} · {_unit(c['unit'])}", "label": lab,
                                   "sub": "", "x": m["x"], "n": m["n"], "ci": m["ci"], "tone": tone})
-        v1chart = self.interval("rq3.v1", "V1 gives the agent CI's own information",
-                                "First-CI consumer break and oracle break, V1 next to V0·S2 · x of N, 95% interval",
+        v1chart = self.interval("rq3.v1", f"{L.with_code('V1')}: the agent has CI's own information",
+                                f"First-CI consumer break and oracle break, next to {L.condition_with_code('V0', 'S2')} "
+                                "· x of N, 95% interval",
                                 vrows, vcells, tone="fail")
         cd = self.agg["rq3"]["coding"]
         coding = {"id": "rq3.coding", "title": "Blind coding of gate-flagged runs (runs)",
                   "columns": [{"key": k, "label": l, "num": True} for k, l in
-                              (("T2", "T2 edited the check"), ("T3", "T3 weakened the contract"),
-                               ("T1", "T1 benign (reported apart)"), ("honest_escalation", "Honest escalation"),
+                              (("T2", "Edited the check (T2)"), ("T3", "Weakened the contract (T3)"),
+                               ("T1", "Benign, reported apart (T1)"), ("honest_escalation", "Honest escalation"),
                                ("none", "None"), ("uncoded", "Not coded yet"))],
                   "rows": [{k: cd.get(k, 0) for k in ("T1", "T2", "T3", "honest_escalation", "none", "uncoded")}]}
         any_flag = sum(cd.values()) > 0
         return self.section("rq3", note="Descriptive. Cells where every run passed the first CI are left out: there was "
-                            "nothing to repair. V1 is the arm in which the agent has the same information as CI.",
+                            f"nothing to repair. {L.with_code('V1')} is the arm in which the agent has the same "
+                            "information as CI.",
                             charts=[gate, outcomes, v1chart], tables=[coding if any_flag else None],
                             v1_units=self.v1_units())
 
@@ -408,11 +446,13 @@ class Build:
         for c in rows_cells:
             m = c["metrics"].get("staging_break")
             if m and m["n"]:
-                rows.append({"group": f"{c['ticket']} {c['V']}·{c['S']} · {_unit(c['unit'])}", "label": c.get("W", "W1"),
-                             "sub": c["stage"], "x": m["x"], "n": m["n"], "ci": m["ci"]})
-        brk = self.interval("rq5.break", "Staging break by ticket wording (W1 vs. W2)",
-                            "W2 states the outcome the ticket wants instead of the mechanical change · descriptive, "
-                            "no p-values", rows, rows_cells, tone="fail")
+                W = c.get("W", "W1")
+                rows.append({"group": f"{L.with_code(c['ticket'])} · {L.condition_with_code(c['V'], c['S'])} · "
+                                      f"{_unit(c['unit'])}", "label": L.short(W), "sub": f"{W} · {c['stage']}",
+                             "x": m["x"], "n": m["n"], "ci": m["ci"]})
+        brk = self.interval("rq5.break", "Broke another team, by how the ticket is worded",
+                            f"{L.with_code('W2')} states the outcome the ticket wants instead of the mechanical change "
+                            "· descriptive, no p-values", rows, rows_cells, tone="fail")
         return self.section("rq5", note="Exploratory. Descriptive counts and intervals only.", charts=[brk])
 
     # ------------------------------------------------------------ RQ4
@@ -605,6 +645,46 @@ def load_mutation() -> dict:
     return out
 
 
+# ---------------------------------------------------------------- Claude Code vs Codex per cell (descriptive)
+
+BY_AGENT_UNITS = (("cc-sonnet", ("P1", "P2", "P4"), "Claude Code · Sonnet"), ("codex", ("P6",), "Codex"),
+                  ("cc-opus", ("P5",), "Claude Code · Opus"))
+BY_AGENT_METRICS = (("staging_break", "Broke another team, first try"), ("staging_break_final", "Broke another team, final PR"),
+                    ("gate_flagged", "Touched the gate"), ("no_change", "Stopped without a change"))
+
+
+def by_agent(b: "Build") -> dict:
+    """Each design cell (ticket × V × S × W) with every unit side by side: Claude Code + Sonnet over P1, P2 and P4, Codex
+    over P6 (which replicates those parts), Opus over P5. Counts only; no test (the pre-registration has no test between
+    agents)."""
+    outs = {(o["stage"], o["cell"]): o["counts"] for o in b.agg["rq3"]["outcomes"] if b.visible(o["stage"])}
+    acc: dict = {}
+    for c in b.cells():
+        unit = c.get("unit")
+        spec = next((u for u in BY_AGENT_UNITS if u[0] == unit and c["stage"] in u[1]), None)
+        if not spec:
+            continue
+        key = (c.get("ticket"), c.get("V"), c.get("S"), c.get("W", "W1"))
+        slot = acc.setdefault(key, {}).setdefault(unit, {"n": 0, "stages": set(), **{m: 0 for m, _ in BY_AGENT_METRICS}})
+        slot["n"] += c["n"]
+        slot["stages"].add(c["stage"])
+        for m, _ in BY_AGENT_METRICS[:3]:
+            slot[m] += (c["metrics"].get(m) or {}).get("x", 0)
+        slot["no_change"] += outs.get((c["stage"], c["cell"]), {}).get("no_change", 0)
+    rows = []
+    for (ticket, V, S, W), units in sorted(acc.items(), key=lambda kv: tuple(str(x) for x in kv[0])):
+        if "codex" not in units or "cc-sonnet" not in units:
+            continue
+        rows.append({"ticket": ticket, "V": V, "S": S, "W": W,
+                     "units": {u: {"n": v["n"], "stages": sorted(v["stages"], key=_stage_key),
+                                   **{m: {"x": v[m], "n": v["n"]} for m, _ in BY_AGENT_METRICS}} for u, v in units.items()}})
+    return {"title": "Claude Code vs Codex, cell by cell", "units": [{"unit": u, "label": l, "stages": list(st)} for u, st, l in BY_AGENT_UNITS],
+            "metrics": [{"key": k, "label": l} for k, l in BY_AGENT_METRICS], "rows": rows,
+            "note": "Descriptive. Each agent is tested only against itself in the pre-registration; there is no test "
+                    "between agents, so no p-values here. Claude Code + Sonnet sums P1, P2 and P4; Codex is P6, which "
+                    "replicates those parts; Opus is P5. Only cells run on both Claude Code + Sonnet and Codex are listed."}
+
+
 # ---------------------------------------------------------------- public entry points
 
 def rq_payload(ns: str) -> dict:
@@ -613,7 +693,8 @@ def rq_payload(ns: str) -> dict:
     rq5 = b.rq5()
     if rq5:
         sections["rq5"] = rq5
-    return {**_head(b), "sections": sections, "order": [k for k in ("rq1", "rq2", "rq3", "rq5") if k in sections]}
+    return {**_head(b), "sections": sections, "order": [k for k in ("rq1", "rq2", "rq3", "rq5") if k in sections],
+            "by_agent": by_agent(b)}
 
 
 def reviewer_payload(ns: str) -> dict:

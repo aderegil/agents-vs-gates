@@ -61,3 +61,7 @@
 .rx-io { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
 .rx .tbl .mono, .rx .tbl .num { white-space: nowrap; }
 .rx.has-run .rx-table { max-height: 21vh; }
+
+/* plain cell label with its code chip (night order C.2) */
+.rx-cell { white-space: nowrap; }
+.rx-code { padding: 0 5px; border-radius: 4px; background: var(--suave); border: 1px solid var(--linea); font-size: 11px; color: var(--tinta-2); }

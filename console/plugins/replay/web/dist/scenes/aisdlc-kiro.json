@@ -1,0 +1,979 @@
+{
+ "meta": {
+  "run_id": "aisdlc-kiro",
+  "source": "illustration",
+  "unit": "illustration",
+  "model": null,
+  "date": "2026-10-13",
+  "started_at": "2026-10-13T09:00:00.000Z",
+  "ticket": "X-rename",
+  "condition": {},
+  "outcome": null,
+  "ticket_done": null,
+  "session_outcome": "failed",
+  "stage": null,
+  "title": "Meridian Retail · rename on OrderPlaced · Kiro",
+  "scenario": "meridian-retail/illustration",
+  "trace_sha256": "94a7a76da4c7678ed90625c322d60abe52aee0d9f03f4543c6ae5da81c47bad6",
+  "schema": "replay/1",
+  "exporter_version": 4,
+  "legend": "Illustration · scripted from public documentation",
+  "duration_ms": 46500,
+  "duration_real_ms": 42000,
+  "event_count": 24,
+  "extras_sha256": "9df133529e3dfe710529db48f000891a5e4c5366fc695b53574330530d5ae475",
+  "illustration_source": "Kiro docs: Specs, Steering, Hooks, Custom agents (captured 10 Oct 2026)"
+ },
+ "places": [
+  {
+   "id": "product-desk",
+   "label": "Product",
+   "kind": "desk",
+   "x": 0.07,
+   "y": 0.18,
+   "note": "product owner",
+   "zone": "define",
+   "used": false
+  },
+  {
+   "id": "planning-room",
+   "label": "Delivery · planning",
+   "kind": "room",
+   "x": 0.16,
+   "y": 0.33,
+   "note": "scrum master / delivery",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "analysis-desk",
+   "label": "Analysis",
+   "kind": "desk",
+   "x": 0.06,
+   "y": 0.5,
+   "note": "analyst",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "architecture-library",
+   "label": "Architecture library",
+   "kind": "library",
+   "x": 0.14,
+   "y": 0.7,
+   "note": "ARCH-n rules, catalog, ADRs",
+   "zone": "define",
+   "used": false
+  },
+  {
+   "id": "dispatch",
+   "label": "Dispatch board",
+   "kind": "system",
+   "x": 0.34,
+   "y": 0.16,
+   "note": "flow engine",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "desk-orders",
+   "label": "Checkout · orders",
+   "kind": "desk",
+   "x": 0.33,
+   "y": 0.42,
+   "note": "orders-service",
+   "zone": "build",
+   "used": true
+  },
+  {
+   "id": "tester-desk",
+   "label": "Testing",
+   "kind": "desk",
+   "x": 0.34,
+   "y": 0.86,
+   "note": "tester / verifier",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "pr-tray",
+   "label": "PR tray",
+   "kind": "system",
+   "x": 0.505,
+   "y": 0.42,
+   "note": "pull request",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "ci-tower",
+   "label": "CI Tower",
+   "kind": "system",
+   "x": 0.6,
+   "y": 0.36,
+   "note": "one light per check",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "merge-gate",
+   "label": "Merge gate · release",
+   "kind": "gate",
+   "x": 0.58,
+   "y": 0.72,
+   "note": "release manager",
+   "zone": "verify",
+   "used": false
+  },
+  {
+   "id": "staging-bench",
+   "label": "The other teams' tests",
+   "kind": "stage",
+   "x": 0.93,
+   "y": 0.17,
+   "note": "illustration: what happens downstream",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-billing",
+   "label": "billing-service",
+   "kind": "desk",
+   "x": 0.76,
+   "y": 0.3,
+   "note": "Billing team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-analytics",
+   "label": "analytics-ingest",
+   "kind": "desk",
+   "x": 0.93,
+   "y": 0.47,
+   "note": "Analytics team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-storefront",
+   "label": "web-storefront",
+   "kind": "desk",
+   "x": 0.78,
+   "y": 0.66,
+   "note": "Storefront team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "users",
+   "label": "Users",
+   "kind": "stage",
+   "x": 0.88,
+   "y": 0.88,
+   "note": "illustrative",
+   "zone": "production",
+   "used": true
+  }
+ ],
+ "actors": [
+  {
+   "id": "user",
+   "role": "engineer",
+   "actor_type": "human",
+   "display_name": "Elif · User",
+   "avatar": {
+    "style": "human",
+    "seed": "user",
+    "badge": null
+   },
+   "home": "planning-room"
+  },
+  {
+   "id": "spec-agent",
+   "role": "requirements_agent",
+   "actor_type": "agent",
+   "display_name": "Spec agent",
+   "avatar": {
+    "style": "agent",
+    "seed": "spec-agent",
+    "badge": null
+   },
+   "home": "analysis-desk"
+  },
+  {
+   "id": "kiro-agent",
+   "role": "code_agent",
+   "actor_type": "agent",
+   "display_name": "Kiro agent · orders-service",
+   "avatar": {
+    "style": "agent",
+    "seed": "kiro-agent",
+    "badge": null
+   },
+   "home": "desk-orders"
+  },
+  {
+   "id": "ci",
+   "role": "ci",
+   "actor_type": "system",
+   "display_name": "CI",
+   "avatar": {
+    "style": "system",
+    "seed": "ci",
+    "badge": null
+   },
+   "home": "ci-tower"
+  },
+  {
+   "id": "staging",
+   "role": "staging",
+   "actor_type": "system",
+   "display_name": "The other teams' tests",
+   "avatar": {
+    "style": "system",
+    "seed": "staging",
+    "badge": null
+   },
+   "home": "staging-bench"
+  }
+ ],
+ "steps": [
+  {
+   "t_ms": 0,
+   "t_real_ms": 0,
+   "seq": 0,
+   "actor": "user",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "Meridian Retail · rename on OrderPlaced · Kiro",
+   "key": null,
+   "narration": "Kiro · specs, steering, hooks · Rename totalCents/placedAt on OrderPlaced at Meridian Retail (fictional).",
+   "detail": {
+    "event_type": "SESSION_STARTED",
+    "event_id": "evt-0000",
+    "phase": "discovery",
+    "to_phase": "discovery",
+    "scenario": "meridian-retail/illustration",
+    "condition": ""
+   }
+  },
+  {
+   "t_ms": 2600,
+   "t_real_ms": 2600,
+   "seq": 1,
+   "actor": "user",
+   "action": "work",
+   "target": null,
+   "place": "planning-room",
+   "text": ".kiro/steering/structure.md · Architectural decisions: published event fields stay backward compatible",
+   "key": null,
+   "narration": "Steering: structure.md records the architecture decisions. It is context for the agent.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0001",
+    "phase": "discovery",
+    "artifact_id": "art-steer",
+    "artifact_type": "context_file",
+    "stage": "Steering",
+    "axis": "intent",
+    "rule": true
+   }
+  },
+  {
+   "t_ms": 4800,
+   "t_real_ms": 4800,
+   "seq": 2,
+   "actor": "user",
+   "action": "speak",
+   "target": "spec-agent",
+   "place": "planning-room",
+   "text": "Rename totalCents/placedAt on OrderPlaced",
+   "key": null,
+   "narration": "Elif, the user, starts a spec: the docs address a generic user, not named roles.",
+   "detail": {
+    "event_type": "MESSAGE_EXCHANGED",
+    "event_id": "evt-0002",
+    "phase": "discovery",
+    "interaction_type": "task_assignment",
+    "content": "Rename totalCents/placedAt on OrderPlaced",
+    "stage": "Requirements",
+    "axis": "intent"
+   }
+  },
+  {
+   "t_ms": 6000,
+   "t_real_ms": 6000,
+   "seq": 3,
+   "actor": "user",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "spec started",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0003",
+    "phase": "planning",
+    "from_phase": "discovery",
+    "to_phase": "planning",
+    "stage": "Requirements",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 8600,
+   "t_real_ms": 8600,
+   "seq": 4,
+   "actor": "spec-agent",
+   "action": "work",
+   "target": null,
+   "place": "analysis-desk",
+   "text": ".kiro/specs/orderplaced-rename/requirements.md · WHEN an order is placed THE SYSTEM SHALL publish OrderPlaced with amountCents and createdAt",
+   "key": null,
+   "narration": "Requirements in EARS notation: WHEN an order is placed THE SYSTEM SHALL publish …",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0004",
+    "phase": "planning",
+    "artifact_id": "art-req",
+    "artifact_type": "spec",
+    "stage": "Requirements",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 11000,
+   "t_real_ms": 11000,
+   "seq": 5,
+   "actor": "user",
+   "action": "speak",
+   "target": null,
+   "place": "planning-room",
+   "text": "Happy? yes",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0005",
+    "phase": "planning",
+    "decision": "approved",
+    "subject_artifact_id": "art-req",
+    "stage": "Requirements",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 12600,
+   "t_real_ms": 12600,
+   "seq": 6,
+   "actor": "spec-agent",
+   "action": "work",
+   "target": null,
+   "place": "analysis-desk",
+   "text": ".kiro/steering/structure.md · design context",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_READ",
+    "event_id": "evt-0006",
+    "phase": "planning",
+    "artifact_id": "art-steer",
+    "stage": "Design",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 15200,
+   "t_real_ms": 15200,
+   "seq": 7,
+   "actor": "spec-agent",
+   "action": "work",
+   "target": null,
+   "place": "analysis-desk",
+   "text": "design.md · Event schema change with a deprecation window",
+   "key": null,
+   "narration": "design.md: the agent designs the change, old names kept for a deprecation window.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0007",
+    "phase": "planning",
+    "artifact_id": "art-design",
+    "artifact_type": "spec",
+    "stage": "Design",
+    "axis": "plan",
+    "rule": true
+   }
+  },
+  {
+   "t_ms": 17600,
+   "t_real_ms": 17600,
+   "seq": 8,
+   "actor": "user",
+   "action": "speak",
+   "target": null,
+   "place": "planning-room",
+   "text": "Happy? yes",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0008",
+    "phase": "planning",
+    "decision": "approved",
+    "subject_artifact_id": "art-design",
+    "stage": "Design",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 20200,
+   "t_real_ms": 20200,
+   "seq": 9,
+   "actor": "spec-agent",
+   "action": "work",
+   "target": null,
+   "place": "analysis-desk",
+   "text": "tasks.md · 4 tasks: event type, publisher, tests, docs",
+   "key": null,
+   "narration": "tasks.md: four discrete tasks.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0009",
+    "phase": "planning",
+    "artifact_id": "art-tasks",
+    "artifact_type": "task_list",
+    "stage": "Tasks",
+    "axis": "tasks"
+   }
+  },
+  {
+   "t_ms": 21400,
+   "t_real_ms": 21400,
+   "seq": 10,
+   "actor": "user",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "Run all Tasks",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0010",
+    "phase": "implementation",
+    "from_phase": "planning",
+    "to_phase": "implementation",
+    "stage": "Implementation",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 23400,
+   "t_real_ms": 23400,
+   "seq": 11,
+   "actor": "kiro-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "Edit · src/core/events.ts",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0011",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "input_summary": "src/core/events.ts",
+    "correlation_id": "call-0011",
+    "stage": "Implementation",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 25000,
+   "t_real_ms": 25000,
+   "seq": 12,
+   "actor": "kiro-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+   "key": null,
+   "narration": "Same scripted case in every model: the first attempt renames the fields and drops the old names, although the rule is in the agent's context.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0012",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "status": "success",
+    "output_summary": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+    "correlation_id": "call-0011",
+    "stage": "Implementation",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 27000,
+   "t_real_ms": 27000,
+   "seq": 13,
+   "actor": "kiro-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "hook · Post Task Execution · npm test",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0013",
+    "phase": "implementation",
+    "tool_name": "hook · Post Task Execution",
+    "input_summary": "npm test",
+    "correlation_id": "call-0013",
+    "stage": "Implementation",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 28600,
+   "t_real_ms": 28600,
+   "seq": 14,
+   "actor": "kiro-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "all tests passed",
+   "key": null,
+   "narration": "A Post Task Execution hook runs the tests in the agent's session. They pass.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0014",
+    "phase": "implementation",
+    "tool_name": "hook · Post Task Execution",
+    "status": "success",
+    "output_summary": "all tests passed",
+    "correlation_id": "call-0013",
+    "stage": "Implementation",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 29800,
+   "t_real_ms": 29800,
+   "seq": 15,
+   "actor": "kiro-agent",
+   "action": "phase",
+   "target": null,
+   "place": "desk-orders",
+   "text": "tasks done",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0015",
+    "phase": "review",
+    "from_phase": "implementation",
+    "to_phase": "review",
+    "stage": "Implementation",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 32400,
+   "t_real_ms": 32400,
+   "seq": 16,
+   "actor": "kiro-agent",
+   "action": "move",
+   "target": null,
+   "place": "pr-tray",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "stage": "Implementation",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 32400,
+   "t_real_ms": 32400,
+   "seq": 16,
+   "actor": "kiro-agent",
+   "action": "handoff",
+   "target": "pr-tray",
+   "place": "pr-tray",
+   "text": "PR #57 · 4 tasks done",
+   "key": "pr_opened",
+   "narration": "The agent opens a pull request. Kiro's docs describe no CI step after it.",
+   "caption": "Kiro agent · orders-service opens a pull request (4 tasks done) and leaves it on the PR tray: CI is its only reviewer.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "artifact_id": "art-pr",
+    "diff": null,
+    "stage": "Implementation",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 34800,
+   "t_real_ms": 34800,
+   "seq": 17,
+   "actor": "user",
+   "action": "speak",
+   "target": null,
+   "place": "planning-room",
+   "text": "Looks good",
+   "key": null,
+   "narration": "Elif reviews the diff and merges. Nothing she sees mentions billing or analytics.",
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0017",
+    "phase": "review",
+    "decision": "approved",
+    "subject_artifact_id": "art-pr",
+    "stage": "Implementation",
+    "axis": "review",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 36000,
+   "t_real_ms": 36000,
+   "seq": 18,
+   "actor": "user",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "merged",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0018",
+    "phase": "deployment",
+    "from_phase": "review",
+    "to_phase": "deployment",
+    "stage": "(not described)",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 37200,
+   "t_real_ms": 37200,
+   "seq": 19,
+   "actor": "user",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "running",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0019",
+    "phase": "maintenance",
+    "from_phase": "deployment",
+    "to_phase": "maintenance",
+    "stage": "(not described)",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 38600,
+   "t_real_ms": 38600,
+   "seq": 20,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "billing-service (final): 1 of 5 tests failed: invoices order A: totalCents missing",
+   "key": "oracle",
+   "narration": "Billing and analytics break: the property tests and hooks ran in the session, on this repo only.",
+   "caption": "Staging oracle, hidden from the agent: the other teams run their own tests on the final pull request. 2 of 3 break.",
+   "check": {
+    "id": "billing-service",
+    "status": "fail",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0020",
+    "phase": "maintenance",
+    "consumer": "billing-service",
+    "state": "final",
+    "ok": false,
+    "message": "1 of 5 tests failed: invoices order A: totalCents missing",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "(not described)",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 39100,
+   "t_real_ms": 39100,
+   "seq": 21,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "analytics-ingest (final): 1 of 5 tests failed: records order A: placedAt missing",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "analytics-ingest",
+    "status": "fail",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0021",
+    "phase": "maintenance",
+    "consumer": "analytics-ingest",
+    "state": "final",
+    "ok": false,
+    "message": "1 of 5 tests failed: records order A: placedAt missing",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "(not described)",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 39600,
+   "t_real_ms": 39600,
+   "seq": 22,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "web-storefront (final): all tests passed",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "web-storefront",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0022",
+    "phase": "maintenance",
+    "consumer": "web-storefront",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "(not described)",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 42000,
+   "t_real_ms": 42000,
+   "seq": 23,
+   "actor": "user",
+   "action": "phase",
+   "target": null,
+   "place": "planning-room",
+   "text": "The break escaped: the rule was context; no check after generation read the consumers",
+   "key": "session_end",
+   "narration": "Escaped: the rule lived in steering and design.md, as context.",
+   "caption": "The break escaped: the rule was context; no check after generation read the consumers",
+   "detail": {
+    "event_type": "SESSION_ENDED",
+    "event_id": "evt-0023",
+    "phase": "maintenance",
+    "outcome": "failed",
+    "stats": {
+     "events": 24
+    }
+   }
+  }
+ ],
+ "markers": [
+  {
+   "t_ms": 32400,
+   "label": "PR opened · 4 tasks done",
+   "kind": "pr_opened"
+  },
+  {
+   "t_ms": 38600,
+   "label": "Oracle (final): 2 of 3 consumers fail",
+   "kind": "oracle"
+  },
+  {
+   "t_ms": 42000,
+   "label": "End: failed",
+   "kind": "session_end"
+  }
+ ],
+ "scene": {
+  "layout": "pr-tray",
+  "visibility": null,
+  "spec": null,
+  "agent": "kiro-agent",
+  "context": {
+   "file": ".kiro/steering/structure.md",
+   "summary": "Architectural decisions: published event fields stay backward compatible",
+   "seq": 1,
+   "t_ms": 2600
+  },
+  "fitness_functions": [],
+  "consumers": [
+   {
+    "id": "billing-service",
+    "desk": "desk-billing",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "fail",
+      "seq": 20,
+      "t_ms": 38600,
+      "tests": "1 of 5 tests failed",
+      "impact": "totalCents missing",
+      "test": "invoices order A"
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Noor",
+     "title": "Billing team (consumer)",
+     "seed": "cast:noor:billing",
+     "fictional": true
+    }
+   },
+   {
+    "id": "analytics-ingest",
+    "desk": "desk-analytics",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "fail",
+      "seq": 21,
+      "t_ms": 39100,
+      "tests": "1 of 5 tests failed",
+      "impact": "placedAt missing",
+      "test": "records order A"
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Kenji",
+     "title": "Analytics team (consumer)",
+     "seed": "cast:kenji:analytics",
+     "fictional": true
+    }
+   },
+   {
+    "id": "web-storefront",
+    "desk": "desk-storefront",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 22,
+      "t_ms": 39600
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Lucía",
+     "title": "Storefront team (consumer)",
+     "seed": "cast:lucia:storefront",
+     "fictional": true
+    }
+   }
+  ],
+  "diff_cards": [],
+  "sources": [
+   "events.jsonl"
+  ],
+  "lifecycle_model": {
+   "label": "Kiro · specs, steering, hooks",
+   "detail": "3 roles on the floor (AISDLC-Trace 2.1 role set)",
+   "source": "SESSION_STARTED.payload.frameworks",
+   "kind": "illustration"
+  },
+  "zones": [
+   {
+    "id": "define",
+    "label": "Define",
+    "x0": 0.0,
+    "x1": 0.22,
+    "roles": "product owner · delivery · analyst · architect",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "build",
+    "label": "Build",
+    "x0": 0.22,
+    "x1": 0.46,
+    "roles": "code agents · tester",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "verify",
+    "label": "Verify & release",
+    "x0": 0.46,
+    "x1": 0.68,
+    "roles": "CI · review · merge gate · release manager",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   },
+   {
+    "id": "production",
+    "label": "Production",
+    "x0": 0.68,
+    "x1": 1.0,
+    "roles": "running services · their teams · users",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   }
+  ],
+  "illustration": {
+   "id": "kiro",
+   "model": "Kiro · specs, steering, hooks",
+   "short": "Kiro",
+   "source": "Kiro docs: Specs, Steering, Hooks, Custom agents (captured 10 Oct 2026)",
+   "date": "2026-10-10",
+   "url": "https://kiro.dev/docs/specs/",
+   "stages": [
+    "Requirements",
+    "Design",
+    "Tasks",
+    "Implementation"
+   ],
+   "rule": {
+    "axis": "plan",
+    "place": "desk-orders",
+    "label": "Steering structure.md and design.md (context)"
+   },
+   "blocks": {
+    "axis": "review",
+    "place": "pr-tray",
+    "label": "The user reviewing the PR (no CI step described)"
+   },
+   "ci_arch": false,
+   "outcome": {
+    "status": "escapes",
+    "axis": "production",
+    "label": "Escapes: 2 consumers break"
+   }
+  }
+ }
+}

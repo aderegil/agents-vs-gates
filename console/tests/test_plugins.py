@@ -83,8 +83,8 @@ class RouterTest(unittest.TestCase):
 
 class OwnManifestsTest(unittest.TestCase):
     def test_this_package_manifests_are_valid(self):
-        for pid, order, roles in (("overview", 1, {"owner", "operator", "presenter", "viewer"}),
-                                  ("readiness", 8, {"owner", "operator"}), ("users", 9, {"owner"})):
+        for pid, order, roles in (("overview", 2, {"owner", "operator", "presenter", "viewer"}),
+                                  ("readiness", 9, {"owner", "operator"}), ("users", 10, {"owner"})):
             m = json.loads((PLUGINS_DIR / pid / "plugin.json").read_text(encoding="utf-8"))
             self.assertEqual(validate_manifest(m, pid), [], pid)
             self.assertEqual(m["order"], order)

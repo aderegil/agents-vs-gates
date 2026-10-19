@@ -12,8 +12,9 @@ import { EventsPanel } from "./EventsPanel";
 import { Icon } from "./Icons";
 import "./presenter.css";
 import { SpeedControl } from "./SpeedControl";
-import { Stage, type StageHandle } from "./Stage";
+import { Stage, stageQaBoxes, type StageHandle } from "./Stage";
 import { Timeline, fmt } from "./Timeline";
+import { GLOSSARY, outcomeLabel, plainConditionOf, runHeadline, ticketLabel } from "./labels";
 import { UnitTag } from "./UnitTag";
 
 interface Props {
@@ -31,10 +32,20 @@ interface Props {
 
 type DiffPart = ReturnType<typeof conditionDiff>[number];
 
-function condition(r: Replay): string {
-  const c = r.meta.condition ?? {};
-  return [c.V, c.S, c.W].filter(Boolean).join("·");
+/** The compare heads in plain words: the ticket's label and each condition part's (the default wording W1 only when
+ * one side differs). The codes stay in `key` and in the title. */
+function plainHeads(parts: DiffPart[]): DiffPart[] {
+  return parts
+    .filter((p) => !(p.key === "W" && !p.differs && p.a === "W1"))
+    .map((p) => {
+      const word = (v: string) => (p.key === "ticket" ? ticketLabel(v) : GLOSSARY[v]?.short ?? v);
+      return { ...p, a: word(p.a), b: word(p.b) };
+    });
 }
+
+const PART_NAME: Record<string, string> = {
+  ticket: "the ticket", V: "what the agent can see", S: "what its spec says", W: "how the ticket is worded",
+};
 
 // ------------------------------------------------------------------------------------------------ clip format
 
@@ -195,8 +206,11 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
     let raf = 0;
     let last = 0;
     const loop = (ts: number) => {
-      const dt = last ? Math.min(100, ts - last) : 0;
-      last = ts;
+      // time from performance.now(), not the frame timestamp: a frame the browser paints for another reason (a
+      // screenshot, a recording) must not advance the clock, so a virtual clock drives playback exactly
+      const now = performance.now();
+      const dt = last ? Math.min(100, now - last) : 0;
+      last = now;
       c.tick(dt);
       const pos = tbRef.current.at(c.p);
       follow(engine, pos.a);
@@ -225,6 +239,25 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
     c.seek(tbRef.current.fromA(t));
     apply();
   }, [c, apply]);
+
+  // ?qa=1: a hook for the headless overlap sweep (video/qa-overlap.mjs): seek pane A, draw now, return what was drawn
+  useEffect(() => {
+    if (query().get("qa") !== "1") return;
+    const w = window as unknown as { __avgQa?: unknown };
+    w.__avgQa = {
+      end: engine.end,
+      at: (t: number) => {
+        c.pause();
+        c.seek(tbRef.current.fromA(t));
+        follow(engine, tbRef.current.at(c.p).a);
+        stageRef.current?.draw();
+        return { clock: engine.clock, boxes: stageQaBoxes() };
+      },
+    };
+    return () => {
+      delete w.__avgQa;
+    };
+  }, [c, engine]);
 
   const stepEvent = useCallback((dir: 1 | -1) => {
     c.pause();
@@ -366,6 +399,22 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
 
   useEffect(() => () => recRef.current?.rec.stop(), []);
 
+  // the stage keeps 16:9 inside whatever height the top bar and the controls leave (they wrap on narrow screens)
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+    const fit = () => {
+      const top = root.querySelector<HTMLElement>(".topbar")?.offsetHeight ?? 0;
+      const ctl = root.querySelector<HTMLElement>(".controls")?.offsetHeight ?? 0;
+      const foot = root.querySelector<HTMLElement>(".recast")?.offsetHeight ?? 0;
+      root.style.setProperty("--chrome-h", `${top + ctl + foot + 44}px`);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    root.querySelectorAll(".topbar, .controls, .recast").forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [presenting, compare, footer]);
+
   // Keyboard (spec 22.5 item 5): Space, 1–6, ← →, F; plus Esc, E (events), M (map/floor), P (presenter slides),
   // D (director's cut). Presentation clickers send PageDown/PageUp (and arrows): next/previous key moment.
   useEffect(() => {
@@ -432,7 +481,8 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
   const slideList = tb.slides;
   const slideIdx = currentSlide(slideList, c.p);
   const slide = slideList[slideIdx];
-  const heads = compare ? conditionDiff(replay, compare) : null;
+  const heads = compare ? plainHeads(conditionDiff(replay, compare)) : null;
+  const cond = plainConditionOf(m.condition);
   const shared = compare ? tb.momentAt(c.p) : null;
   const sharedLabel = shared ? momentLabel(shared) : null;
   composeInfo.current = {
@@ -457,7 +507,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
         {heads?.map((p, i) => (
           <span key={p.key}>
             {i > 0 && <span className="compare-head__sep"> · </span>}
-            <span className={p.differs ? "is-diff" : ""} title={p.differs ? `${p.key} differs` : undefined}>
+            <span className={p.differs ? "is-diff" : ""} title={p.differs ? `${PART_NAME[p.key] ?? p.key} differs` : undefined}>
               {side ? p.b : p.a}
             </span>
           </span>
@@ -475,15 +525,23 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
             {picker}
             {tools}
             <div className="meta" aria-label="Run">
-              <strong>{m.ticket ?? m.run_id}</strong>
-              {condition(replay) && <span>{condition(replay)}</span>}
+              <strong title={m.source === "illustration" ? undefined : m.ticket ?? m.run_id}>
+                {m.source === "illustration" ? String(m["title"] ?? "") : runHeadline({ ticket: m.ticket, run_id: m.run_id })}
+              </strong>
+              {cond.text && (
+                <span className="cond" title={cond.title} data-code={[m.condition?.V, m.condition?.S, m.condition?.W].filter(Boolean).join("·")}>
+                  {cond.text}
+                </span>
+              )}
               <UnitTag unit={m.unit} />
               {m.model && m.model !== m.unit && <span>{m.model}</span>}
               <span className="num">{m.date}</span>
-              {m.outcome && <span className="chip">{m.outcome.replace(/_/g, " ")}</span>}
+              {m.outcome && <span className="chip">{outcomeLabel(m.outcome)}</span>}
               {m.ticket_done && <span className="chip">ticket {m.ticket_done.replace(/_/g, " ")}</span>}
               {m.source === "mock" ? <span className="chip chip--sim">SIMULATED</span>
-                : <span className="chip chip--real" title={m.legend}>REAL</span>}
+                : m.source === "illustration"
+                  ? <span className="chip chip--ill" title={m.legend}>ILLUSTRATION · scripted</span>
+                  : <span className="chip chip--real" title={m.legend}>REAL</span>}
             </div>
           </div>
           <div className="topbar__right">
@@ -544,11 +602,11 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
               <div className="compare">
                 <div className="compare__pane">
                   <Stage ref={stageRef} engine={engine} largeSubtitles={presenting} overlay={overlayFor(0)}
-                    label={`${m.run_id} · ${m.ticket ?? ""} ${condition(replay)}`} />
+                    label={runHeadline(m)} />
                 </div>
                 <div className="compare__pane">
                   <Stage ref={stageBRef} engine={engineB} largeSubtitles={presenting} overlay={overlayFor(1)}
-                    label={`${compare.meta.run_id} · ${compare.meta.ticket ?? ""} ${condition(compare)}`} />
+                    label={runHeadline(compare.meta)} />
                   <button type="button" className="btn btn--quiet compare__close" onClick={onCloseCompare}>
                     <Icon name="close" /> Close compare
                   </button>
@@ -625,7 +683,7 @@ export function Player({ replay, compare, picker, comparePicker, onCloseCompare,
       </footer>
       {footer}
         </div>
-        {showPanel && <EventsPanel replay={replay} applied={engine.state.applied} follow={moving}
+        {showPanel && <EventsPanel replay={replay} applied={engine.state.applied} playing={moving}
           onSeek={seekReplay} />}
       </div>
     </div>

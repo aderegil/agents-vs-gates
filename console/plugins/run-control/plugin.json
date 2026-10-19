@@ -2,7 +2,7 @@
   "id": "run-control",
   "name": "Run Control",
   "icon": "play-circle",
-  "order": 2,
+  "order": 3,
   "description": "Launch, stop and follow experiment batches.",
   "roles": ["owner", "operator"],
   "kind": "module",

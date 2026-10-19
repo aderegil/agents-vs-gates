@@ -726,7 +726,7 @@ function paintNeck$1(g, L, f) {
 	const s = L.skin;
 	const o = L.outfit;
 	const deep = o === "tee" || o === "hoodie" || o === "blazer" ? 2.4 : 1.4;
-	g.shape((px, py) => Math.abs(px - CX$1) <= 3.1 && py > f.cy + 4 && py < 36 || py >= 33.5 && inEllipse(px, py, CX$1, 33.6, 4.4, deep), (px, py) => py < f.cy + f.ry + 2.2 ? s.lo : px - CX$1 > 1.4 ? s.lo : s.mid, (_x, y) => y >= 34 ? L.cloth.line : s.line);
+	g.shape((px, py) => Math.abs(px - CX$1) <= 4.2 && py > f.cy + 4 && py < 36 || py >= 33.5 && inEllipse(px, py, CX$1, 33.6, 5.4, deep), (px, py) => py < f.cy + f.ry + 2.2 ? s.lo : px - CX$1 > 1.4 ? s.lo : s.mid, (_x, y) => y >= 34 ? L.cloth.line : s.line);
 	if (o === "turtleneck") g.shape((px, py) => Math.abs(px - CX$1) <= 4.6 && py > f.cy + f.ry - 1 && py < 36.5, (px) => Math.floor(px) % 2 === 0 ? L.cloth.base : L.cloth.mid, L.cloth.line);
 	else if (o === "zip") g.shape((px, py) => Math.abs(px - CX$1) <= 4.4 && py > f.cy + f.ry + .2 && py < 35.5 && Math.abs(px - CX$1) > .4, (px) => px < CX$1 ? L.cloth.hi : L.cloth.base, L.cloth.line);
 	else if (o === "hoodie") for (let y = 31; y < 37; y++) for (let x = 10; x < 30; x++) {
@@ -1203,7 +1203,7 @@ function paintTyping$1(g, L, frame) {
 	}
 }
 function paintHuman(g, spec, pose = {}) {
-	const L = chooseLook(spec, 18 - (pose.breath === 1 ? 1 : 0));
+	const L = chooseLook(spec, 20 - (pose.breath === 1 ? 1 : 0));
 	const f = L.face;
 	if (L.hairStyle === "hijab") {
 		paintBody(g, L);
@@ -1777,8 +1777,8 @@ function paintNeck(g, b, oy) {
 		146,
 		160
 	], .35));
-	g.shape((px, py) => Math.abs(px - CX) <= 3.4 && py > 26 + oy && py < 35.5, (px) => px > 21 ? n.mid : n.base, n.line);
-	for (const y of [30, 32]) for (let x = 17; x <= 22; x++) g.over(x, y, n.lo);
+	g.shape((px, py) => Math.abs(px - CX) <= 5 && py > 26 + oy && py < 35.5, (px) => px > 22 ? n.mid : n.base, n.line);
+	for (let x = 16; x <= 23; x++) g.over(x, 31, n.lo);
 }
 function paintAntenna(g, b, h) {
 	const rod = b.shell.line;

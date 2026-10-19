@@ -1,0 +1,19 @@
+/* Start here: short blocks, one accent, readable line length. Same tokens as the shell. */
+.start { max-width: 860px; }
+.start-block p { margin: 0 0 8px; line-height: 1.55; font-size: 15px; }
+.start-list, .start-steps { margin: 4px 0 10px; padding-left: 22px; line-height: 1.6; font-size: 15px; }
+.start-steps li { padding-left: 4px; }
+.start-steps li::marker { font-weight: 600; color: var(--acento); }
+.start-pages { list-style: none; margin: 8px 0 0; padding: 0; }
+.start-pages li { display: grid; grid-template-columns: 200px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  padding: 8px 0; border-top: 1px solid var(--linea); font-size: 14px; }
+.start-pages li:first-child { border-top: 0; }
+.start-page-name { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: inherit; text-decoration: none; }
+.start-page-name:hover, .start-page-name:focus-visible { color: var(--acento); text-decoration: underline; }
+.start-page-name svg { color: var(--acento); flex: none; }
+.start-page-line { color: var(--tinta-2); line-height: 1.45; }
+.start-go { margin-top: 10px; }
+@media (max-width: 700px) {
+  .start-pages li { grid-template-columns: minmax(0, 1fr) auto; }
+  .start-page-line { grid-column: 1 / -1; }
+}

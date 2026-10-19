@@ -151,14 +151,15 @@ const line = (x1, y1, x2, y2, stroke, sw = 1, extra = "") => `<line x1="${r2(x1)
 const M = { fs: 12.5, small: 11, rowH: 26, groupH: 24, head: 18, axisH: 36, gap: 14, bar: 16 };
 
 function columns(W) {
-  const labelW = Math.round(Math.min(250, Math.max(150, W * 0.3)));
+  // the row label holds plain words plus the code after them ("Every repo visible · No rule  V2·S0"): 40% of the width
+  const labelW = Math.round(Math.min(300, Math.max(150, W * 0.4)));
   const xofnW = 58, ciW = 84;
   return { labelW, px0: labelW + 14, valueW: xofnW + ciW + 8, xofnW, ciW };
 }
 
 function groupHeader(theme, y, W, label, first) {
   const top = first ? 0 : M.gap * 0.4;
-  return text(0, y + top + 15, label, { size: M.small, weight: 600, fill: theme.groupInk, spacing: 0.2 }) +
+  return text(0, y + top + 15, truncate(label, W, M.small), { size: M.small, weight: 600, fill: theme.groupInk, spacing: 0.2 }) +
     line(0, y + top + 20, W, y + top + 20, theme.line, 1);
 }
 

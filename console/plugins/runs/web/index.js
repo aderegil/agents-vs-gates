@@ -2,11 +2,12 @@
 // Transcript and Trace tabs. Data: GET /api/runs and /api/runs/{id}/{diff,ci,oracle,detectors,transcript,trace}.
 // While a stage is blinded the server answers 403 "Blinded until stage complete" for the outcome-bearing tabs; this UI
 // never asks for them (and shows the same message) so nothing flashes.
-import { h, table, tabs, badge, button, panel, facts, notice, empty, fmtInt, fmtDuration, fmtDate, fmtTime, iconEl, unitTag, unitSeg, unitInfo } from "/web/lib/ui.js";
+import { h, table, tabs, badge, button, panel, facts, notice, empty, fmtInt, fmtDuration, fmtDate, fmtTime, iconEl, unitTag, unitSeg, unitInfo, codeLegend } from "/web/lib/ui.js";
 import {
   parseDiff, diffStats, sideBySide, splitArch, isArch, groupTranscript, outcomeTone, ticketDoneTone, statusTone, flagChips,
   filtersToQuery, conditionLabel, fmtBytes,
 } from "./model.js";
+import { plainCondition, conditionTitle, conditionCode, outcomeLabel, ticketLabel, stageLabel, withCode, meaningOf } from "/web/lib/labels.js";
 
 const BLINDED = "Blinded until stage complete";
 let alive = false;
@@ -21,7 +22,8 @@ export async function mount(el, shell) {
   alive = true;
   const S = {
     rows: [], facets: null, blinded: [], total: 0,
-    filters: { stage: "", ticket: "", V: "", S: "", W: "", unit: "", status: "", q: "" },
+    // filters can arrive in the link (Home's Talk figures, Results): #/runs?stage=P1&V=V0&S=S2
+    filters: Object.fromEntries(["stage", "ticket", "V", "S", "W", "unit", "status", "q"].map((k) => [k, shell.params[k] || ""])),
     selected: null, detail: null, cache: new Map(), tab: shell.params.tab || "summary",
     diffView: "unified", diffRef: null, loadSeq: 0,
   };
@@ -35,7 +37,7 @@ export async function mount(el, shell) {
   const filterBar = h("div", { class: "rx-filters" });
   const tableBox = h("div", { class: "rx-table" });
   const detailBox = h("div", { class: "rx-detail" }, empty("Select a run to see its detail."));
-  el.replaceChildren(h("div", { class: "stack rx" }, notes, panel({ title: "Runs", body: h("div", {}, filterBar, tableBox), flush: true, actions: h("span", { class: "small muted", id: "rx-count" }) }), detailBox));
+  el.replaceChildren(h("div", { class: "stack rx" }, notes, codeLegend(), panel({ title: "Runs", body: h("div", {}, filterBar, tableBox), flush: true, actions: h("span", { class: "small muted", id: "rx-count" }) }), detailBox));
 
   // ---------------------------------------------------------------- list
   async function loadList() {
@@ -52,7 +54,7 @@ export async function mount(el, shell) {
 
   function paintNotes() {
     notes.replaceChildren(S.blinded.length
-      ? notice(`${S.blinded.join(", ")} ${S.blinded.length > 1 ? "are" : "is"} blinded. Outcomes, CI, oracle, detectors, diff and transcript of those runs open after the stage is complete and unblinded.`, "", "lock")
+      ? notice(`${S.blinded.map((x) => withCode(x)).join(", ")} ${S.blinded.length > 1 ? "are" : "is"} blinded. Outcomes, CI, oracle, detectors, diff and transcript of those runs open after the stage is complete and unblinded.`, "", "lock")
       : "");
   }
 
@@ -60,11 +62,13 @@ export async function mount(el, shell) {
     const f = S.facets || { stages: [], tickets: [], V: [], S: [], W: [], units: [], statuses: [] };
     const sel = (key, label, options) => h("label", { class: "rx-f" }, h("span", {}, label),
       h("select", { class: "select select-sm", "aria-label": label, onchange: (e) => { S.filters[key] = e.target.value; loadList(); } },
-        h("option", { value: "" }, "All"), options.map((o) => h("option", { value: o, selected: S.filters[key] === o }, o))));
+        // plain words first, the code in parentheses (labels.js withCode); the meaning on hover
+        h("option", { value: "" }, "All"), options.map((o) => h("option", { value: o, selected: S.filters[key] === o, title: meaningOf(o) || null },
+          ["stage", "ticket", "V", "S", "W"].includes(key) ? withCode(o) : o))));
     const search = h("input", { class: "input input-sm", type: "search", placeholder: "Run ID or cell", value: S.filters.q, "aria-label": "Search runs", style: { width: "170px" },
       oninput: (e) => { S.filters.q = e.target.value; clearTimeout(timer); timer = setTimeout(loadList, 250); } });
     const active = Object.values(S.filters).some(Boolean);
-    filterBar.replaceChildren(sel("stage", "Stage", f.stages), sel("ticket", "Ticket", f.tickets), sel("V", "V", f.V), sel("S", "S", f.S), sel("W", "W", f.W),
+    filterBar.replaceChildren(sel("stage", "Stage", f.stages), sel("ticket", "Ticket", f.tickets), sel("V", "Sees (V)", f.V), sel("S", "Spec (S)", f.S), sel("W", "Wording (W)", f.W),
       h("div", { class: "rx-f" }, h("span", {}, "Unit"), unitSeg({ units: f.units, value: S.filters.unit, onChange: (v) => { S.filters.unit = v; loadList(); } })),
       sel("status", "Status", f.statuses), h("label", { class: "rx-f" }, h("span", {}, "Search"), search),
       ...(active ? [button({ label: "Clear", small: true, subtle: true, onClick: () => { Object.keys(S.filters).forEach((k) => { S.filters[k] = ""; }); loadList(); } })] : []));
@@ -79,14 +83,17 @@ export async function mount(el, shell) {
       sort: undefined,
       columns: [
         { key: "run_id", label: "ID", sort: true, render: (r) => h("span", { class: "mono strong", "data-run": r.run_id }, r.run_id) },
-        { key: "cell", label: "Cell", sort: (r) => r.cell, render: (r) => h("span", { title: r.cell }, conditionLabel(r)) },
+        { key: "cell", label: "Cell", sort: (r) => r.cell, render: (r) => h("span", { class: "rx-cell", title: `${r.cell}
+${conditionTitle(r.visibility, r.spec, r.wording)}` },
+          h("span", { class: "strong" }, ticketLabel(r.ticket)), " · ", plainCondition(r.visibility, r.spec, r.wording), " ",
+          h("span", { class: "rx-code mono" }, `${r.ticket} ${conditionCode(r.visibility, r.spec, r.wording)}`)) },
         { key: "unit", label: "Unit", sort: (r) => unitInfo(r.unit).label, render: (r) => unitTag(r.unit, { compact: true }) },
         { key: "turns", label: "Turns", num: true, sort: true, render: (r) => fmtInt(r.turns) },
         { key: "duration_ms", label: "Duration", num: true, sort: true, render: (r) => r.duration_ms == null ? "—" : fmtDuration(r.duration_ms) },
         { key: "tokens", label: "Tokens", num: true, sort: true, render: (r) => fmtInt(r.tokens) },
         { key: "flags", label: "Flags", render: (r) => h("span", { class: "rx-chips" }, flagChips(r).map((c) => h("span", { title: c.title }, badge(c.text, c.tone)))) },
         { key: "outcome", label: "Outcome", sort: (r) => r.outcome || "", render: (r) => r.blinded ? h("span", { class: "small muted rx-blind", title: BLINDED }, iconEl("lock", 12), " Blinded")
-          : (r.outcome ? badge(r.outcome, outcomeTone(r.outcome)) : h("span", { class: "muted" }, "—")) },
+          : (r.outcome ? h("span", { title: r.outcome }, badge(outcomeLabel(r.outcome), outcomeTone(r.outcome))) : h("span", { class: "muted" }, "—")) },
       ],
     });
     tableBox.replaceChildren(t);
@@ -124,7 +131,8 @@ export async function mount(el, shell) {
     const head = h("div", { class: "rx-head" },
       h("div", { class: "rx-head-main" },
         h("span", { class: "mono strong rx-id" }, d.run_id),
-        h("span", { class: "muted" }, conditionLabel(r)),
+        h("span", { class: "muted", title: conditionTitle(r.visibility, r.spec, r.wording) },
+          `${ticketLabel(r.ticket)} · ${plainCondition(r.visibility, r.spec, r.wording)} (${r.ticket} ${conditionCode(r.visibility, r.spec, r.wording)})`),
         unitTag(r.unit, { model: r.model_reported }),
         d.blinded ? badge("Blinded", "neutral") : (r.outcome ? badge(r.outcome, outcomeTone(r.outcome)) : null),
         d.status && d.status !== "done" ? badge(d.status, statusTone(d.status)) : null,
@@ -175,8 +183,8 @@ export async function mount(el, shell) {
       const outcomeCell = d.blinded ? h("span", { class: "muted" }, iconEl("lock", 13), ` ${BLINDED}`) : (r.outcome ? badge(r.outcome, outcomeTone(r.outcome)) : "—");
       const doneCell = d.blinded ? h("span", { class: "muted" }, BLINDED) : (r.ticket_done ? badge(r.ticket_done.replace("_", " "), ticketDoneTone(r.ticket_done)) : "—");
       const nodes = [facts([
-        { label: "Ticket", value: r.ticket, sub: `${r.wording}${r.paraphrase ? ` · paraphrase ${r.paraphrase}` : ""}` },
-        { label: "Condition", value: `${r.visibility} · ${r.spec} · ${r.wording}`, sub: `replicate ${r.replicate}` },
+        { label: "Ticket", value: withCode(r.ticket), sub: `${withCode(r.wording)}${r.paraphrase ? ` · paraphrase ${r.paraphrase}` : ""}` },
+        { label: "Condition", value: plainCondition(r.visibility, r.spec, r.wording) || "—", sub: `${conditionCode(r.visibility, r.spec, r.wording)} · replicate ${r.replicate}` },
         { label: "Outcome", value: outcomeCell },
         { label: "ticket_done", value: doneCell },
         { label: "Turns", value: fmtInt(t.turns), sub: d.blinded ? null : `${r.repair_attempts ?? 0} repair attempt${r.repair_attempts === 1 ? "" : "s"}` },
@@ -192,7 +200,7 @@ export async function mount(el, shell) {
       if (d.coding_label) flags.push(badge(`Coded ${d.coding_label}`, "accent"));
       const body = [kv([
         ["Run", h("span", { class: "mono" }, d.run_id)],
-        ["Stage / unit", [`${d.stage} · `, unitTag(r.unit), " ", h("span", { class: "muted small" }, `unit ${r.unit}, adapter ${r.adapter || "—"}`), /^X[0-9]$/.test(d.stage || "") ? [" ", badge(`Pilot ${d.stage} · exploratory`, "neutral")] : null]],
+        ["Stage / unit", [h("span", { title: meaningOf(d.stage) || null }, `${withCode(d.stage)} · `), unitTag(r.unit), " ", h("span", { class: "muted small" }, `unit ${r.unit}, adapter ${r.adapter || "—"}`), /^X[0-9]$/.test(d.stage || "") ? [" ", badge(`${stageLabel(d.stage)} · exploratory`, "neutral")] : null]],
         ["Model", [r.model_requested, r.model_reported].filter(Boolean).join(" → ") || "—"],
         ["Effort", r.effort || "—"],
         ["Context file", r.context_file || "—"],
@@ -220,7 +228,7 @@ export async function mount(el, shell) {
         const extra = [...(r.out_of_scope_edits || []).map((x) => `Out of scope edit: ${x}`), ...(r.out_of_workspace_access || []).map((x) => `Outside workspace: ${typeof x === "string" ? x : JSON.stringify(x)}`)];
         if (extra.length) body.push(h("div", { class: "rx-sub" }, h("h3", {}, "Boundary"), h("ul", { class: "rx-list" }, extra.map((x) => h("li", { class: "mono small" }, x)))));
       } else {
-        body.push(notice(`${BLINDED}. Outcome, ticket_done, metrics, sessions and the final message are hidden for ${d.stage}; resource use and exclusion flags stay visible.`, "", "lock"));
+        body.push(notice(`${BLINDED}. Outcome, ticket_done, metrics, sessions and the final message are hidden for ${withCode(d.stage)}; resource use and exclusion flags stay visible.`, "", "lock"));
       }
       if (r.ticket_text) body.push(h("details", { class: "rx-sub" }, h("summary", {}, "Ticket text given to the agent"), pre(r.ticket_text)));
       return h("div", { class: "stack" }, ...nodes, ...body);

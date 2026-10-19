@@ -14,7 +14,26 @@ const S = {
   esTopics: new Set(),
   header: null,
   gPending: null,
+  mode: readMode(),     // "simple" (the story path) | "expert" (every plugin); remembered per browser
 };
+
+/** Simple shows the story path (plugins whose manifest says simple: true); Expert shows everything. */
+function readMode() {
+  try { return localStorage.getItem("avg.mode") === "expert" ? "expert" : "simple"; } catch { return "simple"; }
+}
+
+function railPlugins() {
+  const simple = S.plugins.filter((p) => p.simple);
+  return S.mode === "expert" || !simple.length ? S.plugins : simple;
+}
+
+function setMode(mode) {
+  if (mode === S.mode) return;
+  S.mode = mode;
+  try { localStorage.setItem("avg.mode", mode); } catch { /* private window: the choice lasts this session */ }
+  buildFrame();
+  route(true);
+}
 const root = () => document.getElementById("root");
 
 const api = createApi({
@@ -129,7 +148,10 @@ function teardown() {
 
 // ------------------------------------------------------------------ shell
 
-const HELP_KEYS = [["g", "then a digit: open plugin 1–9"], ["?", "show this list"], ["Esc", "close a dialog or menu"],
+/** g + one digit opens a plugin: only orders 0–9 have a key (Users & Audit, order 10, is in the user menu). */
+const hasKey = (p) => Number.isInteger(p.order) && p.order >= 0 && p.order <= 9;
+
+const HELP_KEYS = [["g", "then a digit: open plugin 0–9"], ["?", "show this list"], ["Esc", "close a dialog or menu"],
   ["↑ ↓", "move between table rows"], ["Enter", "open the focused row"], ["← →", "switch tabs"]];
 
 async function startShell() {
@@ -148,8 +170,8 @@ function buildFrame() {
   const u = S.session.user;
   const rail = h("nav", { class: "rail", "aria-label": "Plugins" },
     h("span", { class: "brand", title: "Agents vs. Gates — Console", "aria-hidden": "true" }, "AG"),
-    S.plugins.map((p) => h("a", { class: "rail-btn", href: `#/${p.id}`, "data-plugin": p.id,
-      "data-tip": `${p.name}  ·  g ${p.order}`, "aria-label": p.name, html: icon(p.icon, 20) })),
+    railPlugins().map((p) => h("a", { class: "rail-btn", href: `#/${p.id}`, "data-plugin": p.id,
+      "data-tip": hasKey(p) ? `${p.name}  ·  g ${p.order}` : p.name, "aria-label": p.name, html: icon(p.icon, 20) })),
     h("span", { class: "rail-spacer" }),
     h("button", { type: "button", class: "rail-btn", "data-tip": "Keyboard shortcuts  ·  ?", "aria-label": "Keyboard shortcuts",
       onclick: showShortcuts, html: icon("keyboard", 20) }),
@@ -212,6 +234,11 @@ function paintStatus() {
     items.push(h("span", { class: "item", title: `Runner in the ${other} namespace` }, h("span", { class: `dot ${runnerText(o).dot}` }), `${other === "mock" ? "Mock" : "Real"}: ${runnerText(o).text}`));
   }
   items.push(h("span", { class: "spacer" }));
+  items.push(h("span", { class: "item" }, h("span", { class: "sr-only" }, "View"),
+    h("span", { class: "ns-switch mode-switch", role: "group", "aria-label": "Simple or Expert view" },
+      [["simple", "Simple", "The story path: Start here, Home, Results, Runs, Replay, Scenario"], ["expert", "Expert", "Every panel, including Run Control and Readiness"]]
+        .map(([m, label, tip]) => h("button", { type: "button", "aria-pressed": String(S.mode === m), title: tip,
+          onclick: () => setMode(m) }, label)))));
   items.push(h("span", { class: "item" }, h("span", { class: "sr-only" }, "Namespace"),
     h("span", { class: "ns-switch", role: "group", "aria-label": "Namespace" },
       ["real", "mock"].map((ns) => h("button", { type: "button", "aria-pressed": String(S.ns === ns),
@@ -284,7 +311,7 @@ function showShortcuts() {
     title: "Keyboard shortcuts",
     body: [h("dl", { class: "shortcuts" },
       HELP_KEYS.map(([k, d]) => [h("dt", {}, k.split(" ").map((x) => h("kbd", {}, x)).reduce((a, x) => a.length ? [...a, " ", x] : [x], [])), h("dd", {}, d)]),
-      S.plugins.map((p) => [h("dt", {}, h("kbd", {}, "g"), " ", h("kbd", {}, String(p.order))), h("dd", {}, p.name)]))],
+      S.plugins.filter(hasKey).map((p) => [h("dt", {}, h("kbd", {}, "g"), " ", h("kbd", {}, String(p.order))), h("dd", {}, p.name)]))],
   }));
 }
 
@@ -351,6 +378,8 @@ function subscribe(topic, fn) {
 
 // ------------------------------------------------------------------ routing and plugin host
 
+const LANDING = "start";
+
 function parseHash() {
   const raw = location.hash.replace(/^#\/?/, "");
   const [id, qs] = raw.split("?");
@@ -389,6 +418,7 @@ function makeShell(plugin, params, unsubs) {
     api,
     get user() { return { ...S.session.user }; },
     get ns() { return S.ns; },
+    get mode() { return S.mode; },
     canWrite: !plugin.readonly,
     params: { ...params },
     plugin: { id: plugin.id, name: plugin.name },
@@ -405,7 +435,8 @@ async function route(force = false) {
   if (!S.session?.authenticated || !document.getElementById("pbody")) return;
   let { id, params } = parseHash();
   if (!id) {
-    const first = S.plugins[0];
+    // the landing page (no hash: a fresh visit, or after sign-out): Start here, else the first plugin in rail order
+    const first = S.plugins.find((p) => p.id === LANDING) || S.plugins[0];
     if (first) { history.replaceState(null, "", `#/${first.id}`); id = first.id; }
   }
   const plugin = S.plugins.find((p) => p.id === id);

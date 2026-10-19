@@ -2,11 +2,12 @@
   "id": "runs",
   "name": "Run Explorer",
   "icon": "table",
-  "order": 4,
+  "order": 5,
   "description": "Individual runs: diff, CI, oracle, detectors, transcript and trace.",
   "roles": ["owner", "operator", "presenter"],
   "readonly_roles": ["presenter"],
   "kind": "module",
   "entry": "web/index.js",
-  "api": "api.py"
+  "api": "api.py",
+  "simple": true
 }

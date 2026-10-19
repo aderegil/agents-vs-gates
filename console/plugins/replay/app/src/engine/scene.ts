@@ -2,6 +2,7 @@
 // packets that travel between places, the other teams' code owners and their reactions, the agent's reads and edits
 // in another team's folder, and the diff card of the key file. Everything comes from replay.json; nothing here reads
 // the wall clock or Math.random, so the same clock always gives the same frame. Erasable TypeScript only.
+import { ticketPhrase } from "../../../../../web/lib/labels.js";
 import type { CheckStatus, DiffCard, Replay, ReplayStep, SceneConsumer } from "./replay.ts";
 
 export const SHEET_MS = 2400;
@@ -64,7 +65,7 @@ export function architectSheets(r: Replay): Travel[] {
   const spec = sc.spec ?? "";
   if (spec === "S1" || spec === "S2") {
     out.push({ kind: "sheet", from: "architecture-library", to: agentDesk(r), t0, dur: SHEET_MS,
-      label: `${sc.context?.file ?? "context"} · ${spec} rules` });
+      label: `${sc.context?.file ?? "context"} · ${spec === "S2" ? "the rules" : "architecture notes"}` });
   }
   if (hasPlace(r, "ci-tower")) {
     out.push({ kind: "sheet", from: "architecture-library", to: "ci-tower", t0, dur: SHEET_MS,
@@ -83,7 +84,7 @@ function prPlace(r: Replay): string | null {
 export function ticketSheet(r: Replay): Travel | null {
   const o = r.scene?.ticket_origin;
   if (!o || !hasPlace(r, o.place) || !hasPlace(r, o.to)) return null;
-  return { kind: "sheet", from: o.place, to: o.to, t0: o.t_ms, dur: SHEET_MS, label: o.ticket ? `ticket ${o.ticket}` : "ticket" };
+  return { kind: "sheet", from: o.place, to: o.to, t0: o.t_ms, dur: SHEET_MS, label: o.ticket ? `ticket: ${ticketPhrase(o.ticket)}` : "ticket" };
 }
 
 /** Everything that travels during the run, in a fixed order (deterministic). */

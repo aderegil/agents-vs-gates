@@ -1,0 +1,1298 @@
+{
+ "meta": {
+  "run_id": "aisdlc-aws",
+  "source": "illustration",
+  "unit": "illustration",
+  "model": null,
+  "date": "2026-10-13",
+  "started_at": "2026-10-13T09:00:00.000Z",
+  "ticket": "X-rename",
+  "condition": {},
+  "outcome": null,
+  "ticket_done": null,
+  "session_outcome": "failed",
+  "stage": null,
+  "title": "Meridian Retail · rename on OrderPlaced · AWS AI-DLC",
+  "scenario": "meridian-retail/illustration",
+  "trace_sha256": "661b5f77d17a2b5d8a6b2fc929efe5e629abf9db57ae71c6652b44e63f1c52b5",
+  "schema": "replay/1",
+  "exporter_version": 4,
+  "legend": "Illustration · scripted from public documentation",
+  "duration_ms": 56500,
+  "duration_real_ms": 52000,
+  "event_count": 33,
+  "extras_sha256": "9df133529e3dfe710529db48f000891a5e4c5366fc695b53574330530d5ae475",
+  "illustration_source": "AWS, AI-DLC blog (31 Jul 2025) + awslabs/aidlc-workflows 2.11.0"
+ },
+ "places": [
+  {
+   "id": "product-desk",
+   "label": "Product",
+   "kind": "desk",
+   "x": 0.07,
+   "y": 0.18,
+   "note": "product owner",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "planning-room",
+   "label": "Delivery · planning",
+   "kind": "room",
+   "x": 0.16,
+   "y": 0.33,
+   "note": "scrum master / delivery",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "analysis-desk",
+   "label": "Analysis",
+   "kind": "desk",
+   "x": 0.06,
+   "y": 0.5,
+   "note": "analyst",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "architecture-library",
+   "label": "Architecture library",
+   "kind": "library",
+   "x": 0.14,
+   "y": 0.7,
+   "note": "ARCH-n rules, catalog, ADRs",
+   "zone": "define",
+   "used": true
+  },
+  {
+   "id": "dispatch",
+   "label": "Dispatch board",
+   "kind": "system",
+   "x": 0.34,
+   "y": 0.16,
+   "note": "flow engine",
+   "zone": "build",
+   "used": false
+  },
+  {
+   "id": "desk-orders",
+   "label": "Checkout · orders",
+   "kind": "desk",
+   "x": 0.33,
+   "y": 0.42,
+   "note": "orders-service",
+   "zone": "build",
+   "used": true
+  },
+  {
+   "id": "tester-desk",
+   "label": "Testing",
+   "kind": "desk",
+   "x": 0.34,
+   "y": 0.86,
+   "note": "tester / verifier",
+   "zone": "build",
+   "used": true
+  },
+  {
+   "id": "review-desk",
+   "label": "Review desk",
+   "kind": "desk",
+   "x": 0.52,
+   "y": 0.17,
+   "note": "reviewers",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "review-table",
+   "label": "Review table",
+   "kind": "room",
+   "x": 0.54,
+   "y": 0.45,
+   "note": "pull request",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "ci-tower",
+   "label": "CI Tower",
+   "kind": "system",
+   "x": 0.6,
+   "y": 0.36,
+   "note": "one light per check",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "merge-gate",
+   "label": "Merge gate · release",
+   "kind": "gate",
+   "x": 0.58,
+   "y": 0.72,
+   "note": "release manager",
+   "zone": "verify",
+   "used": true
+  },
+  {
+   "id": "staging-bench",
+   "label": "The other teams' tests",
+   "kind": "stage",
+   "x": 0.93,
+   "y": 0.17,
+   "note": "illustration: what happens downstream",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-billing",
+   "label": "billing-service",
+   "kind": "desk",
+   "x": 0.76,
+   "y": 0.3,
+   "note": "Billing team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-analytics",
+   "label": "analytics-ingest",
+   "kind": "desk",
+   "x": 0.93,
+   "y": 0.47,
+   "note": "Analytics team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "desk-storefront",
+   "label": "web-storefront",
+   "kind": "desk",
+   "x": 0.78,
+   "y": 0.66,
+   "note": "Storefront team",
+   "zone": "production",
+   "used": true
+  },
+  {
+   "id": "users",
+   "label": "Users",
+   "kind": "stage",
+   "x": 0.88,
+   "y": 0.88,
+   "note": "illustrative",
+   "zone": "production",
+   "used": true
+  }
+ ],
+ "actors": [
+  {
+   "id": "product-owner",
+   "role": "product_owner",
+   "actor_type": "human",
+   "display_name": "Chen · Product Owner",
+   "avatar": {
+    "style": "human",
+    "seed": "product-owner",
+    "badge": null
+   },
+   "home": "product-desk"
+  },
+  {
+   "id": "product-agent",
+   "role": "requirements_agent",
+   "actor_type": "agent",
+   "display_name": "Product Agent",
+   "avatar": {
+    "style": "agent",
+    "seed": "product-agent",
+    "badge": null
+   },
+   "home": "analysis-desk"
+  },
+  {
+   "id": "product-lead",
+   "role": "review_agent",
+   "actor_type": "agent",
+   "display_name": "Product Lead",
+   "avatar": {
+    "style": "agent",
+    "seed": "product-lead",
+    "badge": null
+   },
+   "home": "review-desk"
+  },
+  {
+   "id": "architect-agent",
+   "role": "task_planner",
+   "actor_type": "agent",
+   "display_name": "Architect Agent",
+   "avatar": {
+    "style": "agent",
+    "seed": "architect-agent",
+    "badge": null
+   },
+   "home": "planning-room"
+  },
+  {
+   "id": "arch-reviewer",
+   "role": "review_agent",
+   "actor_type": "agent",
+   "display_name": "Architecture Reviewer",
+   "avatar": {
+    "style": "agent",
+    "seed": "arch-reviewer",
+    "badge": null
+   },
+   "home": "review-desk"
+  },
+  {
+   "id": "architect",
+   "role": "architect",
+   "actor_type": "human",
+   "display_name": "Kwame · Architect",
+   "avatar": {
+    "style": "human",
+    "seed": "architect",
+    "badge": null
+   },
+   "home": "architecture-library"
+  },
+  {
+   "id": "developer-agent",
+   "role": "code_agent",
+   "actor_type": "agent",
+   "display_name": "Developer Agent · orders-service",
+   "avatar": {
+    "style": "agent",
+    "seed": "developer-agent",
+    "badge": null
+   },
+   "home": "desk-orders"
+  },
+  {
+   "id": "quality-agent",
+   "role": "verifier",
+   "actor_type": "agent",
+   "display_name": "Quality Agent",
+   "avatar": {
+    "style": "agent",
+    "seed": "quality-agent",
+    "badge": null
+   },
+   "home": "tester-desk"
+  },
+  {
+   "id": "pipeline-agent",
+   "role": "devops_agent",
+   "actor_type": "agent",
+   "display_name": "Pipeline & Deploy Agent",
+   "avatar": {
+    "style": "agent",
+    "seed": "pipeline-agent",
+    "badge": null
+   },
+   "home": "merge-gate"
+  },
+  {
+   "id": "operations-agent",
+   "role": "monitoring_agent",
+   "actor_type": "agent",
+   "display_name": "Operations Agent",
+   "avatar": {
+    "style": "agent",
+    "seed": "operations-agent",
+    "badge": null
+   },
+   "home": "staging-bench"
+  },
+  {
+   "id": "ci",
+   "role": "ci",
+   "actor_type": "system",
+   "display_name": "CI",
+   "avatar": {
+    "style": "system",
+    "seed": "ci",
+    "badge": null
+   },
+   "home": "ci-tower"
+  },
+  {
+   "id": "staging",
+   "role": "staging",
+   "actor_type": "system",
+   "display_name": "The other teams' tests",
+   "avatar": {
+    "style": "system",
+    "seed": "staging",
+    "badge": null
+   },
+   "home": "staging-bench"
+  }
+ ],
+ "steps": [
+  {
+   "t_ms": 0,
+   "t_real_ms": 0,
+   "seq": 0,
+   "actor": "product-owner",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "Meridian Retail · rename on OrderPlaced · AWS AI-DLC",
+   "key": null,
+   "narration": "AWS · AI-DLC (blog + aidlc-workflows) · Rename totalCents/placedAt on OrderPlaced at Meridian Retail (fictional).",
+   "detail": {
+    "event_type": "SESSION_STARTED",
+    "event_id": "evt-0000",
+    "phase": "discovery",
+    "to_phase": "discovery",
+    "scenario": "meridian-retail/illustration",
+    "condition": ""
+   }
+  },
+  {
+   "t_ms": 2200,
+   "t_real_ms": 2200,
+   "seq": 1,
+   "actor": "product-owner",
+   "action": "speak",
+   "target": "product-agent",
+   "place": "product-desk",
+   "text": "Rename totalCents/placedAt on OrderPlaced",
+   "key": null,
+   "narration": "Inception: Chen states the intent; the Product Agent leads Intent Capture.",
+   "detail": {
+    "event_type": "MESSAGE_EXCHANGED",
+    "event_id": "evt-0001",
+    "phase": "discovery",
+    "interaction_type": "task_assignment",
+    "content": "Rename totalCents/placedAt on OrderPlaced",
+    "stage": "Inception",
+    "axis": "intent"
+   }
+  },
+  {
+   "t_ms": 4800,
+   "t_real_ms": 4800,
+   "seq": 2,
+   "actor": "product-agent",
+   "action": "work",
+   "target": null,
+   "place": "analysis-desk",
+   "text": "requirements.md · Requirements and user stories for the rename",
+   "key": null,
+   "narration": "The Product Agent writes requirements and stories. The whole team validates them: Mob Elaboration.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0002",
+    "phase": "discovery",
+    "artifact_id": "art-req",
+    "artifact_type": "spec",
+    "stage": "Inception",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 7200,
+   "t_real_ms": 7200,
+   "seq": 3,
+   "actor": "product-lead",
+   "action": "speak",
+   "target": null,
+   "place": "review-desk",
+   "text": "Stories complete and testable",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0003",
+    "phase": "discovery",
+    "decision": "commented",
+    "subject_artifact_id": "art-req",
+    "stage": "Inception",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 9600,
+   "t_real_ms": 9600,
+   "seq": 4,
+   "actor": "product-owner",
+   "action": "speak",
+   "target": null,
+   "place": "product-desk",
+   "text": "Requirements validated",
+   "key": null,
+   "narration": "Chen validates them: AI-DLC defers critical decisions to humans.",
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0004",
+    "phase": "discovery",
+    "decision": "approved",
+    "subject_artifact_id": "art-req",
+    "stage": "Inception",
+    "axis": "spec"
+   }
+  },
+  {
+   "t_ms": 10800,
+   "t_real_ms": 10800,
+   "seq": 5,
+   "actor": "product-owner",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "requirements validated",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0005",
+    "phase": "planning",
+    "from_phase": "discovery",
+    "to_phase": "planning",
+    "stage": "Inception",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 13400,
+   "t_real_ms": 13400,
+   "seq": 6,
+   "actor": "architect-agent",
+   "action": "work",
+   "target": null,
+   "place": "planning-room",
+   "text": "design/contract-design.md · Units of work and the OrderPlaced contract: new names, old names kept during a deprecation window",
+   "key": null,
+   "narration": "The Architect Agent designs the units and the OrderPlaced contract. The rule lives in this design.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0006",
+    "phase": "planning",
+    "artifact_id": "art-design",
+    "artifact_type": "plan",
+    "stage": "Inception",
+    "axis": "plan",
+    "rule": true
+   }
+  },
+  {
+   "t_ms": 15800,
+   "t_real_ms": 15800,
+   "seq": 7,
+   "actor": "arch-reviewer",
+   "action": "speak",
+   "target": null,
+   "place": "review-desk",
+   "text": "Design sound and implementable",
+   "key": null,
+   "narration": "The Architecture Reviewer, an LLM, reviews the design before any code exists.",
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0007",
+    "phase": "planning",
+    "decision": "commented",
+    "subject_artifact_id": "art-design",
+    "stage": "Inception",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 18200,
+   "t_real_ms": 18200,
+   "seq": 8,
+   "actor": "architect",
+   "action": "speak",
+   "target": null,
+   "place": "architecture-library",
+   "text": "Design approved",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "REVIEW_SUBMITTED",
+    "event_id": "evt-0008",
+    "phase": "planning",
+    "decision": "approved",
+    "subject_artifact_id": "art-design",
+    "stage": "Construction",
+    "axis": "plan"
+   }
+  },
+  {
+   "t_ms": 19400,
+   "t_real_ms": 19400,
+   "seq": 9,
+   "actor": "architect",
+   "action": "phase",
+   "target": null,
+   "place": "architecture-library",
+   "text": "design approved",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0009",
+    "phase": "implementation",
+    "from_phase": "planning",
+    "to_phase": "implementation",
+    "stage": "Construction",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 21000,
+   "t_real_ms": 21000,
+   "seq": 10,
+   "actor": "developer-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "design/contract-design.md · code generation",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_READ",
+    "event_id": "evt-0010",
+    "phase": "implementation",
+    "artifact_id": "art-design",
+    "stage": "Construction",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 23000,
+   "t_real_ms": 23000,
+   "seq": 11,
+   "actor": "developer-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "Edit · src/core/events.ts",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0011",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "input_summary": "src/core/events.ts",
+    "correlation_id": "call-0011",
+    "stage": "Construction",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 24600,
+   "t_real_ms": 24600,
+   "seq": 12,
+   "actor": "developer-agent",
+   "action": "work",
+   "target": null,
+   "place": "desk-orders",
+   "text": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+   "key": null,
+   "narration": "Same scripted case in every model: the first attempt renames the fields and drops the old names, although the rule is in the agent's context.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0012",
+    "phase": "implementation",
+    "tool_name": "Edit",
+    "status": "success",
+    "output_summary": "OrderPlaced: totalCents → amountCents, placedAt → createdAt",
+    "correlation_id": "call-0011",
+    "stage": "Construction",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 26600,
+   "t_real_ms": 26600,
+   "seq": 13,
+   "actor": "quality-agent",
+   "action": "work",
+   "target": null,
+   "place": "tester-desk",
+   "text": "Bash · npm test",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "TOOL_CALL_STARTED",
+    "event_id": "evt-0013",
+    "phase": "implementation",
+    "tool_name": "Bash",
+    "input_summary": "npm test",
+    "correlation_id": "call-0013",
+    "stage": "Construction",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 28200,
+   "t_real_ms": 28200,
+   "seq": 14,
+   "actor": "quality-agent",
+   "action": "work",
+   "target": null,
+   "place": "tester-desk",
+   "text": "generated test suite: all passed",
+   "key": null,
+   "narration": "The Quality Agent runs the test suite the AI generated. It passes.",
+   "detail": {
+    "event_type": "TOOL_CALL_COMPLETED",
+    "event_id": "evt-0014",
+    "phase": "implementation",
+    "tool_name": "Bash",
+    "status": "success",
+    "output_summary": "generated test suite: all passed",
+    "correlation_id": "call-0013",
+    "stage": "Construction",
+    "axis": "code"
+   }
+  },
+  {
+   "t_ms": 29400,
+   "t_real_ms": 29400,
+   "seq": 15,
+   "actor": "developer-agent",
+   "action": "phase",
+   "target": null,
+   "place": "desk-orders",
+   "text": "bolt ready to merge",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0015",
+    "phase": "review",
+    "from_phase": "implementation",
+    "to_phase": "review",
+    "stage": "Construction",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 32000,
+   "t_real_ms": 32000,
+   "seq": 16,
+   "actor": "developer-agent",
+   "action": "move",
+   "target": null,
+   "place": "review-table",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "stage": "Construction",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 32000,
+   "t_real_ms": 32000,
+   "seq": 16,
+   "actor": "developer-agent",
+   "action": "handoff",
+   "target": "review-table",
+   "place": "review-table",
+   "text": "PR #88 · bolt 3: OrderPlaced rename",
+   "key": "pr_opened",
+   "narration": null,
+   "caption": "Developer Agent · orders-service opens a pull request (bolt 3: OrderPlaced rename) and leaves it on the review table.",
+   "detail": {
+    "event_type": "ARTIFACT_CREATED",
+    "event_id": "evt-0016",
+    "phase": "review",
+    "artifact_id": "art-pr",
+    "diff": null,
+    "stage": "Construction",
+    "axis": "review"
+   }
+  },
+  {
+   "t_ms": 33800,
+   "t_real_ms": 33800,
+   "seq": 17,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": null,
+   "key": null,
+   "narration": null,
+   "caption": "CI picks up the pull request and runs 5 deterministic checks.",
+   "detail": {
+    "event_type": "CI_RUN_STARTED",
+    "event_id": "evt-0017",
+    "phase": "review",
+    "run_attempt": 0,
+    "subject_artifact_id": "art-pr",
+    "stage": "Construction",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 34500,
+   "t_real_ms": 34500,
+   "seq": 18,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "Lint: zero lint errors",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "lint",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0018",
+    "phase": "review",
+    "category": "build",
+    "duration_ms": 900,
+    "output": "Lint: zero lint errors",
+    "stage": "Construction",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 35200,
+   "t_real_ms": 35200,
+   "seq": 19,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "Unit Test: all passed",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "unit-tests",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0019",
+    "phase": "review",
+    "category": "test",
+    "duration_ms": 900,
+    "output": "Unit Test: all passed",
+    "stage": "Construction",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 35900,
+   "t_real_ms": 35900,
+   "seq": 20,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "Test coverage 84% (>= 80%)",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "coverage",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0020",
+    "phase": "review",
+    "category": "test",
+    "duration_ms": 900,
+    "output": "Test coverage 84% (>= 80%)",
+    "stage": "Construction",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 36600,
+   "t_real_ms": 36600,
+   "seq": 21,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "Security scan: zero Critical/High",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "security-scan",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0021",
+    "phase": "review",
+    "category": "build",
+    "duration_ms": 900,
+    "output": "Security scan: zero Critical/High",
+    "stage": "Construction",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 37300,
+   "t_real_ms": 37300,
+   "seq": 22,
+   "actor": "ci",
+   "action": "check",
+   "target": null,
+   "place": "ci-tower",
+   "text": "Integration tests: 100% pass",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "integration",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CHECK_COMPLETED",
+    "event_id": "evt-0022",
+    "phase": "review",
+    "category": "test",
+    "duration_ms": 900,
+    "output": "Integration tests: 100% pass",
+    "stage": "Construction",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 38200,
+   "t_real_ms": 38200,
+   "seq": 23,
+   "actor": "ci",
+   "action": "ci_result",
+   "target": null,
+   "place": "ci-tower",
+   "text": "CI quality gates: lint, tests, coverage, security, integration. All pass. None is an architecture rule.",
+   "key": "ci_pass",
+   "narration": "CI quality gates: lint, tests, coverage, security, integration. All pass. None is an architecture rule.",
+   "caption": "CI passes: all 5 checks pass.",
+   "check": {
+    "id": "attempt-0",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "CI_RUN_COMPLETED",
+    "event_id": "evt-0023",
+    "phase": "review",
+    "run_attempt": 0,
+    "ok": true,
+    "failed_checks": [],
+    "stage": "Construction",
+    "axis": "ci"
+   }
+  },
+  {
+   "t_ms": 39400,
+   "t_real_ms": 39400,
+   "seq": 24,
+   "actor": "pipeline-agent",
+   "action": "phase",
+   "target": null,
+   "place": "merge-gate",
+   "text": "CI passed",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0024",
+    "phase": "deployment",
+    "from_phase": "review",
+    "to_phase": "deployment",
+    "stage": "Operations",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 41400,
+   "t_real_ms": 41400,
+   "seq": 25,
+   "actor": "pipeline-agent",
+   "action": "handoff",
+   "target": "product-owner",
+   "place": "merge-gate",
+   "text": "Promote bolt 3 to production?",
+   "key": null,
+   "narration": "Manual approval gate: the product owner signs off the release.",
+   "detail": {
+    "event_type": "APPROVAL_REQUESTED",
+    "event_id": "evt-0025",
+    "phase": "deployment",
+    "gate": "manual-approval",
+    "request_id": "rel-1",
+    "stage": "Operations",
+    "axis": "release",
+    "blocks": true
+   }
+  },
+  {
+   "t_ms": 43800,
+   "t_real_ms": 43800,
+   "seq": 26,
+   "actor": "product-owner",
+   "action": "speak",
+   "target": null,
+   "place": "product-desk",
+   "text": "approved · Release approved",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "APPROVAL_DECIDED",
+    "event_id": "evt-0026",
+    "phase": "deployment",
+    "request_id": "rel-1",
+    "decision": "approved",
+    "stage": "Operations",
+    "axis": "release"
+   }
+  },
+  {
+   "t_ms": 45000,
+   "t_real_ms": 45000,
+   "seq": 27,
+   "actor": "product-owner",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "deployed",
+   "key": null,
+   "narration": null,
+   "detail": {
+    "event_type": "PHASE_CHANGED",
+    "event_id": "evt-0027",
+    "phase": "maintenance",
+    "from_phase": "deployment",
+    "to_phase": "maintenance",
+    "stage": "Operations",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 46400,
+   "t_real_ms": 46400,
+   "seq": 28,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "billing-service (final): 1 of 5 tests failed: invoices order A: totalCents missing",
+   "key": "oracle",
+   "narration": "Billing and analytics break in production: they still read the old names.",
+   "caption": "Staging oracle, hidden from the agent: the other teams run their own tests on the final pull request. 2 of 3 break.",
+   "check": {
+    "id": "billing-service",
+    "status": "fail",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0028",
+    "phase": "maintenance",
+    "consumer": "billing-service",
+    "state": "final",
+    "ok": false,
+    "message": "1 of 5 tests failed: invoices order A: totalCents missing",
+    "hidden_from_agent": true,
+    "contradicts_ci": true,
+    "stage": "Operations",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 46900,
+   "t_real_ms": 46900,
+   "seq": 29,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "analytics-ingest (final): 1 of 5 tests failed: records order A: placedAt missing",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "analytics-ingest",
+    "status": "fail",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0029",
+    "phase": "maintenance",
+    "consumer": "analytics-ingest",
+    "state": "final",
+    "ok": false,
+    "message": "1 of 5 tests failed: records order A: placedAt missing",
+    "hidden_from_agent": true,
+    "contradicts_ci": true,
+    "stage": "Operations",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 47400,
+   "t_real_ms": 47400,
+   "seq": 30,
+   "actor": "staging",
+   "action": "oracle",
+   "target": null,
+   "place": "staging-bench",
+   "text": "web-storefront (final): all tests passed",
+   "key": null,
+   "narration": null,
+   "check": {
+    "id": "web-storefront",
+    "status": "pass",
+    "rule": null
+   },
+   "detail": {
+    "event_type": "ORACLE_RESULT",
+    "event_id": "evt-0030",
+    "phase": "maintenance",
+    "consumer": "web-storefront",
+    "state": "final",
+    "ok": true,
+    "message": "all tests passed",
+    "hidden_from_agent": true,
+    "contradicts_ci": false,
+    "stage": "Operations",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 49600,
+   "t_real_ms": 49600,
+   "seq": 31,
+   "actor": "operations-agent",
+   "action": "speak",
+   "target": "product-owner",
+   "place": "staging-bench",
+   "text": "Incident: billing cannot invoice new orders",
+   "key": null,
+   "narration": "Contract testing (Pact) is in the pipeline agent's knowledge for many repos, not a required gate.",
+   "detail": {
+    "event_type": "MESSAGE_EXCHANGED",
+    "event_id": "evt-0031",
+    "phase": "maintenance",
+    "interaction_type": "report",
+    "content": "Incident: billing cannot invoice new orders",
+    "stage": "Operations",
+    "axis": "production"
+   }
+  },
+  {
+   "t_ms": 52000,
+   "t_real_ms": 52000,
+   "seq": 32,
+   "actor": "product-owner",
+   "action": "phase",
+   "target": null,
+   "place": "product-desk",
+   "text": "The break escaped: no step after generation checked the consumers' contracts",
+   "key": "session_end",
+   "narration": "Escaped: the rule lived in the design; after generation nothing checked it.",
+   "caption": "The break escaped: no step after generation checked the consumers' contracts",
+   "detail": {
+    "event_type": "SESSION_ENDED",
+    "event_id": "evt-0032",
+    "phase": "maintenance",
+    "outcome": "failed",
+    "stats": {
+     "events": 33
+    }
+   }
+  }
+ ],
+ "markers": [
+  {
+   "t_ms": 32000,
+   "label": "PR opened · bolt 3: OrderPlaced rename",
+   "kind": "pr_opened"
+  },
+  {
+   "t_ms": 38200,
+   "label": "CI passed",
+   "kind": "ci_pass"
+  },
+  {
+   "t_ms": 46400,
+   "label": "Oracle (final): 2 of 3 consumers fail",
+   "kind": "oracle"
+  },
+  {
+   "t_ms": 52000,
+   "label": "End: failed",
+   "kind": "session_end"
+  }
+ ],
+ "scene": {
+  "layout": "review",
+  "visibility": null,
+  "spec": null,
+  "agent": "developer-agent",
+  "context": null,
+  "fitness_functions": [],
+  "consumers": [
+   {
+    "id": "billing-service",
+    "desk": "desk-billing",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "fail",
+      "seq": 28,
+      "t_ms": 46400,
+      "tests": "1 of 5 tests failed",
+      "impact": "totalCents missing",
+      "test": "invoices order A"
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Noor",
+     "title": "Billing team (consumer)",
+     "seed": "cast:noor:billing",
+     "fictional": true
+    }
+   },
+   {
+    "id": "analytics-ingest",
+    "desk": "desk-analytics",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "fail",
+      "seq": 29,
+      "t_ms": 46900,
+      "tests": "1 of 5 tests failed",
+      "impact": "placedAt missing",
+      "test": "records order A"
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Kenji",
+     "title": "Analytics team (consumer)",
+     "seed": "cast:kenji:analytics",
+     "fictional": true
+    }
+   },
+   {
+    "id": "web-storefront",
+    "desk": "desk-storefront",
+    "contract": null,
+    "oracle": {
+     "final": {
+      "status": "pass",
+      "seq": 30,
+      "t_ms": 47400
+     }
+    },
+    "reads": [],
+    "edits": [],
+    "owner": {
+     "name": "Lucía",
+     "title": "Storefront team (consumer)",
+     "seed": "cast:lucia:storefront",
+     "fictional": true
+    }
+   }
+  ],
+  "diff_cards": [],
+  "sources": [
+   "events.jsonl"
+  ],
+  "lifecycle_model": {
+   "label": "AWS · AI-DLC (blog + aidlc-workflows)",
+   "detail": "9 roles on the floor (AISDLC-Trace 2.1 role set)",
+   "source": "SESSION_STARTED.payload.frameworks",
+   "kind": "illustration"
+  },
+  "zones": [
+   {
+    "id": "define",
+    "label": "Define",
+    "x0": 0.0,
+    "x1": 0.22,
+    "roles": "product owner · delivery · analyst · architect",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "build",
+    "label": "Build",
+    "x0": 0.22,
+    "x1": 0.46,
+    "roles": "code agents · tester",
+    "band": "probabilistic",
+    "band_label": "before generation and generation · probabilistic"
+   },
+   {
+    "id": "verify",
+    "label": "Verify & release",
+    "x0": 0.46,
+    "x1": 0.68,
+    "roles": "CI · review · merge gate · release manager",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   },
+   {
+    "id": "production",
+    "label": "Production",
+    "x0": 0.68,
+    "x1": 1.0,
+    "roles": "running services · their teams · users",
+    "band": "deterministic",
+    "band_label": "after generation · deterministic"
+   }
+  ],
+  "illustration": {
+   "id": "aws",
+   "model": "AWS · AI-DLC (blog + aidlc-workflows)",
+   "short": "AWS AI-DLC",
+   "source": "AWS, AI-DLC blog (31 Jul 2025) + awslabs/aidlc-workflows 2.11.0",
+   "date": "2025-07-31",
+   "url": "https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/",
+   "stages": [
+    "Inception",
+    "Construction",
+    "Operations"
+   ],
+   "rule": {
+    "axis": "plan",
+    "place": "planning-room",
+    "label": "The design artifacts (Contract Design), reviewed by an LLM reviewer"
+   },
+   "blocks": {
+    "axis": "release",
+    "place": "merge-gate",
+    "label": "Release: manual approval (tech lead or product owner)"
+   },
+   "ci_arch": false,
+   "outcome": {
+    "status": "escapes",
+    "axis": "production",
+    "label": "Escapes: 2 consumers break"
+   }
+  }
+ }
+}

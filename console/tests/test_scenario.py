@@ -209,7 +209,7 @@ class ScenarioRoutesTest(unittest.TestCase):
             self.assertIn("scenario", [p["id"] for p in plugins], role)
             self.assertEqual(self.j("rules", client=c)["rules"][0]["id"], "ARCH-1")
         sc = next(p for p in self.o.get("/api/plugins").json["plugins"] if p["id"] == "scenario")
-        self.assertEqual(sc["order"], 7)
+        self.assertEqual(sc["order"], 8)
 
     def test_repos_listing(self):
         d = self.j("repos")

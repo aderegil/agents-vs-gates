@@ -2,7 +2,7 @@
   "id": "readiness",
   "name": "Readiness",
   "icon": "shield-check",
-  "order": 8,
+  "order": 9,
   "description": "Environment health, smoke test, pre-registration lock, units, token and review checklist.",
   "roles": ["owner", "operator"],
   "readonly_roles": ["operator"],

@@ -29,7 +29,7 @@ from harness.jsonio import read_json, write_json_atomic
 # argparse `choices` of harness/runner.py --stage (P3 is the reviewer study, run by harness.reviewer).
 RUNNABLE = ("P0", "X1", "X2", "P1", "P2", "P4", "P5", "P6")
 EXPLORATORY = ("P0", "X1", "X2")   # no pre-registration lock needed (calibration, pilots); same as harness.runner
-STAGE_NOTE = {"P3": "Reviewer calls (RQ4) run from the reviewer study, not from a batch."}
+STAGE_NOTE = {"P3": "Reviewer calls (AI reviewer, RQ4) run from the reviewer study, not from a batch."}
 WORKERS_NOTICE = "Parallel runs don't add quota; they spend it faster"
 MAX_BATCH = 1000
 MAX_MINUTES = 24 * 60

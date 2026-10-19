@@ -1,0 +1,12 @@
+{
+  "id": "start",
+  "name": "Start here",
+  "icon": "flag",
+  "order": 0,
+  "description": "What this console shows, in five short parts.",
+  "roles": ["owner", "operator", "presenter", "viewer"],
+  "kind": "module",
+  "entry": "web/index.js",
+  "api": "api.py",
+  "simple": true
+}

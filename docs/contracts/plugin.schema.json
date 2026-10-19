@@ -56,6 +56,10 @@
     "api": {
       "type": "string"
     },
+    "simple": {
+      "type": "boolean",
+      "description": "Shown in the console's Simple mode (the story path); every plugin is shown in Expert mode"
+    },
     "readonly_roles": {
       "type": "array",
       "items": {

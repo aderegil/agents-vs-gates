@@ -569,6 +569,210 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - RQ5 (exploratory): X-rename V0·S0·W2 on `cc-sonnet` 0 of 10 (all 10 added the new fields and kept the old ones), against W1 10 of 10 in P1. Not run in the same rounds as P1.
 - **The 17 disagreements (2026-10-13).** Alfredo accepted the proposal ("Lo que tu me sugieras está bien"): A's label stands on all 17 (`results/real/coding/batch4-disagreements.csv`). No RQ4 number depends on them.
 
+## Night of 2026-10-13 (builder, branch night-1013; night work order from the design session, approved by Alfredo)
+### A. Replay Theater: quality and legibility
+- **QA replays (deterministic picks, no manual choice).**
+  - Break: the poll-PR run `p1-0002` (`analysis.select_poll_pr` rule).
+  - Contrast: `p1-0005`, the first P1 X-rename V0·S2 `cc-sonnet` run in manifest order (`passed_first_ci`).
+  - Codex V1: `p6-0012`, the first P6 X-remove V1·S0 `codex` run in manifest order (`passed_with_gate_flag`; it edited `contracts/consumers/analytics-ingest__OrderPlaced.json`).
+  - The replays are built in memory with `replay.export.build_replay`. Nothing is written to `results/`.
+- **The event list follows the stage.**
+  - The current event is scrolled to about a third of the panel, highlighted, and expanded with what matters (tool, path, check, CI output, message); the previous one folds back.
+  - A wheel, touch or keyboard scroll of the list pauses following. The "Follow" chip resumes it, and so does clicking any event (which seeks the stage).
+  - The list now follows while paused too (arrow-key stepping, timeline seeks), not only during playback.
+- **Nothing overlaps (collision avoidance, not fixed lanes).**
+  - Every label is placed at the candidate box that covers the least: other labels, pills and name tags weigh most, then people, with 5 px of air. Candidates are its anchor, a line higher or lower, just above or below a person standing there, or beside it.
+  - A label that moves far keeps a hairline to its place. Every label has a white halo.
+  - Items that now avoid collisions: the CI tower's rule sheet (the ARCH-1…ARCH-8 case), the spec sheet on the agent's desk, the glass caption, the teams' tags and verdict pills (now drawn after every figure), the V1 contract label and the staging bench names (now under the bench, on two rows).
+  - The diff card is no wider than the DEFINE column, so it never covers the agent's desk.
+  - At most two speech bubbles show at once (the newest). A bubble that repeats the subtitle of the same step is not drawn.
+- **Presentation mode (F, `?present=1`).**
+  - Every stage label is scaled ×1.18, with a floor of 12 stage px, which is 18 px on a projected 1080p frame. Labels of places nobody uses in the run are dropped.
+  - Names and place labels use the darker ink.
+  - The subtitle is the short caption line for the current beat; it existed and is unchanged.
+- **Polish.**
+  - The canvas is allocated at its displayed size × devicePixelRatio, so the pixel art lands on whole device pixels at every size (it used to be a fixed 2× buffer resampled by CSS).
+  - Calmer idle: breathing every 2.6 s instead of 1.6 s, blinks every 5.3 s instead of 4.1 s.
+  - No hops: walking is a one-grid-pixel step, the green-CI hop is gone, and a rejected event packet eases back and fades instead of bouncing.
+  - Every frame carries a legend, bottom-right: cyan = pass, pink = fail.
+  - The stage keeps 16:9 inside whatever height the wrapped top bar and controls leave. At 1280×720 its bottom used to slide under the timeline.
+- QA: before/after stills, at fixed timestamps, of the three replays at 1920×1080 (panel and presentation) and at 1280×720, in `docs/qa/night-theater-*`.
+### B. The full AI-SDLC on stage: one scripted scene per public model, comparable
+- **What.** `replay/scenes/make_scenes.py` scripts five AISDLC-Trace 2.1 sessions:
+  - Anthropic playbook;
+  - AWS AI-DLC (blog + `awslabs/aidlc-workflows`);
+  - Kiro (specs, steering, hooks);
+  - GitHub spec-kit;
+  - "Any of the above + the gate".
+  The exporter turns each into a replay that the theater plays (`public/scenes`, bundled into `web/dist`). Every beat cites the section it stages (`replay/scenes/SOURCES.md`, generated). Validation:
+  - trace rules 1–13 and the replay schema, in `replay.tests.test_scenes`;
+  - real exports are unchanged: illustration support only touches traces whose source is `illustration`, so `EXPORTER_VERSION` stays 4 and no real cache is invalidated.
+- **Labelling.**
+  - A new replay source `illustration` (contract `replay.schema.json`).
+  - Every frame carries a dashed watermark, "Illustration · scripted from public documentation · <source, date>", and the top bar shows an ILLUSTRATION chip. The real runs keep "Replay of a real run · <id>".
+  - The lanes view carries the same label.
+- **Same feature, same premise.**
+  - The feature is Meridian Retail's X-rename (`totalCents`/`placedAt` on `OrderPlaced`). In every scene the agent's first attempt drops the old names although the rule is in its context.
+  - This is the scripted case, not a rate. The README cites the measured rates with the rule in view (X-rename 0 of 10 per unit; Codex X-remove 7 of 10), so the scenes say "helps, does not guarantee" without implying a frequency.
+  - The scenes then differ only in what each model has after generation.
+- **Outcomes follow each model's own mechanisms.**
+  - Anthropic: caught at review, by the REVIEW.md compliance pass, an LLM finding that advises. This is consistent with P3, where reviewers given the rule flagged 20 of 20 with the correct reason. Then @claude fixes it and the code owner approves.
+  - AWS, Kiro and spec-kit: the break escapes to the other teams, because no step after generation reads their contracts.
+    - AWS's quality gates are lint, coverage, security, integration, manual approval and smoke. Pact appears only as knowledge in a pattern.
+    - Kiro's and spec-kit's docs describe no CI step, and the scenes show that silence.
+  - The gate: ARCH-4 fails the PR in CI (with the experiment's own output lines), the agent repairs with @deprecated aliases, and CI passes.
+- **Roles only as named.**
+  - Casts come from the Teams plugin rosters (fictional people).
+  - Where the trace schema forces a role:
+    - AWS's Architect Agent plays `task_planner`, because `architect` is a human role in the schema and the agent leads Units Generation;
+    - Kiro's User and spec-kit's developer play `engineer`;
+    - spec-kit's maintainer plays `tech_lead`.
+  - spec-kit comes from its public README and `spec-driven.md`, read 13 Oct 2026 (constitution Articles I–IX; IV–VI are defined by each project, so the rule is a project article; Phase −1 gates; no CI or PR in the docs).
+- **On the floor.**
+  - The header shows the model's own stage names, with the current one marked.
+  - Callouts, placed with the same collision avoidance as the labels: "Where the rule lives" (accent outline), "What blocks the merge" (ink) and, at the CI tower, "no architecture check in CI" or "no CI step in this model's docs".
+  - Places the model doesn't use read "not in this model". The staging bench becomes "The other teams' tests" (no hidden oracle in an illustration).
+  - Two theater-wide improvements came out of this:
+    - in presentation mode, a place where people stand drops its own label (their name tags say it);
+    - name tags are placed after every figure, so two people at one desk no longer overlap.
+- **Compare mode (`?lanes=1`, "Compare AI-SDLC models").**
+  - The five models are rows on one phase axis (intent → spec → plan → tasks → code → review → CI → release → production). Each cell shows the model's stage names, artifacts, checks and who acted.
+  - Highlights: where the rule lives (accent), what blocks the merge (ink), the outcome (cyan caught, pink reaches the other teams), and "no architecture check" in CI.
+  - A playhead reveals one column every 4.6 s with a one-line caption, then a closing line (~55 s).
+  - A stacked-lanes view was chosen over five canvases side by side, which are unreadable at 1080p. The two-pane synchronized compare still works for any two scenes.
+- QA: `docs/qa/night-scene-*`, `docs/qa/night-lanes-*`.
+### C. Console UX: question-first, plain labels, Simple/Expert
+- **Home (`story` plugin, first in the rail).** It has four parts:
+  - What we tested: the company, the codes in plain words, the gates.
+  - What happened: six questions in plain words, each with a one-line answer whose numbers are computed from the records when the page loads, plus links into Results, the filtered runs and the Replay Theater.
+  - See it: the two featured runs, the AI-SDLC lanes, Results.
+  - Talk figures.
+  - Every panel that existed before is still there; only the way in changed.
+- **Talk figures.**
+  - These are the 29 numbers of slides 10, 11, 16, 18 and 20, taken from the design session's storyboard notes. Each shows the value computed from the records, what the storyboard says, a match badge, the query in words, and a "Runs" button that opens the Run Explorer filtered to those runs.
+  - On 13 Oct, 29 of 29 match. That includes the corrected CI figure: 140 of 140 first attempts stopped (P1/P4/P5/P6, V1 excluded); 137 repaired, 2 repaired with the right shape but the wrong meaning (p6-0051, p6-0097), 1 still failing (p6-0107).
+  - Blinded stages count for nothing (`common.analyzable`). p-values come only from the pre-registered tests, through `aggregate`.
+  - The panel says "blind-coded by two independent AI coders" and states that no figure is a test of one agent against the other.
+- **Simple / Expert.**
+  - A status-bar switch, remembered in the browser (`localStorage avg.mode`, default Simple).
+  - Simple puts the story path in the rail: Home, Results, Run Explorer, Replay Theater, Scenario (`"simple": true` in their manifests; the plugin schema gains that optional field). Expert shows every plugin, as before.
+  - Deep links to any plugin still work in Simple.
+  - Results in Simple hides the instrument, the pilots and the exclusions tabs.
+- **Plain labels.**
+  - `console/web/lib/labels.js` is the single glossary: V0 "Own repo", V1 "Own repo + contracts", V2 "All four repos", S0 "No rules", S1 "Architecture prose", S2 "Rule in the spec", the tickets, the outcomes. The Replay app carries a copy (`labels.ts`).
+  - The code stays beside the words as a chip (`V0·S2`), and hovering shows the full meaning. This applies in Run Explorer (cell column, filters, detail head, outcome badges), Results (a codes strip and plain tab names), Run Control (cells, with tooltips) and the Replay Theater top bar.
+  - Chart labels keep their codes, so the exported slides and their tests are unchanged.
+- **Claude Code vs Codex, cell by cell (Results › By agent).**
+  - Descriptive counts only: broke another team on the first try, on the final PR, touched the gate, stopped without a change.
+  - Claude Code + Sonnet sums P1, P2 and P4; Codex is P6, which replicates those parts; Opus is P5. No p-values, with the note that the pre-registration has no test between agents.
+- `console --check` now expects the story plugin. QA: before/after stills `docs/qa/night-console-*`, from private consoles on ports 8781 (main) and 8782 (this branch) over a copy of `results/real` without bundles or replay caches. The console on :8765 was not touched.
+- Tests: `console.tests.test_story` (new), plus the console suites (152 OK, 1 skipped), the JS model and chart tests (60) and the replay app tests (47).
+- **Theater timing fix (found while rendering D).** The player now advances its clock from `performance.now()`, not the frame timestamp, and so does the lanes view. A frame painted for another reason must not move playback.
+### D. Clips for the deck
+- **One file per segment** (`video/clips.mjs`, `video/prepare_clips.py`), listed in `video/out/manifest.json` with `file`, `duration_s`, `shows`, `source` (plus `label` and `format`). The design session's update reshaped the set:
+  - `exp-one-run`: one real run only, ~2.5 min, no results grids and no Codex.
+  - `exp-codex-contract`: optional, slide 18.
+  - `exp-company-design`: may stay unused.
+  - `aisdlc-<model>` × 5 and `aisdlc-compare`.
+  - No results clip: the results are reveals on later slides.
+- **Run picks are rules.**
+  - `exp-one-run` uses the poll-PR run (`analysis.select_poll_pr`, spec 14.3): p1-0002.
+  - `exp-codex-contract` uses the first P6 X-remove V1·S0 `codex` run in manifest order with a D6 flag (consumer contract modified): p6-0012.
+  - Card facts come from the records (`work/clip-facts.json`); nothing is typed by hand.
+- **Order in `exp-one-run`.** The deck asked for "CI red → billing team's oracle fails → red build back to the agent". The oracle ran on the first PR after the session ended, so the clip:
+  - plays the theater (0.5×) until just after CI turns red;
+  - cuts to a card titled "Meanwhile, on that first pull request · the other teams' own tests · hidden from the agent", with each team's verdict in the oracle's own words;
+  - resumes the theater from just before the red build goes back to the agent, through the repair and green CI, stopping before the oracle results appear again;
+  - ends on a "what the record says" card.
+- **CI wording** follows the corrected figures (design session, 13 Oct): "stopped every first attempt (140 of 140)", high by construction. No clip uses "86 of 88".
+- **Virtual clock.** Theater and lanes segments run on a paused Playwright clock (`clock.pauseAt` after `install`). The first night render of the theater clips ran ~3× fast because an installed clock also follows wall time, so every slow screenshot advanced the replay. Those clips were re-rendered before delivery, and `build.mjs` got the same fix. Frames are captured at 30 fps.
+- Every AI-SDLC clip carries "Illustration · scripted from public documentation" with its source and date in every frame. The real-run clips carry "Replay of a real run · <id>", and their chip says "Real run · 0.5× speed" or "Real run · 1×".
+- Renders ran only with ≥ 6 GB free RAM (checked before each clip and each segment); no other heavy job ran at the same time.
+- The compare lanes had a second timing bug, found in the re-render: the playhead read a ref inside a lazy React state updater, so under a virtual clock the deltas could come out negative. The delta is now taken before the update and clamped at 0. That clip was re-rendered as well.
+- **Neutral comparison (design session request, 13 Oct).**
+  - `aisdlc-compare-neutral.mp4` (`?lanes=1&neutral=1`) uses the same layout and the same five lanes, with no per-vendor verdict.
+  - Vendor lanes drop every outcome and merge-blocker tag. Their CI cells say only "no architecture check in CI (not described)". Review reads "review (advisory)" wherever somebody besides the author acts on the PR: Anthropic, Kiro and spec-kit. AWS's review lane has no such reviewer; its reviews happen at design time and at release.
+  - Only "+ the gate" shows an outcome: it blocks the merge in CI, and the break is caught by ARCH-4 and repaired.
+  - The per-vendor caption lines become neutral. The clip still opens with "Same scripted case in every lane…" and still ends on "The rule is written down in every model. What differs is whether something checks it after generation."
+  - `aisdlc-compare.mp4` is unchanged. The neutral clip is a separate manifest entry; the choice between them is Alfredo's.
+
+## theater-1016 · Replay Theater and AI-SDLC lanes: cleaner stage, focus, smaller avatars (2026-10-16 night; builder subagent, Alfredo's review notes)
+Branch `theater-1016` (worktree `C:\avg\theater-1016`, from `night-1013`), not merged. No model calls, no runs; `results/` read only.
+- **Measured first.** Every text box and figure the stage draws is recorded per frame (`engine/overlap.ts`, `?qa=1` hook). `video/qa-overlap.mjs` seeks every 250 ms of 8 replays (5 scenes, p1-0002, p6-0012, the mock sprint) in presentation mode at 1920×1080 and counts text over text (different owners, > 6 px²) and text over another owner's person (> 8% of the figure). Before: 18 374 text-over-text pairs and 12 282 text-over-person pairs in 2 711 frames; after: 506 and 1 195. The five scenes and two real runs alone: 1 073 → 111 and 1 225 → 78. Reports: `docs/qa/theater-1016-overlap-{before,after}.txt` (with the most frequent remaining pairs). What remains is mostly partial touches (a sheet label grazing a team member, a bubble over a "Dispatch board" label in the real runs) and the crowded mock sprint.
+- **Avatars 25% smaller.** `ACTOR_W` 124 → 93 stage px (`engine/stagePolicy.ts`). Figures stay crisp (whole device pixels per grid pixel), so the drawn size moves in steps: averaged over depths and devices it is 0.74× of before; at a projected 1080p frame most people now draw at 3 device px per grid pixel (the old front row was 5, the back row 3).
+- **Necks.** Humans: head 2 px lower (shorter neck) and neck 8–9 px wide instead of 6; agents: neck 10 px wide with one ring. Pinned portrait hashes were re-pinned in both the theater and the Teams `avatar.js` tests.
+- **Focus.** `engine/focus.ts`: each beat (steps closer than 160 ms) lights its actor, its place, its target (actor or place), a system actor's object, the consumer desk of an oracle verdict, and the PR tray during CI. Everything else is drawn at about 40% opacity and partly desaturated; labels and callouts dim less (50–60%). Light fades in and out over 400 ms, a beat hands over to the next instead of lingering, and after 2.6 s without a beat the floor is back to full light. Zone titles, header, subtitle, watermark, legend and travelling packets never dim. On a crowded floor (the mock sprint, > 12 people) the names of people outside the beat fade out too.
+- **Fewer messages.** Still at most two bubbles, but the older one collapses to one line at half light; bubbles fade in (200 ms) and out (600 ms). Bubbles, labels and callouts never cover the subtitle or a failing-check label (reserved boxes).
+- **Placement.** Illustration callouts are placed before name tags and never over a person (heavy weight + ring fallbacks); labels, sheets, the V1 label and bubbles get ring fallbacks; name tags can go two rows down or above the head.
+- **Where the rule lives, on the floor.** "WHERE THE RULE LIVES" is the deck's purple, dashed, with "BEFORE GENERATION · CONTEXT · NO GUARANTEE". In the gate scene, what blocks the merge is a check in CI: cyan, "WHAT BLOCKS THE MERGE · IN CI", "AFTER GENERATION · A CHECK · DETERMINISTIC". Vendor scenes whose CI runs say "no architecture check in CI" in the tower's own label (one label instead of a third callout); models whose docs describe no CI step keep the quiet callout at the idle tower. Same sources, same wording as before (`replay/scenes/SOURCES.md` untouched).
+- **Compare lanes redesigned** (`ModelLanes.tsx`, `engine/lanes.ts`, `lanes.css`):
+  - A band over the axis names the two moments: BEFORE GENERATION (purple dashed; the rule is context the agent reads; probabilistic), GENERATION, AFTER GENERATION (cyan; only a check that runs can block; deterministic). The review column sits after generation but is not called deterministic: the band says only a check that runs can block.
+  - The axis is a chevron flow; the current column is lit, earlier ones step back (62%), later ones wait (10%).
+  - Rule cells: purple dashed with a "rule · context" tag. The gate lane's CI cell is cyan ("ARCH-4 · a check in CI"), turns pink ("ARCH-4 fails · blocks the merge") and cyan again ("ARCH-4 passes after the repair").
+  - A marker for the change travels along each lane, eased, one column per 4.6 s. It turns pink/cyan only where the lane's scripted outcome is: gate lane fails at CI then "repaired · passes"; non-neutral vendor lanes show their existing outcome ("caught", "2 consumers break" from the outcome label); in `?neutral=1` vendor markers never change colour.
+  - Closing 13 s (total unchanged, 54.4 s, so the deck's 50 s poster frame is the closing board): rule cells only ("Before generation, every lane has the rule written down: context the agent reads. It helps; it does not guarantee."), then the CI column ("After generation, only the gate lane runs a check in CI that reads the other teams' contracts. A check that runs is deterministic."), then everything with the existing closing line. Both sentences restate what the scene data already says (rule cell per lane; `ci_arch` true only for the gate). The word "pipeline" is not used (a test checks it).
+  - Cells show roles, not names ("Priya · Originator" → "Originator"), and one artifact.
+  - No CSS transitions: every opacity and position is computed from the clock, so the virtual-clock capture is exact.
+- **Theme.** The theater and the lanes stay on the light palette (Alfredo, 11 Oct: no dark mode). Purple enters only as the colour of "the rule as context"; cyan = pass/deterministic, pink = fail, as before.
+- **Clips.** Regenerated with the same file names in `video/out` (see BUILD-STATUS); `exp-company-design.mp4` was not re-rendered (scene pages only, no theater). The previous clips are kept in `C:\avg\agents-vs-gates\video\out-backup-2026-10-15\`.
+- **Not run:** `python -m console --check` (the lead was running mock harness runs on the shared workers; the check launches mock runs).
+- Tests: theater `npm test` 61/61 (14 new in `test/theater1016.test.ts`: focus, bubble cap and fade, avatar scale, overlap rules, lanes timeline and neutral variant); `node --test console/plugins/*/web/*.test.mjs` 51/51; replay python tests 53 OK (1 skipped).
+
+## theater-1016 · Plain words instead of codes (2026-10-16; builder subagent, Alfredo: «Pero sí aparecen y por eso confunden»)
+- **One label map:** `console/web/lib/labels.js` (types in `labels.d.ts`). The console plugins import it as before; the
+  theater re-exports it (`app/src/components/labels.ts`, no copy any more) and the clip cards load it from the new
+  `/labels/` mount (`video/lib.mjs`). Meanings checked against PREREGISTRATION.md §6/§7, the addendum on `ext-1016`
+  (P7, P8, C8), `scenario/tasks/X-*.md`, `harness/detectors.py`.
+- **Wording.** Tickets: X-rename «Rename two fields», X-remove «Remove a field», X-add «Add an optional field», X-api
+  «Rename a field in the API», X-dep «Call another team's API», X-units «Total in dollars». V0 «Own repo», V1
+  «Contracts inside the repo» (plural: every consumer contract is copied in; Alfredo's example said «Contract»), V2
+  «Every repo visible». S0 «No rule», S1 «Architecture notes» (prose without rule IDs or consumers), S2 «Rule in the
+  spec». W1 «Ticket as written» (never shown: it is the default), W2 «Ticket asks not to break consumers». Stages: P0
+  «Trial runs», P1 «Main test», P2 «Pressure test», P3 «Reviewer test», P4 «More tickets», P5 «Opus and wording», P6
+  «Codex repeat», P7 «More main-test runs», P8 «Third agent», C8 «Third-agent trial runs», X1/X2 «Pilot 1/2». H2
+  «Rule vs no rule», HS-V2 «Every repo vs own repo». Detectors D1–D8 get short words (D6 «Consumer contract changed»).
+  Run ids read «Main test · run 2» (p1-0002), «Codex repeat · run 12» (p6-0012), «Simulated run 14» (st-0014).
+- **Theater and clips: words only.** `plainReplay` (on load) rewrites the free text of a replay that reaches the
+  screen (step text, subtitles, markers, title, context sheet, ticket origin, events-panel text); header, compare
+  heads, picker, canvas title, watermark, V1 desk label («the other teams' contracts»), sheets and the events panel's
+  detector row use the map. Codes stay in the data, in `<option title>`/`data-run`/`data-code`, and in file names.
+  ARCH-n rule names, file paths, contract names and model ids stay: they are what the audience reads in the code.
+- **Console: words first, code after** in parentheses or a chip (Run Explorer, Run Control, Results, Home, Overview),
+  plus «What the codes mean» (`ui.js codeLegend`, a native `<details>` with one `<dl>` per family) on Home, Run Control,
+  Run Explorer and Results. The unblind confirmation still asks for `UNBLIND P1` (the code is the safety word).
+- **Left as codes (not in scope or need a visual check; the charts, figures, RQs and reviewer conditions were done next, see «Plain words in the charts and figures»):** the Results chart labels built in
+  `console/plugins/results/payload.py` (group labels such as «X-rename V0·S0»; exported SVG/PNG figures for the deck
+  would change size), the Story figures' captions in `console/plugins/story/figures.py`, RQ1–RQ7 and the reviewer
+  conditions R-S0/R-S2/R-C; the talk-draft video scenes (`experiment`, `break*`, `stop*`, `results` in
+  `video/scenes/scenes.js`, used by `build.mjs`, not by the deck clips). No meaning was unclear.
+- **Tests:** `app/test/plainwords.test.ts` (map, `plainText`, run names, and no code in any visible text of the 7 demo
+  replays, 5 scenes and the two clip replays after `plainReplay`); theater 67/67; console model/chart tests 35/35. Clip
+  cards checked in headless Edge (scene pages only, no video): no code in the five changed cards.
+
+## theater-1016 · Plain words in the charts and figures; «Start here» (2026-10-16; builder subagent, Alfredo's request)
+- **Python reads the one map.** `console/core/labels.py` parses the data blocks of `console/web/lib/labels.js` (one
+  entry per line; a line it cannot read is an error, so a code cannot come back on screen silently) and mirrors the
+  helpers (`with_code`, `plain_condition`, `condition_code`, `run_name`). No second copy of the words.
+  `console/tests/test_labels.py` runs Node on labels.js and checks both sides hold the same map and give the same strings.
+- **New families in the map:** `QUESTIONS` (RQ1–RQ5, the tab words already used by Results: «Nothing in view», «Rule or
+  repos», «What CI does», «AI reviewer», «Ticket wording») and `REVIEWERS` (R-S0 «Reviewer: no rule», R-S2 «Reviewer:
+  rule in the spec», R-C «Reviewer: rule and contracts»), both in the «What the codes mean» legend. RQ6 and RQ7 (design
+  spec only) appear nowhere in the console, so they are not in the map.
+- **Results charts:** each row is the words with its code muted at the right («Every repo visible · No rule  V2·S0»);
+  the group header carries stage · unit · ticket in words with the codes in parentheses; rows are grouped so a header
+  is drawn once. The row-label column grew to 40 % of the width (cap 300) and the app draws charts at 680 wide, so the
+  longest words fit (chart test). Titles, subtitles, source notes («Main test (P1)»), the coding table (T1–T3) and the
+  RQ tabs are words first. Figure sizes changed; the deck does not use these figures.
+- **Home figures:** captions, claims, notes (run ids as «Codex repeat · run 31 (p6-0031)») and the «Results ·» links are
+  words first, code in parentheses; the p-value row uses the ticket words on both sides, so «matches» still compares
+  like with like. `test_story` checks that no code shows outside parentheses. The unblind safety word stays `UNBLIND P1`.
+- **«Start here»** (`console/plugins/start`) is the landing page: no hash → `#/start` (`LANDING` in `web/app.js`), deep
+  links still work. Five blocks in simple English, no codes, text served by `GET /api/start` so the test can read it:
+  what we tested (the H2 question, Meridian Retail, the three main-test setups), one line per page (only the pages the
+  role can open; Expert-only ones are marked), the three clicks (Replay Theater → «Select a run…» → Play, checked
+  against App.tsx and Player.tsx), where the results are, and «words first». Plugins renumbered 0–10 so Start here is
+  0 and keeps a `g` key; Users & Audit (10) has no key and stays in the user menu.
+
 ## Addendum 1: P7, P8 and the agy-flash unit (2026-10-15/16, branch ext-1016; builder, Alfredo's brief `encargo-2026-10-15-extension-y-agy.md`)
 Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothing real ran; every 🔒 step waits for Alfredo.
 - **§1.** The pending Teams API test fix was committed on `night-1013` (4e7fcbb), not merged. `main`'s copy of the same test fails 57 subtests since the reorganization of the talk's working folder of 15 Oct, so the commit was cherry-picked onto `ext-1016` (2e083a6); `night-1013` itself stays unmerged.

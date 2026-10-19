@@ -326,3 +326,14 @@ kbd { display: inline-block; min-width: 20px; padding: 1px 6px; border: var(--tr
 .md .md-xref { color: var(--acento); border-bottom: 1px dotted var(--acento); cursor: help; }
 .md .md-img { color: var(--tinta-2); font-style: italic; }
 .md del { color: var(--tinta-2); }
+
+/* "What the codes mean" (ui.js codeLegend): plain words first, the code after them */
+.code-legend { border: 1px solid var(--linea); border-radius: 6px; background: var(--superficie, #fff); padding: 6px 12px; }
+.code-legend > summary { cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+.code-legend-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px 24px; padding: 8px 0 6px; }
+.code-legend-group h4 { margin: 0 0 6px; font-size: 13px; color: var(--tinta-2); font-weight: 600; }
+.code-legend dl { margin: 0; }
+.code-legend-item { padding: 4px 0; border-top: 1px solid var(--linea); }
+.code-legend dt { font-weight: 600; }
+.code-legend dt code { font-weight: 400; color: var(--tinta-2); font-size: 12px; margin-left: 4px; }
+.code-legend dd { margin: 2px 0 0; color: var(--tinta-2); font-size: 13px; }
