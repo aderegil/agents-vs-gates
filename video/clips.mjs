@@ -14,6 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { FFMPEG, ORIGIN, OUT, REPO, VIDEO, WORK, encoder, ffprobeDuration, freeGB, launch, shot } from "./lib.mjs";
 import { captureTour } from "./console-tour.mjs";
+import { captureFullTour } from "./console-tour-full.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(n);
@@ -92,6 +93,13 @@ function clips() {
       file: "console-tour.mp4",
       segments: [{ kind: "console" }],
       shows: "The experiment console, real namespace: sign in → Start here (the five short parts) → Results, the \"Nothing in view\" tab → the Replay Theater: \"Main test · run 2\" played at 1× → Compare AI-SDLC models (the five lanes). A stage still sealed shows its lock.",
+      source: "a private console (python -m console --port 8793) on video/work/results, prepare.py's read-only snapshot of results/real",
+      label: "Console tour",
+    },
+    {
+      file: "console-tour-full.mp4",
+      segments: [{ kind: "console-full" }],
+      shows: "The whole console on the real data (for the kit): Start here → the scenario (four repos, the architecture rules, what the spec says, the tickets, the consumer contracts) → Run Control → Results: three agents, 100 runs per condition → one run in Run Explorer (diff, CI, the other teams' tests) → the same run in the Replay Theater at 2× → Compare AI-SDLC models.",
       source: "a private console (python -m console --port 8793) on video/work/results, prepare.py's read-only snapshot of results/real",
       label: "Console tour",
     },
@@ -190,6 +198,7 @@ async function renderSegment(seg, file) {
       const ms = seg.kind === "scene" ? await captureScene(context, seg, enc)
         : seg.kind === "lanes" ? await captureLanes(context, enc, seg.query)
         : seg.kind === "console" ? await captureTour(context, enc, { fps: FPS, port: Number(opt("--port", 8793)) })
+        : seg.kind === "console-full" ? await captureFullTour(context, enc, { fps: FPS, port: Number(opt("--port", 8793)) })
         : await captureTheater(context, seg, enc);
       await enc.close();
       return ms;

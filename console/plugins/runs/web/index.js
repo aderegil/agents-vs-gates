@@ -54,7 +54,7 @@ export async function mount(el, shell) {
 
   function paintNotes() {
     notes.replaceChildren(S.blinded.length
-      ? notice(`${S.blinded.map((x) => withCode(x)).join(", ")} ${S.blinded.length > 1 ? "are" : "is"} blinded. Outcomes, CI, oracle, detectors, diff and transcript of those runs open after the stage is complete and unblinded.`, "", "lock")
+      ? notice(`${S.blinded.map((x) => withCode(x)).join(", ")} ${S.blinded.length > 1 ? "are" : "is"} blinded. Outcomes, CI, the other teams' tests, detectors, diff and transcript of those runs open after the stage is complete and unblinded.`, "", "lock")
       : "");
   }
 
@@ -143,7 +143,7 @@ ${conditionTitle(r.visibility, r.spec, r.wording)}` },
       { id: "summary", label: "Summary", icon: "file-text" },
       { id: "diff", label: "Diff", icon: "git-compare", count: d.blinded ? null : (d.files.diffs.length || null) },
       { id: "ci", label: "CI", icon: "list-checks" },
-      { id: "oracle", label: "Oracle", icon: "scale" },
+      { id: "oracle", label: "Other teams' tests", icon: "scale" },   // the oracle/ check, in public words
       { id: "detectors", label: "Detectors", icon: "flag", count: d.blinded ? null : (r.detector_flags || null) },
       { id: "transcript", label: "Transcript", icon: "message-square" },
       { id: "trace", label: "Trace", icon: "activity" },
@@ -284,7 +284,7 @@ ${conditionTitle(r.visibility, r.spec, r.wording)}` },
           { key: "name", label: "Consumer", mono: true },
           { key: "status", label: "Result", render: (c) => badge(c.status, c.status === "pass" ? "pass" : c.status === "fail" ? "fail" : "warn") },
           { key: "message", label: "Message", render: (c) => c.message ? h("span", { class: "mono small" }, c.message) : "—" }],
-          rows: Object.entries(v.consumers || {}).map(([name, c]) => ({ name, ...c })) }) : empty("No oracle result (infrastructure failure or not reached)."));
+          rows: Object.entries(v.consumers || {}).map(([name, c]) => ({ name, ...c })) }) : empty("No result from the other teams' tests (infrastructure failure or not reached)."));
       const done = (label, v, chk) => v ? h("div", { class: "small" }, h("span", { class: "muted" }, `${label} `), badge(v.replace("_", " "), ticketDoneTone(v)),
         chk && chk.detail ? h("span", { class: "muted" }, ` ${chk.detail}`) : null) : null;
       // ticket_done is judged on the final PR; gen is shown beside it only when a repair changed it
@@ -347,7 +347,7 @@ ${conditionTitle(r.visibility, r.spec, r.wording)}` },
         { label: "Rules violated", value: res.rules.length ? res.rules.join(", ") : "none" },
         d.blinded ? null : { label: "Recorded at run time", value: res.recorded_valid == null ? "—" : (res.recorded_valid ? "valid" : "invalid") },
       ].filter(Boolean))];
-      if (d.blinded) nodes.push(notice("Only the validity of the trace is shown while the stage is blinded; the events carry CI and oracle results.", "", "lock"));
+      if (d.blinded) nodes.push(notice("Only the validity of the trace is shown while the stage is blinded; the events carry CI results and the other teams' tests.", "", "lock"));
       else if (res.violations && res.violations.length) nodes.push(table({ keyboard: false, caption: "Trace violations", columns: [
         { key: "seq", label: "Seq", num: true }, { key: "rule", label: "Rule", mono: true }, { key: "message", label: "Message" }], rows: res.violations }));
       return h("div", { class: "stack" }, ...nodes);

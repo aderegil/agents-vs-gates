@@ -487,7 +487,7 @@ export async function mount(el, shell) {
     items.push({ id: "by-agent", label: "By agent", render: () => h("div", { class: "stack" }, byAgentSection()) });
     // Simple mode keeps the story path; the instrument, the pilots and the exclusions are in Expert mode
     if (expert) {
-      items.push({ id: "instrument", label: "CI vs. oracle", render: () => h("div", { class: "stack" }, instrumentSection()) });
+      items.push({ id: "instrument", label: "CI vs. other teams' tests", render: () => h("div", { class: "stack" }, instrumentSection()) });
       if (d.pilot && d.pilot.runs) items.push({ id: "pilot", label: "Pilot 1 (X1) · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot)) });
       if (d.pilot2 && d.pilot2.runs) items.push({ id: "pilot2", label: "Pilot 2 (X2) · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot2)) });
       items.push({ id: "excluded", label: "Excluded", count: d.excluded.excluded.length || null, render: () => h("div", { class: "stack" }, excludedSection()) });

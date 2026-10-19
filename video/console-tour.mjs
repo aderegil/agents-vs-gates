@@ -195,7 +195,7 @@ export async function captureTour(context, enc, { fps = 30, port = 8793 } = {}) 
 // -------------------------------------------------------------------- page helpers
 
 /** Not filmed: advance the paused clock in small steps (real time passes too) until `ok()` holds. */
-async function until(page, ok, what, ms = 60000) {
+export async function until(page, ok, what, ms = 60000) {
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
     if (await ok().catch(() => false)) {
@@ -209,19 +209,19 @@ async function until(page, ok, what, ms = 60000) {
   throw new Error(`console tour: timed out waiting for ${what}`);
 }
 
-const ease = (x) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
+export const ease = (x) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
 
-function scrollTo(page, y) {
+export function scrollTo(page, y) {
   return page.evaluate((y) => { const b = document.getElementById("pbody"); if (b) b.scrollTop = y; }, y);
 }
 
 /** The subtitle, in the band that presentation() adds under the console. */
-function subtitle(page, text) {
+export function subtitle(page, text) {
   return page.evaluate((text) => { document.getElementById("tour-sub").textContent = text; }, text);
 }
 
 /** Init script (top document only): the subtitle band under the console, and plain words on screen (see the top). */
-function presentation({ band }) {
+export function presentation({ band }) {
   if (window.top !== window) return;
   const CODE = String.raw`(?:X-[a-z]+|X1c?|X2|[VSW][0-2](?:[-·][VSW][0-2])*|P\d|C8|RQ\d|HS-V2|H2|R-S[02]|R-C|D\d{1,2}|(?:p\d|x1c?|x2|c8|st)-\d{4})`;
   const LIST = String.raw`(?:${CODE})(?:[\s,·/–-]+(?:${CODE}))*`;
@@ -247,6 +247,8 @@ function presentation({ band }) {
     const css = document.createElement("style");
     css.textContent = `.app,.main{height:calc(100vh - ${band}px)!important}.auth{min-height:calc(100vh - ${band}px)!important}`
       + ".res-gloss,details.code-legend{display:none!important}"
+      // the namespace switch (REAL | MOCK) is chrome: the tour only shows real data, and no frame says MOCK
+      + "span.ns-switch[aria-label=Namespace]{display:none!important}"
       + `#tour-band{position:fixed;left:0;right:0;bottom:0;height:${band}px;z-index:99999;pointer-events:none;display:flex;`
       + "align-items:center;justify-content:center;background:#fff;border-top:1px solid #dfe3e8}"
       + "#tour-sub{font:500 26px 'IBM Plex Sans',system-ui,sans-serif;color:#2f3744;background:#fff;border:1.5px solid #c4cad3;"
@@ -271,7 +273,7 @@ function presentation({ band }) {
 }
 
 /** A ring around what is about to be clicked (the headless browser has no visible pointer); null removes it. */
-function ring(page, box) {
+export function ring(page, box) {
   return page.evaluate((box) => {
     let r = document.getElementById("tour-ring");
     if (!box) { r?.remove(); return; }

@@ -200,6 +200,8 @@ def snapshot() -> int:
                 shutil.copytree(f, t / "diffs")
         n += 1
     (WORK / "results" / "mock" / "runs").mkdir(parents=True, exist_ok=True)
+    for f in paths.results_root().glob("smoke*.json"):      # the live smoke tests Run Control's guards read
+        shutil.copy2(f, WORK / "results" / f.name)
     return n
 
 

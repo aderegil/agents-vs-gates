@@ -3,7 +3,7 @@
   "name": "Run Explorer",
   "icon": "table",
   "order": 5,
-  "description": "Individual runs: diff, CI, oracle, detectors, transcript and trace.",
+  "description": "Individual runs: diff, CI, the other teams' tests, detectors, transcript and trace.",
   "roles": ["owner", "operator", "presenter"],
   "readonly_roles": ["presenter"],
   "kind": "module",
