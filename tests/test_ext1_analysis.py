@@ -104,8 +104,11 @@ class Ext1Summary(unittest.TestCase):
             tree(t)
             deck = deck_numbers_ext.build("real")
         self.assertIn("## Claude Code + Sonnet 5.5 (`cc-sonnet`)", deck)
-        self.assertIn("| **no rule (V0·S0)** | both | 8 of 8 [0.631, 1.000] | 7 of 8 | 1 of 8 [0.003, 0.527] | 0 of 8 |",
-                      deck)
+        self.assertIn("| **no rule (V0·S0)** | both | 8 of 8 [0.631, 1.000] | 7 of 8 | 1 of 8 [0.003, 0.527] | 0 of 0 "
+                      "| 0 of 8 |", deck)
+        # first-attempt CI per unit, never summed across units
+        self.assertIn("| Claude Code + Sonnet 5.5 | P1, P7 | 10 of 11 | — |", deck)
+        self.assertNotIn("all units", deck.lower())
         self.assertIn("### P1 + P7 — combined (descriptive, no p-values)", deck)
         self.assertIn("### P6 (P1 part) + P7 — combined", deck)
         self.assertIn("1 of 3 (T2/T3 1)", deck)
