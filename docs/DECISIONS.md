@@ -689,3 +689,9 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
   runs that read a solution or oracle file: no rule X-rename 50/50 and X-remove 35/35; rule in the spec 0/47 and 0/48;
   sees every repo X-rename 41/42, X-remove 17/31 (vs 32/50 with them). Of the 46 readers, 36 still broke a consumer.
   The conclusions do not depend on these runs; whether and how to show it in the deck is Alfredo's call.
+- **Addendum 3 make-up run (2026-10-18 20:13–20:25 Monterrey, Alfredo: "100 in every model").** p9-0185, agy-flash
+  X-rename V2·S0, frozen before it ran (lock 02:13:57 UTC). Result: analysable (no canary, no read of solutions or
+  consumer tests), broke a consumer on the first attempt, fixed after CI (`fixed_code`). Every cell now has 50
+  analysable runs per ticket for `cc-sonnet` (P1 + P7), `codex` (P6 P1 part + P7) and `agy-flash` (P8 + P9).
+  Gemini V2·S0 is 80 of 100 (X-rename 48/50, X-remove 32/50); P9 HS-V2 X-rename 30/30 vs 30/31 (p 1). During the run
+  agy also read files in the new `C:\avg\try-it-1018` worktree (outside its workspace, recorded; not a solution file).
