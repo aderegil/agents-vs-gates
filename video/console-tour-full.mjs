@@ -82,7 +82,7 @@ export async function captureFullTour(context, enc, { fps = 30, port = 8793 } = 
       await until(page, ready, what, 120000);
       await scrollTo(page, 0);
     };
-    const tab = (name) => page.getByRole("tab", { name, exact: true }).first();
+    const tab = (name) => page.getByRole("tab").filter({ hasText: name }).first();   // a tab may carry a count ("Diff 2")
     const maxScroll = () => page.evaluate(() => { const b = document.getElementById("pbody"); return b.scrollHeight - b.clientHeight; });
     const glide = async (ms, to) => {
       const from = await page.evaluate(() => document.getElementById("pbody").scrollTop);
