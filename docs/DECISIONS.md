@@ -4,62 +4,31 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
 
 ## WP0 · Contracts and base (2026-10-10, night)
 
-- 2026-10-10 · Results are namespaced `results/<ns>/{manifest.json,state.json,runs/<id>/…}` with `ns ∈ {real, mock}`
-  · flat `results/runs/<id>` of §10.7 · §21.6 requires real and mock never to mix; the namespace is derived from the
-  unit (adapter `mock` → `mock`).
-- 2026-10-10 · Mock batches use their own workers `C:\avg\wm1..wm3`, the selftest uses `C:\avg\wst` · sharing
-  `w1..w3` · a mock batch launched from the console must never disturb a real run's worker.
-- 2026-10-10 · Selftest runs are archived in `results/mock/runs/st-*` with `stage: "selftest"`, always unblinded · a
-  separate namespace · gives the Replay Theater and Run Explorer mock material from the first morning (§22.5.2).
-- 2026-10-10 · CI, oracle and ticket_done run `tsc` and `depcruise` from the repo's `node_modules` via
-  `node <entry>` (`harness.paths.tool`) · resolving from the worker · one pinned toolchain, no `cmd.exe` shims.
-  `npm test` inside the workspace still resolves from the worker's `node_modules` (§5.2).
-- 2026-10-10 · `trace/schema/simulation-log-event-2.1.0.json` was generated in WP0 (it is the contract between the
-  harness emitter and the replay exporter); `trace/validate.py` and the examples go with the harness package (WP2),
-  so emitter and validator are built together · leaving all of `trace/` to WP6 · avoids a late, blocking contract.
-  WP6 is reduced to the Scenario plugin. The 2.1 schema also enforces the required payload fields of spec-logs §4
-  (2.0 left payloads unchecked) — additive.
-- 2026-10-10 · Python package named `trace` shadows the stdlib `trace` module when running from the repo root · rename
-  · §13.4 fixes the command `python -m trace.validate`; nothing in the project imports the stdlib `trace`.
-- 2026-10-10 · Truth-table cells marked "—" in the Detectors column are checked as "no detector fires" ·
-  "not evaluated" · stricter: a reference patch that trips a detector by accident would hide a detector bug.
-- 2026-10-10 · ticket_done uses its own fixture: 1 line, 2 × $6.25 USD, channel `web` (§6.4 says "12.5 for the
-  fixture"); `arch9_signal` is evaluated on the same captures · oracle fixture A ($24.97) as §14.5 suggests · §6.4 is
-  the more specific text; ticket_done is not the oracle, so sharing CI's shape does not affect oracle independence.
-- 2026-10-10 · Canaries: one per origin (docs, broker, architecture, solutions, each oracle suite, acceptance, each
-  consumer repo), registry in `harness/canaries.json`; planted as a comment in each consumer `.ts`/`.md` file, a
-  `_canary` key in broker JSONs, a header line in each patch, a trailing comment in each `docs/` file. Workspaces
-  that legitimately receive copies get them with canary lines/keys stripped (§5.8).
-- 2026-10-10 · Avatars are served at `/api/teams/avatars` instead of `/api/avatars` · a core alias · keeps every
-  plugin route under its own prefix (§21.2).
+- 2026-10-10 · Results are namespaced `results/<ns>/{manifest.json,state.json,runs/<id>/…}` with `ns ∈ {real, mock}` · flat `results/runs/<id>` of §10.7 · §21.6 requires real and mock never to mix; the namespace is derived from the unit (adapter `mock` → `mock`).
+- 2026-10-10 · Mock batches use their own workers `C:\avg\wm1..wm3`, the selftest uses `C:\avg\wst` · sharing `w1..w3` · a mock batch launched from the console must never disturb a real run's worker.
+- 2026-10-10 · Selftest runs are archived in `results/mock/runs/st-*` with `stage: "selftest"`, always unblinded · a separate namespace · gives the Replay Theater and Run Explorer mock material from the first morning (§22.5.2).
+- 2026-10-10 · CI, oracle and ticket_done run `tsc` and `depcruise` from the repo's `node_modules` via `node <entry>` (`harness.paths.tool`) · resolving from the worker · one pinned toolchain, no `cmd.exe` shims. `npm test` inside the workspace still resolves from the worker's `node_modules` (§5.2).
+- 2026-10-10 · `trace/schema/simulation-log-event-2.1.0.json` was generated in WP0 (it is the contract between the harness emitter and the replay exporter); `trace/validate.py` and the examples go with the harness package (WP2), so emitter and validator are built together · leaving all of `trace/` to WP6 · avoids a late, blocking contract. WP6 is reduced to the Scenario plugin. The 2.1 schema also enforces the required payload fields of spec-logs §4 (2.0 left payloads unchecked) — additive.
+- 2026-10-10 · Python package named `trace` shadows the stdlib `trace` module when running from the repo root · rename · §13.4 fixes the command `python -m trace.validate`; nothing in the project imports the stdlib `trace`.
+- 2026-10-10 · Truth-table cells marked "—" in the Detectors column are checked as "no detector fires" · "not evaluated" · stricter: a reference patch that trips a detector by accident would hide a detector bug.
+- 2026-10-10 · ticket_done uses its own fixture: 1 line, 2 × $6.25 USD, channel `web` (§6.4 says "12.5 for the fixture"); `arch9_signal` is evaluated on the same captures · oracle fixture A ($24.97) as §14.5 suggests · §6.4 is the more specific text; ticket_done is not the oracle, so sharing CI's shape does not affect oracle independence.
+- 2026-10-10 · Canaries: one per origin (docs, broker, architecture, solutions, each oracle suite, acceptance, each consumer repo), registry in `harness/canaries.json`; planted as a comment in each consumer `.ts`/`.md` file, a `_canary` key in broker JSONs, a header line in each patch, a trailing comment in each `docs/` file. Workspaces that legitimately receive copies get them with canary lines/keys stripped (§5.8).
+- 2026-10-10 · Avatars are served at `/api/teams/avatars` instead of `/api/avatars` · a core alias · keeps every plugin route under its own prefix (§21.2).
 - 2026-10-10 · `@types/node` pinned to 24.13.2 (an exact 24.x) · `^24` · reproducible `npm ci` across workers.
 - 2026-10-10 · (Corrected 2026-10-11 by WP5:) `C:\avg\pixel-souls\SOURCE.txt` does exist and records commit `046ad8e6…` (branch `claude/simulation-game-characters-5vvhqj`); `console/plugins/replay/app/ORIGIN.md` cites it. The lead first missed it.
-- 2026-10-10 · The builder's subagents do not commit; the lead commits each package when it closes · subagents
-  committing in parallel · avoids index races in one working tree.
+- 2026-10-10 · The builder's subagents do not commit; the lead commits each package when it closes · subagents committing in parallel · avoids index races in one working tree.
 
 ## WP1a · Scenario repos (2026-10-10, night; Sonnet subagent)
-- 2026-10-10 · ESM `nodenext` with `.js` import suffixes in all four TS repos · CommonJS · works with the `.cjs`
-  dependency-cruiser config; all builds and `arch` green.
-- 2026-10-10 · `arch` = `depcruise src --config .dependency-cruiser.cjs --ignore-known` (default baseline file name),
-  `tsPreCompilationDeps: true` so type-only imports count (freezes `legacyExport`'s adapter import) · explicit file arg.
-- 2026-10-10 · LOC ranges (§5.2) are met by all three measures (total, non-blank, code-only) by adding genuine
-  features (customer order listing with cursor, 30-day cancel window, payment retry, `/health`; billing reminders and
-  payment recording; storefront cache, receipt, status badge) · padding · the metric is unspecified.
-- 2026-10-10 · Payments gateway exposes only `authorize` (no void on cancel) · a void call · one payments call is what
-  CI's netstub models.
-- 2026-10-10 · `POST /orders` and cancel return the same body as `GET /orders/{id}` (no `customerEmail`, no
-  `cancelledAt`) · full order · avoids PII in responses and keeps one response mapping (`toOrderResponse`).
-- 2026-10-10 · Consumers ignore unknown fields (incl. `schemaVersion`) · strict schema · additive changes must stay
-  compatible (ARCH-4).
-- 2026-10-10 · Broker `requires` use only the §5.4 field lists; storefront's `status` is a plain `string` · enum ·
-  new statuses stay compatible.
-- 2026-10-10 · Invented catalog hosts for M2 services (customer-api `customer.identity.internal`, erp-api
-  `erp.integration.internal`, `PaymentCaptured` on `payments.captured`); `envAliases` on every provided API ·
-  the spec leaves them open. inventory-service is a third catalog consumer of `OrderPlaced` without a broker file (M2).
-- 2026-10-10 · Consumer `.dependency-cruiser.cjs` files also carry the canary line · `.ts`/`.md` only · stripping
-  works on any line containing `CANARY-`.
-- 2026-10-10 · Known gap: `npm test` per repo takes ~5 s of test time but `tsc` adds 14–20 s and node startup ~2.8 s
-  on this machine, so the "< 10 s" target (§5.2) is not met end to end · not fixable without changing the toolchain.
+- 2026-10-10 · ESM `nodenext` with `.js` import suffixes in all four TS repos · CommonJS · works with the `.cjs` dependency-cruiser config; all builds and `arch` green.
+- 2026-10-10 · `arch` = `depcruise src --config .dependency-cruiser.cjs --ignore-known` (default baseline file name), `tsPreCompilationDeps: true` so type-only imports count (freezes `legacyExport`'s adapter import) · explicit file arg.
+- 2026-10-10 · LOC ranges (§5.2) are met by all three measures (total, non-blank, code-only) by adding genuine features (customer order listing with cursor, 30-day cancel window, payment retry, `/health`; billing reminders and payment recording; storefront cache, receipt, status badge) · padding · the metric is unspecified.
+- 2026-10-10 · Payments gateway exposes only `authorize` (no void on cancel) · a void call · one payments call is what CI's netstub models.
+- 2026-10-10 · `POST /orders` and cancel return the same body as `GET /orders/{id}` (no `customerEmail`, no `cancelledAt`) · full order · avoids PII in responses and keeps one response mapping (`toOrderResponse`).
+- 2026-10-10 · Consumers ignore unknown fields (incl. `schemaVersion`) · strict schema · additive changes must stay compatible (ARCH-4).
+- 2026-10-10 · Broker `requires` use only the §5.4 field lists; storefront's `status` is a plain `string` · enum · new statuses stay compatible.
+- 2026-10-10 · Invented catalog hosts for M2 services (customer-api `customer.identity.internal`, erp-api `erp.integration.internal`, `PaymentCaptured` on `payments.captured`); `envAliases` on every provided API · the spec leaves them open. inventory-service is a third catalog consumer of `OrderPlaced` without a broker file (M2).
+- 2026-10-10 · Consumer `.dependency-cruiser.cjs` files also carry the canary line · `.ts`/`.md` only · stripping works on any line containing `CANARY-`.
+- 2026-10-10 · Known gap: `npm test` per repo takes ~5 s of test time but `tsc` adds 14–20 s and node startup ~2.8 s on this machine, so the "< 10 s" target (§5.2) is not met end to end · not fixable without changing the toolchain.
 - 2026-10-11 · Oracle-suite author prompt recorded verbatim in `docs/ORACLE-AUTHOR-PROMPT.md` (§8.2) · inline here · it is long.
 
 ## WP3 · Console shell (2026-10-11; Opus subagent)
@@ -603,8 +572,7 @@ Format: date · decision · discarded alternative · why. Proposals for Alfredo 
   - AWS AI-DLC (blog + `awslabs/aidlc-workflows`);
   - Kiro (specs, steering, hooks);
   - GitHub spec-kit;
-  - "Any of the above + the gate".
-  The exporter turns each into a replay that the theater plays (`public/scenes`, bundled into `web/dist`). Every beat cites the section it stages (`replay/scenes/SOURCES.md`, generated). Validation:
+  - "Any of the above + the gate". The exporter turns each into a replay that the theater plays (`public/scenes`, bundled into `web/dist`). Every beat cites the section it stages (`replay/scenes/SOURCES.md`, generated). Validation:
   - trace rules 1–13 and the replay schema, in `replay.tests.test_scenes`;
   - real exports are unchanged: illustration support only touches traces whose source is `illustration`, so `EXPORTER_VERSION` stays 4 and no real cache is invalidated.
 - **Labelling.**
@@ -719,59 +687,19 @@ Branch `theater-1016` (worktree `C:\avg\theater-1016`, from `night-1013`), not m
 - Tests: theater `npm test` 61/61 (14 new in `test/theater1016.test.ts`: focus, bubble cap and fade, avatar scale, overlap rules, lanes timeline and neutral variant); `node --test console/plugins/*/web/*.test.mjs` 51/51; replay python tests 53 OK (1 skipped).
 
 ## theater-1016 · Plain words instead of codes (2026-10-16; builder subagent, Alfredo: «Pero sí aparecen y por eso confunden»)
-- **One label map:** `console/web/lib/labels.js` (types in `labels.d.ts`). The console plugins import it as before; the
-  theater re-exports it (`app/src/components/labels.ts`, no copy any more) and the clip cards load it from the new
-  `/labels/` mount (`video/lib.mjs`). Meanings checked against PREREGISTRATION.md §6/§7, the addendum on `ext-1016`
-  (P7, P8, C8), `scenario/tasks/X-*.md`, `harness/detectors.py`.
-- **Wording.** Tickets: X-rename «Rename two fields», X-remove «Remove a field», X-add «Add an optional field», X-api
-  «Rename a field in the API», X-dep «Call another team's API», X-units «Total in dollars». V0 «Own repo», V1
-  «Contracts inside the repo» (plural: every consumer contract is copied in; Alfredo's example said «Contract»), V2
-  «Every repo visible». S0 «No rule», S1 «Architecture notes» (prose without rule IDs or consumers), S2 «Rule in the
-  spec». W1 «Ticket as written» (never shown: it is the default), W2 «Ticket asks not to break consumers». Stages: P0
-  «Trial runs», P1 «Main test», P2 «Pressure test», P3 «Reviewer test», P4 «More tickets», P5 «Opus and wording», P6
-  «Codex repeat», P7 «More main-test runs», P8 «Third agent», C8 «Third-agent trial runs», X1/X2 «Pilot 1/2». H2
-  «Rule vs no rule», HS-V2 «Every repo vs own repo». Detectors D1–D8 get short words (D6 «Consumer contract changed»).
-  Run ids read «Main test · run 2» (p1-0002), «Codex repeat · run 12» (p6-0012), «Simulated run 14» (st-0014).
-- **Theater and clips: words only.** `plainReplay` (on load) rewrites the free text of a replay that reaches the
-  screen (step text, subtitles, markers, title, context sheet, ticket origin, events-panel text); header, compare
-  heads, picker, canvas title, watermark, V1 desk label («the other teams' contracts»), sheets and the events panel's
-  detector row use the map. Codes stay in the data, in `<option title>`/`data-run`/`data-code`, and in file names.
-  ARCH-n rule names, file paths, contract names and model ids stay: they are what the audience reads in the code.
-- **Console: words first, code after** in parentheses or a chip (Run Explorer, Run Control, Results, Home, Overview),
-  plus «What the codes mean» (`ui.js codeLegend`, a native `<details>` with one `<dl>` per family) on Home, Run Control,
-  Run Explorer and Results. The unblind confirmation still asks for `UNBLIND P1` (the code is the safety word).
-- **Left as codes (not in scope or need a visual check; the charts, figures, RQs and reviewer conditions were done next, see «Plain words in the charts and figures»):** the Results chart labels built in
-  `console/plugins/results/payload.py` (group labels such as «X-rename V0·S0»; exported SVG/PNG figures for the deck
-  would change size), the Story figures' captions in `console/plugins/story/figures.py`, RQ1–RQ7 and the reviewer
-  conditions R-S0/R-S2/R-C; the talk-draft video scenes (`experiment`, `break*`, `stop*`, `results` in
-  `video/scenes/scenes.js`, used by `build.mjs`, not by the deck clips). No meaning was unclear.
-- **Tests:** `app/test/plainwords.test.ts` (map, `plainText`, run names, and no code in any visible text of the 7 demo
-  replays, 5 scenes and the two clip replays after `plainReplay`); theater 67/67; console model/chart tests 35/35. Clip
-  cards checked in headless Edge (scene pages only, no video): no code in the five changed cards.
+- **One label map:** `console/web/lib/labels.js` (types in `labels.d.ts`). The console plugins import it as before; the theater re-exports it (`app/src/components/labels.ts`, no copy any more) and the clip cards load it from the new `/labels/` mount (`video/lib.mjs`). Meanings checked against PREREGISTRATION.md §6/§7, the addendum on `ext-1016` (P7, P8, C8), `scenario/tasks/X-*.md`, `harness/detectors.py`.
+- **Wording.** Tickets: X-rename «Rename two fields», X-remove «Remove a field», X-add «Add an optional field», X-api «Rename a field in the API», X-dep «Call another team's API», X-units «Total in dollars». V0 «Own repo», V1 «Contracts inside the repo» (plural: every consumer contract is copied in; Alfredo's example said «Contract»), V2 «Every repo visible». S0 «No rule», S1 «Architecture notes» (prose without rule IDs or consumers), S2 «Rule in the spec». W1 «Ticket as written» (never shown: it is the default), W2 «Ticket asks not to break consumers». Stages: P0 «Trial runs», P1 «Main test», P2 «Pressure test», P3 «Reviewer test», P4 «More tickets», P5 «Opus and wording», P6 «Codex repeat», P7 «More main-test runs», P8 «Third agent», C8 «Third-agent trial runs», X1/X2 «Pilot 1/2». H2 «Rule vs no rule», HS-V2 «Every repo vs own repo». Detectors D1–D8 get short words (D6 «Consumer contract changed»). Run ids read «Main test · run 2» (p1-0002), «Codex repeat · run 12» (p6-0012), «Simulated run 14» (st-0014).
+- **Theater and clips: words only.** `plainReplay` (on load) rewrites the free text of a replay that reaches the screen (step text, subtitles, markers, title, context sheet, ticket origin, events-panel text); header, compare heads, picker, canvas title, watermark, V1 desk label («the other teams' contracts»), sheets and the events panel's detector row use the map. Codes stay in the data, in `<option title>`/`data-run`/`data-code`, and in file names. ARCH-n rule names, file paths, contract names and model ids stay: they are what the audience reads in the code.
+- **Console: words first, code after** in parentheses or a chip (Run Explorer, Run Control, Results, Home, Overview), plus «What the codes mean» (`ui.js codeLegend`, a native `<details>` with one `<dl>` per family) on Home, Run Control, Run Explorer and Results. The unblind confirmation still asks for `UNBLIND P1` (the code is the safety word).
+- **Left as codes (not in scope or need a visual check; the charts, figures, RQs and reviewer conditions were done next, see «Plain words in the charts and figures»):** the Results chart labels built in `console/plugins/results/payload.py` (group labels such as «X-rename V0·S0»; exported SVG/PNG figures for the deck would change size), the Story figures' captions in `console/plugins/story/figures.py`, RQ1–RQ7 and the reviewer conditions R-S0/R-S2/R-C; the talk-draft video scenes (`experiment`, `break*`, `stop*`, `results` in `video/scenes/scenes.js`, used by `build.mjs`, not by the deck clips). No meaning was unclear.
+- **Tests:** `app/test/plainwords.test.ts` (map, `plainText`, run names, and no code in any visible text of the 7 demo replays, 5 scenes and the two clip replays after `plainReplay`); theater 67/67; console model/chart tests 35/35. Clip cards checked in headless Edge (scene pages only, no video): no code in the five changed cards.
 
 ## theater-1016 · Plain words in the charts and figures; «Start here» (2026-10-16; builder subagent, Alfredo's request)
-- **Python reads the one map.** `console/core/labels.py` parses the data blocks of `console/web/lib/labels.js` (one
-  entry per line; a line it cannot read is an error, so a code cannot come back on screen silently) and mirrors the
-  helpers (`with_code`, `plain_condition`, `condition_code`, `run_name`). No second copy of the words.
-  `console/tests/test_labels.py` runs Node on labels.js and checks both sides hold the same map and give the same strings.
-- **New families in the map:** `QUESTIONS` (RQ1–RQ5, the tab words already used by Results: «Nothing in view», «Rule or
-  repos», «What CI does», «AI reviewer», «Ticket wording») and `REVIEWERS` (R-S0 «Reviewer: no rule», R-S2 «Reviewer:
-  rule in the spec», R-C «Reviewer: rule and contracts»), both in the «What the codes mean» legend. RQ6 and RQ7 (design
-  spec only) appear nowhere in the console, so they are not in the map.
-- **Results charts:** each row is the words with its code muted at the right («Every repo visible · No rule  V2·S0»);
-  the group header carries stage · unit · ticket in words with the codes in parentheses; rows are grouped so a header
-  is drawn once. The row-label column grew to 40 % of the width (cap 300) and the app draws charts at 680 wide, so the
-  longest words fit (chart test). Titles, subtitles, source notes («Main test (P1)»), the coding table (T1–T3) and the
-  RQ tabs are words first. Figure sizes changed; the deck does not use these figures.
-- **Home figures:** captions, claims, notes (run ids as «Codex repeat · run 31 (p6-0031)») and the «Results ·» links are
-  words first, code in parentheses; the p-value row uses the ticket words on both sides, so «matches» still compares
-  like with like. `test_story` checks that no code shows outside parentheses. The unblind safety word stays `UNBLIND P1`.
-- **«Start here»** (`console/plugins/start`) is the landing page: no hash → `#/start` (`LANDING` in `web/app.js`), deep
-  links still work. Five blocks in simple English, no codes, text served by `GET /api/start` so the test can read it:
-  what we tested (the H2 question, Meridian Retail, the three main-test setups), one line per page (only the pages the
-  role can open; Expert-only ones are marked), the three clicks (Replay Theater → «Select a run…» → Play, checked
-  against App.tsx and Player.tsx), where the results are, and «words first». Plugins renumbered 0–10 so Start here is
-  0 and keeps a `g` key; Users & Audit (10) has no key and stays in the user menu.
+- **Python reads the one map.** `console/core/labels.py` parses the data blocks of `console/web/lib/labels.js` (one entry per line; a line it cannot read is an error, so a code cannot come back on screen silently) and mirrors the helpers (`with_code`, `plain_condition`, `condition_code`, `run_name`). No second copy of the words. `console/tests/test_labels.py` runs Node on labels.js and checks both sides hold the same map and give the same strings.
+- **New families in the map:** `QUESTIONS` (RQ1–RQ5, the tab words already used by Results: «Nothing in view», «Rule or repos», «What CI does», «AI reviewer», «Ticket wording») and `REVIEWERS` (R-S0 «Reviewer: no rule», R-S2 «Reviewer: rule in the spec», R-C «Reviewer: rule and contracts»), both in the «What the codes mean» legend. RQ6 and RQ7 (design spec only) appear nowhere in the console, so they are not in the map.
+- **Results charts:** each row is the words with its code muted at the right («Every repo visible · No rule  V2·S0»); the group header carries stage · unit · ticket in words with the codes in parentheses; rows are grouped so a header is drawn once. The row-label column grew to 40 % of the width (cap 300) and the app draws charts at 680 wide, so the longest words fit (chart test). Titles, subtitles, source notes («Main test (P1)»), the coding table (T1–T3) and the RQ tabs are words first. Figure sizes changed; the deck does not use these figures.
+- **Home figures:** captions, claims, notes (run ids as «Codex repeat · run 31 (p6-0031)») and the «Results ·» links are words first, code in parentheses; the p-value row uses the ticket words on both sides, so «matches» still compares like with like. `test_story` checks that no code shows outside parentheses. The unblind safety word stays `UNBLIND P1`.
+- **«Start here»** (`console/plugins/start`) is the landing page: no hash → `#/start` (`LANDING` in `web/app.js`), deep links still work. Five blocks in simple English, no codes, text served by `GET /api/start` so the test can read it: what we tested (the H2 question, Meridian Retail, the three main-test setups), one line per page (only the pages the role can open; Expert-only ones are marked), the three clicks (Replay Theater → «Select a run…» → Play, checked against App.tsx and Player.tsx), where the results are, and «words first». Plugins renumbered 0–10 so Start here is 0 and keeps a `g` key; Users & Audit (10) has no key and stays in the user menu.
 
 ## Addendum 1: P7, P8 and the agy-flash unit (2026-10-15/16, branch ext-1016; builder, Alfredo's brief `encargo-2026-10-15-extension-y-agy.md`)
 Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothing real ran; every 🔒 step waits for Alfredo.
@@ -816,171 +744,64 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
 - **Guard so it cannot happen again.** The runner now refuses to start while another runner of the same namespace is alive (`results/<ns>/runner.lock` holding the pid, plus `state.json`'s pid; checked with the console's `pid_alive`), and removes the lock when it ends. Test `test_2c_refuses_while_another_runner_is_alive`. The resume step now relies on that refusal instead of reading `state.json`.
 
 ### P8 starts while Codex waits for its quota (2026-10-16, ~17:16 Monterrey)
-- Alfredo's «sí» for P8 came before P7 ended ("we can run agy while we wait for codex"). Nothing in the addendum ties
-  P8's start to P7's end; the order "P8 after P7" was only the builder's plan.
-- Still one runner at a time (runner.lock). A driver script runs P8 first. When a batch ends rate-limited, that unit
-  waits for its own reset and the other one runs if it is free. Exit 0 = that stage is finished; any other exit stops both.
-- Consequence: P7's last 79 Codex runs may resume after P8's batch, not right at Codex's 21:02 reset. Run order inside
-  each stage stays the manifest's; blinding is unchanged for both stages.
+- Alfredo's «sí» for P8 came before P7 ended ("we can run agy while we wait for codex"). Nothing in the addendum ties P8's start to P7's end; the order "P8 after P7" was only the builder's plan.
+- Still one runner at a time (runner.lock). A driver script runs P8 first. When a batch ends rate-limited, that unit waits for its own reset and the other one runs if it is free. Exit 0 = that stage is finished; any other exit stops both.
+- Consequence: P7's last 79 Codex runs may resume after P8's batch, not right at Codex's 21:02 reset. Run order inside each stage stays the manifest's; blinding is unchanged for both stages.
 
 ### P7 complete and unblinded; blind-coding batch 5 starts while P8 runs (2026-10-17)
-- P7 480 of 480 (cc-sonnet 240, codex 240). One unit at a time; Codex paused on its quota several times, and Claude
-  Code stopped the driver twice for low memory (runs cut in the middle go back to pending, as the runner already does).
-- To unblind P7 while P8 was running, P8 was stopped after its current runs (control file), `--unblind P7` ran
-  (17:48:36 UTC, not forced), and P8 was relaunched. Reason: the runner keeps state.json in memory and would have
-  overwritten the unblinding.
-- `analysis.coding_export` did not check blinding; it now leaves out runs of a stage that is still blinded (test added).
-  Before, every export ran after its stages were unblinded, so no earlier sheet is affected.
-- Batch 5: the previous coding files are archived in `results/real/coding/archive-2026-10-17-batch4/`; the 743 earlier
-  labels are carried over by run id / review id; 93 new gate rows (P7 92, C8 1) go to the two blind LLM coders (A = Opus,
-  B = Sonnet), the same procedure and declared deviation as batches 1–4.
+- P7 480 of 480 (cc-sonnet 240, codex 240). One unit at a time; Codex paused on its quota several times, and Claude Code stopped the driver twice for low memory (runs cut in the middle go back to pending, as the runner already does).
+- To unblind P7 while P8 was running, P8 was stopped after its current runs (control file), `--unblind P7` ran (17:48:36 UTC, not forced), and P8 was relaunched. Reason: the runner keeps state.json in memory and would have overwritten the unblinding.
+- `analysis.coding_export` did not check blinding; it now leaves out runs of a stage that is still blinded (test added). Before, every export ran after its stages were unblinded, so no earlier sheet is affected.
+- Batch 5: the previous coding files are archived in `results/real/coding/archive-2026-10-17-batch4/`; the 743 earlier labels are carried over by run id / review id; 93 new gate rows (P7 92, C8 1) go to the two blind LLM coders (A = Opus, B = Sonnet), the same procedure and declared deviation as batches 1–4.
 
 ### P8 complete and unblinded; blind-coding batch 6 (2026-10-17/18)
-- P8 120 of 120 (agy-flash), ended 01:19 UTC on 18 Oct; unblinded 01:19:49 UTC (not forced). One Google quota stop
-  (14:27–17:06 Monterrey) and three driver stops by Claude Code for low memory; cut runs went back to pending.
-- Exclusions (pre-registered rule, no replacement): 4 P8 runs hit a canary (oracle-acceptance 2, solutions 1,
-  consumer-analytics-ingest 1), all in V2·S0, which ends at 36 of 40 (X-rename 19, X-remove 17). The addendum had
-  declared that agy's sandbox does not stop its file tools.
-- Batch 6: 33 new gate rows (all P8), coders A = Opus, B = Sonnet. Agreement 32 of 33 (A: honest_escalation 28,
-  none 5; B: 27, 6). The one disagreement (C96431f: the last message is cut at 1500 characters before naming the
-  consumer) keeps A's label and is listed in `results/real/coding/batch6-disagreements.csv` for Alfredo. No deck
-  number depends on it (the deck table counts breaks, CI and T2/T3 gate edits).
+- P8 120 of 120 (agy-flash), ended 01:19 UTC on 18 Oct; unblinded 01:19:49 UTC (not forced). One Google quota stop (14:27–17:06 Monterrey) and three driver stops by Claude Code for low memory; cut runs went back to pending.
+- Exclusions (pre-registered rule, no replacement): 4 P8 runs hit a canary (oracle-acceptance 2, solutions 1, consumer-analytics-ingest 1), all in V2·S0, which ends at 36 of 40 (X-rename 19, X-remove 17). The addendum had declared that agy's sandbox does not stop its file tools.
+- Batch 6: 33 new gate rows (all P8), coders A = Opus, B = Sonnet. Agreement 32 of 33 (A: honest_escalation 28, none 5; B: 27, 6). The one disagreement (C96431f: the last message is cut at 1500 characters before naming the consumer) keeps A's label and is listed in `results/real/coding/batch6-disagreements.csv` for Alfredo. No deck number depends on it (the deck table counts breaks, CI and T2/T3 gate edits).
 - `results/real/summary.md` and `results/real/deck-numbers-ext.md` regenerated with P7 and P8.
 
 
 ### Addendum 2: P9, `agy-flash` up to 50 runs per cell (2026-10-18)
-- Alfredo's decision (relayed by the deck session, confirmed by him in this terminal): Gemini gets the same depth as
-  Claude and Codex, 100 runs per condition. P9 = 30 new runs per P8 cell plus that cell's P8 shortfall (canary
-  exclusions: X-rename V2·S0 1, X-remove V2·S0 3) = 184 runs, seed 20261018, sidecar `results/real/manifest-ext2.json`.
-- Declared in the addendum: decided after P8 was seen, so the confirmatory tests use P9's new runs only; P8 + P9 is
-  descriptive. P9's own exclusions are not made up. Quota stop: 24 Oct 2026 12:00 Monterrey, last complete round.
-- Code: `harness.manifest --ext2-sidecar` (shortfall from exclusion flags, never outcomes; refused before P8 is
-  complete), `prereg` addendum 2 (`PREREGISTRATION-ADDENDUM-2.md` + the sidecar), runner stage P9 (needs the original
-  lock and both addendum locks), summary `ext2` block and the deck table's P9 and P8 + P9 sections.
-- The auto-mode safety check blocked the first edits of the addendum and of the analysis stage list because the
-  request came from another session; they were made after Alfredo confirmed in this terminal.
-- `test_analysis_tools` fixed: its sheet export needs the stages unblinded since the 17 Oct blinding fix. The 3 errors
-  in `test_ext1.RunnerExt1` come from its setUp writing the addendum-1 sidecar while the real lock exists (since
-  16 Oct); not related to P9.
-- **P9 at 6 workers (2026-10-18 ~14:05 Monterrey, Alfredo: "reduce time to half").** The frozen addendum says 3
-  workers; this is an operational deviation, recorded here: it changes neither N, cells, seed, run order nor the
-  analysis (each run has its own worker folder and HOME). With Google AI Ultra the quota is not the limit. The
-  runner now accepts `--workers` up to 6, only if every worker folder is ready (w4–w6 set up with
-  `doctor.setup_worker`, without touching w1–w3 in use). The 3-worker batch was stopped after its current runs
-  (control file) and P9 relaunched with 6.
-- **Isolation-breach stop and 8 workers (2026-10-18 14:32–14:40 Monterrey).** Alfredo had an interactive agy CLI
-  session open (started 13:45 from his own PowerShell); closing it wrote his real
-  `~\.gemini\antigravity-cli\history.jsonl` at 14:31:47. The guard saw the change during three P9 sessions
-  (p9-0012, p9-0016, p9-0018), marked them `isolation_breach` and stopped the batch (spec 10.6). No P9 run wrote there:
-  the runs stay pending, are never data, and are re-run. Alfredo then asked for 8 workers to recover the time: the
-  runner accepts up to 8 (w7, w8 set up), and P9 was relaunched at 14:40. Rule for the rest of P9: no agy CLI on this
-  machine while it runs.
+- Alfredo's decision (relayed by the deck session, confirmed by him in this terminal): Gemini gets the same depth as Claude and Codex, 100 runs per condition. P9 = 30 new runs per P8 cell plus that cell's P8 shortfall (canary exclusions: X-rename V2·S0 1, X-remove V2·S0 3) = 184 runs, seed 20261018, sidecar `results/real/manifest-ext2.json`.
+- Declared in the addendum: decided after P8 was seen, so the confirmatory tests use P9's new runs only; P8 + P9 is descriptive. P9's own exclusions are not made up. Quota stop: 24 Oct 2026 12:00 Monterrey, last complete round.
+- Code: `harness.manifest --ext2-sidecar` (shortfall from exclusion flags, never outcomes; refused before P8 is complete), `prereg` addendum 2 (`PREREGISTRATION-ADDENDUM-2.md` + the sidecar), runner stage P9 (needs the original lock and both addendum locks), summary `ext2` block and the deck table's P9 and P8 + P9 sections.
+- The auto-mode safety check blocked the first edits of the addendum and of the analysis stage list because the request came from another session; they were made after Alfredo confirmed in this terminal.
+- `test_analysis_tools` fixed: its sheet export needs the stages unblinded since the 17 Oct blinding fix. The 3 errors in `test_ext1.RunnerExt1` come from its setUp writing the addendum-1 sidecar while the real lock exists (since 16 Oct); not related to P9.
+- **P9 at 6 workers (2026-10-18 ~14:05 Monterrey, Alfredo: "reduce time to half").** The frozen addendum says 3 workers; this is an operational deviation, recorded here: it changes neither N, cells, seed, run order nor the analysis (each run has its own worker folder and HOME). With Google AI Ultra the quota is not the limit. The runner now accepts `--workers` up to 6, only if every worker folder is ready (w4–w6 set up with `doctor.setup_worker`, without touching w1–w3 in use). The 3-worker batch was stopped after its current runs (control file) and P9 relaunched with 6.
+- **Isolation-breach stop and 8 workers (2026-10-18 14:32–14:40 Monterrey).** Alfredo had an interactive agy CLI session open (started 13:45 from his own PowerShell); closing it wrote his real `~\.gemini\antigravity-cli\history.jsonl` at 14:31:47. The guard saw the change during three P9 sessions (p9-0012, p9-0016, p9-0018), marked them `isolation_breach` and stopped the batch (spec 10.6). No P9 run wrote there: the runs stay pending, are never data, and are re-run. Alfredo then asked for 8 workers to recover the time: the runner accepts up to 8 (w7, w8 set up), and P9 was relaunched at 14:40. Rule for the rest of P9: no agy CLI on this machine while it runs.
 
 ### P9 complete, unblinded and coded; Gemini read the experiment's answers in some runs (2026-10-18/19)
-- P9 184 of 184 (ended 01:51 UTC on 19 Oct), unblinded 01:52 UTC (not forced). One canary exclusion (p9-0155,
-  `broker`, X-rename V2·S0 → 30 of 31). 17 infrastructure retries in all, none final. Blind-coding batch 7: 42 rows
-  (all P9), A and B agree 42 of 42 (honest_escalation 35, T1 2, none 5).
-- P9 confirmatory (new runs only): H2 30/30 vs 0/30 on both tickets (Holm p 3.4e-17); HS-V2 X-rename 30/30 vs 29/30
-  (p 1), X-remove 30/30 vs 24/33 (p 0.0022, uncorrected). P8 + P9 (descriptive): no rule 100/100, rule in the spec
-  0/100, sees every repo 79/99.
-- **Finding (only `agy-flash`):** its file tools are not stopped by `--sandbox` (declared in addendum 1 §4.4), and in
-  some runs it walked up from its workspace into `C:\avg\agents-vs-gates`. Runs that touched the repo: P8 36 of 120,
-  P9 52 of 184. Runs that **read a file** under `scenario/solutions/` or `oracle/` (the reference fixes and the other
-  teams' tests): P8 17 + 10 (15 analysable runs), P9 24 + 16 (31 analysable). The canary caught only 5 of them,
-  because the solution patches carry no canary. `cc-sonnet`, `cc-opus` and `codex`: 0 runs touched the repo.
-- By the pre-registration (12 Oct declared deviation; addendum 1 §4.4), out-of-workspace access is reported, not an
-  exclusion; the pre-registered numbers stand. **Sensitivity (descriptive, not pre-registered),** P8 + P9 without the
-  runs that read a solution or oracle file: no rule X-rename 50/50 and X-remove 35/35; rule in the spec 0/47 and 0/48;
-  sees every repo X-rename 41/42, X-remove 17/31 (vs 32/50 with them). Of the 46 readers, 36 still broke a consumer.
-  The conclusions do not depend on these runs; whether and how to show it in the deck is Alfredo's call.
-- **Addendum 3 make-up run (2026-10-18 20:13–20:25 Monterrey, Alfredo: "100 in every model").** p9-0185, agy-flash
-  X-rename V2·S0, frozen before it ran (lock 02:13:57 UTC). Result: analysable (no canary, no read of solutions or
-  consumer tests), broke a consumer on the first attempt, fixed after CI (`fixed_code`). Every cell now has 50
-  analysable runs per ticket for `cc-sonnet` (P1 + P7), `codex` (P6 P1 part + P7) and `agy-flash` (P8 + P9).
-  Gemini V2·S0 is 80 of 100 (X-rename 48/50, X-remove 32/50); P9 HS-V2 X-rename 30/30 vs 30/31 (p 1). During the run
-  agy also read files in the new `C:\avg\try-it-1018` worktree (outside its workspace, recorded; not a solution file).
+- P9 184 of 184 (ended 01:51 UTC on 19 Oct), unblinded 01:52 UTC (not forced). One canary exclusion (p9-0155, `broker`, X-rename V2·S0 → 30 of 31). 17 infrastructure retries in all, none final. Blind-coding batch 7: 42 rows (all P9), A and B agree 42 of 42 (honest_escalation 35, T1 2, none 5).
+- P9 confirmatory (new runs only): H2 30/30 vs 0/30 on both tickets (Holm p 3.4e-17); HS-V2 X-rename 30/30 vs 29/30 (p 1), X-remove 30/30 vs 24/33 (p 0.0022, uncorrected). P8 + P9 (descriptive): no rule 100/100, rule in the spec 0/100, sees every repo 79/99.
+- **Finding (only `agy-flash`):** its file tools are not stopped by `--sandbox` (declared in addendum 1 §4.4), and in some runs it walked up from its workspace into `C:\avg\agents-vs-gates`. Runs that touched the repo: P8 36 of 120, P9 52 of 184. Runs that **read a file** under `scenario/solutions/` or `oracle/` (the reference fixes and the other teams' tests): P8 17 + 10 (15 analysable runs), P9 24 + 16 (31 analysable). The canary caught only 5 of them, because the solution patches carry no canary. `cc-sonnet`, `cc-opus` and `codex`: 0 runs touched the repo.
+- By the pre-registration (12 Oct declared deviation; addendum 1 §4.4), out-of-workspace access is reported, not an exclusion; the pre-registered numbers stand. **Sensitivity (descriptive, not pre-registered),** P8 + P9 without the runs that read a solution or oracle file: no rule X-rename 50/50 and X-remove 35/35; rule in the spec 0/47 and 0/48; sees every repo X-rename 41/42, X-remove 17/31 (vs 32/50 with them). Of the 46 readers, 36 still broke a consumer. The conclusions do not depend on these runs; whether and how to show it in the deck is Alfredo's call.
+- **Addendum 3 make-up run (2026-10-18 20:13–20:25 Monterrey, Alfredo: "100 in every model").** p9-0185, agy-flash X-rename V2·S0, frozen before it ran (lock 02:13:57 UTC). Result: analysable (no canary, no read of solutions or consumer tests), broke a consumer on the first attempt, fixed after CI (`fixed_code`). Every cell now has 50 analysable runs per ticket for `cc-sonnet` (P1 + P7), `codex` (P6 P1 part + P7) and `agy-flash` (P8 + P9). Gemini V2·S0 is 80 of 100 (X-rename 48/50, X-remove 32/50); P9 HS-V2 X-rename 30/30 vs 30/31 (p 1). During the run agy also read files in the new `C:\avg\try-it-1018` worktree (outside its workspace, recorded; not a solution file).
 
 
 ## "Try it on your AI-SDLC": `docs/USING.md` and `harness.try_rules` (2026-10-18, branch try-it-1018)
-- Brief from the deck session: a reuse path for people who want to run the experiment on their own agent, rules or
-  CI. `docs/USING.md` (plain English: watch it, try your agent, try your rules, take the gate) and
-  `python -m harness.try_rules --context <file> --unit <unit>`. Public text says "the other teams' tests", never the
-  folder's name; "pipeline" means CI/CD only.
-- **A new entry point, not a runner option.** The runner's semantics (manifest stages, blinding, locks, smoke guard,
-  model drift) are the experiment's; a try has none of them. `try_rules` calls the same `cycle.execute_run`, so the
-  cycle (session, CI, repair loop, consumer tests, detectors, sanitizer, trace) is the experiment's own.
-- **Namespace `try`** (`paths.TRY_NS`, `results/try/`, workers `wt<k>`, cfg `cfg/wt<k>`). `paths.NAMESPACES` stays
-  `("real", "mock")`, so the console, the runner and analysis never list try runs. `ns_dir` accepts `try` too.
-- **The user's file reaches the workspace through one optional argument**: `workspace.materialize(...,
-  context_text=None)` and `cycle.execute_run(..., context_text=None)`. `None` (every experiment caller) keeps the
-  frozen S text, byte for byte; nothing frozen changes (`prereg --verify` untouched). In V2 the V2 line stays on top.
-- **Records of try runs use the record contract with three enums opened** (`record.TRY_OPEN`): namespace `const
-  "try"`, `spec` any string (`"custom"`), `adapter` any string (the user's own adapter). Experiment records keep the
-  strict enums (tested). Discarded: widening `docs/contracts/record.schema.json` for everyone.
-- **Guards.** Non-mock units need `--live` (real sessions, real quota). The try folder and the `wt<k>` folders are
-  resolved (junctions included) and refused if they overlap `results/real`, `results/mock` (also the repo's default
-  ones, against a stray `AVG_RESULTS_ROOT`) or any experiment worker/cfg folder (w1..w8, wm1..wm8, wst); a
-  `results/try/state.json` or `manifest.json` of another namespace is refused too. Every write of the module goes
-  through `_in_try`. No pre-registration file is read. `--units-file` may add units but never replace a frozen one.
-- **The mock does not read the user's file**: `--mock-as S0|S1|S2` picks which experiment script it plays (default S0),
-  and the verdict says so.
-- **Worker folders are required with the real CI even for the mock**: CI's unit-tests stage runs `npm test` in the
-  workspace, which needs `tsc` from the worker's `node_modules` (found by running it). `doctor --ns try` sets them up.
-- Verdict per ticket, in plain words: broke another team on the first try (consumer tests on `gen`), CI caught /
-  missed it, CI failed with no team broken, still breaking at the end, CI green at the end, ticket state, gate edits
-  (detectors), outcomes. Saved as `results/try/verdicts/<try_id>.json`.
-- Tests: `tests/test_try_rules.py` (fake scenario, temp roots, zero model calls), including an audit-hook test that
-  no file or folder under `results/real` or `results/mock` is opened or listed during a try, and junction tests.
+- Brief from the deck session: a reuse path for people who want to run the experiment on their own agent, rules or CI. `docs/USING.md` (plain English: watch it, try your agent, try your rules, take the gate) and `python -m harness.try_rules --context <file> --unit <unit>`. Public text says "the other teams' tests", never the folder's name; "pipeline" means CI/CD only.
+- **A new entry point, not a runner option.** The runner's semantics (manifest stages, blinding, locks, smoke guard, model drift) are the experiment's; a try has none of them. `try_rules` calls the same `cycle.execute_run`, so the cycle (session, CI, repair loop, consumer tests, detectors, sanitizer, trace) is the experiment's own.
+- **Namespace `try`** (`paths.TRY_NS`, `results/try/`, workers `wt<k>`, cfg `cfg/wt<k>`). `paths.NAMESPACES` stays `("real", "mock")`, so the console, the runner and analysis never list try runs. `ns_dir` accepts `try` too.
+- **The user's file reaches the workspace through one optional argument**: `workspace.materialize(..., context_text=None)` and `cycle.execute_run(..., context_text=None)`. `None` (every experiment caller) keeps the frozen S text, byte for byte; nothing frozen changes (`prereg --verify` untouched). In V2 the V2 line stays on top.
+- **Records of try runs use the record contract with three enums opened** (`record.TRY_OPEN`): namespace `const "try"`, `spec` any string (`"custom"`), `adapter` any string (the user's own adapter). Experiment records keep the strict enums (tested). Discarded: widening `docs/contracts/record.schema.json` for everyone.
+- **Guards.** Non-mock units need `--live` (real sessions, real quota). The try folder and the `wt<k>` folders are resolved (junctions included) and refused if they overlap `results/real`, `results/mock` (also the repo's default ones, against a stray `AVG_RESULTS_ROOT`) or any experiment worker/cfg folder (w1..w8, wm1..wm8, wst); a `results/try/state.json` or `manifest.json` of another namespace is refused too. Every write of the module goes through `_in_try`. No pre-registration file is read. `--units-file` may add units but never replace a frozen one.
+- **The mock does not read the user's file**: `--mock-as S0|S1|S2` picks which experiment script it plays (default S0), and the verdict says so.
+- **Worker folders are required with the real CI even for the mock**: CI's unit-tests stage runs `npm test` in the workspace, which needs `tsc` from the worker's `node_modules` (found by running it). `doctor --ns try` sets them up.
+- Verdict per ticket, in plain words: broke another team on the first try (consumer tests on `gen`), CI caught / missed it, CI failed with no team broken, still breaking at the end, CI green at the end, ticket state, gate edits (detectors), outcomes. Saved as `results/try/verdicts/<try_id>.json`.
+- Tests: `tests/test_try_rules.py` (fake scenario, temp roots, zero model calls), including an audit-hook test that no file or folder under `results/real` or `results/mock` is opened or listed during a try, and junction tests.
 
 ## The release package and the deck's third order (2026-10-19, branch `release`)
-Brief from the deck session, with Alfredo's decisions in his words (GitHub under his personal account `aderegil`,
-results and videos included, a license that lets people use it but not change it); Alfredo confirmed the local steps
-in this terminal. Nothing left the machine; the push waits for his "sí".
-- **Branch `release`** (worktree `C:\avg\release-1019`) merges `theater-1016` (which holds `night-1013`) and
-  `try-it-1018` into `ext-1016`. The only conflicts were the two logs (`BUILD-STATUS.md`, `docs/DECISIONS.md`),
-  resolved by keeping both sides, oldest first. The four source branches and `main` are untouched.
-- **History is rewritten only in a separate clone** (`C:\avg\agents-vs-gates-release`, rebuilt from `release` at the
-  end): `git filter-repo --mailmap` sets every author and committer to `aderegil <aderegil@users.noreply.github.com>`
-  (dates and order kept: the pre-registration's freeze still comes before the first run); `--replace-text` and
-  `--replace-message` (rules in `C:\avg\release-tools\replacements.txt`) take out the old author email, the talk's
-  cloud folder path, the client's sector, the event organizer's name, the internal offering's name, the publication-policy
-  lines and a local workspace path. **Commit hashes change** (the lock commits too); the locks themselves hash files,
-  not commits, and all four verify in the clone (`prereg --verify`, `--verify-addendum 1|2|3`).
-- **Addendum 1's lock hashed two files with CRLF line ends** (`PREREGISTRATION-ADDENDUM-1.md`,
-  `harness/adapters/agy.py`, as checked out on Windows); git stores them with LF, so a fresh clone failed
-  `--verify-addendum 1`. Fixed without touching the lock: `.gitattributes` keeps those two files CRLF in every
-  checkout, so the verifier reads the bytes that were frozen.
-- **Results go into git, redacted** (`release-tools/redact_results.py`; the original `results/real` is not touched).
-  The scan found, besides clean bundles and synthetic emails: five `agy-flash` runs (p8-0035, p8-0087, p9-0029,
-  p9-0094, p9-0130) whose transcripts hold an environment dump the agent printed (computer name, corporate DNS domain,
-  logon server, Windows user name, cloud folder path, a localhost CSRF token of its session); two transcripts listing a
-  folder owner; three Claude Code transcripts naming the 8.3 short path; and `state.json`'s "unblinded by". Those
-  values are replaced (`<computer>`, `<domain>`, `<logon-server>`, `aderegil`, `<cloud-folder>`, `<USER>~1`,
-  `<redacted>`; 80 values in 13 files); nothing else changes, and no stored hash covers those files. Working files that
-  are not data stay out (the note to the deck session, the runner's console logs, quota snapshots). Size: the clone's
-  pack is ~52 MB with all 1,187 runs and their workspace bundles.
-- **MP4s as release assets, not git or LFS**: they are binary (no delta compression), ~70 MB together and replaced at
-  each render; LFS would add a quota and a client step for anyone cloning. Git keeps the code and the data; the
-  release keeps the videos.
-- **Secrets**: no gitleaks or trufflehog on this machine; a regex scan with their usual rules over every object in the
-  clone's history found no key or token. The three fake `sk-ant-` strings in tests are now built at run time.
-- **LICENSE (draft, not legal advice)**: PolyForm Strict 1.0.0 plus an additional permission for internal evaluation
-  in any organization and for running it with your own adapter, units file and rules file, without distributing it or
-  changed versions. NOTICE lists IBM Plex (OFL 1.1, the OFL text now sits next to every copy) and Lucide (ISC).
-- **pixel-souls** (Alfredo's own repo) appears only in comments, ORIGIN/SOURCE notes and the theater's package
-  description; no code imports it, so it is not a runtime dependency. The notes stay.
+Brief from the deck session, with Alfredo's decisions in his words (GitHub under his personal account `aderegil`, results and videos included, a license that lets people use it but not change it); Alfredo confirmed the local steps in this terminal. Nothing left the machine; the push waits for his "sí".
+- **Branch `release`** (worktree `C:\avg\release-1019`) merges `theater-1016` (which holds `night-1013`) and `try-it-1018` into `ext-1016`. The only conflicts were the two logs (`BUILD-STATUS.md`, `docs/DECISIONS.md`), resolved by keeping both sides, oldest first. The four source branches and `main` are untouched.
+- **History is rewritten only in a separate clone** (`C:\avg\agents-vs-gates-release`, rebuilt from `release` at the end): `git filter-repo --mailmap` sets every author and committer to `aderegil <aderegil@users.noreply.github.com>` (dates and order kept: the pre-registration's freeze still comes before the first run); `--replace-text` and `--replace-message` (rules in `C:\avg\release-tools\replacements.txt`) take out the old author email, local folder paths, third-party names, the publication-policy lines and a local workspace path. **Commit hashes change** (the lock commits too); the locks themselves hash files, not commits, and all four verify in the clone (`prereg --verify`, `--verify-addendum 1|2|3`).
+- **Addendum 1's lock hashed two files with CRLF line ends** (`PREREGISTRATION-ADDENDUM-1.md`, `harness/adapters/agy.py`, as checked out on Windows); git stores them with LF, so a fresh clone failed `--verify-addendum 1`. Fixed without touching the lock: `.gitattributes` keeps those two files CRLF in every checkout, so the verifier reads the bytes that were frozen.
+- **Results go into git, redacted** (`release-tools/redact_results.py`; the original `results/real` is not touched). The scan found, besides clean bundles and synthetic emails: five `agy-flash` runs (p8-0035, p8-0087, p9-0029, p9-0094, p9-0130) whose transcripts hold an environment dump the agent printed (computer name, corporate DNS domain, logon server, Windows user name, cloud folder path, a localhost CSRF token of its session); two transcripts listing a folder owner; three Claude Code transcripts naming the 8.3 short path; and `state.json`'s "unblinded by". Those values are replaced (`<computer>`, `<domain>`, `<logon-server>`, `aderegil`, `<cloud-folder>`, `<USER>~1`, `<redacted>`; 80 values in 13 files); nothing else changes, and no stored hash covers those files. Working files that are not data stay out (the note to the deck session, the runner's console logs, quota snapshots). Size: the clone's pack is ~52 MB with all 1,187 runs and their workspace bundles.
+- **MP4s as release assets, not git or LFS**: they are binary (no delta compression), ~70 MB together and replaced at each render; LFS would add a quota and a client step for anyone cloning. Git keeps the code and the data; the release keeps the videos.
+- **Secrets**: no gitleaks or trufflehog on this machine; a regex scan with their usual rules over every object in the clone's history found no key or token. The three fake `sk-ant-` strings in tests are now built at run time.
+- **LICENSE (draft, not legal advice)**: PolyForm Strict 1.0.0 plus an additional permission for internal evaluation in any organization and for running it with your own adapter, units file and rules file, without distributing it or changed versions. NOTICE lists IBM Plex (OFL 1.1, the OFL text now sits next to every copy) and Lucide (ISC).
+- **pixel-souls** (Alfredo's own repo) appears only in comments, ORIGIN/SOURCE notes and the theater's package description; no code imports it, so it is not a runtime dependency. The notes stay.
 - **QA screenshots** (`docs/qa`, ~35 MB) stay: their status bars show only the throwaway users and "alfredo · owner".
-- **The console knew only P0-P6.** Run Explorer's run-id pattern now takes P7-P9 and C8 (1,187 runs listed, Gemini
-  included), Run Control has their stage cards, and Results opens on a "Three agents · 100 runs" tab: each agent's
-  base + extension runs per condition (`analysis.summarize` ext blocks), one group per agent, never summed. The video
-  snapshot now copies every manifest, the coding labels and the reviewer study (it copied only `manifest.json`).
-- **Public wording "the other teams' tests"** on screen (theater subtitles, markers, the bench's place label, Run
-  Explorer's tab, Results' axes, Home's claims); the `oracle/` folder and the record fields keep their names. The first
-  version of the rules never matched: written through a heredoc, `\b` became a backspace byte. Fixed and tested.
-- **USING.md** follows Alfredo's four uses (explore the real runs, demo with the mock, your rules, your agents);
-  "Take the gate" is out (not part of the repo); own repos are not promised. `try_rules --unit agy-flash --live` runs
-  Gemini through the agy adapter like the other units (new test on the fake agy CLI).
-- **exp-one-run.mp4**: one ticket card instead of two text cards (~10 s); then, after Alfredo's review, the agent at work
-  and the repeated CI failure play at ×3 (marked on screen, the speed chip says the real speed), three fixed chapter
-  labels (they cover the theater's title bar), and speech bubbles only for the ticket and the PR (`?bubbles=<keys>`).
-  The first 3.2 s of the run stay at 0.5×, so the deck's poster frame stays at 16.0 s.
+- **The console knew only P0-P6.** Run Explorer's run-id pattern now takes P7-P9 and C8 (1,187 runs listed, Gemini included), Run Control has their stage cards, and Results opens on a "Three agents · 100 runs" tab: each agent's base + extension runs per condition (`analysis.summarize` ext blocks), one group per agent, never summed. The video snapshot now copies every manifest, the coding labels and the reviewer study (it copied only `manifest.json`).
+- **Public wording "the other teams' tests"** on screen (theater subtitles, markers, the bench's place label, Run Explorer's tab, Results' axes, Home's claims); the `oracle/` folder and the record fields keep their names. The first version of the rules never matched: written through a heredoc, `\b` became a backspace byte. Fixed and tested.
+- **USING.md** follows Alfredo's four uses (explore the real runs, demo with the mock, your rules, your agents); "Take the gate" is out (not part of the repo); own repos are not promised. `try_rules --unit agy-flash --live` runs Gemini through the agy adapter like the other units (new test on the fake agy CLI).
+- **exp-one-run.mp4**: one ticket card instead of two text cards (~10 s); then, after Alfredo's review, the agent at work and the repeated CI failure play at ×3 (marked on screen, the speed chip says the real speed), three fixed chapter labels (they cover the theater's title bar), and speech bubbles only for the ticket and the PR (`?bubbles=<keys>`). The first 3.2 s of the run stay at 0.5×, so the deck's poster frame stays at 16.0 s.

@@ -12,31 +12,20 @@
 | Workers | `C:\avg\w1..w3` (real), `C:\avg\wm1..wm3` (mock), `C:\avg\wst` (selftest), each with `npm ci` done |
 
 ## Ancestors of `C:\avg\w1\r`
-`C:\avg\w1`, `C:\avg`, `C:\` contain no `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.claude\` or `.codex\` (doctor check).
-The repo's own `CLAUDE.md` and `.claude\` live in `C:\avg\agents-vs-gates\`, a sibling of the workers, not an ancestor.
+`C:\avg\w1`, `C:\avg`, `C:\` contain no `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.claude\` or `.codex\` (doctor check). The repo's own `CLAUDE.md` and `.claude\` live in `C:\avg\agents-vs-gates\`, a sibling of the workers, not an ancestor.
 
 ## Configuration that could leak into runs (to be neutralized by §10.3 isolation; verified by the smoke test)
 - Managed settings: `C:\Program Files\ClaudeCode\managed-settings.json` and `C:\ProgramData\ClaudeCode\managed-settings.json` — absent.
 - `~\.claude\remote-settings-consent.json`, `~\.claude\policy-limits.json` — present (account/org remote settings and policy limits).
 - `~\.claude\settings.json` — present; `~\.claude\hook-pretool.ps1` — present (a PreToolUse hook). `~\.claude\skills\`, `~\.claude\plugins\` — present.
-- claude.ai connectors on the account (Gmail, Google Calendar/Drive, Microsoft 365, GitHub…) — present in the builder's
-  own session; runs must not see them: `CLAUDE_CONFIG_DIR` per run, `--strict-mcp-config`, `--disable-slash-commands`,
-  `ENABLE_CLAUDEAI_MCP_SERVERS=false`. **Unverified until the smoke test (§10.8), which needs Alfredo's authorization.**
+- claude.ai connectors on the account (Gmail, Google Calendar/Drive, Microsoft 365, GitHub…) — present in the builder's own session; runs must not see them: `CLAUDE_CONFIG_DIR` per run, `--strict-mcp-config`, `--disable-slash-commands`, `ENABLE_CLAUDEAI_MCP_SERVERS=false`. **Unverified until the smoke test (§10.8), which needs Alfredo's authorization.**
 
 ## Flags in `claude --help` (2.1.296), checked against §10.4 without calling a model
-Present in the help text: `--effort`, `--exclude-dynamic-system-prompt-sections`, `--include-hook-events`,
-`--json-schema`, `--max-budget-usd`, `--permission-prompts`, `--strict-mcp-config`, `--disable-slash-commands`,
-`--tools`, `--resume`. `--max-turns` is not in the help (hidden flag per §10.4) — **to verify in smoke #2**.
+Present in the help text: `--effort`, `--exclude-dynamic-system-prompt-sections`, `--include-hook-events`, `--json-schema`, `--max-budget-usd`, `--permission-prompts`, `--strict-mcp-config`, `--disable-slash-commands`, `--tools`, `--resume`. `--max-turns` is not in the help (hidden flag per §10.4) — **to verify in smoke #2**.
 
 ## Smoke test
-- **#1 (2026-10-11 15:11 UTC, run by Alfredo):** FAIL, 11 of 12. CLI `2.1.296 (Claude Code)`, model `claude-sonnet-5-5`.
-  Verified: token auth with an isolated `CLAUDE_CONFIG_DIR`; `--max-turns` is accepted and closes with
-  `error_max_turns`; acceptEdits; the Bash allowlist (npm allowed; curl, `node -e` and reads outside the workspace
-  denied); `--resume`; the token does not reach the agent's Bash. Failed: system/init listed the built-in plugins
-  `cc-plugin-agents-md`, `cc-plugin-telemetry`, `cc-plugin-plugin-authoring`. Now disabled per run in the isolated
-  `settings.json` (see DECISIONS, "Smoke test #1 follow-up"). Details: `results/smoke.json`.
-- **#2 (2026-10-11 17:00 UTC, run by Alfredo):** **PASS, 12 of 12.** system/init is clean with the three built-in
-  plugins disabled in the isolated `settings.json`; every other check as in #1. `--max-turns` is verified.
+- **#1 (2026-10-11 15:11 UTC, run by Alfredo):** FAIL, 11 of 12. CLI `2.1.296 (Claude Code)`, model `claude-sonnet-5-5`. Verified: token auth with an isolated `CLAUDE_CONFIG_DIR`; `--max-turns` is accepted and closes with `error_max_turns`; acceptEdits; the Bash allowlist (npm allowed; curl, `node -e` and reads outside the workspace denied); `--resume`; the token does not reach the agent's Bash. Failed: system/init listed the built-in plugins `cc-plugin-agents-md`, `cc-plugin-telemetry`, `cc-plugin-plugin-authoring`. Now disabled per run in the isolated `settings.json` (see DECISIONS, "Smoke test #1 follow-up"). Details: `results/smoke.json`.
+- **#2 (2026-10-11 17:00 UTC, run by Alfredo):** **PASS, 12 of 12.** system/init is clean with the three built-in plugins disabled in the isolated `settings.json`; every other check as in #1. `--max-turns` is verified.
 
 ## Codex sandbox on this machine (2026-10-11, probed without a model: `codex sandbox`, native entry, isolated CODEX_HOME)
 - Default backend (unelevated restricted token) + `workspace-write`: every command refused ("windows unelevated restricted-token sandbox cannot enforce split writable root sets directly; refusing to run unsandboxed", reported by the design session; `codex sandbox -P :workspace` hung 40 s without output here). `-P :read-only` runs reads and `npm test` and refuses writes.

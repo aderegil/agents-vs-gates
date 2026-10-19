@@ -1,8 +1,6 @@
 # Console contract (§19–§24)
 
-`python -m console` → `http://127.0.0.1:8765` (stdlib `ThreadingHTTPServer`, binds 127.0.0.1 only).
-`python -m console --check` → the headless end-to-end check of §24 (prints `CHECK OK` / `CHECK FAILED`).
-`python -m console --port N --data-dir D` for tests.
+`python -m console` → `http://127.0.0.1:8765` (stdlib `ThreadingHTTPServer`, binds 127.0.0.1 only). `python -m console --check` → the headless end-to-end check of §24 (prints `CHECK OK` / `CHECK FAILED`). `python -m console --port N --data-dir D` for tests.
 
 ## 1. Plugin folder
 ```
@@ -13,8 +11,7 @@ console/plugins/<id>/
   web/dist/index.html  kind=iframe (Replay Theater)
   web/*.css          optional, loaded by the shell when the plugin mounts if listed as web/style.css
 ```
-Plugin ids and order (fixed): 1 `overview`, 2 `run-control`, 3 `results`, 4 `runs` (Run Explorer), 5 `replay`
-(Replay Theater), 6 `teams` (Teams & Avatars), 7 `scenario`, 8 `readiness`, 9 `users` (Users & Audit). Roles per §19.
+Plugin ids and order (fixed): 1 `overview`, 2 `run-control`, 3 `results`, 4 `runs` (Run Explorer), 5 `replay` (Replay Theater), 6 `teams` (Teams & Avatars), 7 `scenario`, 8 `readiness`, 9 `users` (Users & Audit). Roles per §19.
 
 ## 2. Python side (implemented by WP3 in `console/core/`; plugins import from `console.core.plugin_api`)
 ```python
@@ -33,30 +30,14 @@ def list_stages(req):        # req: Request
 ```
 - `req.user` = `{"username", "role"}`; `req.ns` = `"real"|"mock"` (from `?ns=`, else the session's global switch).
 - Readonly enforcement: `ctx.can_write(req)` is false for roles listed in the plugin's `readonly_roles`.
-- `ctx`: `ctx.repo` (Path), `ctx.results_dir(ns)` (Path), `ctx.data_dir` (console data dir), `ctx.python`
-  (venv interpreter path), `ctx.audit(action: str, detail: dict, user: dict|None)`, `ctx.publish(topic, data, ns=None)`,
-  `ctx.spawn(argv: list[str], log_name: str) -> int pid` (detached process, survives console restarts).
-- Core routes (WP3): `GET /api/session`, `POST /api/login`, `POST /api/logout`, `POST /api/setup` (only when no users
-  and from 127.0.0.1), `POST /api/session/ns` `{"ns"}`, `GET /api/plugins`, `GET /api/events` (SSE),
-  `GET /api/audit` (owner; filters `user`, `action`, `from`, `to`; `?format=csv`), `GET /api/health`.
-- Plugin routes (owners): `overview` → `/api/overview`; `run-control` → `/api/run-control/{stages,status,dry-run,start,stop,workers,resume-at}`;
-  `results` → `/api/results/{rq,mutation,reviewer,excluded,export}`; `runs` → `/api/runs`, `/api/runs/{id}`,
-  `/api/runs/{id}/{diff,ci,oracle,detectors,transcript,trace,replay}`; `replay` → `/api/replay/list` (runs of the ns that have an `events.jsonl`, with meta) and
-  `/api/replay/run/{run_id}` (the run's `replay.json`, built on demand with `replay.export.build_replay` and cached
-  in the run folder; `/api/runs/{id}/replay` delegates to the same function);
-  `teams` → `/api/teams`, `/api/teams/{model}`, `/api/teams/avatars` (stands in for §23's `/api/avatars`);
-  `scenario` → `/api/scenario/{repos,file,rules,catalog,tickets,contexts,broker}`;
-  `readiness` → `/api/readiness/{doctor,smoke,lock,freeze,units,token,checklist}`; `users` → `/api/users…`.
+- `ctx`: `ctx.repo` (Path), `ctx.results_dir(ns)` (Path), `ctx.data_dir` (console data dir), `ctx.python` (venv interpreter path), `ctx.audit(action: str, detail: dict, user: dict|None)`, `ctx.publish(topic, data, ns=None)`, `ctx.spawn(argv: list[str], log_name: str) -> int pid` (detached process, survives console restarts).
+- Core routes (WP3): `GET /api/session`, `POST /api/login`, `POST /api/logout`, `POST /api/setup` (only when no users and from 127.0.0.1), `POST /api/session/ns` `{"ns"}`, `GET /api/plugins`, `GET /api/events` (SSE), `GET /api/audit` (owner; filters `user`, `action`, `from`, `to`; `?format=csv`), `GET /api/health`.
+- Plugin routes (owners): `overview` → `/api/overview`; `run-control` → `/api/run-control/{stages,status,dry-run,start,stop,workers,resume-at}`; `results` → `/api/results/{rq,mutation,reviewer,excluded,export}`; `runs` → `/api/runs`, `/api/runs/{id}`, `/api/runs/{id}/{diff,ci,oracle,detectors,transcript,trace,replay}`; `replay` → `/api/replay/list` (runs of the ns that have an `events.jsonl`, with meta) and `/api/replay/run/{run_id}` (the run's `replay.json`, built on demand with `replay.export.build_replay` and cached in the run folder; `/api/runs/{id}/replay` delegates to the same function); `teams` → `/api/teams`, `/api/teams/{model}`, `/api/teams/avatars` (stands in for §23's `/api/avatars`); `scenario` → `/api/scenario/{repos,file,rules,catalog,tickets,contexts,broker}`; `readiness` → `/api/readiness/{doctor,smoke,lock,freeze,units,token,checklist}`; `users` → `/api/users…`.
 - No route ever returns the OAuth token, `.env` content, or a path containing `C:\Users\<name>` (sanitize to `~`).
-- Session cookie `avg_session` (HttpOnly, SameSite=Strict, 12 h). Every POST needs header `X-CSRF-Token`
-  (value from `GET /api/session`).
+- Session cookie `avg_session` (HttpOnly, SameSite=Strict, 12 h). Every POST needs header `X-CSRF-Token` (value from `GET /api/session`).
 
 ## 3. Server-Sent Events
-`GET /api/events` streams `event: <topic>\ndata: <json>\n\n` with `data = {"ns": "real"|"mock", ...}`. Topics:
-`runner.progress` (the whole `state.runner` + `state.workers` + counts, at most 1/s), `runner.run_started`
-(`run_id, worker, ticket, cell`), `runner.run_finished` (`run_id, turns, duration_ms, tokens` — and `outcome` only
-when the stage is visible), `runner.stopped`, `runner.rate_limited` (`until`), `audit.new`. The core watcher reads
-`state.json` and `runner.log.jsonl` of both namespaces every second.
+`GET /api/events` streams `event: <topic>\ndata: <json>\n\n` with `data = {"ns": "real"|"mock", ...}`. Topics: `runner.progress` (the whole `state.runner` + `state.workers` + counts, at most 1/s), `runner.run_started` (`run_id, worker, ticket, cell`), `runner.run_finished` (`run_id, turns, duration_ms, tokens` — and `outcome` only when the stage is visible), `runner.stopped`, `runner.rate_limited` (`until`), `audit.new`. The core watcher reads `state.json` and `runner.log.jsonl` of both namespaces every second.
 
 ## 4. Browser side (`shell` object given to `mount(el, shell)`)
 ```js
@@ -74,15 +55,9 @@ shell.confirm({title, message, confirmLabel, requireText}) // Promise<boolean>; 
 shell.setHeader({title, subtitle, actions: [{id, label, icon, primary, disabled, reason, onClick}]})
 shell.icon(name, size)           // SVG string for a Lucide icon
 ```
-Shared UI helpers: `/web/lib/ui.js` (WP3): `h(tag, attrs, ...children)`, `fmtInt`, `fmtDuration`, `fmtDate`,
-`table({columns, rows, onRowClick, keyboard: true})`, `tabs`, `badge(text, tone)`, `empty(msg)`.
-Tones: `neutral`, `accent`, `pass` (cyan #00BCD4), `fail` (pink #E91E63), `warn` (amber, only for TODO/attention).
+Shared UI helpers: `/web/lib/ui.js` (WP3): `h(tag, attrs, ...children)`, `fmtInt`, `fmtDuration`, `fmtDate`, `table({columns, rows, onRowClick, keyboard: true})`, `tabs`, `badge(text, tone)`, `empty(msg)`. Tones: `neutral`, `accent`, `pass` (cyan #00BCD4), `fail` (pink #E91E63), `warn` (amber, only for TODO/attention).
 
-`kind: iframe` plugins receive `postMessage({type: "avg:hello", apiBase: "/api", csrf, user, ns, params})` after load
-and may post `{type: "avg:navigate", plugin, params}` back.
+`kind: iframe` plugins receive `postMessage({type: "avg:hello", apiBase: "/api", csrf, user, ns, params})` after load and may post `{type: "avg:navigate", plugin, params}` back.
 
 ## 5. Visual tokens (from the Iniciativas app, §20) — defined once in `/web/styles.css`
-`--fondo #f6f7f9; --superficie #fff; --linea #e3e6eb; --tinta #111827; --tinta-2 #5b6474; --acento #2563eb;
---trazo 1.5px; --radio 6px; --pass #00BCD4; --fail #E91E63;` IBM Plex Sans 400/500/600 from `/web/fonts/`.
-Tabular figures (`font-variant-numeric: tabular-nums`) on every number column. No gradients, no glass, no large soft
-shadows, no emoji, no sparkle icons, no filler copy. Interface text in English.
+`--fondo #f6f7f9; --superficie #fff; --linea #e3e6eb; --tinta #111827; --tinta-2 #5b6474; --acento #2563eb; --trazo 1.5px; --radio 6px; --pass #00BCD4; --fail #E91E63;` IBM Plex Sans 400/500/600 from `/web/fonts/`. Tabular figures (`font-variant-numeric: tabular-nums`) on every number column. No gradients, no glass, no large soft shadows, no emoji, no sparkle icons, no filler copy. Interface text in English.

@@ -1,7 +1,6 @@
 # Freeze checklist: PREREGISTRATION.md (prepared 2026-10-12, not frozen)
 
-Prepared by the builder for Alfredo. Read-only on `PREREGISTRATION.md`: nothing here has been applied, nothing is
-frozen, nothing has been launched. Line numbers are those of `PREREGISTRATION.md` at commit cfdbbd6.
+Prepared by the builder for Alfredo. Read-only on `PREREGISTRATION.md`: nothing here has been applied, nothing is frozen, nothing has been launched. Line numbers are those of `PREREGISTRATION.md` at commit cfdbbd6.
 
 Kind: **fact** = a measured value, copy it in; **judgment** = Alfredo decides (a proposal is given).
 
@@ -21,11 +20,7 @@ Kind: **fact** = a measured value, copy it in; **judgment** = Alfredo decides (a
 
 Replace "Codex later (P6), when an account exists." with:
 
-> `codex` = Codex CLI 0.162.1 + `gpt-5.6-terra`, effort medium, `workspace-write` sandbox on the Windows MXC
-> backend, exec policy `harness/adapters/codex_rules/agents-vs-gates.rules` (`harness/units.json`). Live smoke test
-> passed (`results/smoke-codex.json`, 18 of 18 checks, 2026-10-12T04:38:17Z). Used in Pilot X1 (exploratory, 40
-> runs) and in P6, the replication; P6's scope is unchanged (§6). Declared parity differences: DECISIONS
-> 2026-10-11 (reads outside the workspace are detected, not blocked; `node <file>` / `node --test` allowed).
+> `codex` = Codex CLI 0.162.1 + `gpt-5.6-terra`, effort medium, `workspace-write` sandbox on the Windows MXC backend, exec policy `harness/adapters/codex_rules/agents-vs-gates.rules` (`harness/units.json`). Live smoke test passed (`results/smoke-codex.json`, 18 of 18 checks, 2026-10-12T04:38:17Z). Used in Pilot X1 (exploratory, 40 runs) and in P6, the replication; P6's scope is unchanged (§6). Declared parity differences: DECISIONS 2026-10-11 (reads outside the workspace are detected, not blocked; `node <file>` / `node --test` allowed).
 
 Evidence:
 - `harness/units.json`: codex = `{"adapter":"codex","model":"gpt-5.6-terra","effort":"medium","sandbox":"workspace-write","windows_sandbox":"mxc"}`.
@@ -44,9 +39,7 @@ P6's scope stays as written (121 runs, §6). Only the wording changes.
 
 ## 4. Order of steps (all in `C:\avg\agents-vs-gates`, PowerShell)
 
-1. Edit `PREREGISTRATION.md` (§1 and §2 above, plus whatever is chosen in §3), then **commit it on its own**.
-   `harness.prereg --freeze` hashes the files on disk but commits only `PREREGISTRATION.lock` and the manifest. An
-   uncommitted edit would be frozen without being in git.
+1. Edit `PREREGISTRATION.md` (§1 and §2 above, plus whatever is chosen in §3), then **commit it on its own**. `harness.prereg --freeze` hashes the files on disk but commits only `PREREGISTRATION.lock` and the manifest. An uncommitted edit would be frozen without being in git.
    ```powershell
    git commit -q -m "PREREGISTRATION: fill the freeze-time values" -- PREREGISTRATION.md
    git status --short -- PREREGISTRATION.md scenario ci harness/texts harness/units.json analysis/RUBRIC.md
@@ -58,9 +51,7 @@ P6's scope stays as written (121 runs, §6). Only the wording changes.
    .venv\Scripts\python.exe -X utf8 -m harness.prereg --freeze
    .venv\Scripts\python.exe -X utf8 -m harness.prereg --verify
    ```
-   `--freeze` writes `PREREGISTRATION.lock` and commits `Freeze pre-registration` together with
-   `results/real/manifest.json` (sha256 `118d4a9c1c5709d8e26955cdb96745bf2dfb7b0f77ed4f55e98ade1877401aa2`). It
-   refuses if a lock already exists. `--verify` must report no problems.
+   `--freeze` writes `PREREGISTRATION.lock` and commits `Freeze pre-registration` together with `results/real/manifest.json` (sha256 `118d4a9c1c5709d8e26955cdb96745bf2dfb7b0f77ed4f55e98ade1877401aa2`). It refuses if a lock already exists. `--verify` must report no problems.
 3. Before P1: no other runner active, at least 6 GB free RAM, then a last dry-run (60 runs, p1-0001..0060):
    ```powershell
    .venv\Scripts\python.exe -X utf8 -m harness.runner --ns real --stage P1 --dry-run
@@ -69,6 +60,4 @@ P6's scope stays as written (121 runs, §6). Only the wording changes.
    ```powershell
    .venv\Scripts\python.exe -X utf8 -m harness.runner --ns real --stage P1 --workers 3
    ```
-   The runner refuses unless `results/smoke.json` is ok and `prereg --verify` passes. P1 is blinded; follow it with
-   `harness.runner --ns real --status`. Estimate: about 590 worker-minutes, so 3.5–4 h with 3 workers. This uses
-   X1/X2 means per cell (X-rename V0·S0 18 min/run). The V0·S2 cells are unmeasured and assumed equal to V0·S0.
+   The runner refuses unless `results/smoke.json` is ok and `prereg --verify` passes. P1 is blinded; follow it with `harness.runner --ns real --status`. Estimate: about 590 worker-minutes, so 3.5–4 h with 3 workers. This uses X1/X2 means per cell (X-rename V0·S0 18 min/run). The V0·S2 cells are unmeasured and assumed equal to V0·S0.

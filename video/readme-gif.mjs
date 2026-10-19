@@ -16,7 +16,7 @@ const DST = path.join(REPO, "docs", "media", "console-tour.gif");
 
 /** [from, to] seconds of the full tour: the rules, the three agents, one run's other teams' tests, the theater at the
  * moment CI fails the pull request, the AI-SDLC lanes. */
-export const CUTS = [[19.0, 21.5], [52.5, 55.5], [75.8, 78.3], [94.5, 97.5], [101.0, 104.0]];
+export const CUTS = [[19.0, 21.5], [52.5, 55.5], [76.0, 78.5], [94.5, 97.5], [108.0, 111.0]];
 
 function main() {
   if (!fs.existsSync(SRC)) throw new Error(`${SRC} is missing: render console-tour-full first`);
