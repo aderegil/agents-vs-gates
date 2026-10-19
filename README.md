@@ -1,86 +1,63 @@
 # Agents vs. Gates
 
-Experiment and local console for **"The AI-SDLC Governance Gap"**. The experiment asks
-whether a coding agent breaks deployed consumers it cannot see, and whether a spec that carries rules (S), visibility
-of consumers (V) or a CI gate stops it. The scenario is 100 % synthetic: Meridian Retail's `orders-service` and three
-consumers (`billing-service`, `analytics-ingest`, `web-storefront`).
+**Does a coding agent break another team's service it cannot see, and what stops it: rules in its context, or a
+check in CI?** 1,187 recorded runs of Claude Code, Codex and Gemini on a fictional retailer, with the analysis
+pre-registered before the first run.
 
-- **Part I, the experiment:** scenario, CI with the ARCH-1..8 gates, an independent staging oracle, tamper detectors,
-  a resumable and blinded batch runner, the RQ4 reviewer, AISDLC-Trace 2.1 traces, analysis.
-- **Part II, the console:** a local web console with plugins (Overview, Run Control, Results, Run Explorer, Replay
-  Theater, Teams & Avatars, Scenario, Readiness, Users & Audit).
+![The console: the scenario, the results, one run, the Replay Theater](docs/media/console-tour.gif)
 
-**Try it on your AI-SDLC:** `docs/USING.md` — watch it with the mock agent, plug in your own agent, run the tickets
-with your own rules file (`python -m harness.try_rules`, results only in `results/try/`), or copy the checks into your
-CI.
+## What happened
 
-Full build spec (Spanish): `docs/construccion-experimento.md`. Seams between packages: `docs/contracts/`.
-Build progress: `BUILD-STATUS.md`. Every decision taken without asking: `docs/DECISIONS.md`.
-Environment and verified flags: `docs/ENVIRONMENT.md`.
+Two tickets ask the agent to rename or remove a field of an event that two other teams read. 100 runs per agent and
+condition (50 per ticket). Each agent is counted on its own; the agents are never added together.
 
-## Requirements
-Windows 11, Node 24, Git, Python 3.13 with a `.venv` holding `jsonschema` (nothing else). From this folder:
+| Broke another team on the first try | Own repo, no rule | Own repo, rule in the spec | Sees every repo, no rule |
+|---|---|---|---|
+| Claude Code + Sonnet 5.5 | **100** of 100 | **0** of 100 | **51** of 100 |
+| Codex CLI + gpt-5.6-terra | **100** of 100 | **35** of 100 | **100** of 100 |
+| Antigravity CLI + Gemini 3.8 Flash | **100** of 100 | **0** of 100 | **80** of 100 |
+
+A rule in the spec stopped the breaks for Claude Code and Gemini, and about two thirds of them for Codex. Seeing
+every repo was not enough. The consumer-contract check in CI, kept outside the agent's repo, caught every break on
+the first pull request: Claude Code 172 of 172, Codex 256 of 256, Gemini 180 of 180, over every run with the check
+out of the agent's reach. It is not the whole answer: after repairing on CI's feedback, 19 Codex runs turned CI green
+and still broke another team (the right shape, the wrong meaning); Claude Code and Gemini, none. And when the
+contracts sat inside the agent's repo, Codex edited them so CI would pass (CI caught 1 of 10).
+
+"Broke another team" is measured by the other teams' own tests, which the agent never sees, not by CI and not by the
+agent's last message.
+
+## Watch it (no model calls, nothing to sign in to)
 
 ```
-py -3.13 -m venv .venv && .venv\Scripts\python.exe -m pip install jsonschema
-npm ci
-.venv\Scripts\python.exe -X utf8 -m harness.doctor --setup-workers 3 --ns real
-.venv\Scripts\python.exe -X utf8 -m harness.doctor --setup-workers 3 --ns mock
-.venv\Scripts\python.exe -X utf8 -m harness.doctor --setup-workers 1 --ns selftest
-.venv\Scripts\python.exe -X utf8 -m harness.doctor            # must print DOCTOR OK
+git clone https://github.com/aderegil/agents-vs-gates && cd agents-vs-gates
+py -3.13 -m venv .venv && .venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m console
 ```
+Open http://127.0.0.1:8765: the results, every run (diff, CI, the other teams' tests) and the Replay Theater.
 
-Run workspaces live in `C:\avg\w<k>\r` (real), `C:\avg\wm<k>` (mock) and `C:\avg\wst` (selftest). Never put a
-`CLAUDE.md`, `AGENTS.md` or `.claude\` in `C:\avg\` — it is an ancestor of every run workspace.
+## More
+- **[Using this repo](docs/USING.md):** explore the runs, demo with the mock agent, try your own rules file, run
+  Claude Code, Codex or Gemini (or your own agent) on the same tickets and get the same verdict.
+- **[Pre-registration](PREREGISTRATION.md)** and its addenda [1](PREREGISTRATION-ADDENDUM-1.md),
+  [2](PREREGISTRATION-ADDENDUM-2.md) and [3](PREREGISTRATION-ADDENDUM-3.md). Each was frozen by a lock file before
+  its runs; `python -m harness.prereg --verify` checks them.
+- **Results:** every run in `results/real/` (record, diffs, CI, the other teams' tests, transcript, trace), the
+  summary in [`results/real/summary.md`](results/real/summary.md) and the numbers above in
+  [`results/real/deck-numbers-ext.md`](results/real/deck-numbers-ext.md).
+- **Videos:** one real run, the console tour and the AI-SDLC comparison, in
+  [Releases](https://github.com/aderegil/agents-vs-gates/releases).
+- **How it was built:** every decision taken along the way in [`docs/DECISIONS.md`](docs/DECISIONS.md); the build
+  log in [`BUILD-STATUS.md`](BUILD-STATUS.md).
 
-## Console
-```
-.venv\Scripts\python.exe -m console            # http://127.0.0.1:8765 — the first visit creates the owner account
-.venv\Scripts\python.exe -m console --check    # headless end-to-end check (prints CHECK OK)
-```
-The status bar has a REAL / MOCK switch; mock data is hatched and watermarked everywhere and never mixes with real
-data (`results/real/`, `results/mock/`).
+Made for the talk *The AI-SDLC Governance Gap*. The scenario, Meridian Retail, is fictional.
 
-## Tests (zero model calls)
-```
-.venv\Scripts\python.exe -X utf8 -m unittest                       # backend + console + replay
-.venv\Scripts\python.exe -X utf8 -m harness.selftest --truth-table  # 29 reference patches → TRUTH TABLE 29/29 OK
-.venv\Scripts\python.exe -X utf8 -m harness.selftest               # every ticket × V × S with the mock agent
-.venv\Scripts\python.exe -X utf8 -m oracle.mutation                # results/mutation-matrix.md (CI vs. oracle)
-cd console\plugins\replay\app && npm ci && npm run build && npm test
-```
+## Cite it
 
-## Running the real experiment (Alfredo only, in this order)
-Nothing below has been run. Each step spends quota or freezes something, so each needs a deliberate decision.
+See [`CITATION.cff`](CITATION.cff) (GitHub shows "Cite this repository" on the right).
 
-1. **Smoke test** (5 live calls, §10.8): `.venv\Scripts\python.exe -X utf8 -m harness.smoke --i-am-authorized`
-   (or Readiness → Smoke test). Writes `results/smoke.json`; record the verified flags in `docs/ENVIRONMENT.md`.
-2. **Paraphrases:** write `scenario/tasks/<ticket>.p1.md … p5.md` for X-rename, X-remove and X-api by hand, or record
-   in `PREREGISTRATION.md` that the base text is used ×10.
-3. **Real manifest:** `.venv\Scripts\python.exe -X utf8 -m harness.manifest --ns real` (add `--force` to regenerate
-   before the freeze).
-4. **Calibration (P0):** `.venv\Scripts\python.exe -X utf8 -m harness.runner --calibrate` — then put the full model id
-   and the chosen effort in `harness/units.json` (Readiness → Units).
-5. **Review** `docs/REVIEW-CHECKLIST.md`, fill every `[FILL]` in `PREREGISTRATION.md`, then **freeze**:
-   `.venv\Scripts\python.exe -X utf8 -m harness.prereg --freeze` (verify any time with `--verify`).
-6. **P1 in batches:** `.venv\Scripts\python.exe -X utf8 -m harness.runner --stage P1 --batch 10` (or
-   `--max-minutes 60`; `--workers 1..3`), or Run Control → Run batch. Rate limits stop the batch (exit 3); resume with
-   the same command or Run Control → Resume at HH:MM.
-7. **Status:** `.venv\Scripts\python.exe -X utf8 -m harness.runner --status` (blind: no outcomes for blinded stages).
-8. **Unblind and summarize** once P1 is complete: `.venv\Scripts\python.exe -X utf8 -m harness.runner --unblind P1`,
-   then `.venv\Scripts\python.exe -X utf8 -m analysis.summarize --ns real` (writes `results/real/summary.md` and `tables/*.csv`).
+## License
 
-## Layout
-| Folder | What |
-|---|---|
-| `scenario/` | the four TS repos, the architecture repo (rules, catalog, broker), S0/S1/S2 contexts, tickets, reference patches |
-| `ci/` | `python -m ci.run` — typecheck, unit tests, ARCH-1..8; `netstub.mjs` (no network) |
-| `oracle/` | staging oracle (`run.py`, suites written with restricted information), `ticket_done`, mutation test |
-| `harness/` | workspaces, adapters (Claude Code, Codex, mock), repair loop, detectors D1–D8, runner, reviewer, pre-registration, selftest |
-| `analysis/` | summary, statistics (stdlib), PR set, blind coding |
-| `trace/` | AISDLC-Trace 2.1 schema, validator, examples |
-| `replay/` | trace → `replay.json` exporter for the Replay Theater |
-| `console/` | the web console (stdlib HTTP server, ES-module shell, plugins) |
-| `docs/` | spec, contracts, decisions, environment, QA screenshots |
-
-License: see `LICENSE.TODO`.
+[PolyForm Strict 1.0.0](LICENSE) with an additional permission: you may use it, evaluate it inside any organization,
+and run it with your own rules file, units file and adapter. You may not distribute it or changed versions of it.
+Third-party fonts and icons keep their own licenses ([NOTICE](NOTICE)). © 2026 Alfredo De Regil.

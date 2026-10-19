@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this experiment or its data, please cite it as below."
+title: "Agents vs. Gates: does a coding agent break the teams it cannot see, and what stops it?"
+type: software
+authors:
+  - family-names: "De Regil"
+    given-names: "Alfredo"
+version: "1.0.0"
+date-released: "2026-10-27"
+repository-code: "https://github.com/aderegil/agents-vs-gates"
+license-url: "https://polyformproject.org/licenses/strict/1.0.0"
+keywords:
+  - coding agents
+  - AI-SDLC
+  - architecture governance
+  - fitness functions
+  - consumer-driven contracts
+  - pre-registration
+abstract: >-
+  A pre-registered experiment with 1,187 recorded runs of Claude Code, Codex and Gemini (Antigravity CLI) on a
+  fictional retailer's four repos. Two tickets ask the agent to rename or remove an event field that other teams
+  read. It measures how often the agent breaks another team (by that team's own tests), with no rule, with the rule
+  in the agent's spec, or with every repo visible, and whether a consumer-contract check in CI stops the break.
