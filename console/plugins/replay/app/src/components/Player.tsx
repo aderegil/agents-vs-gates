@@ -6,7 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import {
   Conductor, conditionDiff, currentSlide, makeTimebase, momentLabel, nextSlide, prevSlide, type Timebase,
 } from "../engine/director";
-import { ReplayEngine, SPEEDS, nextStepTime, prevStepTime, type Replay } from "../engine/replay";
+import { ReplayEngine, SPEEDS, nextStepTime, prevStepTime, setBubbleKeys, type Replay } from "../engine/replay";
 import { AerialMap } from "./AerialMap";
 import { EventsPanel } from "./EventsPanel";
 import { Icon } from "./Icons";
@@ -150,6 +150,7 @@ function follow(e: ReplayEngine, t: number): void {
 }
 
 const query = () => new URLSearchParams(window.location.search);
+setBubbleKeys(query().get("bubbles")?.split(",").filter(Boolean) ?? null);
 
 export function Player({ replay, compare, picker, comparePicker, onCloseCompare, onOpenInExplorer, tools, footer }: Props) {
   const engine = useMemo(() => {

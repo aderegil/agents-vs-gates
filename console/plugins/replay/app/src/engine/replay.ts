@@ -272,6 +272,13 @@ export function quietStep(step: ReplayStep): boolean {
   return step.action === "speak" && (step.detail ?? {})["feedback"] === "ci_output";
 }
 
+/** `?bubbles=task_assigned,pr_opened` (the deck clips): speech bubbles only for steps with one of these keys; the
+ * agent's tool calls and messages stay in the events panel. null = every step with text speaks (the default). */
+let bubbleKeys: Set<string> | null = null;
+export function setBubbleKeys(keys: string[] | null): void {
+  bubbleKeys = keys && keys.length ? new Set(keys) : null;
+}
+
 /** Applies one step to the scene (mutates `s`). Steps must be applied in order. */
 export function applyStep(s: SceneState, step: ReplayStep, index: number): void {
   const a = ensureActor(s, step.actor);
@@ -324,7 +331,7 @@ export function applyStep(s: SceneState, step: ReplayStep, index: number): void 
     default:
       break;
   }
-  if (step.text && step.action !== "move" && !quietStep(step)) {
+  if (step.text && step.action !== "move" && !quietStep(step) && (!bubbleKeys || (step.key != null && bubbleKeys.has(step.key)))) {
     a.bubble = { text: step.text, at: t, seq: step.seq, tone: toneFor(step) };
   }
   const sub = step.narration || step.caption;

@@ -32,12 +32,50 @@ function freeRamGB() {
 const facts = () => JSON.parse(fs.readFileSync(path.join(WORK, "clip-facts.json"), "utf8"));
 const replayMs = (rel) => JSON.parse(fs.readFileSync(path.join(WORK, rel), "utf8")).meta.duration_ms;
 
+const CH1 = "1 · The change";
+const CH2 = "2 · The red build";
+const CH3 = "3 · The repair";
+const ONE_BUBBLES = "bubbles=task_assigned,pr_opened";
+const SCENE_BG = "#f6f7f9";          // scenes/style.css --fondo
+const THEATER_BG = "rgb(234,237,244)"; // the theater's floor colour behind its title bar
+
+/** The chapter label, fixed at the top left; on a theater segment it covers the run's title (same words as the cards). */
+async function setChapter(page, text, bg) {
+  await page.evaluate(([text, bg]) => {
+    let d = document.getElementById("clip-chapter");
+    if (!text) { d?.remove(); return; }
+    if (!d) {
+      d = document.createElement("div");
+      d.id = "clip-chapter";
+      d.style.cssText = "position:fixed;left:0;top:0;width:760px;height:66px;z-index:99999;display:flex;align-items:center;"
+        + `box-sizing:border-box;padding-left:36px;background:${bg};font:600 30px 'IBM Plex Sans',system-ui,sans-serif;color:#111827;`;
+      document.body.appendChild(d);
+    }
+    d.textContent = text;
+  }, [text, bg]);
+}
+
+/** A small box at the bottom right: the speed chip, and above it the speed-up mark ("×3") while a stretch runs faster. */
+async function setBox(page, id, text, css) {
+  await page.evaluate(([id, text, css]) => {
+    let d = document.getElementById(id);
+    if (!text) { d?.remove(); return; }
+    if (!d) { d = document.createElement("div"); d.id = id; d.style.cssText = css; document.body.appendChild(d); }
+    d.textContent = text;
+  }, [id, text, css]);
+}
+const CHIP_CSS = "position:fixed;right:18px;bottom:70px;z-index:99999;font:500 20px 'IBM Plex Sans',system-ui,sans-serif;"
+  + "color:#5b6474;background:#fff;border:1.5px solid #c4cad3;border-radius:6px;padding:5px 12px;";
+const MARK_CSS = "position:fixed;right:18px;bottom:118px;z-index:99999;font:600 24px 'IBM Plex Sans',system-ui,sans-serif;"
+  + "color:#fff;background:#1f2937;border-radius:6px;padding:4px 14px;";
+const fmtSpeed = (x) => String(Math.round(x * 100) / 100);
+
 /** The clips: a list of segments each, and what the manifest says about them. */
 function clips() {
   const f = facts();
   const one = f.one.run_id;
   const cx = f.codex.run_id;
-  const scene = (id) => ({ kind: "scene", id });
+  const scene = (id, chapter) => ({ kind: "scene", id, chapter });
   const theater = (replay, from, to, speed, chip, hold = 0) => ({ kind: "theater", replay, from, to, speed, chip, hold });
   const ill = (id, model, source) => ({
     file: `aisdlc-${id}.mp4`, segments: [{ kind: "theater", replay: `theater/scenes/aisdlc-${id}.json`, from: 0,
@@ -49,8 +87,17 @@ function clips() {
   return [
     {
       file: "exp-one-run.mp4",
-      segments: [scene("oneIntro"), theater(`replays/${one}.json`, 0, 23200, 0.5, "Real run · 0.5× speed"),
-        scene("oneOracle"), theater(`replays/${one}.json`, 22600, 42800, 0.5, "Real run · 0.5× speed", 3000), scene("oneOutro")],
+      // three chapters fixed at the top left; the slow stretches (the agent at work, CI failing again) at ×3, marked;
+      // speech bubbles only for the ticket and the PR (Alfredo's review, 2026-10-19). The clean map at 16.0 s is the
+      // deck's poster frame: the first 3.2 s of the run stay at 0.5×, so it does not move.
+      segments: [scene("oneIntro", CH1),
+        { ...theater(`replays/${one}.json`, 0, 23200, 0.5, null), chipBase: "Real run", query: ONE_BUBBLES,
+          parts: [{ to: 3200, rate: 1, chapter: CH1 }, { to: 17500, rate: 3 }, { to: 19300, rate: 1 },
+            { to: 23200, rate: 1, chapter: CH2 }] },
+        scene("oneOracle", CH2),
+        { ...theater(`replays/${one}.json`, 22600, 42800, 0.5, null, 3000), chipBase: "Real run", query: ONE_BUBBLES,
+          parts: [{ to: 30600, rate: 3, chapter: CH2 }, { to: 42800, rate: 1, chapter: CH3 }] },
+        scene("oneOutro", CH3)],
       shows: `One real run (${one}, poll-PR rule): ticket → rename → its own tests pass → PR → CI red (ARCH-4: billing needs totalCents, analytics needs placedAt) → the billing team's own tests fail on that first PR → the red build goes back to the agent → it keeps the old names as @deprecated aliases → CI green.`,
       source: `results/real/runs/${one} (events.jsonl → replay, record.json, diffs/fix1.diff); scenario/ contracts`,
       label: "Real run",
@@ -113,6 +160,10 @@ async function captureScene(context, seg, enc) {
   const err = await page.evaluate(() => window.SCENE_ERROR || null);
   if (err) throw new Error(`${seg.id}: ${err}`);
   const duration = await page.evaluate(() => window.SCENE.duration);
+  if (seg.chapter) {   // the card's own top bar moves down under the chapter label
+    await page.addStyleTag({ content: ".topbar{top:84px!important}" });
+    await setChapter(page, seg.chapter, SCENE_BG);
+  }
   const n = Math.round((duration / 1000) * FPS);
   for (let i = 0; i < n; i++) {
     await page.evaluate((t) => window.SCENE.render(t), (i * 1000) / FPS);
@@ -130,27 +181,31 @@ async function captureTheater(context, seg, enc) {
   // paused: time moves only with runFor. Installed but running, the fake clock also follows wall time, so every
   // slow screenshot would push the replay ahead (the first renders ran ~3× fast)
   await page.clock.pauseAt(new Date("2026-10-13T12:00:01Z"));
-  await page.goto(`${ORIGIN}/theater/index.html?replay=/${seg.replay.replace(/^theater\//, "theater/")}&present=1&t=${seg.from}`);
+  await page.goto(`${ORIGIN}/theater/index.html?replay=/${seg.replay.replace(/^theater\//, "theater/")}&present=1&t=${seg.from}`
+    + (seg.query ? `&${seg.query}` : ""));
   await page.waitForSelector("canvas", { timeout: 60000 });
   await page.clock.runFor(3000); // presentation chrome hides after 2.5 s
-  if (seg.chip) {
-    await page.evaluate((txt) => {
-      const d = document.createElement("div");
-      d.textContent = txt;
-      d.style.cssText = "position:fixed;right:18px;bottom:70px;z-index:99999;font:500 20px 'IBM Plex Sans',system-ui,sans-serif;"
-        + "color:#5b6474;background:#fff;border:1.5px solid #c4cad3;border-radius:6px;padding:5px 12px;";
-      document.body.appendChild(d);
-    }, seg.chip);
-  }
+  if (seg.chip) await setBox(page, "clip-chip", seg.chip, CHIP_CSS);
   await page.keyboard.press(SPEED_KEY[seg.speed] || "2");
   await page.keyboard.press("Space");
-  const wall = (seg.to - seg.from) / seg.speed;
-  const n = Math.round((wall / 1000) * FPS);
+  // parts: stretches of the replay played `rate` times faster than seg.speed (the clock runs rate × per frame)
+  const parts = seg.parts || [{ to: seg.to, rate: 1, chapter: seg.chapter }];
   const step = 1000 / FPS;
-  for (let i = 0; i < n; i++) {
-    await page.clock.runFor(step);
-    await enc.push(await shot(page));
+  let at = seg.from;
+  let wall = 0;
+  for (const part of parts) {
+    if (part.chapter !== undefined) await setChapter(page, part.chapter, THEATER_BG);
+    if (seg.chipBase) await setBox(page, "clip-chip", `${seg.chipBase} · ${fmtSpeed(seg.speed * part.rate)}× speed`, CHIP_CSS);
+    await setBox(page, "clip-mark", part.rate > 1 ? `×${fmtSpeed(part.rate)}` : null, MARK_CSS);
+    const n = Math.round(((part.to - at) / seg.speed / part.rate / 1000) * FPS);
+    for (let i = 0; i < n; i++) {
+      await page.clock.runFor(step * part.rate);
+      await enc.push(await shot(page));
+    }
+    wall += n * step;
+    at = part.to;
   }
+  await setBox(page, "clip-mark", null, MARK_CSS);
   // a still hold on the last frame (playback paused), e.g. to let green CI sink in before the next card
   if (seg.hold) {
     await page.keyboard.press("Space");

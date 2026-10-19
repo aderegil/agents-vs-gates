@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
 import {
   ReplayEngine, SPEEDS, WALK_MS, applyStep, bubbleVisible, duration, initialState, markerTone, nextStepTime,
-  prevStepTime, stateAt, stepsUntil, syncAnchors, syncClock, walkProgress, type Replay, type ReplayStep,
+  prevStepTime, setBubbleKeys, stateAt, stepsUntil, syncAnchors, syncClock, walkProgress, type Replay, type ReplayStep,
 } from "../src/engine/replay.ts";
 
 const DEMO = new URL("../public/demo/", import.meta.url);
@@ -208,4 +208,24 @@ test("compare view syncs two runs by key moment", () => {
   assert.equal(Math.round(syncClock(anchors, ea)), duration(b));
   const mid = syncClock(anchors, ta / 2);
   assert.ok(mid > 0 && mid < tb);
+});
+
+test("?bubbles=<keys>: only key steps speak (the deck clips); the default is unchanged", () => {
+  const r = breakRepair();
+  const keyed = r.steps.filter((s) => s.key === "task_assigned" || s.key === "pr_opened");
+  assert.ok(keyed.length >= 2);
+  const speakers = (st: ReturnType<typeof stateAt>) => Object.values(st.actors).filter((a) => a.bubble).map((a) => a.bubble!.text);
+  const all = r.steps.filter((s) => s.text && s.action !== "move");
+  const before = new Set(r.steps.map((_, i) => i).filter((i) => all.includes(r.steps[i])));
+  assert.ok(before.size > keyed.length);
+  try {
+    setBubbleKeys(["task_assigned", "pr_opened"]);
+    for (let t = 0; t <= duration(r); t += 500) {
+      for (const text of speakers(stateAt(r, t))) assert.ok(keyed.some((s) => s.text === text), `unexpected bubble: ${text}`);
+    }
+  } finally {
+    setBubbleKeys(null);
+  }
+  const anyTool = r.steps.find((s) => s.action === "work" && s.text);
+  if (anyTool) assert.ok(speakers(stateAt(r, anyTool.t_ms)).includes(anyTool.text!));
 });
