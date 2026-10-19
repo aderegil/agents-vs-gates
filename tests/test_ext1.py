@@ -9,6 +9,7 @@ import unittest
 from collections import Counter, defaultdict
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 from harness import blinding, jsonio, manifest, paths, prereg, runner
 
@@ -126,7 +127,8 @@ class RunnerExt1(TempResults):
         super().setUp()
         paths.manifest_path("real").parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(paths.REPO / "results" / "real" / "manifest.json", paths.manifest_path("real"))  # the frozen one
-        manifest.write_ext1("real")
+        # the frozen P7/P8 sidecar too: since addendum 1's freeze (2026-10-16) write_ext1 refuses to regenerate it
+        shutil.copyfile(paths.REPO / "results" / "real" / "manifest-ext1.json", manifest.ext1_path("real"))
 
     def run_cli(self, *argv):
         out, err = io.StringIO(), io.StringIO()
@@ -155,11 +157,15 @@ class RunnerExt1(TempResults):
         for name in ("smoke.json", "smoke-codex.json", "smoke-agy.json"):
             jsonio.write_json_atomic(paths.results_root() / name, {"ok": True})
         self.assertEqual(runner.guard_errors("real", "C8", {"agy-flash"}), [])
-        errs = runner.guard_errors("real", "P7", {"cc-sonnet"})
-        self.assertEqual(len(errs), 1, errs)                                # the original lock verifies
-        self.assertIn("addendum-1 lock missing", errs[0])
+        # frozen since 2026-10-16: the original lock and addendum 1's lock verify against the repo's files
+        self.assertEqual(runner.guard_errors("real", "P7", {"cc-sonnet"}), [])
         self.assertEqual(runner.guard_errors("real", "P1", {"cc-sonnet"}), [])
-        code, _, err = self.run_cli("--stage", "P8", "--max-runs", "1")
+        # an addendum-1 lock that does not verify stops P7/P8 before any run starts (no real call can happen here)
+        with mock.patch.object(prereg, "verify_addendum", return_value=(False, ["PREREGISTRATION-ADDENDUM-1.lock missing"])):
+            errs = runner.guard_errors("real", "P7", {"cc-sonnet"})
+            self.assertEqual(len(errs), 1, errs)
+            self.assertIn("addendum-1 lock missing", errs[0])
+            code, _, err = self.run_cli("--stage", "P8", "--max-runs", "1")
         self.assertEqual(code, runner.EXIT_GUARD)
         self.assertIn("addendum-1 lock", err)
 

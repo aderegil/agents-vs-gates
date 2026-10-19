@@ -160,7 +160,8 @@ export async function captureFullTour(context, enc, { fps = 30, port = 8793 } = 
     }
     await until(page, async () => (await page.locator("[data-run]").count()) === 1, "the filtered list");
     await frames(600);
-    const row = page.locator(`[data-run="${RUN}"]`).first();
+    // the row, not its id cell: the presentation layer takes text that is only a code (the run id) off screen
+    const row = page.locator(`[data-run="${RUN}"]`).first().locator("xpath=ancestor::tr[1]");
     await point(row, 700);
     await click(row);
     await until(page, async () => (await tab("Diff").count()) > 0, "the run's detail");
