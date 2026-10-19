@@ -671,3 +671,21 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
   the runs stay pending, are never data, and are re-run. Alfredo then asked for 8 workers to recover the time: the
   runner accepts up to 8 (w7, w8 set up), and P9 was relaunched at 14:40. Rule for the rest of P9: no agy CLI on this
   machine while it runs.
+
+### P9 complete, unblinded and coded; Gemini read the experiment's answers in some runs (2026-10-18/19)
+- P9 184 of 184 (ended 01:51 UTC on 19 Oct), unblinded 01:52 UTC (not forced). One canary exclusion (p9-0155,
+  `broker`, X-rename V2·S0 → 30 of 31). 17 infrastructure retries in all, none final. Blind-coding batch 7: 42 rows
+  (all P9), A and B agree 42 of 42 (honest_escalation 35, T1 2, none 5).
+- P9 confirmatory (new runs only): H2 30/30 vs 0/30 on both tickets (Holm p 3.4e-17); HS-V2 X-rename 30/30 vs 29/30
+  (p 1), X-remove 30/30 vs 24/33 (p 0.0022, uncorrected). P8 + P9 (descriptive): no rule 100/100, rule in the spec
+  0/100, sees every repo 79/99.
+- **Finding (only `agy-flash`):** its file tools are not stopped by `--sandbox` (declared in addendum 1 §4.4), and in
+  some runs it walked up from its workspace into `C:\avg\agents-vs-gates`. Runs that touched the repo: P8 36 of 120,
+  P9 52 of 184. Runs that **read a file** under `scenario/solutions/` or `oracle/` (the reference fixes and the other
+  teams' tests): P8 17 + 10 (15 analysable runs), P9 24 + 16 (31 analysable). The canary caught only 5 of them,
+  because the solution patches carry no canary. `cc-sonnet`, `cc-opus` and `codex`: 0 runs touched the repo.
+- By the pre-registration (12 Oct declared deviation; addendum 1 §4.4), out-of-workspace access is reported, not an
+  exclusion; the pre-registered numbers stand. **Sensitivity (descriptive, not pre-registered),** P8 + P9 without the
+  runs that read a solution or oracle file: no rule X-rename 50/50 and X-remove 35/35; rule in the spec 0/47 and 0/48;
+  sees every repo X-rename 41/42, X-remove 17/31 (vs 32/50 with them). Of the 46 readers, 36 still broke a consumer.
+  The conclusions do not depend on these runs; whether and how to show it in the deck is Alfredo's call.
