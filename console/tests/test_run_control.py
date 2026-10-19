@@ -67,7 +67,7 @@ class StagesTest(unittest.TestCase):
         with ConsoleFixture(copy_real=PLUGINS) as fx:
             seed(fx.results)
             d = fx.owner.get("/api/run-control/stages?ns=mock").json
-            self.assertEqual([c["stage"] for c in d["stages"]], ["P0", "X1", "X2", "P1", "P2", "P3", "P4", "P5", "P6"])
+            self.assertEqual([c["stage"] for c in d["stages"]], ["P0", "X1", "X2", "P1", "P2", "P3", "P4", "P5", "P6", "C8", "P7", "P8", "P9"])
             by = {c["stage"]: c for c in d["stages"]}
             self.assertEqual((by["P0"]["done"], by["P0"]["total"], by["P0"]["status"], by["P0"]["blinding"]), (5, 5, "complete", "visible"))
             self.assertEqual((by["P1"]["done"], by["P1"]["total"], by["P1"]["status"], by["P1"]["blinding"]), (3, 60, "in_progress", "blinded"))

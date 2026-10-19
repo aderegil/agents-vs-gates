@@ -8,7 +8,7 @@ from tests.test_cycle import S_BREAK_FIX, entry
 
 WIN_PATH = "C:" + chr(92) + "Users" + chr(92) + "someone" + chr(92) + "proj"
 PUBLIC_PATH = "C:" + chr(92) + "Users" + chr(92) + "Public" + chr(92) + "x"
-FAKE_TOKEN = "sk-ant-api03-" + "x" * 24      # shape only; never a real credential
+FAKE_TOKEN = "sk-" + "ant-api03-" + "x" * 24      # shape only, built at run time; never a real credential
 
 
 class SideCommitPipeline(FakePipeline):

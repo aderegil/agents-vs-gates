@@ -28,12 +28,15 @@ SIM = common.SIM_BANNER
 STAGE_FEEDS = {
     "P1": ("rq1", "rq2", "rq3"), "P2": ("rq3",), "P3": ("rq4",), "P4": ("rq1", "rq2", "rq3"),
     "P5": ("rq1", "rq2", "rq3", "rq5"), "P6": ("rq1", "rq2", "rq3"),
+    "P7": ("agents",), "P8": ("agents",), "P9": ("agents",),
 }
 
 UNIT_LABEL = {"cc-sonnet": "Claude Code + Sonnet", "cc-opus": "Claude Code + Opus", "codex": "Codex",
-              "gemini": "Gemini", "mock": "mock agent (SIMULATED)"}
+              "agy-flash": "Antigravity CLI + Gemini 3.8 Flash", "gemini": "Gemini", "mock": "mock agent (SIMULATED)",
+              "mock-cx": "mock agent (SIMULATED)", "mock-agy": "mock agent (SIMULATED)"}
 
 QUESTIONS = {
+    "agents": ("100 runs", "Three agents, 100 runs per condition: how often did each break another team?"),
     "rq1": ("RQ1", "Do agents break what they cannot see?"),
     "rq2": ("RQ2", "Does a spec that names the consumers prevent it?"),
     "rq3": ("RQ3", "When CI says no, do agents fix the code or touch the gate?"),
@@ -243,6 +246,45 @@ class Build:
         return {"id": rid, "code": code, "question": question, "descriptive": descriptive, "note": note,
                 "status": status, "blinded_stages": blinded, "charts": charts, "tables": [t for t in tables if t],
                 **extra}
+
+    # ------------------------------------------------------------ addenda 1-3: every agent at 100 runs per condition
+
+    def agents(self) -> dict:
+        """Each agent's main-test cells over its own stages (base + extension: P1 + P7, P6's main-test part + P7,
+        P8 + P9), both tickets per condition: 100 runs, 50 per ticket. Descriptive; agents are never summed or tested
+        against each other (addendum 1 §5, addendum 2 §4)."""
+        rows, trows, pairs, n = [], [], set(), 0
+        for ext in ("ext1", "ext2"):
+            for unit, c in ((self.agg.get(ext) or {}).get("combined") or {}).items():
+                if c.get("blinded") or not c.get("conditions"):
+                    continue
+                words = [L.with_code(s) if " " not in s else f"{L.with_code(s.split(' ')[0])}, main-test part"
+                         for s in c["stages"]]
+                group = f"{_unit(unit)} · {' + '.join(words)}"
+                for cond in c["conditions"]:
+                    m = cond["combined"]
+                    rows.append({"group": group, "label": L.plain_condition(cond["V"], cond["S"]),
+                                 "sub": f"{cond['V']}·{cond['S']}", "x": m["x"], "n": m["n"], "ci": m["ci"]})
+                    n += m["n"]
+                for cell in c["cells"]:
+                    m = cell["combined"]
+                    trows.append({"agent": _unit(unit), "ticket": L.with_code(cell["ticket"]),
+                                  "condition": f"{L.plain_condition(cell['V'], cell['S'])} ({cell['V']}·{cell['S']})",
+                                  "runs": f"{m['x']} of {m['n']}"})
+                pairs |= {(s.split(" ")[0], unit) for s in c["stages"]}
+        chart = self.finish({"id": "agents.break", "kind": "interval", "tone": "fail", "axis": "share of runs",
+                             "title": "Broke another team on the first try, three agents, 100 runs per condition",
+                             "subtitle": "Both tickets per condition (50 runs each) · x of N, 95% Clopper-Pearson "
+                                         "interval · each agent on its own, never summed",
+                             "rows": rows}, pairs=sorted(pairs), n=n) if rows else None
+        table = {"id": "agents.tickets", "title": "Per ticket (x of N runs)",
+                 "columns": [{"key": "agent", "label": "Agent"}, {"key": "ticket", "label": "Ticket"},
+                             {"key": "condition", "label": "Condition"}, {"key": "runs", "label": "Broke another team",
+                                                                          "num": True}],
+                 "rows": trows} if trows else None
+        return self.section("agents", note="Descriptive: counts and intervals, no p-values between agents. Each "
+                            "agent's own pre-registered tests are in its addendum; this view only adds each agent's "
+                            "runs of the same cells together (addenda 1, 2 and 3).", charts=[chart], tables=[table])
 
     # ------------------------------------------------------------ RQ1, RQ2, RQ3, RQ5
 
@@ -689,11 +731,13 @@ def by_agent(b: "Build") -> dict:
 
 def rq_payload(ns: str) -> dict:
     b = Build(ns)
-    sections = {s["id"]: s for s in (b.rq1(), b.rq2(), b.rq3()) }
+    sections = {s["id"]: s for s in (b.agents(), b.rq1(), b.rq2(), b.rq3())}
     rq5 = b.rq5()
     if rq5:
         sections["rq5"] = rq5
-    return {**_head(b), "sections": sections, "order": [k for k in ("rq1", "rq2", "rq3", "rq5") if k in sections],
+    return {**_head(b), "sections": sections,
+            "order": [k for k in ("agents", "rq1", "rq2", "rq3", "rq5")
+                      if k in sections and not (k == "agents" and sections[k]["status"] == "empty")],
             "by_agent": by_agent(b)}
 
 
@@ -718,7 +762,7 @@ def all_charts(ns: str) -> dict:
     hide which family of charts (`blinded_by_chart`, keyed by the id prefix: rq1…rq5, concordance)."""
     b = Build(ns)
     charts, hidden = {}, {}
-    for sec in (b.rq1(), b.rq2(), b.rq3(), b.rq5(), b.rq4()):
+    for sec in (b.agents(), b.rq1(), b.rq2(), b.rq3(), b.rq5(), b.rq4()):
         if not sec:
             continue
         hidden[sec["id"]] = sec["blinded_stages"]

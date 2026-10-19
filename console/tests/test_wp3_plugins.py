@@ -173,7 +173,7 @@ class ReadinessTest(unittest.TestCase):
                 self.assertEqual(self.fx.owner.post("/api/readiness/units", {"units": {"cc-sonnet": {"effort": "low"}}}).status, 409)
 
     def test_token_never_returns_the_value(self):
-        secret = "sk-ant-oat01-" + "Z" * 40
+        secret = "sk-" + "ant-oat01-" + "Z" * 40
         with tempfile.TemporaryDirectory() as t:
             env = Path(t) / ".env"
             env.write_text(f"CLAUDE_CODE_OAUTH_TOKEN={secret}\n", encoding="utf-8")

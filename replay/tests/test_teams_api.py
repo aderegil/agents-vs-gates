@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import unittest
 from pathlib import Path
 
@@ -11,7 +12,8 @@ import jsonschema
 
 REPO = Path(__file__).resolve().parents[2]
 PLUGIN = REPO / "console" / "plugins" / "teams"
-FUENTES = Path(r"<the talk's working folder>")
+# the talk's working folder (not in this repo): cited fuentes/ sources are checked only when AVG_TALK_DIR points to it
+FUENTES = Path(os.environ.get("AVG_TALK_DIR") or "__no_talk_folder__")
 PHASES = ["discovery", "planning", "implementation", "review", "testing", "deployment", "maintenance"]
 V21 = {"originator", "product_owner", "tech_lead", "engineer", "policy_owner", "code_owner", "release_manager",
        "supervisor", "researcher", "requirements_agent", "task_planner", "code_agent", "code_simplifier",
@@ -121,7 +123,7 @@ class TeamsApi(unittest.TestCase):
         schema = json.loads((REPO / "docs" / "contracts" / "plugin.schema.json").read_text(encoding="utf-8"))
         jsonschema.validate(manifest, schema)
         self.assertEqual((manifest["id"], manifest["order"], manifest["kind"], manifest["entry"]),
-                         ("teams", 6, "module", "web/index.js"))
+                         ("teams", 7, "module", "web/index.js"))   # 7 since Start here took 0 (theater-1016)
         self.assertEqual(len(manifest["roles"]), 4)
         js = (PLUGIN / "web" / "avatar.js").read_text(encoding="utf-8")
         self.assertIn("renderAvatar", js)

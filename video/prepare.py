@@ -176,9 +176,17 @@ def snapshot() -> int:
     if dst.exists():
         shutil.rmtree(dst)
     dst.mkdir(parents=True)
-    for name in ("manifest.json", "state.json", "runner.log.jsonl", "x1-summary.json", "x1-summary.md"):
+    # every manifest (the P6 and addendum sidecars too, else the console lists only the main manifest's runs), the
+    # state, the coding labels and the reviewer study the Results page reads
+    names = ["state.json", "runner.log.jsonl", "x1-summary.json", "x1-summary.md"] + sorted(
+        f.name for f in src.glob("manifest*.json"))
+    for name in names:
         if (src / name).is_file():
             shutil.copy2(src / name, dst / name)
+    for sub in ("coding/labels.json", "reviews/reviews.jsonl", "reviews/pr_set.json"):
+        if (src / sub).is_file():
+            (dst / sub).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src / sub, dst / sub)
     n = 0
     for d in sorted((src / "runs").iterdir()):
         if not d.is_dir():

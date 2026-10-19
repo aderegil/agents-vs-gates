@@ -1,4 +1,4 @@
-IBM Plex Sans 400/500/600 (latin), unchanged, copied from the Iniciativas app (another app by the same author).
+IBM Plex Sans 400/500/600 (latin subset), unchanged, from the IBM Plex project (https://github.com/IBM/plex).
 
 Copyright 2018 IBM Corp. All rights reserved.
 

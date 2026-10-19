@@ -116,7 +116,7 @@ function numbersTable(spec) {
 
 export async function mount(el, shell) {
   alive = true;
-  const S = { style: store.get("style", "app") === "deck" ? "deck" : "app", tab: shell.params?.tab || store.get("tab", "rq1"),
+  const S = { style: store.get("style", "app") === "deck" ? "deck" : "app", tab: shell.params?.tab || store.get("tab", "agents"),
     data: null, busy: new Set() };
   if (!THEMES[S.style]) S.style = "app";
   el.classList.add("res-root");
@@ -479,6 +479,8 @@ export async function mount(el, shell) {
     const items = [];
     const secs = d.rq.sections;
     const expert = shell.mode !== "simple";
+    // addenda 1-3: the three agents at 100 runs per condition, first when there is anything to show
+    if (secs.agents && secs.agents.status !== "empty") items.push({ id: "agents", label: "Three agents · 100 runs", render: () => h("div", { class: "stack" }, sectionBody(secs.agents)) });
     for (const id of ["rq1", "rq2", "rq3"]) items.push({ id, label: TAB_LABEL[id] || secs[id].code, render: () => h("div", { class: "stack" }, sectionBody(secs[id])) });
     items.push({ id: "rq4", label: TAB_LABEL.rq4, render: () => h("div", { class: "stack" }, reviewerSection()) });
     if (secs.rq5) items.push({ id: "rq5", label: TAB_LABEL.rq5, render: () => h("div", { class: "stack" }, sectionBody(secs.rq5)) });
@@ -490,7 +492,7 @@ export async function mount(el, shell) {
       if (d.pilot2 && d.pilot2.runs) items.push({ id: "pilot2", label: "Pilot 2 (X2) · exploratory", render: () => h("div", { class: "stack" }, pilotSection(d.pilot2)) });
       items.push({ id: "excluded", label: "Excluded", count: d.excluded.excluded.length || null, render: () => h("div", { class: "stack" }, excludedSection()) });
     }
-    if (!items.some((i) => i.id === S.tab)) S.tab = "rq1";
+    if (!items.some((i) => i.id === S.tab)) S.tab = items[0].id;
     const t = tabs({ items, active: S.tab, onChange: (id) => { S.tab = id; store.set("tab", id); } });
     body.replaceChildren(...[
       d.rq.simulated ? notice(h("span", {}, h("strong", {}, d.rq.banner), ". Every figure exported from this namespace carries the MOCK watermark; it cannot be switched off."), "", "info") : null,

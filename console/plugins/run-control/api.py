@@ -1,6 +1,6 @@
 """Run Control plugin API (spec §22.2; contract console-api.md).
 
-    GET  /api/run-control/stages      stage cards P0-P6: cells k/N, status, blinding, tokens, minutes, guards
+    GET  /api/run-control/stages      stage cards P0-P9: cells k/N, status, blinding, tokens, minutes, guards
     GET  /api/run-control/status      runner + live view: workers, next 5 queued, finished, usage limit, sleep notice
     POST /api/run-control/dry-run     what a batch would run (never launches anything)
     POST /api/run-control/start       launch `python -m harness.runner ...` as a detached process (preview: true = plan only)
@@ -27,7 +27,7 @@ from harness import blinding, paths
 from harness.jsonio import read_json, write_json_atomic
 
 # argparse `choices` of harness/runner.py --stage (P3 is the reviewer study, run by harness.reviewer).
-RUNNABLE = ("P0", "X1", "X2", "P1", "P2", "P4", "P5", "P6")
+RUNNABLE = ("P0", "X1", "X2", "P1", "P2", "P4", "P5", "P6", "P7", "P8", "P9")   # P7-P9: addenda 1-3
 EXPLORATORY = ("P0", "X1", "X2")   # no pre-registration lock needed (calibration, pilots); same as harness.runner
 STAGE_NOTE = {"P3": "Reviewer calls (AI reviewer, RQ4) run from the reviewer study, not from a batch."}
 WORKERS_NOTICE = "Parallel runs don't add quota; they spend it faster"

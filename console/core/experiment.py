@@ -14,10 +14,11 @@ from pathlib import Path
 from harness import blinding, paths
 from harness.jsonio import read_json, read_jsonl
 
-STAGES = ["P0", "X1", "X2", "P1", "P2", "P3", "P4", "P5", "P6"]
+STAGES = ["P0", "X1", "X2", "P1", "P2", "P3", "P4", "P5", "P6", "C8", "P7", "P8", "P9"]   # C8, P7, P8: addendum 1; P9: addenda 2-3
 STAGE_NAMES = {
     "P0": "Calibration", "X1": "Pilot X1 · exploratory", "X2": "Pilot X2 · exploratory", "P1": "Core", "P2": "Pressure", "P3": "Reviewers (RQ4)",
     "P4": "Breadth", "P5": "Optional: Opus, RQ5", "P6": "Later: Codex",
+    "C8": "Third-agent calibration", "P7": "More main-test runs", "P8": "Third agent", "P9": "Third agent, more runs",
 }
 MAIN_STAGES = ["P1", "P2", "P4"]  # what "data collection" means before the optional stages
 
@@ -362,8 +363,10 @@ def phase_and_next(data_dir: Path) -> dict:
         action = nxt("Freeze the pre-registration", "readiness", {"tab": "prereg"}, "Real runs from P1 on require the lock (§11.4).")
     else:
         action = None
-        for s in ("P1", "P2", "P4", "P5", "P6"):
-            p = real[s]
+        for s in ("P1", "P2", "P4", "P5", "P6", "P7", "P8", "P9"):
+            p = real.get(s)
+            if p is None:
+                continue
             if p["in_manifest"] and not p["complete"]:
                 action = nxt(f"Run {s} batch ({p['done']} of {p['total']} done)", "run-control", {"stage": s})
                 break

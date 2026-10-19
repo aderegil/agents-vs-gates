@@ -1,0 +1,21 @@
+Agents vs. Gates
+Copyright © 2026 Alfredo De Regil. See LICENSE.
+
+This repository includes third-party works, unchanged, under their own licenses:
+
+1. IBM Plex Sans, weights 400, 500 and 600 (latin subset). Copyright 2018 IBM Corp.
+   License: SIL Open Font License 1.1. The license text is in OFL.txt next to each copy of the fonts:
+   console/web/fonts/, console/plugins/replay/app/src/assets/fonts/ and console/plugins/replay/web/dist/
+   (the built theater, where the font files carry a content hash in their names).
+
+2. Lucide icons (path data). Copyright (c) Lucide Icons and Contributors; portions Copyright (c) 2013-2022 Cole Bemis
+   (Feather, MIT). License: ISC.
+   Files: console/web/icons.js and console/plugins/replay/app/src/components/Icons.tsx. The license text is in
+   console/web/LICENCIAS.txt.
+
+npm and Python packages are not included; `npm ci` and `pip install` fetch them under their own licenses
+(package-lock.json files, requirements.txt).
+
+Meridian Retail, its teams and its people are fictional. Anthropic, Claude, OpenAI, Codex, Google, Gemini, Antigravity,
+AWS, Kiro and GitHub are trademarks of their owners. They are named only to say which tools were tested or which public
+documentation a scripted scene paraphrases (sources in replay/scenes/SOURCES.md); no endorsement is implied.

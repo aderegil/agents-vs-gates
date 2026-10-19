@@ -66,3 +66,30 @@ class TestResultsUnits(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestThreeAgents(unittest.TestCase):
+    """The 'Three agents · 100 runs' section: each agent's base + extension runs per condition, one group per agent."""
+
+    def test_one_group_per_agent_never_summed(self):
+        from tests.test_ext1_analysis import tree
+        with ResultsTree() as t:
+            tree(t)
+            p = payload.rq_payload("real")
+        self.assertEqual(p["order"][0], "agents")
+        sec = p["sections"]["agents"]
+        self.assertEqual(sec["status"], "ok")
+        rows = sec["charts"][0]["rows"]
+        groups = sorted({r["group"].split(" · ")[0] for r in rows})
+        self.assertEqual(groups, ["Claude Code + Sonnet", "Codex"])                 # P8 alone has no extension yet
+        son = {r["sub"]: (r["x"], r["n"]) for r in rows if r["group"].startswith("Claude Code + Sonnet")}
+        self.assertEqual(son["V0·S0"], (10, 10))
+        cx = {r["sub"]: (r["x"], r["n"]) for r in rows if r["group"].startswith("Codex")}
+        self.assertEqual(cx["V0·S0"][1], 3)                                         # P6's P4-part run stays out
+        self.assertNotIn("p", {k for r in rows for k in r})
+
+    def test_absent_without_addendum_runs(self):
+        with ResultsTree() as t:
+            _tree(t, ["P1", "P6"])
+            p = payload.rq_payload("real")
+        self.assertNotIn("agents", p["order"])

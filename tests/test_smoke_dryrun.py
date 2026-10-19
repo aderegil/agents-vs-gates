@@ -15,7 +15,7 @@ FIX = Path(__file__).parent / "fixtures"
 class Smoke(unittest.TestCase):
     def test_dry_run_prints_five_calls_no_token(self):
         buf = io.StringIO()
-        with mock.patch.object(cc.authenv, "oauth_token", return_value="sk-ant-oat01-SECRET"), \
+        with mock.patch.object(cc.authenv, "oauth_token", return_value="sk-" + "ant-oat01-SECRET"), \
                 mock.patch.object(smoke.proc, "run_streaming", side_effect=AssertionError("no live call")), \
                 contextlib.redirect_stdout(buf):
             rc = smoke.main(["--dry-run"])
