@@ -185,6 +185,10 @@ def guard_errors(ns: str, stage: str, units_used: set[str]) -> list[str]:
             ok, problems = prereg.verify_addendum(2)
             if not ok:
                 errs.append("addendum-2 lock missing or does not match: " + "; ".join(problems[:5]))
+            if manifest_mod.ext3_path(ns).exists():       # make-up P9 runs (addendum 3)
+                ok, problems = prereg.verify_addendum(3)
+                if not ok:
+                    errs.append("addendum-3 lock missing or does not match: " + "; ".join(problems[:5]))
     for u in units_used:
         if u == "mock":
             errs.append("unit mock in the real namespace")

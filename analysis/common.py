@@ -40,8 +40,8 @@ def load_manifest(ns: str) -> dict | None:
     """manifest.json plus the P6 sidecar's runs (manifest-p6.json) and the addendum sidecars (manifest-ext1.json,
     manifest-ext2.json), if any; not the pilots or the C8 calibration."""
     m = read_json(paths.manifest_path(ns))
-    return (manifest_mod.with_ext2(manifest_mod.with_ext1(manifest_mod.with_p6(m, ns), ns), ns)
-            if m is not None else None)
+    return (manifest_mod.with_ext3(manifest_mod.with_ext2(manifest_mod.with_ext1(manifest_mod.with_p6(m, ns), ns), ns),
+                                   ns) if m is not None else None)
 
 
 def load_state(ns: str) -> dict | None:

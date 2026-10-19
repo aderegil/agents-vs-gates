@@ -110,7 +110,9 @@ def verify(repo: Path | None = None) -> tuple[bool, list[str]]:
 ADDENDUM_FILES = {1: ("PREREGISTRATION-ADDENDUM-1.md", "harness/units-ext.json", "harness/adapters/agy.py",
                       "results/real/manifest-ext1.json"),
                   # addendum 2 (P9) reuses addendum 1's unit, adapter and prices, which stay frozen by that lock
-                  2: ("PREREGISTRATION-ADDENDUM-2.md", "results/real/manifest-ext2.json")}
+                  2: ("PREREGISTRATION-ADDENDUM-2.md", "results/real/manifest-ext2.json"),
+                  # addendum 3: make-up P9 runs (stage P9, ids after p9-0184)
+                  3: ("PREREGISTRATION-ADDENDUM-3.md", "results/real/manifest-ext3.json")}
 
 
 def addendum_lock_name(n: int) -> str:
