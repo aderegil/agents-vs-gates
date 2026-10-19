@@ -931,3 +931,56 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
   (detectors), outcomes. Saved as `results/try/verdicts/<try_id>.json`.
 - Tests: `tests/test_try_rules.py` (fake scenario, temp roots, zero model calls), including an audit-hook test that
   no file or folder under `results/real` or `results/mock` is opened or listed during a try, and junction tests.
+
+## The release package and the deck's third order (2026-10-19, branch `release`)
+Brief from the deck session, with Alfredo's decisions in his words (GitHub under his personal account `aderegil`,
+results and videos included, a license that lets people use it but not change it); Alfredo confirmed the local steps
+in this terminal. Nothing left the machine; the push waits for his "sí".
+- **Branch `release`** (worktree `C:\avg\release-1019`) merges `theater-1016` (which holds `night-1013`) and
+  `try-it-1018` into `ext-1016`. The only conflicts were the two logs (`BUILD-STATUS.md`, `docs/DECISIONS.md`),
+  resolved by keeping both sides, oldest first. The four source branches and `main` are untouched.
+- **History is rewritten only in a separate clone** (`C:\avg\agents-vs-gates-release`, rebuilt from `release` at the
+  end): `git filter-repo --mailmap` sets every author and committer to `aderegil <aderegil@users.noreply.github.com>`
+  (dates and order kept: the pre-registration's freeze still comes before the first run); `--replace-text` and
+  `--replace-message` (rules in `C:\avg\release-tools\replacements.txt`) take out the old author email, the talk's
+  cloud folder path, the client's sector, the event organizer's name, the internal offering's name, the publication-policy
+  lines and a local workspace path. **Commit hashes change** (the lock commits too); the locks themselves hash files,
+  not commits, and all four verify in the clone (`prereg --verify`, `--verify-addendum 1|2|3`).
+- **Addendum 1's lock hashed two files with CRLF line ends** (`PREREGISTRATION-ADDENDUM-1.md`,
+  `harness/adapters/agy.py`, as checked out on Windows); git stores them with LF, so a fresh clone failed
+  `--verify-addendum 1`. Fixed without touching the lock: `.gitattributes` keeps those two files CRLF in every
+  checkout, so the verifier reads the bytes that were frozen.
+- **Results go into git, redacted** (`release-tools/redact_results.py`; the original `results/real` is not touched).
+  The scan found, besides clean bundles and synthetic emails: five `agy-flash` runs (p8-0035, p8-0087, p9-0029,
+  p9-0094, p9-0130) whose transcripts hold an environment dump the agent printed (computer name, corporate DNS domain,
+  logon server, Windows user name, cloud folder path, a localhost CSRF token of its session); two transcripts listing a
+  folder owner; three Claude Code transcripts naming the 8.3 short path; and `state.json`'s "unblinded by". Those
+  values are replaced (`<computer>`, `<domain>`, `<logon-server>`, `aderegil`, `<cloud-folder>`, `<USER>~1`,
+  `<redacted>`; 80 values in 13 files); nothing else changes, and no stored hash covers those files. Working files that
+  are not data stay out (the note to the deck session, the runner's console logs, quota snapshots). Size: the clone's
+  pack is ~52 MB with all 1,187 runs and their workspace bundles.
+- **MP4s as release assets, not git or LFS**: they are binary (no delta compression), ~70 MB together and replaced at
+  each render; LFS would add a quota and a client step for anyone cloning. Git keeps the code and the data; the
+  release keeps the videos.
+- **Secrets**: no gitleaks or trufflehog on this machine; a regex scan with their usual rules over every object in the
+  clone's history found no key or token. The three fake `sk-ant-` strings in tests are now built at run time.
+- **LICENSE (draft, not legal advice)**: PolyForm Strict 1.0.0 plus an additional permission for internal evaluation
+  in any organization and for running it with your own adapter, units file and rules file, without distributing it or
+  changed versions. NOTICE lists IBM Plex (OFL 1.1, the OFL text now sits next to every copy) and Lucide (ISC).
+- **pixel-souls** (Alfredo's own repo) appears only in comments, ORIGIN/SOURCE notes and the theater's package
+  description; no code imports it, so it is not a runtime dependency. The notes stay.
+- **QA screenshots** (`docs/qa`, ~35 MB) stay: their status bars show only the throwaway users and "alfredo · owner".
+- **The console knew only P0-P6.** Run Explorer's run-id pattern now takes P7-P9 and C8 (1,187 runs listed, Gemini
+  included), Run Control has their stage cards, and Results opens on a "Three agents · 100 runs" tab: each agent's
+  base + extension runs per condition (`analysis.summarize` ext blocks), one group per agent, never summed. The video
+  snapshot now copies every manifest, the coding labels and the reviewer study (it copied only `manifest.json`).
+- **Public wording "the other teams' tests"** on screen (theater subtitles, markers, the bench's place label, Run
+  Explorer's tab, Results' axes, Home's claims); the `oracle/` folder and the record fields keep their names. The first
+  version of the rules never matched: written through a heredoc, `\b` became a backspace byte. Fixed and tested.
+- **USING.md** follows Alfredo's four uses (explore the real runs, demo with the mock, your rules, your agents);
+  "Take the gate" is out (not part of the repo); own repos are not promised. `try_rules --unit agy-flash --live` runs
+  Gemini through the agy adapter like the other units (new test on the fake agy CLI).
+- **exp-one-run.mp4**: one ticket card instead of two text cards (~10 s); then, after Alfredo's review, the agent at work
+  and the repeated CI failure play at ×3 (marked on screen, the speed chip says the real speed), three fixed chapter
+  labels (they cover the theater's title bar), and speech bubbles only for the ticket and the PR (`?bubbles=<keys>`).
+  The first 3.2 s of the run stay at 0.5×, so the deck's poster frame stays at 16.0 s.
