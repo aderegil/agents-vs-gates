@@ -3,3 +3,7 @@
 *.woff2 binary
 *.png binary
 *.bundle binary
+# Addendum 1's lock (frozen 2026-10-16) hashed these two files as checked out on Windows, with CRLF line ends. Keep them
+# CRLF in every checkout, so `python -m harness.prereg --verify-addendum 1` checks the very bytes that were frozen.
+PREREGISTRATION-ADDENDUM-1.md text eol=crlf
+harness/adapters/agy.py text eol=crlf
