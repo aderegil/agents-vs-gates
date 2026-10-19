@@ -10,6 +10,10 @@ consumers (`billing-service`, `analytics-ingest`, `web-storefront`).
 - **Part II, the console:** a local web console with plugins (Overview, Run Control, Results, Run Explorer, Replay
   Theater, Teams & Avatars, Scenario, Readiness, Users & Audit).
 
+**Try it on your AI-SDLC:** `docs/USING.md` — watch it with the mock agent, plug in your own agent, run the tickets
+with your own rules file (`python -m harness.try_rules`, results only in `results/try/`), or copy the checks into your
+CI.
+
 Full build spec (Spanish): `docs/construccion-experimento.md`. Seams between packages: `docs/contracts/`.
 Build progress: `BUILD-STATUS.md`. Every decision taken without asking: `docs/DECISIONS.md`.
 Environment and verified flags: `docs/ENVIRONMENT.md`.

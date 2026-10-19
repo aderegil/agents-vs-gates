@@ -2,7 +2,8 @@
 
   python -m harness.doctor                      check everything, print OK/FAIL lines
   python -m harness.doctor --json               same, machine-readable (used by the console Readiness plugin)
-  python -m harness.doctor --setup-workers 3    npm ci in C:\\avg\\w1..w3 (real); add --ns mock|selftest for wm<k> / wst
+  python -m harness.doctor --setup-workers 3    npm ci in C:\\avg\\w1..w3 (real); add --ns mock|selftest for wm<k> / wst,
+                                                --ns try for wt<k> (harness.try_rules)
 """
 from __future__ import annotations
 
@@ -149,7 +150,7 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--workers", type=int, default=2, help="how many real workers must be ready")
     ap.add_argument("--setup-workers", type=int, metavar="N")
-    ap.add_argument("--ns", default="real", choices=["real", "mock", "selftest"])
+    ap.add_argument("--ns", default="real", choices=["real", "mock", "selftest", paths.TRY_NS])
     a = ap.parse_args(argv)
     if a.setup_workers:
         ks = [1] if a.ns == "selftest" else range(1, a.setup_workers + 1)

@@ -159,7 +159,9 @@ def _v1_extras(service: Path, notes: list) -> None:
 
 
 def materialize(ns: str, worker: int, unit: str, ticket: str | None, V: str, S: str, *,
-                units: dict | None = None) -> Workspace:
+                units: dict | None = None, context_text: str | None = None) -> Workspace:
+    """context_text: written as the context file instead of scenario/context/orders-service/<S>.md (harness.try_rules:
+    your own rules file). None, the experiment's case, keeps the frozen S text."""
     if units is None:
         from harness import unitsio
         units = unitsio.load_units()
@@ -174,7 +176,7 @@ def materialize(ns: str, worker: int, unit: str, ticket: str | None, V: str, S: 
     ctx_name = units[unit].get("context_file") or scenario_io.context_name(adapter)
     ws = Workspace(ns=ns, worker=worker, unit=unit, adapter=adapter, ticket=ticket, V=V, S=S, root=root, cfg=cfg,
                    worker_dir=wdir, context_file=ctx_name, service_prefix="orders-service/" if V == "V2" else "")
-    ctx = scenario_io.context_text(S)
+    ctx = scenario_io.context_text(S) if context_text is None else context_text
     if V in ("V0", "V1"):
         shutil.copytree(paths.REPOS / "orders-service", root, ignore=COPY_IGNORE, dirs_exist_ok=True)
         (root / ctx_name).write_text(ctx, encoding="utf-8", newline="\n")
