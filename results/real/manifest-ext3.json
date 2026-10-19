@@ -1,0 +1,40 @@
+{
+  "schema": "manifest/1",
+  "seed": 20261019,
+  "namespace": "real",
+  "generated_at": "2026-10-19T02:13:47+00:00",
+  "sidecar_of": "manifest.json",
+  "addendum": 3,
+  "target": 50,
+  "shortfall": {
+    "X-remove|V0|S0|W1|agy-flash": 0,
+    "X-remove|V0|S2|W1|agy-flash": 0,
+    "X-remove|V2|S0|W1|agy-flash": 0,
+    "X-rename|V0|S0|W1|agy-flash": 0,
+    "X-rename|V0|S2|W1|agy-flash": 0,
+    "X-rename|V2|S0|W1|agy-flash": 1
+  },
+  "stage_counts": {
+    "P9": 1
+  },
+  "units": {
+    "P9": {
+      "agy-flash": 1
+    }
+  },
+  "runs": [
+    {
+      "run_id": "p9-0185",
+      "stage": "P9",
+      "unit": "agy-flash",
+      "ticket": "X-rename",
+      "wording": "W1",
+      "paraphrase": "p1",
+      "visibility": "V2",
+      "spec": "S0",
+      "replicate": 1,
+      "round": 1,
+      "cell": "X-rename|V2|S0|W1|agy-flash"
+    }
+  ]
+}
