@@ -899,3 +899,35 @@ Decided without asking (brief: "decide lo más simple, anótalo y sigue"). Nothi
   analysable runs per ticket for `cc-sonnet` (P1 + P7), `codex` (P6 P1 part + P7) and `agy-flash` (P8 + P9).
   Gemini V2·S0 is 80 of 100 (X-rename 48/50, X-remove 32/50); P9 HS-V2 X-rename 30/30 vs 30/31 (p 1). During the run
   agy also read files in the new `C:\avg\try-it-1018` worktree (outside its workspace, recorded; not a solution file).
+
+
+## "Try it on your AI-SDLC": `docs/USING.md` and `harness.try_rules` (2026-10-18, branch try-it-1018)
+- Brief from the deck session: a reuse path for people who want to run the experiment on their own agent, rules or
+  CI. `docs/USING.md` (plain English: watch it, try your agent, try your rules, take the gate) and
+  `python -m harness.try_rules --context <file> --unit <unit>`. Public text says "the other teams' tests", never the
+  folder's name; "pipeline" means CI/CD only.
+- **A new entry point, not a runner option.** The runner's semantics (manifest stages, blinding, locks, smoke guard,
+  model drift) are the experiment's; a try has none of them. `try_rules` calls the same `cycle.execute_run`, so the
+  cycle (session, CI, repair loop, consumer tests, detectors, sanitizer, trace) is the experiment's own.
+- **Namespace `try`** (`paths.TRY_NS`, `results/try/`, workers `wt<k>`, cfg `cfg/wt<k>`). `paths.NAMESPACES` stays
+  `("real", "mock")`, so the console, the runner and analysis never list try runs. `ns_dir` accepts `try` too.
+- **The user's file reaches the workspace through one optional argument**: `workspace.materialize(...,
+  context_text=None)` and `cycle.execute_run(..., context_text=None)`. `None` (every experiment caller) keeps the
+  frozen S text, byte for byte; nothing frozen changes (`prereg --verify` untouched). In V2 the V2 line stays on top.
+- **Records of try runs use the record contract with three enums opened** (`record.TRY_OPEN`): namespace `const
+  "try"`, `spec` any string (`"custom"`), `adapter` any string (the user's own adapter). Experiment records keep the
+  strict enums (tested). Discarded: widening `docs/contracts/record.schema.json` for everyone.
+- **Guards.** Non-mock units need `--live` (real sessions, real quota). The try folder and the `wt<k>` folders are
+  resolved (junctions included) and refused if they overlap `results/real`, `results/mock` (also the repo's default
+  ones, against a stray `AVG_RESULTS_ROOT`) or any experiment worker/cfg folder (w1..w8, wm1..wm8, wst); a
+  `results/try/state.json` or `manifest.json` of another namespace is refused too. Every write of the module goes
+  through `_in_try`. No pre-registration file is read. `--units-file` may add units but never replace a frozen one.
+- **The mock does not read the user's file**: `--mock-as S0|S1|S2` picks which experiment script it plays (default S0),
+  and the verdict says so.
+- **Worker folders are required with the real CI even for the mock**: CI's unit-tests stage runs `npm test` in the
+  workspace, which needs `tsc` from the worker's `node_modules` (found by running it). `doctor --ns try` sets them up.
+- Verdict per ticket, in plain words: broke another team on the first try (consumer tests on `gen`), CI caught /
+  missed it, CI failed with no team broken, still breaking at the end, CI green at the end, ticket state, gate edits
+  (detectors), outcomes. Saved as `results/try/verdicts/<try_id>.json`.
+- Tests: `tests/test_try_rules.py` (fake scenario, temp roots, zero model calls), including an audit-hook test that
+  no file or folder under `results/real` or `results/mock` is opened or listed during a try, and junction tests.

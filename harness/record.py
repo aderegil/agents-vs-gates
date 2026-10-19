@@ -8,16 +8,23 @@ from pathlib import Path
 from harness import jsonio, outcome as outcome_mod, paths, scenario_io
 
 SCHEMA = paths.CONTRACTS / "record.schema.json"
+# harness.try_rules records: same contract, except the namespace is "try", the spec is "custom" (your rules file) and
+# the adapter may be one of your own. Experiment records keep the strict enums.
+TRY_OPEN = {"namespace": {"const": paths.TRY_NS}, "spec": {"type": "string"}, "adapter": {"type": "string"}}
 
 
-@lru_cache(maxsize=1)
-def _validator():
+@lru_cache(maxsize=2)
+def _validator(try_ns: bool = False):
     import jsonschema
-    return jsonschema.Draft7Validator(json.loads(SCHEMA.read_text(encoding="utf-8")))
+    schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
+    if try_ns:
+        schema["properties"].update(TRY_OPEN)
+    return jsonschema.Draft7Validator(schema)
 
 
 def validate(rec: dict) -> list[str]:
-    return [f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in _validator().iter_errors(rec)]
+    v = _validator(rec.get("namespace") == paths.TRY_NS)
+    return [f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in v.iter_errors(rec)]
 
 
 def write(path: Path, rec: dict) -> None:

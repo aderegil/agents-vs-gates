@@ -10,7 +10,9 @@ import os
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-NAMESPACES = ("real", "mock")
+NAMESPACES = ("real", "mock")      # the experiment's namespaces (runner, console, analysis)
+TRY_NS = "try"                     # `python -m harness.try_rules` (your own rules file): never part of the experiment
+_WORKER_PREFIX = {"real": "w", "mock": "wm", "selftest": "wst", TRY_NS: "wt"}
 
 
 def avg_root() -> Path:
@@ -22,7 +24,7 @@ def results_root() -> Path:
 
 
 def ns_dir(ns: str) -> Path:
-    if ns not in NAMESPACES:
+    if ns not in NAMESPACES and ns != TRY_NS:
         raise ValueError(f"unknown namespace {ns!r}")
     return results_root() / ns
 
@@ -56,8 +58,8 @@ def runner_lock_path(ns: str) -> Path:
 
 
 def worker_dir(ns: str, k: int) -> Path:
-    """Worker k: own node_modules + r\\ (the run in progress). Real: w<k>; mock: wm<k>; selftest: wst."""
-    prefix = {"real": "w", "mock": "wm", "selftest": "wst"}[ns]
+    """Worker k: own node_modules + r\\ (the run in progress). Real: w<k>; mock: wm<k>; selftest: wst; try: wt<k>."""
+    prefix = _WORKER_PREFIX[ns]
     return avg_root() / (prefix if ns == "selftest" else f"{prefix}{k}")
 
 
@@ -66,7 +68,7 @@ def workspace_dir(ns: str, k: int) -> Path:
 
 
 def cfg_dir(ns: str, k: int) -> Path:
-    prefix = {"real": "w", "mock": "wm", "selftest": "wst"}[ns]
+    prefix = _WORKER_PREFIX[ns]
     return avg_root() / "cfg" / (prefix if ns == "selftest" else f"{prefix}{k}")
 
 
