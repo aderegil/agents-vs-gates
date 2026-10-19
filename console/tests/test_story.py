@@ -15,7 +15,7 @@ figures = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(figures)
 
 # A code that would be on screen without its words: tickets, V/S/W, stages, H2/HS-V2, reviewer conditions, RQs, run ids.
-CODE = re.compile(r"\bX-(?:rename|remove|add|api|dep|units)\b|(?<![\w-])(?:[VSW][0-2]|P[0-8]|C8|X[12]|H2|D[1-8])(?![\w-])"
+CODE = re.compile(r"\bX-(?:rename|remove|add|api|dep|units)\b|(?<![\w-])(?:[VSW][0-2]|P[0-9]|C8|X[12]|H2|D[1-8])(?![\w-])"
                   r"|\bHS-V2\b|\bR-(?:S0|S2|C)\b|\bRQ[1-7]\b|\b[pPxXcC]\d-\d{4}\b")
 
 

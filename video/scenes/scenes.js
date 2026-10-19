@@ -323,7 +323,7 @@ async function breakOutro() {
   const facts = [
     ["fail", `First attempt: CI blocked the pull request (${(gen.failing || []).map((x) => x.id).join(", ") || "—"})`,
       (gen.failing || []).flatMap((x) => x.output).map((l) => el("div", { class: "mono" }, l))],
-    ["fail", `Staging oracle on that first PR: ${broke.length} of ${Object.keys(b.oracle_gen || {}).length} consumers broke`,
+    ["fail", `The other teams' tests on that first PR: ${broke.length} of ${Object.keys(b.oracle_gen || {}).length} consumers broke`,
       Object.entries(b.oracle_gen || {}).map(([k, v]) => el("div", {}, `${k}: ${v.head}`))],
     [last.ok ? "pass" : "fail", `Repair after reading CI's output (${b.repair_diff ? b.repair_diff.replace(".diff", "") : "—"}): CI ${last.ok ? "passed" : "failed"}`,
       (b.deprecated_lines || []).map((l) => el("div", { class: "mono" }, l))],
@@ -477,24 +477,38 @@ async function results() {
 const UNIT_NAME = { "cc-sonnet": "Claude Code · Sonnet", "cc-opus": "Claude Code · Opus", codex: "Codex" };
 
 async function oneIntro() {
-  const [f, scn] = await Promise.all([J("/data/clip-facts.json"), J("/data/scenario.json")]);
+  const f = await J("/data/clip-facts.json");
   const b = f.one;
-  const hot = ticketFields(scn);
-  const needs = scn.contracts.filter((c) => c.provider === "orders-service")
-    .map((c) => ({ c, keys: Object.keys(c.requires).map(lastSeg).filter((k) => hot.has(k) && new RegExp(`\\b${k}\\b`).test(b.ticket_text || "")) }))
-    .filter((x) => x.keys.length);
-  const D = sec(24);
-  const card = el("div", { class: "title-card", style: { top: "150px" } },
-    el("div", { class: "eyebrow" }, `A real run · ${runName(b.run_id)} · ${UNIT_NAME[b.unit] || b.unit} (${b.model})`),
-    el("h2", {}, `${ticketLabel(b.ticket)} · ${plainCondition(b.V, b.S)}`),
-    el("p", {}, "Its workspace holds only orders-service. Its spec says nothing about architecture."),
-    el("div", { class: "quote", style: { marginTop: "34px" } }, `“${b.ticket_text}”`),
-    el("p", { style: { marginTop: "30px", fontSize: "30px" } }, "What it cannot see: ",
-      needs.map((x, i) => el("span", {}, i ? " · " : "", el("strong", {}, x.c.consumer), ` reads ${x.keys.join(", ")} (${x.c.contract})`))));
-  stage.append(card);
-  const cap = captions([[0.5, 11, "One real run of the experiment, from the ticket to a green CI."],
-    [11, 24, "The agent sees only its own repo. Two other teams read the fields it is asked to rename."]]);
-  return { duration: D, render(t) { show(card, t, 0, D + 1000); cap(t); } };
+  const D = sec(10);
+  // one ticket card, the way a team tracker shows it (Alfredo, 2026-10-19: less text, look like a ticket): the service,
+  // a short title, the ticket's own two sentences, who it is assigned to and the condition as labels
+  const event = (String(b.ticket_text || "").match(/\b(Order[A-Z]\w+)\b/) || [])[1];
+  const lines = String(b.ticket_text || "").split(/(?<=\.)\s+/).filter(Boolean);
+  const icon = (paths, size, stroke) => S("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke,
+    "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" }, paths.map((d) => S("path", { d })));
+  const card = el("div", { class: "ticket" },
+    el("div", { class: "meta" },
+      el("span", { class: "type" }, icon(["M5 12.5l4.5 4.5L19 7.5"], 22, "#fff")),
+      el("span", {}, "orders-service"),
+      el("span", { class: "status" }, "To do")),
+    el("h2", {}, `${ticketLabel(b.ticket)}${event ? ` in ${event}` : ""}`),
+    el("div", { class: "label" }, "Description"),
+    el("div", { class: "desc" }, lines.map((l) => el("div", {}, l))),
+    el("div", { class: "foot" },
+      el("div", {}, el("div", { class: "label" }, "Assignee"),
+        el("div", { class: "who" }, el("span", { class: "avatar" },
+          icon(["M12 8V4H8", "M6 8h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z", "M2 14h2", "M20 14h2", "M15 13v2", "M9 13v2"], 26, "#2563eb")),
+        "Code agent")),
+      el("div", {}, el("div", { class: "label" }, "Labels"),
+        el("div", { class: "who" }, plainCondition(b.V, b.S).split(" · ").map((x) => el("span", { class: "tag" }, x))))));
+  const note = el("div", { class: "unseen" },
+    icon(["M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
+      "M14.084 14.158a3 3 0 0 1-4.242-4.242", "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",
+      "M2 2l20 20"], 38, "#5b6474"),
+    el("span", {}, "Two other teams read these fields. The agent cannot see them."));
+  stage.append(card, note);
+  const cap = captions([[0.5, 10, "One real run of the experiment, from the ticket to a green CI."]]);
+  return { duration: D, render(t) { show(card, t, 0, D + 1000); show(note, t, sec(2.5), D + 1000); cap(t); } };
 }
 
 async function oneOracle() {

@@ -539,9 +539,9 @@ class Build:
         chart = None
         if panels:
             chart = self.finish({"id": "concordance.matrix", "kind": "matrix",
-                                 "title": "CI and the oracle, per ticket (first CI vs. staging oracle)",
-                                 "subtitle": "Runs by whether CI and the oracle found a consumer break",
-                                 "rowAxis": "First CI", "colAxis": "Staging oracle",
+                                 "title": "CI and the other teams' tests, per ticket (first CI vs. their tests)",
+                                 "subtitle": "Runs by whether CI and the other teams' tests found a consumer break",
+                                 "rowAxis": "First CI", "colAxis": "Other teams' tests",
                                  "rowNames": ["Breaks a consumer", "Passes"], "colNames": ["Breaks a consumer", "Passes"],
                                  "panels": panels, "footnote": self.agg["concordance_note"]},
                                 self.cells())
@@ -560,7 +560,7 @@ class Build:
             m["chart"] = self.finish(
                 {"id": "mutation.matrix", "kind": "matrix", "title": "What CI sees and what it does not (mutation test)",
                  "subtitle": f"{m['total']} mutants of OrderPlaced and the REST response · deterministic, no agents",
-                 "rowAxis": "CI (ARCH-4, ARCH-8)", "colAxis": "Staging oracle",
+                 "rowAxis": "CI (ARCH-4, ARCH-8)", "colAxis": "Other teams' tests",
                  "rowNames": ["Catches", "Misses"], "colNames": ["Catches", "Misses"],
                  "panels": [{"title": "", "note": "", "total": m["total"], "cells": grid}]},
                 [], pairs=[], n=m["total"])

@@ -1,6 +1,6 @@
 // node --test for the plain-words rule (2026-10-16): the one label map (console/web/lib/labels.js, re-exported by
 // src/components/labels.ts) and "no code on screen" in the theater: every text a replay puts on screen, after
-// plainReplay, is free of ticket ids (X-…), cell codes (V/S/W), stage codes (P0–P8, C8, X1, X2), H2/HS-V2, detector
+// plainReplay, is free of ticket ids (X-…), cell codes (V/S/W), stage codes (P0–P9, C8, X1, X2), H2/HS-V2, detector
 // codes and run ids. Codes stay in the data (meta.ticket, meta.condition, detail.detector…).
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";

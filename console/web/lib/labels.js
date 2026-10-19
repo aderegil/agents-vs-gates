@@ -38,7 +38,7 @@ export const GLOSSARY = {
   gate_flagged: { short: "Touched the gate", long: "The agent edited a file the gate depends on (a contract, a check script, CI config)." },
 };
 
-/** Stages of the experiment (PREREGISTRATION.md §6; P7, P8 and C8 from addendum 1; X1 and X2 are the pilots). */
+/** Stages of the experiment (PREREGISTRATION.md §6; P7, P8 and C8 from addendum 1; P9 from addendum 2; X1 and X2 are the pilots). */
 export const STAGES = {
   P0: { short: "Trial runs", long: "Calibration: 5 Claude Code runs to check the setup (rename two fields, own repo, with and without the rule). Not analysed." },
   P1: { short: "Main test", long: "The core runs with Claude Code + Sonnet: rename two fields and remove a field × {own repo · no rule, own repo · rule in the spec, every repo visible · no rule} × 10." },
@@ -49,6 +49,7 @@ export const STAGES = {
   P6: { short: "Codex repeat", long: "The main test, the pressure test and the more-tickets runs again with Codex (the replication)." },
   P7: { short: "More main-test runs", long: "40 more runs of each main-test cell, with Claude Code + Sonnet and with Codex (addendum 1)." },
   P8: { short: "Third agent", long: "The main-test cells with a third agent, Antigravity CLI + Gemini 3.8 Flash, × 20 (addendum 1)." },
+  P9: { short: "Third agent, more runs", long: "The third agent again on the same cells, so it has 50 runs per ticket and condition like the other two (addenda 2 and 3)." },
   C8: { short: "Third-agent trial runs", long: "Calibration for the third agent (5 runs, like the trial runs). Not analysed; it only decides whether the third-agent runs start." },
   X1: { short: "Pilot 1", long: "Exploratory pilot: own repo vs every repo visible, no rule, on rename two fields and remove a field." },
   X2: { short: "Pilot 2", long: "Exploratory pilot: remove a field · own repo · no rule × 5, to settle which two tickets the main question uses." },
@@ -182,7 +183,7 @@ export function runName(runId) {
 export const VISIBLE_CODE_RE = new RegExp([
   String.raw`\bX-(?:rename|remove|add|api|dep|units)\b`,
   String.raw`(?<![\w-])[VSW][0-2](?![\w-])`,
-  String.raw`(?<![\w-])(?:P[0-8]|C8|X[12]|H2|D[1-8])(?![\w-])`,
+  String.raw`(?<![\w-])(?:P[0-9]|C8|X[12]|H2|D[1-8])(?![\w-])`,
   String.raw`\bHS-V2\b`,
   RUN_ID,
 ].join("|"));
@@ -205,6 +206,11 @@ export function plainText(s) {
     const k = o.trim().replace(/ /g, "_");
     return OUTCOME_LABEL[k] ? `End: ${OUTCOME_LABEL[k]}` : m;
   });
+  // the hidden staging check reads as what it is, the other teams' own tests (public wording, 2026-10-18); the
+  // oracle/ folder and the record fields keep their names
+  t = t.replace(/Staging oracle, hidden from the agent: /g, "Hidden from the agent: ");
+  t = t.replace(/Oracle \(gen\): /g, "Other teams' tests, first PR: ").replace(/Oracle \(final\): /g, "Other teams' tests, final PR: ");
+  t = t.replace(/([Ss])taging oracle/g, (_, s) => (s === "S" ? "Other teams' tests" : "the other teams' tests"));
   if (!VISIBLE_CODE_RE.test(t) && !/\bfix\d\b/.test(t)) return t;
   // run ids: "PR p1-0002" is just "PR"; elsewhere the run's plain name
   t = t.replace(new RegExp(String.raw`\bPR ${RUN_ID}`, "g"), "PR");
@@ -223,7 +229,7 @@ export function plainText(s) {
   t = t.replace(/\s*\(D[1-8]\)/g, "");
   t = t.replace(/(?<![\w-])D[1-8](?![\w-])(?: ·)? ?/g, "");
   // stages and the pre-registered questions
-  t = t.replace(/(?<![\w-])(P[0-8]|C8|X[12])(?![\w-])/g, (m) => stageLabel(m));
+  t = t.replace(/(?<![\w-])(P[0-9]|C8|X[12])(?![\w-])/g, (m) => stageLabel(m));
   t = t.replace(/\bHS-V2\b/g, HYPOTHESES["HS-V2"].short).replace(/(?<![\w-])H2(?![\w-])/g, HYPOTHESES.H2.short);
   return t;
 }
@@ -234,7 +240,7 @@ export const LEGEND = [
   { title: "V0 · V1 · V2: what the agent can see", codes: ["V0", "V1", "V2"] },
   { title: "S0 · S1 · S2: what its spec says", codes: ["S0", "S1", "S2"] },
   { title: "W1 · W2: how the ticket is worded", codes: ["W1", "W2"] },
-  { title: "Stages (P0–P8, C8 and the pilots X1, X2)", codes: ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "C8", "X1", "X2"] },
+  { title: "Stages (P0–P9, C8 and the pilots X1, X2)", codes: ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "C8", "X1", "X2"] },
   { title: "Pre-registered questions", codes: ["H2", "HS-V2"] },
   { title: "Research questions (RQ1–RQ5)", codes: ["RQ1", "RQ2", "RQ3", "RQ4", "RQ5"] },
   { title: "What the AI reviewer is given (R-…)", codes: ["R-S0", "R-S2", "R-C"] },

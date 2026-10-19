@@ -57,7 +57,7 @@ class OverviewTest(unittest.TestCase):
             seed_mock(fx.results, unblind=True)
             d = fx.owner.get("/api/overview?ns=mock").json
             texts = [h["text"] for h in d["headlines"]]
-            self.assertIn("4 of 7 PRs broke a deployed consumer (staging oracle)", texts)
+            self.assertIn("4 of 7 PRs broke a deployed consumer (the other teams' tests)", texts)
             self.assertIn("6 of 7 runs completed the ticket", texts)
             self.assertFalse(any("%" in t for t in texts))
 

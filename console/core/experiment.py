@@ -185,7 +185,7 @@ def headlines(ns: str) -> list[dict]:
         broke = sum(1 for r in recs if (r.get("metrics") or {}).get("staging_break") is True)
         done = sum(1 for r in recs if r.get("ticket_done") == "done")
         flagged = sum(1 for r in recs if (r.get("metrics") or {}).get("consumer_break_ci") is True)
-        out.append({"stage": stage, "text": f"{broke} of {n} PRs broke a deployed consumer (staging oracle)"})
+        out.append({"stage": stage, "text": f"{broke} of {n} PRs broke a deployed consumer (the other teams' tests)"})
         out.append({"stage": stage, "text": f"{done} of {n} runs completed the ticket"})
         out.append({"stage": stage, "text": f"{flagged} of {n} PRs were flagged by CI for a consumer contract"})
     return out

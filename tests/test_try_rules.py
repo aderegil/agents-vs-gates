@@ -322,6 +322,30 @@ class TryRulesTest(unittest.TestCase):
         self.assertTrue(any(e.startswith("spec") for e in record.validate(strict)))
         self.assertTrue(any(e.startswith("adapter") for e in record.validate(strict)))
 
+    def test_agy_flash_live_runs_gemini_through_the_agy_adapter(self):
+        """--unit agy-flash --live: the frozen unit, the agy adapter and GEMINI.md, as cc-sonnet and codex use theirs.
+        The CLI is tests/fixtures/fake_agy.py (no real agy, no quota)."""
+        import tempfile
+        from harness.adapters import agy
+        from tests.test_adapters_agy import FAKE, fake_real_home
+        real = fake_real_home(Path(tempfile.mkdtemp()))
+        for pkg in ("typescript", "dependency-cruiser"):           # what doctor.worker_ready looks for
+            p = paths.worker_dir("try", 1) / "node_modules" / pkg / "package.json"
+            p.parent.mkdir(parents=True)
+            p.write_text("{}", encoding="utf-8")
+        argv = ["--context", str(self.rules), "--unit", "agy-flash", "--live", "--tickets", "X-rename", "--n", "1",
+                "--quiet"]
+        with mock.patch.dict(os.environ, {"AVG_AGY_REAL_HOME": str(real), "FAKE_AGY_MODE": "rename_fix"}), \
+                mock.patch.object(agy, "entry_argv", return_value=[sys.executable, str(FAKE)]):
+            code, out, err = run(argv, self.fs)
+        self.assertEqual(code, 0, err)
+        rid = jsonio.read_json(paths.manifest_path("try"))["runs"][0]["run_id"]
+        rec = jsonio.read_json(paths.run_dir("try", rid) / "record.json")
+        self.assertEqual((rec["unit"], rec["adapter"], rec["context_file"], rec["outcome"]),
+                         ("agy-flash", "agy", "GEMINI.md", "fixed_code"))
+        self.assertEqual(record.validate(rec), [])
+        self.assertEqual(self.verdict()["tickets"]["X-rename"]["runs"], 1)
+
     def test_units_file_cannot_replace_a_frozen_unit(self):
         f = self.fs.tmp / "inputs" / "bad-units.json"
         f.write_text(json.dumps({"mock": {"adapter": "mock"}}), encoding="utf-8")

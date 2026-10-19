@@ -12,7 +12,7 @@ WEB = PLUGINS_DIR.parent / "web"
 REPLAY_APP = PLUGINS_DIR / "replay" / "app" / "src"
 
 # Any experiment code: tickets, V/S/W, stages, H2/HS-V2, detectors, research questions, reviewer conditions, run ids.
-CODE = re.compile(r"\bX-(?:rename|remove|add|api|dep|units)\b|(?<![\w-])(?:[VSW][0-2]|P[0-8]|C8|X[12]|H2|D[1-8]|T[1-3])"
+CODE = re.compile(r"\bX-(?:rename|remove|add|api|dep|units)\b|(?<![\w-])(?:[VSW][0-2]|P[0-9]|C8|X[12]|H2|D[1-8]|T[1-3])"
                   r"(?![\w-])|\bHS-V2\b|\bR-(?:S0|S2|C)\b|\bRQ[1-7]\b|\b[pPxXcCsS][\dt]-\d{3,4}\b|\bARCH-\d\b")
 
 

@@ -92,7 +92,7 @@ export function badge(text, tone = "neutral") {
 }
 
 /**
- * "What the codes mean": every code family of the experiment (tickets X-…, V0–V2, S0–S2, W1–W2, stages P0–P8 and C8,
+ * "What the codes mean": every code family of the experiment (tickets X-…, V0–V2, S0–S2, W1–W2, stages P0–P9 and C8,
  * the pilots, H2/HS-V2) with its plain words and meaning, from labels.js LEGEND. A native <details> (keyboard and
  * screen-reader friendly), collapsed by default; a <dl> per family.
  */
