@@ -193,7 +193,7 @@ class PluginApi(unittest.TestCase):
         manifest = json.loads((PLUGIN / "plugin.json").read_text(encoding="utf-8"))
         schema = json.loads((REPO / "docs" / "contracts" / "plugin.schema.json").read_text(encoding="utf-8"))
         jsonschema.validate(manifest, schema)
-        self.assertEqual((manifest["id"], manifest["order"], manifest["kind"]), ("replay", 5, "iframe"))
+        self.assertEqual((manifest["id"], manifest["order"], manifest["kind"]), ("replay", 6, "iframe"))   # 6 since Start here took 0
         self.assertEqual(manifest["roles"], ["owner", "operator", "presenter", "viewer"])
         self.assertTrue((PLUGIN / manifest["entry"]).is_file(), "commit-ready dist must exist (npm run build)")
 

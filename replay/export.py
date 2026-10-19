@@ -466,7 +466,9 @@ def build_replay(events: list[dict], extras: dict | None = None) -> dict:
                 step("work", text=" · ".join(x for x in (p.get("path"), p.get("change_summary")) if x),
                      detail={"artifact_id": p.get("artifact_id"), "version": p.get("version")})
         elif et == "ARTIFACT_READ":
+            # the context file being read is a key moment (the deck clips keep its bubble: ?bubbles=...,context_loaded)
             step("work", text=" · ".join(x for x in (p.get("path"), p.get("purpose")) if x),
+                 key="context_loaded" if p.get("artifact_id") == "art-context" else None,
                  detail={"artifact_id": p.get("artifact_id")})
         elif et == "ACTOR_STATE_CHANGED":
             if p.get("thought_summary"):

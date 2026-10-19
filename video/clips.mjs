@@ -35,7 +35,7 @@ const replayMs = (rel) => JSON.parse(fs.readFileSync(path.join(WORK, rel), "utf8
 const CH1 = "1 · The change";
 const CH2 = "2 · The red build";
 const CH3 = "3 · The repair";
-const ONE_BUBBLES = "bubbles=task_assigned,pr_opened";
+const ONE_BUBBLES = "bubbles=task_assigned,context_loaded,pr_opened";
 const SCENE_BG = "#f6f7f9";          // scenes/style.css --fondo
 const THEATER_BG = "rgb(234,237,244)"; // the theater's floor colour behind its title bar
 
@@ -89,10 +89,11 @@ function clips() {
       file: "exp-one-run.mp4",
       // three chapters fixed at the top left; the slow stretches (the agent at work, CI failing again) at ×3, marked;
       // speech bubbles only for the ticket and the PR (Alfredo's review, 2026-10-19). The clean map at 16.0 s is the
-      // deck's poster frame: the first 3.2 s of the run stay at 0.5×, so it does not move.
+      // deck's poster frame: the first 3.2 s of the run stay at 0.5× with the run's title and the "CLAUDE.md · loaded
+      // as context" bubble as before, so it does not move or change; chapter 1's label covers the title from there on.
       segments: [scene("oneIntro", CH1),
         { ...theater(`replays/${one}.json`, 0, 23200, 0.5, null), chipBase: "Real run", query: ONE_BUBBLES,
-          parts: [{ to: 3200, rate: 1, chapter: CH1 }, { to: 17500, rate: 3 }, { to: 19300, rate: 1 },
+          parts: [{ to: 3200, rate: 1, chapter: null }, { to: 17500, rate: 3, chapter: CH1 }, { to: 19300, rate: 1 },
             { to: 23200, rate: 1, chapter: CH2 }] },
         scene("oneOracle", CH2),
         { ...theater(`replays/${one}.json`, 22600, 42800, 0.5, null, 3000), chipBase: "Real run", query: ONE_BUBBLES,
