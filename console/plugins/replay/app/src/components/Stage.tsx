@@ -108,6 +108,37 @@ const CLIP_QUERY = typeof window !== "undefined" ? new URLSearchParams(window.lo
 const NO_SUBS = CLIP_QUERY.get("subs") === "0";
 /** ?header=0: no title bar (run title, lifecycle model, phase and clock); the clip puts its own chapter there. */
 const NO_HEADER = CLIP_QUERY.get("header") === "0";
+/** ?stagger=1 (the clip): checks the trace logged at the same instant light one by one between the check before them
+ * and that instant, so the tower fills while CI runs and is complete when its result comes (the result's time is
+ * unchanged). */
+const STAGGER = CLIP_QUERY.get("stagger") === "1";
+/** ?envdelay=<ms> (the clip): CI's output envelope leaves the tower this much later, so the tower's ten lights read
+ * clearly on "Red." before it flies (only the envelope's drawing moves; CI's result keeps its time). */
+const ENV_DELAY = Math.max(0, Number(CLIP_QUERY.get("envdelay")) || 0);
+interface EarlyLight { id: string; status: LightState; t: number; reveal: number; start: number }
+const earlyCache = new WeakMap<object, EarlyLight[]>();
+function earlyLights(replay: ReplayEngine["replay"]): EarlyLight[] {
+  const hit = earlyCache.get(replay);
+  if (hit) return hit;
+  const out: EarlyLight[] = [];
+  let start = -1, prev = 0;
+  let group: { id: string; status: LightState; t: number }[] = [];
+  const flush = () => {
+    group.forEach((g, k) => out.push({ ...g, start, reveal: prev + ((k + 1) * (g.t - prev)) / group.length }));
+    if (group.length) prev = group[0].t;
+    group = [];
+  };
+  for (const st of replay.steps) {
+    if (st.action !== "check") continue;
+    if (!st.check) { flush(); start = st.t_ms; prev = st.t_ms; continue; }
+    if (!st.check.id || !st.check.status) continue;
+    if (group.length && group[0].t !== st.t_ms) flush();
+    group.push({ id: st.check.id, status: st.check.status as LightState, t: st.t_ms });
+  }
+  flush();
+  earlyCache.set(replay, out);
+  return out;
+}
 const CLIP_LIGHT = CLIP_QUERY.has("light") ? Math.min(1, Math.max(0, Number(CLIP_QUERY.get("light")) || 0)) : 1;
 const UNUSED_ALPHA = 1 - (1 - DIM_ALPHA) * CLIP_LIGHT;
 /** The consumer teams sit behind their service's counter (floor y offset). */
@@ -327,7 +358,7 @@ const travelCache = new WeakMap<object, Travel[]>();
 function travelsOf(replay: ReplayEngine["replay"]): Travel[] {
   let t = travelCache.get(replay);
   if (!t) {
-    t = travels(replay);
+    t = travels(replay).map((tr) => (ENV_DELAY && tr.kind === "envelope" ? { ...tr, t0: tr.t0 + ENV_DELAY } : tr));
     travelCache.set(replay, t);
   }
   return t;
@@ -1590,16 +1621,25 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
     note = place.note ?? null;
     layout.obstacles.push({ x: px - 30 * scale, y: top - 10 * scale, w: 80 * scale, h: py - top + 10 * scale });
   } else if (place.id === "ci-tower") {
-    const order = state.ci.order;
+    const order = [...state.ci.order];
+    const lit: Record<string, LightState> = { ...state.ci.lights };
+    if (STAGGER) {
+      for (const e of earlyLights(replay)) {
+        if (e.start <= clock && e.t > clock && e.reveal <= clock && state.ci.running) {
+          lit[e.id] = e.status;
+          if (!order.includes(e.id)) order.push(e.id);
+        }
+      }
+    }
     const n = Math.max(order.length, DEFAULT_CHECKS);
     const lights: LightState[] = [];
-    for (let i = 0; i < n; i++) lights.push(order[i] ? state.ci.lights[order[i]] ?? "idle" : "idle");
+    for (let i = 0; i < n; i++) lights.push(order[i] ? lit[order[i]] ?? "idle" : "idle");
     owner = actorFor(replay.actors, state.actors, "ci");
     top = drawSystemObject(ctx, "tower", px, py, scale, {
       lights, beacon: state.ci.result, running: state.ci.running, active: owner ? isActive(owner, clock) : false,
     }, c);
     // label failing checks next to their light so "which rule" is readable at a glance
-    const failing = order.filter((id) => state.ci.lights[id] === "fail" || state.ci.lights[id] === "error");
+    const failing = order.filter((id) => lit[id] === "fail" || lit[id] === "error");
     if (failing.length) {
       ctx.save();
       const fs = fz(Math.max(11, Math.round(12 * scale)));

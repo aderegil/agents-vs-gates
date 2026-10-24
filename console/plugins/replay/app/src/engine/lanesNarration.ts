@@ -18,6 +18,8 @@ export interface NarrationMoment {
   /** a second column the change moves on to right after the first (one sentence, two moves) */
   then?: string;
   gate?: "fail" | "pass";
+  /** a D moment: its subject stays on screen, still, this much longer before the sentence (round 4: red, green) */
+  dwellMs?: number;
 }
 export interface Narration { moments: NarrationMoment[]; title?: string; subtitle?: string }
 
@@ -112,7 +114,7 @@ export function timeline(nar: Narration, axis: string[]): Timeline {
     }
     let start = Math.max(lastEnd + GAP_MS, quiet, camReady + SETTLE_MS);
     if (m.n === nar.moments[0].n) start = Math.max(start, LEAD_MS);
-    if (m.type === "D") start = Math.max(start, shown + SHOWN_MS);
+    if (m.type === "D") start = Math.max(start, shown + SHOWN_MS + (m.dwellMs ?? 0));
     const stops = m.type === "A" && m.focus === "column" && m.col
       ? [axis.indexOf(m.col), ...(m.then ? [axis.indexOf(m.then)] : [])].filter((x, k, a) => x !== (k ? a[k - 1] : col))
       : [];

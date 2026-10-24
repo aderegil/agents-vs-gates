@@ -17,7 +17,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { ORIGIN, OUT, REPO, WORK, shot } from "./lib.mjs";
+import { ORIGIN, OUT, REPO, WORK, clockStepper, shot } from "./lib.mjs";
 
 const NARRATION = JSON.parse(fs.readFileSync(new URL("./narration/exp-one-run.json", import.meta.url), "utf8"));
 const PHRASE = new Map(NARRATION.phrases.map((p) => [p.id, p]));
@@ -38,8 +38,12 @@ const SHOT = {
   middle: { cx: 0.48, cy: 0.42, fw: 0.52 },
   diff: { cx: 0.21, cy: 0.4, fw: 0.36 },
   agent: { cx: 0.36, cy: 0.42, fw: 0.5 },
+  // the agent with its diff cards whole (they sit at x 0.11–0.29, left of the desk) and the PR tray
+  agentWide: { cx: 0.3, cy: 0.42, fw: 0.54 },
+  // the assignment: Product, Maya's library, the agent and the CI tower in one shot
+  assign: { cx: 0.39, cy: 0.47, fw: 0.64 },
   ci: { cx: 0.6, cy: 0.42, fw: 0.5 },
-  agentCi: { cx: 0.5, cy: 0.42, fw: 0.6 },
+  agentCi: { cx: 0.38, cy: 0.42, fw: 0.66 },     // the tower, the agent and the first diff card whole
   teams: { cx: 0.67, cy: 0.45, fw: 0.56 },
 };
 // Signs drawn over the stage, in its own coordinates (they move with the camera), in the style of the theater's
@@ -217,6 +221,7 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
   let rt = 0;                  // the replay's clock in the theater
   let speed = 0.5, at = 0, signs = [];
   let canvasBox = null;        // the stage canvas in the page, before any transform
+  let tick = null;             // the theater page's clock, moved by exact amounts (lib.mjs clockStepper)
   let cam = { from: SHOT.wide, to: SHOT.wide, t0: 0, ms: 0 };
 
   const camAt = (t) => {
@@ -241,7 +246,7 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
       }, [Math.min(cardT, cardFreeze), band, logRow, logOn]);
       cardT += adv;
     } else {
-      if (adv > 0) { await page.clock.runFor(adv); rt += adv; }
+      if (adv > 0) { await tick(adv); rt += adv; }
       const r = { ...camAt(wall) };
       const { x, y, w, h } = canvasBox;
       // a close-up never shows past the stage's edges (the define column sits at its left edge)
@@ -350,7 +355,7 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
     kind = "theater"; logOn = true;
     await page.clock.install({ time: new Date("2026-10-13T12:00:00Z") });
     await page.clock.pauseAt(new Date("2026-10-13T12:00:01Z"));
-    await page.goto(`${ORIGIN}/theater/index.html?replay=/replays/${oneRunId}.json&present=1&subs=0&header=0&bubbles=none&light=0.45&t=${from}`);
+    await page.goto(`${ORIGIN}/theater/index.html?replay=/replays/${oneRunId}.json&present=1&subs=0&header=0&stagger=1&envdelay=1200&bubbles=none&light=0.45&t=${from}`);
     await page.waitForSelector("canvas", { timeout: 60000 });
     // the player in the left 1200×960 (its 16:9 stage centred there), the log on the right, the band under both
     await page.addStyleTag({ content: `html,body,#root{width:${SCENE_W}px!important;height:${SCENE_H}px!important;overflow:visible!important}
@@ -362,6 +367,7 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
     await page.clock.runFor(3000);               // presentation chrome hides after 2.5 s
     await page.keyboard.press("2");              // 1×: the clip sets the pace by how far the clock runs per frame
     await page.keyboard.press("Space");
+    tick = clockStepper(page);
     canvasBox = await page.evaluate(() => { const r = document.querySelector("canvas").getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
     await page.evaluate(([b]) => Object.assign(document.getElementById("clip-signs").style,
       { left: `${b.x}px`, top: `${b.y}px`, width: `${b.w}px`, height: `${b.h}px` }), [canvasBox]);
@@ -401,8 +407,13 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
     await say(id);
   }
   signs = [{ sign: SIGNS.ownTests, from: 18224, to: 22701 }, { sign: SIGNS.ciFailed, from: 22701, to: 1e9 }];
-  camTo("agent");
-  await play(3200, 1);                           // the ticket reaches the agent, it loads its context
+  // the assignment (round 4): the camera on both flights before the sentence; when it ends the ticket flies from
+  // Product to the agent and the ARCH-1…ARCH-8 sheet from Maya's library to the CI tower (2.4 s each, the theater's
+  // own sheets), then the agent loads its context
+  camTo("assign");
+  await say("3e");
+  await play(3200, 1);
+  camTo("agentWide");
   await say("4");
   await play(18450, 3);                          // reads and edits (×6); the agent's message "All 39 tests pass" at 18.2 s
   shown(-(18450 - 18224) / 3);
@@ -425,13 +436,14 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
   await say("10");
 
   // ---- the red build back to the agent, the repair, CI green
-  await openTheater(23300);                      // CI's output on its way to the agent
+  // CI's output envelope leaves the tower at 23.9 s in the clip (?envdelay=1200: the tower stays clear on "Red.")
+  await openTheater(23800);
   signs = [];
   cut("agentCi");
   await dress(CH2);
   await say("11");
-  await play(24400, 0.5);                        // the CI output reaches the agent at 23.9 s
-  camTo("agent");
+  await play(25400, 0.5);                        // the envelope flies 23.9–25.1 s and reaches the agent
+  camTo("agentWide");
   await say("12");
   await play(31700, 2, CH3);                     // reads, edits; the repair's diff card from 31.4 s
   camTo("diff");                                 // the diff card large enough to read (round 3)

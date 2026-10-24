@@ -1,6 +1,6 @@
 {
  "view": "lanes · neutral",
- "source": "coordinator orders 2026-10-24, rounds 1 and 2 (Alfredo approved); text literal; sentences 1 and 7 generic (round 2); title, subtitle and a line break in sentence 1 (round 3)",
+ "source": "coordinator orders 2026-10-24, rounds 1 and 2 (Alfredo approved); text literal; sentences 1 and 7 generic (round 2); title, subtitle and a line break in sentence 1 (round 3); red and green held 1 s more, sentence 14 final (round 4)",
  "rule": "Column moments: the camera is on the marked column 0.3 s before the sentence; the change starts moving 1.5 s after the sentence appears (1.6 s), ends >= 0.5 s before it ends; then >= 1.5 s still with an empty band. A without a move: >= 2 s watch. D: its subject on screen >= 0.55 s before. Each sentence max(3 s, words/1.8 + 1.0 s).",
  "moments": [
   {
@@ -70,14 +70,16 @@
    "focus": "gate-ci",
    "gate": "fail",
    "text": "Red. Rule ARCH-4 blocks the merge.",
-   "type": "D"
+   "type": "D",
+   "dwellMs": 1000
   },
   {
    "n": 11,
    "focus": "gate-ci",
    "gate": "pass",
    "text": "The agent fixes the code, and CI passes.",
-   "type": "D"
+   "type": "D",
+   "dwellMs": 1000
   },
   {
    "n": 12,
@@ -96,7 +98,7 @@
   {
    "n": 14,
    "focus": "ci",
-   "text": "What differs: does something check the rule after the code is written?",
+   "text": "The real question: does a check run after the code?",
    "type": "D"
   }
  ],

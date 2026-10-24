@@ -62,7 +62,8 @@ test("narration: red is on screen before 'Red.' and green before 'The agent fixe
   const red = cue(10), green = cue(11), ci = cue(9);
   assert.notEqual(gateTok(ci.end - 1), "fail");
   assert.equal(narratedAt(ci.end - 1, TL, AXIS).frame.gate, "idle");
-  assert.ok(red.start - red.action >= SHOWN_MS - 1e-9);
+  assert.ok(red.start - red.action >= SHOWN_MS + 1000 - 1e-9);   // round 4: the red held 1 s more
+  assert.ok(green.start - green.action >= SHOWN_MS + 1000 - 1e-9);
   assert.equal(gateTok(red.start - SHOWN_MS), "fail");
   assert.equal(narratedAt(red.start - SHOWN_MS, TL, AXIS).gateFade, 1);
   assert.ok(green.start - green.action >= SHOWN_MS - 1e-9);

@@ -85,6 +85,20 @@ export function encoder(outFile, fps) {
   };
 }
 
+/**
+ * A page's virtual clock moved by exact amounts. Playwright's clock.runFor rounds a fractional ms up (33.33 → 34),
+ * so 30 fps frames ran the page 2 % ahead of the film (found 2026-10-24: the lanes' sentences ~1.7 s early by 90 s).
+ * This keeps the wanted time as a float and advances whole ms that add up to it.
+ */
+export function clockStepper(page) {
+  let want = 0, done = 0;
+  return async (ms) => {
+    want += ms;
+    const d = Math.round(want) - done;
+    if (d > 0) { await page.clock.runFor(d); done += d; }
+  };
+}
+
 export async function shot(page) {
   // scale "css": a page drawn at deviceScaleFactor 2 (the zoomed theater, one-run.mjs) is still filmed at 1920×1080
   return page.screenshot({ type: "jpeg", quality: 90, animations: "allow", caret: "hide", scale: "css" });

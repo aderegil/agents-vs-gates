@@ -13,7 +13,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { FFMPEG, ORIGIN, OUT, REPO, VIDEO, WORK, encoder, ffprobeDuration, freeGB, launch, shot } from "./lib.mjs";
+import { FFMPEG, ORIGIN, OUT, REPO, VIDEO, WORK, clockStepper, encoder, ffprobeDuration, freeGB, launch, shot } from "./lib.mjs";
 import { captureTour } from "./console-tour.mjs";
 import { captureFullTour } from "./console-tour-full.mjs";
 import { captureOneRun } from "./one-run.mjs";
@@ -259,8 +259,9 @@ async function captureLanes(context, enc, query = "") {
   const wall = total + (narrated ? 0 : 1500);
   const n = Math.round((wall / 1000) * FPS);
   const step = 1000 / FPS;
+  const tick = clockStepper(page);   // exact: runFor rounds 33.33 ms up to 34
   for (let i = 0; i < n; i++) {
-    await page.clock.runFor(step);
+    await tick(step);
     await enc.push(await shot(page));
   }
   await page.close();

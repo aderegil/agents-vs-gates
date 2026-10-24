@@ -865,3 +865,18 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
   scenario comes at slide 13): sentences 1 and 7 new, the subtitle "One small change · a field that other teams
   read", and "orderplaced-rename.md" shown as "field-rename.md" in capture. The close lights the rule cells and the CI
   column, wide, 3 s still. Backups: exp-one-run_143s.mp4, aisdlc-compare-neutral_86s.mp4.
+
+### Round 4 and the 2 % clock drift (2026-10-24)
+- **Clock drift, found and fixed.** Playwright's `clock.runFor` rounds a fractional ms up, so the 30 fps step
+  (33.33 ms) advanced pages 34 ms: they ran 2 % ahead of the film (the lanes' sentence 10 came 1.7 s early by 90 s;
+  the theater ran ahead of the log). `lib.mjs clockStepper` keeps the wanted time as a float and advances whole ms
+  that add up to it; one-run and the lanes use it. `video/measure-band.mjs` measures each sentence's appearance in
+  the filmed band and compares it with the cue list: after the fix every sentence is +0.13 s / −0.10 s (the band's
+  0.2 s fade), with no drift. The old captureTheater and the console tours still step with runFor (not re-rendered).
+- exp-one-run: sentence 3e (A, the assignment): the ticket from Product to the agent and the ARCH-1…ARCH-8 sheet from
+  Maya's library to the CI tower, both in one shot; sentence 6 says "ten checks. Eight are for architecture."; wider
+  agent shots so the "gen" and "fix1" diff cards are whole. Theater clip options: `?stagger=1` (checks the trace
+  logged at one instant light one by one between the check before them and that instant: the tower fills while CI
+  runs and is complete at its result) and `?envdelay=1200` (CI's output envelope is drawn leaving 1.2 s later, so
+  the tower's ten lights read on "Red."). Neither moves a recorded event.
+- Lanes: the red and the green are held 1 s more before their sentences (`dwellMs`); sentence 14 final.
