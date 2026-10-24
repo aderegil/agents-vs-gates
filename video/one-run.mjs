@@ -274,7 +274,8 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
     let start = Math.max(wall, lastEnd + GAP, quietUntil, camDone());
     if (p.type === "D") start = Math.max(start, shownAt + SHOWN);
     await holdUntil(start);
-    const c = { id, type: p.type, text: p.text, start: wall, end: wall + phraseMs(p.text), action: p.type === "D" ? shownAt : null };
+    const c = { id, type: p.type, text: p.text, start: wall, end: wall + phraseMs(p.text), action: p.type === "D" ? shownAt : null,
+      replay: kind === "theater" ? rt : null, row: kind === "theater" ? currentRow(rows, rt) : logOn ? logRow : null };
     cues.push(c);
     lastEnd = c.end;
     await holdUntil(c.end);
@@ -294,8 +295,9 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
   const play = async (to, sp, chapter) => {
     speed = sp;
     await dress(chapter);
-    const n = Math.round((to - at) / sp / step);
-    for (let i = 0; i < n; i++) await frame(step * sp);
+    // the replay's clock lands exactly on `to` (rounding a whole number of frames per stretch drifted it ~0.2 s
+    // behind by the end, so the log and the D sentences lagged the scene); the last frame takes the remainder
+    while (to - rt > 1e-6) await frame(Math.min(step * sp, to - rt));
     at = to;
   };
 
@@ -444,7 +446,8 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
     clip: "exp-one-run.mp4", poster_first_s: 0, poster_last_s: s2(wall - step), duration_ms: Math.round(wall),
     rule: NARRATION.rule,
     cues: cues.map((c) => ({ id: c.id, type: c.type, start_s: s2(c.start), end_s: s2(c.end), action_s: s2(c.action),
-      margin_s: c.type === "A" ? s2(c.action - c.end) : s2(c.start - c.action), text: c.text })),
+      margin_s: c.type === "A" ? s2(c.action - c.end) : s2(c.start - c.action), replay_s: s2(c.replay),
+      log_row: c.row === null ? null : rows[c.row].text.slice(0, 60), text: c.text })),
     camera: camLog.map((c) => ({ at_s: s2(c.at), shot: c.shot })),
   }, null, 1) + "\n");
   return wall;
