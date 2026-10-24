@@ -5,7 +5,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { tokenState } from "../src/engine/lanes.ts";
 import {
-  CAM_MS, COLUMN_ZOOM, END_HOLD_MS, GAP_MS, MOVE_MS, SHOWN_MS, WATCH_MS, cameraTransform, narratedAt, narratedOpacity,
+  CAM_MS, COLUMN_ZOOM, END_HOLD_MS, GAP_MS, MOVE_AFTER_MS, MOVE_DONE_MS, REST_MS, SHOWN_MS, WATCH_MS, cameraTransform,
+  narratedAt, narratedOpacity,
   phraseMs, timeline, type Narration,
 } from "../src/engine/lanesNarration.ts";
 
@@ -24,28 +25,43 @@ test("narration: every sentence long enough to read, one at a time, generic word
     assert.doesNotMatch(c.text, /totalCents|placedAt|amountCents|createdAt|OrderPlaced|Meridian/);
   }
   assert.equal(phraseMs("Red. Rule ARCH-4 blocks the merge."), 4333.333333333333);
-  assert.equal(NAR.subtitle, "One small change · a field that other teams read");
+  assert.equal(NAR.title, "Where does the rule live? What can block the merge?");
+  assert.equal(NAR.subtitle, "Four public AI-SDLC models + the gate · one small change");
 });
 
-test("narration: an A sentence's event starts when it ends, then two seconds with an empty band", () => {
-  for (const c of TL.cues.filter((x) => x.type === "A")) {
-    assert.equal(c.action, c.end, `sentence ${c.n}`);
+test("narration: a column moment marks the column first, moves the change 1.5 s into its sentence, then rests", () => {
+  const moving = TL.cues.filter((c) => c.moves?.length);
+  assert.deepEqual(moving.map((c) => c.n), [2, 3, 4, 6, 7, 8, 9, 12]);
+  for (const c of moving) {
+    const m = c.moves!;
+    assert.equal(m[0].t0, c.start + MOVE_AFTER_MS, `move ${c.n}`);
+    assert.ok(c.end >= m.at(-1)!.t1 + MOVE_DONE_MS - 1e-9, `the move ends before sentence ${c.n} does`);
+    // the column is marked (and the camera there) before the sentence, never when the change arrives
+    const col = AXIS.indexOf(m.at(-1)!.to);
+    assert.equal(narratedAt(c.start - 1, TL, AXIS).frame.now, AXIS.indexOf(c.moment.then ?? c.moment.col!));
+    assert.ok(Math.abs(narratedAt(c.end, TL, AXIS).frame.pos - col) < 1e-9);
     const next = TL.cues[TL.cues.indexOf(c) + 1];
-    if (next) assert.ok(next.start >= c.end + WATCH_MS - 1e-9, `quiet after ${c.n}`);
+    if (next) {
+      assert.ok(next.start >= c.end + REST_MS - 1e-9, `rest after ${c.n}`);
+      // still during the rest: nothing moves
+      assert.deepEqual(narratedAt(c.end + 10, TL, AXIS).camera, narratedAt(c.end + REST_MS - 10, TL, AXIS).camera);
+    }
   }
-  // the change reaches INTENT…CODE only after its sentence
-  const spec = cue(3);
-  assert.ok(narratedAt(spec.end - 1, TL, AXIS).frame.pos <= AXIS.indexOf("intent") + 1e-9);
-  assert.equal(narratedAt(spec.end + MOVE_MS, TL, AXIS).frame.pos, AXIS.indexOf("spec"));
-  // RELEASE then PRODUCTION after sentence 12
+  // the change waits before INTENT until sentence 2 moves it there
+  assert.ok(narratedAt(0, TL, AXIS).frame.pos < 0);
+  // sentence 12: RELEASE, then PRODUCTION 2 s later, both inside the sentence
   const rel = cue(12);
-  assert.ok(narratedAt(rel.end - 1, TL, AXIS).frame.pos <= AXIS.indexOf("ci") + 1e-9);
-  assert.equal(narratedAt(rel.end + 2 * MOVE_MS, TL, AXIS).frame.pos, AXIS.indexOf("production"));
+  assert.equal(rel.moves!.length, 2);
+  assert.equal(rel.moves![1].t0 - rel.moves![0].t0, 2000);
+  // sentence 5 has no move: a plain A, two seconds of watch
+  assert.equal(cue(5).moves, undefined);
+  assert.ok(cue(6).start >= cue(5).end + WATCH_MS - 1e-9);
 });
 
 test("narration: red is on screen before 'Red.' and green before 'The agent fixes…'", () => {
   const red = cue(10), green = cue(11), ci = cue(9);
   assert.notEqual(gateTok(ci.end - 1), "fail");
+  assert.equal(narratedAt(ci.end - 1, TL, AXIS).frame.gate, "idle");
   assert.ok(red.start - red.action >= SHOWN_MS - 1e-9);
   assert.equal(gateTok(red.start - SHOWN_MS), "fail");
   assert.equal(narratedAt(red.start - SHOWN_MS, TL, AXIS).gateFade, 1);

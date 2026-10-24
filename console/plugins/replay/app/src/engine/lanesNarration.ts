@@ -19,10 +19,18 @@ export interface NarrationMoment {
   then?: string;
   gate?: "fail" | "pass";
 }
-export interface Narration { moments: NarrationMoment[]; subtitle?: string }
+export interface Narration { moments: NarrationMoment[]; title?: string; subtitle?: string }
 
 export const GAP_MS = 400;
 export const WATCH_MS = 2000;
+/** A column moment (round 3): the change starts moving this long after its sentence appears, ends at least
+ * MOVE_DONE_MS before the sentence does, and the scene then rests at least REST_MS with an empty band. */
+export const MOVE_AFTER_MS = 1500;
+export const MOVE_DONE_MS = 500;
+export const REST_MS = 1500;
+export const THEN_AFTER_MS = 2000;
+/** Where the change waits before the first column (in columns; 0 is INTENT's centre). */
+export const START_POS = -0.5;
 export const SHOWN_MS = 550;
 export const LEAD_MS = 600;          // the first sentence after the poster frame (the table is on screen from 0)
 export const CAM_MS = 1700;
@@ -45,8 +53,10 @@ export const phraseMs = (s: string) => Math.max(3000, (words(s) / 1.8) * 1000 + 
 export interface Camera { s: number; cx: number; cy: number }
 export type SummaryBeat = "intro" | "columns" | "rule" | "ci" | "final";
 export interface Cue { n: number; type: "A" | "D"; text: string; start: number; end: number;
-  /** A: when its event starts; D: since when its subject is on screen */
-  action: number; moment: NarrationMoment }
+  /** A: when its event starts (a column moment: when the change starts moving); D: since when its subject is on screen */
+  action: number; moment: NarrationMoment;
+  /** a column moment: the change's moves while the sentence is on screen */
+  moves?: { t0: number; t1: number; to: string }[] }
 interface Key<T> { t: number; v: T }
 interface Move { t0: number; t1: number; from: number; to: number }
 interface CamMove { t0: number; t1: number; to: Camera }
@@ -66,7 +76,8 @@ export function timeline(nar: Narration, axis: string[]): Timeline {
   const cellCam: Camera = { s: CELL_ZOOM, cx: colX(ci, n), cy: GATE_ROW_Y };
   const tl: Timeline = { cues: [], total: 0, beats: [{ t: 0, v: "intro" }], focus: [{ t: 0, v: -1 }], moves: [],
     cams: [], gate: [{ t: 0, v: "idle" }] };
-  let lastEnd = -GAP_MS, quiet = 0, camReady = 0, shown = 0, col = 0, cam = WIDE;
+  // the change waits at the start of the lane, before INTENT, so the first column moment moves it too
+  let lastEnd = -GAP_MS, quiet = 0, camReady = 0, shown = 0, col = START_POS, cam = WIDE;
   let free = 0;                       // when the scene is free for the next moment's preparation
   const camTo = (t: number, to: Camera) => {
     if (to.s === cam.s && to.cx === cam.cx && to.cy === cam.cy) return t;
@@ -102,26 +113,35 @@ export function timeline(nar: Narration, axis: string[]): Timeline {
     let start = Math.max(lastEnd + GAP_MS, quiet, camReady + SETTLE_MS);
     if (m.n === nar.moments[0].n) start = Math.max(start, LEAD_MS);
     if (m.type === "D") start = Math.max(start, shown + SHOWN_MS);
-    const end = start + phraseMs(m.text);
+    const stops = m.type === "A" && m.focus === "column" && m.col
+      ? [axis.indexOf(m.col), ...(m.then ? [axis.indexOf(m.then)] : [])].filter((x, k, a) => x !== (k ? a[k - 1] : col))
+      : [];
+    let end = start + phraseMs(m.text);
     const cue: Cue = { n: m.n, type: m.type, text: m.text, start, end, action: m.type === "D" ? shown : end, moment: m };
-    tl.cues.push(cue);
-    lastEnd = end;
-    free = end;
-    if (m.type === "A") {
-      // the event: the change moves into the moment's column (and on to `then`), when the sentence ends
-      let t = end;
-      const stops = m.focus === "column" && m.col ? [axis.indexOf(m.col), ...(m.then ? [axis.indexOf(m.then)] : [])] : [];
+    if (stops.length) {
+      // a column moment (round 3): the column is marked and the camera on it before the sentence; the change starts
+      // moving 1.5 s into it (a second column 2 s after the first), and is there before the sentence ends
+      cue.moves = [];
+      let t = start + MOVE_AFTER_MS;
       for (const to of stops) {
-        if (to === col) continue;
         tl.moves.push({ t0: t, t1: t + MOVE_MS, from: col, to });
+        cue.moves.push({ t0: t, t1: t + MOVE_MS, to: axis[to] });
         col = to;
-        t += MOVE_MS;
+        t += Math.max(MOVE_MS, THEN_AFTER_MS);
       }
-      quiet = Math.max(end + WATCH_MS, t + 400);
-      free = t;
+      cue.action = cue.moves[0].t0;
+      end = Math.max(end, cue.moves.at(-1)!.t1 + MOVE_DONE_MS);
+      cue.end = end;
+      quiet = end + REST_MS;
+    } else if (m.type === "A") {
+      quiet = end + WATCH_MS;
     } else {
       quiet = 0;
     }
+    tl.cues.push(cue);
+    lastEnd = end;
+    // the next moment's camera waits for the rest after a column moment
+    free = stops.length ? end + REST_MS : end;
   }
   // the close: the whole table, the rule cells and the CI column lit, still, with an empty band
   const close = lastEnd + GAP_MS;
@@ -153,7 +173,7 @@ export function narratedAt(t: number, tl: Timeline, axis: string[]): NarratedFra
   const beat = keyAt(tl.beats, t).v;
   const focus = keyAt(tl.focus, t).v;
   // where the change is: the last move started, eased
-  let pos = 0;
+  let pos = tl.moves[0]?.from ?? 0;
   for (const m of tl.moves) {
     if (t < m.t0) break;
     pos = m.from + (m.to - m.from) * ease(clamp01((t - m.t0) / (m.t1 - m.t0)));

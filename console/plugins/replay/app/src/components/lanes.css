@@ -145,3 +145,7 @@
 .lanes__cut { position: absolute; top: 0; z-index: 4; height: 100%; pointer-events: none; }
 .lanes__cut-bg { fill: var(--fondo); }
 .lanes__cut-line { fill: none; stroke: #b8bfca; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.lanes__cutfade { position: absolute; top: 0; bottom: 0; z-index: 3; width: 56px; pointer-events: none;
+  background: linear-gradient(to right, var(--fondo), rgba(246, 247, 249, 0)); }
+/* a sentence may carry its own line break (round 3: no single word alone on the second line) */
+.lanes__narration div { white-space: pre-line; }

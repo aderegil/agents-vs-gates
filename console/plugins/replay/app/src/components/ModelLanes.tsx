@@ -101,6 +101,7 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
   const tl = useMemo(() => (nar && idx ? timeline(nar, idx.axis) : null), [nar, idx]);
   const namesRef = useRef<HTMLDivElement>(null);
   const cutRef = useRef<SVGSVGElement>(null);
+  const fadeRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const want = (query.get("lanes") ?? "").split(",").filter((x) => x && x !== "1");
@@ -153,6 +154,12 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
       cutEl.style.left = `${namesW - 4}px`;
       cutEl.style.opacity = cut.toFixed(3);
     }
+    // what is cut at the edge (a label, a cell) fades out into the cut instead of showing half a letter
+    const fade = fadeRef.current;
+    if (fade) {
+      fade.style.left = `${namesW + 16}px`;
+      fade.style.opacity = cut.toFixed(3);
+    }
   });
 
   if (error) return <div className="empty-state"><p className="error">Cannot load the scenes: {error}</p></div>;
@@ -171,7 +178,7 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
       data-total={total} style={{ ["--cols" as string]: axis.length } as CSSProperties}>
       <header className="lanes__head">
         <div>
-          <h1>One change, five AI-SDLC models</h1>
+          <h1>{(CAPTURE || nf) && nar?.title ? nar.title : "One change, five AI-SDLC models"}</h1>
           <p className="lanes__feature">{(CAPTURE || nf) && nar?.subtitle ? nar.subtitle : `${idx.feature} · Meridian Retail (fictional)`}</p>
         </div>
         <div className="lanes__label">{idx.label}</div>
@@ -236,6 +243,9 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
       )}
       {nf && (
         // a broken axis: stops left of here are out of view
+        <div className="lanes__cutfade" ref={fadeRef} aria-hidden="true" />
+      )}
+      {nf && (
         <svg className="lanes__cut" ref={cutRef} width="22" height="100%" viewBox="0 0 22 1000" preserveAspectRatio="none" aria-hidden="true">
           <path d={`M0 0 H22 V1000 H0 Z`} className="lanes__cut-bg" />
           <path d={Array.from({ length: 51 }, (_, k) => `${k ? "L" : "M"}${k % 2 ? 16 : 6} ${k * 20}`).join(" ")} className="lanes__cut-line" />

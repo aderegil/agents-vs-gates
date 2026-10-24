@@ -1,6 +1,6 @@
 {
  "clip": "exp-one-run.mp4",
- "source": "coordinator orders 2026-10-24, rounds 1 and 2 (Alfredo approved); text literal; sentence 5 split in 5a/5b as ordered",
+ "source": "coordinator orders 2026-10-24, rounds 1-3 (Alfredo approved); text literal; 5 split in 5a/5b, 3 replaced by 3a-3d (round 3)",
  "rule": "A (anticipates): the action starts when the sentence ends, then >= 2 s with an empty band. D (describes): the action is already on screen, still, >= 0.5 s before the sentence. Each sentence max(3 s, words/1.8 + 1.0 s). The camera arrives before the sentence.",
  "phrases": [
   {
@@ -16,10 +16,28 @@
    "text": "Two other teams read these fields. The agent cannot see those teams."
   },
   {
-   "id": "3",
+   "id": "3a",
    "type": "D",
-   "moment": "the office comes in",
-   "text": "The code agent works on the orders team. The other teams are behind the glass."
+   "moment": "whole frame: scene and log, the log outlined",
+   "text": "On the right: the real log of this run. On the left: an animation of that log."
+  },
+  {
+   "id": "3b",
+   "type": "D",
+   "moment": "camera on Product and Maya, the architect",
+   "text": "On the left of the office: product, and the architect."
+  },
+  {
+   "id": "3c",
+   "type": "D",
+   "moment": "camera on the agent and the CI tower",
+   "text": "In the middle: the code agent, on the orders team. Then the CI tower."
+  },
+  {
+   "id": "3d",
+   "type": "D",
+   "moment": "camera behind the glass: billing, analytics, storefront",
+   "text": "On the right, behind the glass: billing, analytics and the storefront."
   },
   {
    "id": "4",
@@ -97,13 +115,15 @@
    "id": "15",
    "type": "D",
    "moment": "green",
-   "text": "Green. Every check passes."
+   "text": "CI passes. Every check is good.",
+   "pending": "text waiting for the coordinator OK (round 3)"
   },
   {
    "id": "16",
    "type": "D",
    "moment": "record card",
-   "text": "Before the repair: CI said no, and two teams broke. After: every team is green."
+   "text": "Before the repair: CI said no, and two teams broke. After: every team passes.",
+   "pending": "text waiting for the coordinator OK (round 3)"
   },
   {
    "id": "17",

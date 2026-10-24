@@ -1,12 +1,12 @@
 {
  "view": "lanes · neutral",
- "source": "coordinator orders 2026-10-24, rounds 1 and 2 (Alfredo approved); text literal; sentences 1 and 7 generic (round 2)",
- "rule": "A (anticipates): its event happens when it ends, then >= 2 s with an empty band. D (describes): its subject is on screen >= 0.5 s before it. Each sentence max(3 s, words/1.8 + 1.0 s). The camera arrives before the sentence.",
+ "source": "coordinator orders 2026-10-24, rounds 1 and 2 (Alfredo approved); text literal; sentences 1 and 7 generic (round 2); title, subtitle and a line break in sentence 1 (round 3)",
+ "rule": "Column moments: the camera is on the marked column 0.3 s before the sentence; the change starts moving 1.5 s after the sentence appears (1.6 s), ends >= 0.5 s before it ends; then >= 1.5 s still with an empty band. A without a move: >= 2 s watch. D: its subject on screen >= 0.55 s before. Each sentence max(3 s, words/1.8 + 1.0 s).",
  "moments": [
   {
    "n": 1,
    "focus": "table",
-   "text": "Five rows, one per model. Every row plays the same small change: rename a field that other teams read.",
+   "text": "Five rows, one per model.\nEvery row plays the same small change: rename a field that other teams read.",
    "type": "D"
   },
   {
@@ -100,5 +100,6 @@
    "type": "D"
   }
  ],
- "subtitle": "One small change · a field that other teams read"
+ "subtitle": "Four public AI-SDLC models + the gate · one small change",
+ "title": "Where does the rule live? What can block the merge?"
 }

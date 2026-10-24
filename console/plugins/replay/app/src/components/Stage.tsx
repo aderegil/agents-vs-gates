@@ -106,6 +106,8 @@ const DIM_ALPHA = 0.32;
  * ?light=<0..1> scales how much the beat's focus dims the rest (1 = as always) and lifts the unused places with it. */
 const CLIP_QUERY = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
 const NO_SUBS = CLIP_QUERY.get("subs") === "0";
+/** ?header=0: no title bar (run title, lifecycle model, phase and clock); the clip puts its own chapter there. */
+const NO_HEADER = CLIP_QUERY.get("header") === "0";
 const CLIP_LIGHT = CLIP_QUERY.has("light") ? Math.min(1, Math.max(0, Number(CLIP_QUERY.get("light")) || 0)) : 1;
 const UNUSED_ALPHA = 1 - (1 - DIM_ALPHA) * CLIP_LIGHT;
 /** The consumer teams sit behind their service's counter (floor y offset). */
@@ -346,7 +348,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   drawFloor(ctx, c);
   const zones = replay.scene?.zones ?? [];
   if (zones.length) drawZones(ctx, zones, c);
-  drawHeader(ctx, engine, c, label);
+  if (!NO_HEADER) drawHeader(ctx, engine, c, label);
 
   const drawables: Drawable[] = [];
   const layout: Layout = { obstacles: [], figures: [], bubbles: [], labels: [], late: [], reserved: [] };

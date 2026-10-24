@@ -27,13 +27,16 @@ const GAP = 400;            // empty band between two sentences
 const WATCH = 2000;         // after an A sentence's action starts: empty band at least this long
 const SHOWN = 550;          // a D sentence's subject on screen at least this long before it
 const CAM_MS = 1700;
-const W = 1920, SCENE_W = 1200, LOG_W = W - SCENE_W, BAND_H = 120, SCENE_H = 1080 - BAND_H;
+const W = 1920, LOG_W = 580, SCENE_W = W - LOG_W, BAND_H = 120, SCENE_H = 1080 - BAND_H;
 
 // Camera shots on the stage canvas: centre and width as fractions of the canvas (the height follows from the
-// scene's 1200:960). From the theater's floor plan: the agent's desk x≈0.38, the PR tray 0.50, the CI tower 0.58,
-// the glass 0.65, the teams 0.70–0.95.
+// scene's 1340:960). From the theater's floor plan: Product x≈0.2 and Maya 0.17 (the define column), the agent's desk
+// 0.38, the PR tray 0.50, the CI tower 0.58, the glass 0.65, the teams 0.70–0.95; the repair's diff card 0.11–0.29.
 const SHOT = {
   wide: { cx: 0.5, cy: 0.5, fw: 1 },
+  define: { cx: 0.2, cy: 0.47, fw: 0.48 },
+  middle: { cx: 0.48, cy: 0.42, fw: 0.52 },
+  diff: { cx: 0.21, cy: 0.4, fw: 0.36 },
   agent: { cx: 0.36, cy: 0.42, fw: 0.5 },
   ci: { cx: 0.6, cy: 0.42, fw: 0.5 },
   agentCi: { cx: 0.5, cy: 0.42, fw: 0.6 },
@@ -46,14 +49,14 @@ const SIGNS = {
   ciFailed: { x: 0.56, y: 0.215, cls: "fail big", text: "✗ CI failed · ARCH-4" },      // CI's result at 22.7 s, over the tower
 };
 
-const TITLE = "One real run · Claude Code · rename ticket · own repo · no rule";
+const TITLE = "One real run · Claude Code · no rule";
 const CH1 = "1 · The change", CH2 = "2 · The red build", CH3 = "3 · The repair";
 const SCENE_BG = "#f6f7f9", THEATER_BG = "rgb(234,237,244)";
 const fmtSpeed = (x) => String(Math.round(x * 100) / 100);
 const ease = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
 
 // ---------------------------------------------------------------------------------------------------- the log
-const SHORT_ACTOR = { "code-orders": "Agent", "flow-engine": "Harness", ci: "CI", staging: "Other teams' tests" };
+const SHORT_ACTOR = { "code-orders": "Agent", "flow-engine": "Experiment", ci: "CI", staging: "Other teams' tests" };
 /** Nothing local on screen: the run's workspace path goes, any other drive path is cut (the release package rule). */
 function redact(s) {
   return s.replace(/[A-Za-z]:\\avg\\w\d+\\r\\/g, "").replace(/[A-Za-z]:\\[^\s'"`)]*/g, "…");
@@ -131,12 +134,13 @@ const CHROME_CSS = `
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 #clip-log{position:fixed;top:0;right:0;width:${LOG_W}px;height:${SCENE_H}px;z-index:99990;background:#fff;
   border-left:2px solid #d5dae1;box-sizing:border-box;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;}
-#clip-log header{padding:18px 26px 12px;border-bottom:1.5px solid #e3e6eb;}
+#clip-log header{padding:18px 20px 12px;border-bottom:1.5px solid #e3e6eb;}
 #clip-log h2{margin:0;font-size:28px;font-weight:600;color:#111827;}
 #clip-log header p{margin:4px 0 0;font-size:18px;color:#5b6474;}
 #clip-log .list{position:relative;flex:1;overflow:hidden;}
 #clip-log ol{position:absolute;left:0;right:0;top:0;margin:0;padding:10px 0 0;list-style:none;}
-#clip-log li{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:6px 26px;font-size:19px;line-height:1.3;color:#111827;opacity:.55;}
+#clip-log.hint{box-shadow:inset 0 0 0 4px #22c3e6;}
+#clip-log li{display:grid;grid-template-columns:58px 1fr;gap:8px;padding:6px 20px;font-size:19px;line-height:1.3;color:#111827;opacity:.55;}
 #clip-log li .t{font-variant-numeric:tabular-nums;color:#5b6474;}
 #clip-log li .x{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
 #clip-log li .w{font-weight:600;margin-right:8px;}
@@ -148,7 +152,7 @@ const CHROME_CSS = `
 #clip-log li.future{display:none;}
 #clip-title{position:fixed;left:0;top:0;z-index:99999;box-sizing:border-box;padding:14px 26px;max-width:${SCENE_W}px;
   font:600 30px/1.2 'IBM Plex Sans',system-ui,sans-serif;color:#111827;}
-#clip-reading{position:fixed;bottom:${BAND_H + 16}px;left:16px;z-index:99999;padding:5px 12px;border-radius:6px;
+#clip-reading{position:fixed;bottom:${BAND_H + 16}px;right:${LOG_W + 16}px;z-index:99999;padding:5px 12px;border-radius:6px;
   background:#fff;border:1.5px solid #c4cad3;font:500 18px 'IBM Plex Sans',system-ui,sans-serif;color:#374151;}
 #clip-signs{position:fixed;transform-origin:0 0;z-index:99980;pointer-events:none;}
 #clip-signs div{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;padding:2px 8px;border-radius:3px;
@@ -165,7 +169,7 @@ async function installChrome(page, rows, { log }) {
     if (!log) return;
     const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const box = el("aside", { id: "clip-log" }, `<header><h2>The run's log · real</h2>
-      <p>Claude Code · Sonnet · 12 Oct 2026 · the run's own events, real time</p></header><div class="list"><ol></ol></div>`);
+      <p>Claude Code · Sonnet · 12 Oct 2026 · its own events, real time</p></header><div class="list"><ol></ol></div>`);
     const ol = box.querySelector("ol");
     for (const r of rows) ol.append(el("li", { className: r.tone }, `<span class="t">${r.real != null ? esc(r.realLabel) : ""}</span>`
       + `<span class="x"><span class="w">${esc(r.who)}</span>${esc(r.text)}</span>`));
@@ -194,9 +198,9 @@ async function setBox(page, id, text, css) {
 }
 const CHAPTER_CSS = (bg) => "position:fixed;left:0;top:0;z-index:99999;display:flex;align-items:center;height:62px;"
   + `box-sizing:border-box;padding:0 26px;background:${bg};font:600 28px 'IBM Plex Sans',system-ui,sans-serif;color:#111827;`;
-const CHIP_CSS = `position:fixed;right:${LOG_W + 16}px;bottom:${BAND_H + 16}px;z-index:99999;font:500 18px 'IBM Plex Sans',system-ui,sans-serif;`
+const CHIP_CSS = `position:fixed;right:${LOG_W + 16}px;bottom:${BAND_H + 62}px;z-index:99999;font:500 18px 'IBM Plex Sans',system-ui,sans-serif;`
   + "color:#5b6474;background:#fff;border:1.5px solid #c4cad3;border-radius:6px;padding:4px 10px;";
-const MARK_CSS = `position:fixed;right:${LOG_W + 16}px;bottom:${BAND_H + 58}px;z-index:99999;font:600 22px 'IBM Plex Sans',system-ui,sans-serif;`
+const MARK_CSS = `position:fixed;right:${LOG_W + 16}px;bottom:${BAND_H + 104}px;z-index:99999;font:600 22px 'IBM Plex Sans',system-ui,sans-serif;`
   + "color:#fff;background:#1f2937;border-radius:6px;padding:3px 12px;";
 
 // ---------------------------------------------------------------------------------------------- the capture
@@ -238,8 +242,14 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
       cardT += adv;
     } else {
       if (adv > 0) { await page.clock.runFor(adv); rt += adv; }
-      const r = camAt(wall);
+      const r = { ...camAt(wall) };
       const { x, y, w, h } = canvasBox;
+      // a close-up never shows past the stage's edges (the define column sits at its left edge)
+      const fh = r.fw * (w / h) * (SCENE_H / SCENE_W);
+      if (r.fw < 1 && fh <= 1) {
+        r.cx = Math.min(1 - r.fw / 2, Math.max(r.fw / 2, r.cx));
+        r.cy = Math.min(1 - fh / 2, Math.max(fh / 2, r.cy));
+      }
       const s = 1 / r.fw;
       const tx = SCENE_W / 2 - x - s * r.cx * w, ty = SCENE_H / 2 - y - s * r.cy * h;
       const on = signs.filter((g) => rt >= g.from && rt < g.to).map((g) => g.sign);
@@ -340,7 +350,7 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
     kind = "theater"; logOn = true;
     await page.clock.install({ time: new Date("2026-10-13T12:00:00Z") });
     await page.clock.pauseAt(new Date("2026-10-13T12:00:01Z"));
-    await page.goto(`${ORIGIN}/theater/index.html?replay=/replays/${oneRunId}.json&present=1&subs=0&bubbles=none&light=0.45&t=${from}`);
+    await page.goto(`${ORIGIN}/theater/index.html?replay=/replays/${oneRunId}.json&present=1&subs=0&header=0&bubbles=none&light=0.45&t=${from}`);
     await page.waitForSelector("canvas", { timeout: 60000 });
     // the player in the left 1200×960 (its 16:9 stage centred there), the log on the right, the band under both
     await page.addStyleTag({ content: `html,body,#root{width:${SCENE_W}px!important;height:${SCENE_H}px!important;overflow:visible!important}
@@ -380,8 +390,16 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
   await openTheater(0);
   cut("wide");
   await dress(CH1);
+  // the context: what is where (Alfredo's review, round 3), the camera still on each place before its sentence
+  await page.evaluate(() => document.getElementById("clip-log").classList.add("hint"));
   shown(0);
-  await say("3");
+  await say("3a");
+  await page.evaluate(() => document.getElementById("clip-log").classList.remove("hint"));
+  for (const [id, where] of [["3b", "define"], ["3c", "middle"], ["3d", "teams"]]) {
+    camTo(where);
+    shown(CAM_MS);
+    await say(id);
+  }
   signs = [{ sign: SIGNS.ownTests, from: 18224, to: 22701 }, { sign: SIGNS.ciFailed, from: 22701, to: 1e9 }];
   camTo("agent");
   await play(3200, 1);                           // the ticket reaches the agent, it loads its context
@@ -416,7 +434,8 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
   camTo("agent");
   await say("12");
   await play(31700, 2, CH3);                     // reads, edits; the repair's diff card from 31.4 s
-  shown(-(31700 - 31400) / 2);
+  camTo("diff");                                 // the diff card large enough to read (round 3)
+  shown(CAM_MS);
   await say("13");
   camTo("ci");
   await play(37250, 3);                          // its own checks, no sentence: quick
