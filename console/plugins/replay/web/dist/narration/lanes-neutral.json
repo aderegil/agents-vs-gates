@@ -1,0 +1,21 @@
+{
+ "view": "lanes · neutral",
+ "source": "coordinator order 2026-10-24 (Alfredo approved); text literal, do not edit",
+ "rule": "each sentence shows at least max(2.5 s, words/2 + 0.8 s); one at a time, 0.4 s of empty band between two; the focus moves when a sentence starts, its event happens when the sentence before it ends",
+ "moments": [
+  { "n": 1, "focus": "table", "text": "Five rows, one per model. Every row plays the same change: rename two fields." },
+  { "n": 2, "focus": "column", "col": "intent", "text": "Every model starts from a written intent." },
+  { "n": 3, "focus": "column", "col": "spec", "text": "Then each one writes requirements, or a spec." },
+  { "n": 4, "focus": "column", "col": "plan", "text": "Watch the purple boxes. That is where the architecture rule lives." },
+  { "n": 5, "focus": "column", "col": "plan", "text": "In every model, the rule is something the agent reads." },
+  { "n": 6, "focus": "column", "col": "tasks", "text": "The work is broken into tasks." },
+  { "n": 7, "focus": "column", "col": "code", "text": "The agent writes the code. In every row, it drops the old names." },
+  { "n": 8, "focus": "column", "col": "review", "text": "Review. Where a model has one, it is advice. It does not block." },
+  { "n": 9, "focus": "column", "col": "ci", "text": "Now CI. Only the last row has an architecture check." },
+  { "n": 10, "focus": "gate-ci", "gate": "fail", "minMs": 3000, "text": "Red. Rule ARCH-4 blocks the merge." },
+  { "n": 11, "focus": "gate-ci", "gate": "pass", "text": "The agent fixes the code, and CI passes." },
+  { "n": 12, "focus": "column", "col": "release", "then": "production", "text": "Release: a person says yes. The other teams keep working." },
+  { "n": 13, "focus": "rule", "text": "The rule is written down in every model." },
+  { "n": 14, "focus": "ci", "text": "What differs: does something check the rule after the code is written?" }
+ ]
+}

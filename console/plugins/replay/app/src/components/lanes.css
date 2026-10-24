@@ -106,3 +106,27 @@
 /* the video capture hides the controls */
 .lanes.is-capture .lanes__controls { display: none; }
 @media (max-width: 900px) { .lanes__row { grid-template-columns: 120px repeat(var(--cols), minmax(90px, 1fr)); } .lanes__grid { overflow-x: auto; } }
+
+/* without narration the grid's wrapper takes no box: the layout stays as it was */
+.lanes__plain { display: contents; }
+/* the video capture: no "Play scene", no roles or sources in small print; larger type (2026-10-24) */
+.lanes.is-capture .lanes__open, .lanes.is-capture .lanes__who, .lanes.is-capture .lanes__model span { display: none; }
+.lanes.is-capture .lanes__model strong { font-size: 26px; }
+.lanes.is-capture .lanes__stage { font-size: 16px; line-height: 1.1; }
+.lanes.is-capture .lanes__cell { gap: 2px; }
+.lanes.is-capture .lanes__art { font-size: 12.5px; }
+.lanes.is-capture .lanes__none, .lanes.is-capture .lanes__tag { font-size: 12.5px; }
+.lanes.is-capture .lanes__axis { font-size: 17px; }
+.lanes.is-capture .lanes__band { font-size: 15px; }
+.lanes.is-capture .lanes__token span { font-size: 13px; }
+
+/* ?narration=1: the scene in the top 5/6, a black band under it with the sentence; the camera moves the grid inside
+   its view (ModelLanes, engine/lanesNarration.ts); the grid is as tall as the view at the column zoom (COLUMN_ZOOM 1.25) */
+.lanes.lanes.is-narration { flex: none; height: 83.333vh; overflow: hidden; }
+.lanes.is-narration .lanes__row { padding-bottom: 12px; }
+.lanes.is-narration .lanes__controls { display: none; }
+.lanes__view { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.lanes.is-narration .lanes__grid { flex: none; height: calc(100% / 1.25); transform-origin: 0 0; }
+.lanes__narration { position: fixed; left: 0; right: 0; bottom: 0; height: 16.667vh; z-index: 10; background: #000;
+  display: flex; align-items: center; justify-content: center; }
+.lanes__narration div { max-width: 90%; color: #fff; font-size: 3.9vh; font-weight: 500; line-height: 1.25; text-align: center; }

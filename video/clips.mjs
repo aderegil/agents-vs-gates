@@ -12,6 +12,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { FFMPEG, ORIGIN, OUT, REPO, VIDEO, WORK, encoder, ffprobeDuration, freeGB, launch, shot } from "./lib.mjs";
 import { captureTour } from "./console-tour.mjs";
 import { captureFullTour } from "./console-tour-full.mjs";
@@ -122,7 +123,12 @@ function clips() {
     },
     {
       file: "aisdlc-compare-neutral.mp4",
-      segments: [{ kind: "lanes", query: "neutral=1" }],
+      // third version (coordinator's order, 2026-10-24): the lanes view's own narration mode (?narration=1): the
+      // sentences of public/narration/lanes-neutral.json set the clock, a camera follows the moment, a black band
+      // carries the sentence. The 15 Oct version is aisdlc-compare-neutral_56s.mp4.
+      segments: [{ kind: "lanes", query: "neutral=1&narration=1" }],
+      format: "MP4 H.264 1920×1080 30 fps, no audio, narration text in a bottom band",
+      cues: "lanes-neutral",
       shows: "Neutral variant of the comparison: the same five lanes with no per-vendor outcome. Vendor lanes show where the rule lives and review as \"review (advisory)\"; their CI cells say only \"no architecture check in CI (not described)\". Only the \"+ the gate\" lane shows an outcome: blocks the merge in CI, caught by ARCH-4 and repaired.",
       source: "console/plugins/replay/app/public/scenes/index.json (from replay/scenes/make_scenes.py), theater lanes view ?neutral=1",
       label: "Illustration · scripted from public documentation",
@@ -242,11 +248,15 @@ async function captureLanes(context, enc, query = "") {
   await page.waitForSelector(".lanes__grid", { timeout: 60000 });
   await page.clock.runFor(200);
   await page.keyboard.press("Home");
+  // with ?narration=1 the sentences set the length (engine/lanesNarration.ts); the page says it in data-total
+  const narrated = /(^|&)narration=1/.test(query);
   const total = await page.evaluate(() => {
+    const d = Number(document.querySelector(".lanes")?.dataset.total);
+    if (d > 0) return d;
     const idx = document.querySelectorAll(".lanes__axis").length;
     return idx * 4600 + 13000;
   });
-  const wall = total + 1500;
+  const wall = total + (narrated ? 0 : 1500);
   const n = Math.round((wall / 1000) * FPS);
   const step = 1000 / FPS;
   for (let i = 0; i < n; i++) {
@@ -279,6 +289,19 @@ async function renderSegment(seg, file) {
       await browser.shutdown();
     }
   }
+}
+
+/** The band's timing for a narrated lanes clip, from the same engine and data the page used. */
+async function writeLanesCues(clip) {
+  const app = path.join(REPO, "console", "plugins", "replay", "app");
+  const { timeline } = await import(pathToFileURL(path.join(app, "src", "engine", "lanesNarration.ts")).href);
+  const nar = JSON.parse(fs.readFileSync(path.join(app, "public", "narration", `${clip.cues}.json`), "utf8"));
+  const tl = timeline(nar);
+  fs.writeFileSync(path.join(OUT, clip.file.replace(/\.mp4$/, ".cues.json")), JSON.stringify({
+    clip: clip.file, poster_s: 0.3, duration_ms: tl.total,
+    cues: tl.cues.map((c) => ({ n: c.n, start_s: c.start / 1000, end_s: c.end / 1000, focus: c.moment.focus,
+      col: c.moment.col ?? null, text: c.text })),
+  }, null, 1) + "\n");
 }
 
 async function main() {
@@ -316,6 +339,7 @@ async function main() {
       execFileSync(FFMPEG, ["-hide_banner", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", listFile,
         "-c", "copy", "-movflags", "+faststart", out], { stdio: "inherit" });
     }
+    if (clip.cues) await writeLanesCues(clip);
     const dur = ffprobeDuration(out);
     console.log(`${clip.file}: ${dur?.toFixed(1)} s · ${(fs.statSync(out).size / 1024 ** 2).toFixed(1)} MB · ${((Date.now() - t0) / 1000).toFixed(0)} s wall`);
     byFile.set(clip.file, { file: clip.file, duration_s: dur ? Math.round(dur * 10) / 10 : null, shows: clip.shows,

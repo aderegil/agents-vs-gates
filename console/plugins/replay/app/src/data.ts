@@ -2,6 +2,7 @@
 // after the iframe loads (docs/contracts/console-api.md §4); we then use /api/replay/list and /api/replay/run/{id}
 // with the same session cookie. Standalone (vite preview): ?replay=<url-to-json>[&compare=<url>], or the bundled
 // demo replays (exported from replay/fixtures, all mock, all watermarked SIMULATED).
+import type { Narration } from "./engine/lanesNarration";
 import type { TeamModel } from "./engine/recast";
 import type { Replay } from "./engine/replay";
 import { plainReplay, plainText, runName, runHeadline, stageLabel } from "./components/labels";
@@ -194,6 +195,11 @@ export interface SceneIndex {
 
 export function loadSceneIndex(): Promise<SceneIndex> {
   return getJson<SceneIndex>("scenes/index.json");
+}
+
+/** The lanes view's narration (?narration=1): the moments and their sentences, as data. */
+export function loadLanesNarration(neutral: boolean): Promise<Narration> {
+  return getJson<Narration>(neutral ? "narration/lanes-neutral.json" : "narration/lanes.json");
 }
 
 export async function listScenes(): Promise<RunEntry[]> {

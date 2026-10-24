@@ -7,9 +7,12 @@
 // scripted from public documentation". ?neutral=1 keeps every per-vendor verdict out: only the gate lane shows an
 // outcome. Every opacity and position is computed from the clock (engine/lanes.ts), so a virtual-clock capture is
 // exact. Space plays or pauses, Home restarts; ?autoplay=1 starts it, ?t=<ms> opens at a moment.
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { loadSceneIndex, type SceneIndex } from "../data";
+// ?narration=1 (2026-10-24): the moments and sentences of public/narration/*.json set the clock (engine/lanesNarration.ts),
+// a camera follows the moment, and the sentence sits in a black band under the scene instead of the caption.
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { loadLanesNarration, loadSceneIndex, type SceneIndex } from "../data";
 import { cellOpacity, lanesAt, tokenState, totalMs, type LanesFrame, type TokenState } from "../engine/lanes";
+import { cameraTransform, narratedAt, narratedOpacity, timeline, type Narration } from "../engine/lanesNarration";
 import "./lanes.css";
 
 /** One plain line per column of the axis, the same for every model (the lanes show how they differ). */
@@ -84,13 +87,20 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
   const query = useMemo(() => new URLSearchParams(window.location.search), []);
   const [idx, setIdx] = useState<SceneIndex | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const narrating = query.get("narration") === "1";
+  const neutral = query.get("neutral") === "1";
+  const [nar, setNar] = useState<Narration | null>(null);
   useEffect(() => {
     loadSceneIndex().then(setIdx).catch((e) => setError(String(e)));
-  }, []);
+    if (narrating) loadLanesNarration(neutral).then(setNar).catch((e) => setError(String(e)));
+  }, [narrating, neutral]);
+  const tl = useMemo(() => (nar ? timeline(nar) : null), [nar]);
+  const viewRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const want = (query.get("lanes") ?? "").split(",").filter((x) => x && x !== "1");
   const scenes = (idx?.scenes ?? []).filter((s) => !want.length || want.includes(s.id) || want.includes(s.id.replace(/^aisdlc-/, "")));
   const axis = idx?.axis ?? [];
-  const total = totalMs(axis.length);
+  const total = tl ? tl.total : totalMs(axis.length);
   const { t, setT, playing, setPlaying } = useClock(query.get("autoplay") === "1", total);
   // ?t=<ms> opens at a moment (QA stills)
   useEffect(() => {
@@ -109,21 +119,29 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [setPlaying, setT, total]);
 
-  if (error) return <div className="empty-state"><p className="error">Cannot load the scenes: {error}</p></div>;
-  if (!idx) return <div className="empty-state"><p className="muted">Loading…</p></div>;
+  const nf = tl ? narratedAt(t, tl, axis) : null;
+  // the camera: the grid scaled and moved inside its view, from the sizes laid out (a transform does not change them)
+  useLayoutEffect(() => {
+    const v = viewRef.current, g = gridRef.current;
+    if (!v || !g || !nf) return;
+    const { tx, ty, s } = cameraTransform(nf.camera, { W: v.clientWidth, H: v.clientHeight }, { w: g.offsetWidth, h: g.offsetHeight });
+    g.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${s.toFixed(4)})`;
+  });
 
-  const f = lanesAt(t, axis.length);
-  const neutral = query.get("neutral") === "1";
+  if (error) return <div className="empty-state"><p className="error">Cannot load the scenes: {error}</p></div>;
+  if (!idx || (narrating && !tl)) return <div className="empty-state"><p className="muted">Loading…</p></div>;
+
+  const f = nf ? nf.frame : lanesAt(t, axis.length);
   const col = f.now >= 0 ? axis[f.now] : null;
   const caption = f.beat === "rule" ? BEAT_RULE : f.beat === "ci" ? BEAT_CI : f.beat === "final" ? FINAL
     : (neutral ? CAPTION_NEUTRAL : CAPTION)[col ?? ""] ?? "";
   const ciCol = axis.indexOf("ci");
   const nBefore = axis.filter((a) => BEFORE.has(a)).length;
-  const bandOp = (before: boolean) => (f.beat === "rule" ? (before ? 1 : 0.3) : f.beat === "ci" ? (before ? 0.3 : 1) : 1);
+  const bandOp = (before: boolean) => (f.beat === "intro" ? 1 : f.beat === "rule" ? (before ? 1 : 0.3) : f.beat === "ci" ? (before ? 0.3 : 1) : 1);
 
   return (
-    <div className={`lanes ${query.get("capture") === "1" ? "is-capture" : ""}`}
-      style={{ ["--cols" as string]: axis.length } as CSSProperties}>
+    <div className={`lanes ${query.get("capture") === "1" ? "is-capture" : ""} ${nf ? "is-narration" : ""}`}
+      data-total={total} style={{ ["--cols" as string]: axis.length } as CSSProperties}>
       <header className="lanes__head">
         <div>
           <h1>One change, five AI-SDLC models</h1>
@@ -132,7 +150,8 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
         <div className="lanes__label">{idx.label}</div>
       </header>
 
-      <div className="lanes__grid" role="table" aria-label="AI-SDLC models compared on a common phase axis">
+      <div className={nf ? "lanes__view" : "lanes__plain"} ref={viewRef}>
+      <div className="lanes__grid" ref={gridRef} role="table" aria-label="AI-SDLC models compared on a common phase axis">
         {/* the two moments of verification, over the axis */}
         <div className="lanes__row lanes__row--band" aria-hidden="true">
           <div />
@@ -171,7 +190,7 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
               </div>
               {axis.map((a, i) => (
                 <Cell key={a} lane={s} a={a} i={i} gate={gate} neutral={neutral} f={f} ciCol={ciCol}
-                  op={cellOpacity(f, i, { rule: s.rule.axis === a || (gate && a === "ci"), ci: a === "ci" })} />
+                  op={(nf ? narratedOpacity : cellOpacity)(f, i, { rule: s.rule.axis === a || (gate && a === "ci"), ci: a === "ci" })} />
               ))}
               {/* the change, travelling along the lane */}
               <div className="lanes__track" aria-hidden="true" />
@@ -182,9 +201,10 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
           );
         })}
       </div>
+      </div>
 
       <footer className="lanes__foot">
-        <div className="lanes__caption" aria-live="polite">{caption}</div>
+        {!nf && <div className="lanes__caption" aria-live="polite">{caption}</div>}
         <div className="lanes__controls">
           <button type="button" className="btn btn--quiet" onClick={() => setPlaying((p) => !p)}>{playing ? "Pause" : "Play"}</button>
           <button type="button" className="btn btn--quiet" onClick={() => setT(0)}>Restart</button>
@@ -199,6 +219,11 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
           <span className="lanes__src">Sources: replay/scenes/SOURCES.md</span>
         </div>
       </footer>
+      {nf && (
+        <div className="lanes__narration" aria-live="polite">
+          <div style={{ opacity: nf.caption.opacity }}>{nf.caption.text}</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -218,7 +243,7 @@ interface CellProps {
 function Cell({ lane: s, a, i, gate, neutral, f, ciCol, op }: CellProps) {
   const c = s.columns[a];
   const rule = s.rule.axis === a;
-  const reached = f.beat !== "columns" || f.now >= i;
+  const reached = f.beat !== "intro" && (f.beat !== "columns" || f.now >= i);
   const blocks = !neutral && s.blocks.axis === a && !(gate && a === "ci");
   const out = !neutral && !gate && s.outcome.axis === a && reached;
   const isCi = a === "ci";

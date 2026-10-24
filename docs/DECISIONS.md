@@ -830,3 +830,18 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
   pass on the final PR) instead of the first-PR line "2 of 3 break". Cards: `?nocap=1`, the ticket note timed with
   its sentence (`?note=`); Meanwhile and the record card as they were. Stretches with no sentence are faster and
   marked (×2, ×6, ×4).
+
+### aisdlc-compare-neutral, narrated from the app (2026-10-24)
+- Coordinator's order, Alfredo: fix it in the app, not after. The lanes view has `?narration=1`: the moments and
+  their sentences are data (`console/plugins/replay/app/public/narration/lanes-neutral.json`, literal) and set the
+  clock (`engine/lanesNarration.ts`, pure, tested in `test/lanesNarration.test.ts`). A moment's focus (lit column,
+  camera) starts with its sentence; its event (the change reaching the column, CI red, CI green) waits for the
+  sentence before it to end. Red stays the whole red sentence (≥ 3 s); green comes with the repair sentence.
+- Camera from the clock: 1.25× on the current column (all five rows in view: the grid is laid out as tall as the
+  view at that zoom), 1.5× on the gate lane's CI cell for red and green, the whole table for the intro and the
+  summary. 1.4–1.6× on a column (the order's range) would cut the fifth row; 1.25× shows 5–6 columns and all rows.
+- Opacity with narration: past 0.85, future 0.25, summary rest 0.5. The old caption is off; a black band (1/6 of the
+  height) carries the sentence. With `?capture=1`: no "Play scene", no roles or sources in the cells, larger type.
+- Without `?narration=1` the view is as before (same timing and opacities; its tests unchanged). Video: clips.mjs
+  reads the length from the page (`data-total`) and writes `out/aisdlc-compare-neutral.cues.json` from the same
+  engine and data. The 15 Oct clip is kept as `aisdlc-compare-neutral_56s.mp4`.

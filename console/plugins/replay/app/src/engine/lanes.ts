@@ -15,7 +15,8 @@ export const FINAL_MS = RULE_BEAT_MS + CI_BEAT_MS + LAST_BEAT_MS;
 export const GATE_FAIL_MS = 600;
 export const GATE_REPAIR_MS = 2600;
 
-export type Beat = "columns" | "rule" | "ci" | "final";
+/** "intro": the still table before the change starts (narration only, engine/lanesNarration.ts). */
+export type Beat = "intro" | "columns" | "rule" | "ci" | "final";
 
 export function totalMs(columns: number): number {
   return columns * COLUMN_MS + FINAL_MS;
@@ -31,6 +32,8 @@ export interface LanesFrame {
   inColumn: number;
   /** the change's position on the axis, in columns (0 = first column centre), eased */
   pos: number;
+  /** narration: the gate lane's CI cell set by the moments instead of by GATE_FAIL_MS / GATE_REPAIR_MS */
+  gate?: "idle" | "fail" | "pass";
 }
 
 const ease = (p: number) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
@@ -71,10 +74,11 @@ export type TokenState = "moving" | "fail" | "repaired" | "caught" | "escapes" |
 export function tokenState(f: LanesFrame, axis: string[], lane: { gate: boolean; outcomeAxis: string;
   outcome: "caught" | "escapes" }, neutral: boolean): TokenState {
   const ci = axis.indexOf("ci");
-  const reached = (col: number) => col >= 0 && (f.beat !== "columns" || f.now > col
+  const reached = (col: number) => col >= 0 && f.beat !== "intro" && (f.beat !== "columns" || f.now > col
     || (f.now === col && f.inColumn >= MOVE_MS));
   if (lane.gate) {
     if (!reached(ci)) return "moving";
+    if (f.gate) return f.gate === "fail" ? "fail" : f.gate === "pass" ? "repaired" : "moving";
     if (f.beat === "columns" && f.now === ci) {
       if (f.inColumn < MOVE_MS + GATE_FAIL_MS) return "moving";
       if (f.inColumn < MOVE_MS + GATE_REPAIR_MS) return "fail";
