@@ -18,8 +18,6 @@ export interface NarrationMoment {
   /** a second column the change moves on to right after the first (one sentence, two moves) */
   then?: string;
   gate?: "fail" | "pass";
-  /** a D moment: its subject stays on screen, still, this much longer before the sentence (round 4: red, green) */
-  dwellMs?: number;
 }
 export interface Narration { moments: NarrationMoment[]; title?: string; subtitle?: string }
 
@@ -34,6 +32,8 @@ export const THEN_AFTER_MS = 2000;
 /** Where the change waits before the first column (in columns; 0 is INTENT's centre). */
 export const START_POS = -0.5;
 export const SHOWN_MS = 550;
+/** The red and the green (round 5): their sentence appears this long after the fade starts, with the colour still coming. */
+export const TEXT_WITH_MS = 300;
 export const LEAD_MS = 600;          // the first sentence after the poster frame (the table is on screen from 0)
 export const CAM_MS = 1700;
 export const SETTLE_MS = 300;       // the camera stands still this long before its sentence
@@ -98,23 +98,26 @@ export function timeline(nar: Narration, axis: string[]): Timeline {
       tl.focus.push({ t: prep, v: ci });
       camReady = camTo(prep, cellCam);
       if (m.gate) {
-        // the red (or green) fades in once the camera is on the cell, and is fully there before the sentence
-        const at = Math.max(prep, camReady - FADE_MS);
+        // round 5: the red (or green) starts fading in once the camera is on the cell, and the sentence comes with it
+        // (TEXT_WITH_MS after the fade starts); the watching pause comes after the sentence (REST_MS)
+        const at = camReady;
         tl.gate.push({ t: at, v: m.gate });
-        shown = at + FADE_MS;
+        shown = at;
       }
     } else if (m.focus === "rule" || m.focus === "ci") {
       const i = m.focus === "rule" ? axis.indexOf("plan") : ci;
-      tl.beats.push({ t: prep, v: m.focus });
-      tl.focus.push({ t: prep, v: -1 });
+      // the summary's cells light as the camera arrives (round 5: the sentence ~0.5 s after, not 2 s)
       camReady = camTo(prep, colCam(i));
-      shown = prep;
+      shown = Math.max(prep, camReady - 200);
+      tl.beats.push({ t: shown, v: m.focus });
+      tl.focus.push({ t: shown, v: -1 });
     } else {
       shown = 0;
     }
     let start = Math.max(lastEnd + GAP_MS, quiet, camReady + SETTLE_MS);
     if (m.n === nar.moments[0].n) start = Math.max(start, LEAD_MS);
-    if (m.type === "D") start = Math.max(start, shown + SHOWN_MS + (m.dwellMs ?? 0));
+    const gateMoment = m.focus === "gate-ci" && !!m.gate;
+    if (m.type === "D") start = Math.max(start, shown + (gateMoment ? TEXT_WITH_MS : SHOWN_MS));
     const stops = m.type === "A" && m.focus === "column" && m.col
       ? [axis.indexOf(m.col), ...(m.then ? [axis.indexOf(m.then)] : [])].filter((x, k, a) => x !== (k ? a[k - 1] : col))
       : [];
@@ -137,13 +140,15 @@ export function timeline(nar: Narration, axis: string[]): Timeline {
       quiet = end + REST_MS;
     } else if (m.type === "A") {
       quiet = end + WATCH_MS;
+    } else if (gateMoment) {
+      quiet = end + REST_MS;
     } else {
       quiet = 0;
     }
     tl.cues.push(cue);
     lastEnd = end;
     // the next moment's camera waits for the rest after a column moment
-    free = stops.length ? end + REST_MS : end;
+    free = stops.length || gateMoment ? end + REST_MS : end;
   }
   // the close: the whole table, the rule cells and the CI column lit, still, with an empty band
   const close = lastEnd + GAP_MS;

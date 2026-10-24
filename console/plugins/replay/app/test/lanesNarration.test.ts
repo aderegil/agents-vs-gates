@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { tokenState } from "../src/engine/lanes.ts";
 import {
-  CAM_MS, COLUMN_ZOOM, END_HOLD_MS, GAP_MS, MOVE_AFTER_MS, MOVE_DONE_MS, REST_MS, SHOWN_MS, WATCH_MS, cameraTransform,
+  CAM_MS, COLUMN_ZOOM, END_HOLD_MS, GAP_MS, MOVE_AFTER_MS, MOVE_DONE_MS, REST_MS, SHOWN_MS, TEXT_WITH_MS, WATCH_MS, cameraTransform,
   narratedAt, narratedOpacity,
   phraseMs, timeline, type Narration,
 } from "../src/engine/lanesNarration.ts";
@@ -62,12 +62,16 @@ test("narration: red is on screen before 'Red.' and green before 'The agent fixe
   const red = cue(10), green = cue(11), ci = cue(9);
   assert.notEqual(gateTok(ci.end - 1), "fail");
   assert.equal(narratedAt(ci.end - 1, TL, AXIS).frame.gate, "idle");
-  assert.ok(red.start - red.action >= SHOWN_MS + 1000 - 1e-9);   // round 4: the red held 1 s more
-  assert.ok(green.start - green.action >= SHOWN_MS + 1000 - 1e-9);
-  assert.equal(gateTok(red.start - SHOWN_MS), "fail");
-  assert.equal(narratedAt(red.start - SHOWN_MS, TL, AXIS).gateFade, 1);
-  assert.ok(green.start - green.action >= SHOWN_MS - 1e-9);
-  assert.equal(gateTok(green.start - SHOWN_MS), "repaired");
+  // round 5: the sentence comes 0.3 s into the fade, the watching pause after it
+  assert.equal(red.start - red.action, TEXT_WITH_MS);
+  assert.equal(green.start - green.action, TEXT_WITH_MS);
+  assert.ok(green.start >= red.end + REST_MS - 1e-9);
+  assert.ok(cue(12).start >= green.end + REST_MS - 1e-9);
+  for (const n of [13, 14]) assert.ok(Math.abs(cue(n).start - cue(n).action - SHOWN_MS) < 1e-9, `summary ${n}`);
+  assert.equal(gateTok(red.start), "fail");
+  assert.ok(narratedAt(red.start, TL, AXIS).gateFade < 1);              // still coming in when the sentence appears
+  assert.equal(narratedAt(red.start + 400, TL, AXIS).gateFade, 1);
+  assert.equal(gateTok(green.start), "repaired");
   assert.equal(gateTok(TL.total), "repaired");
 });
 
