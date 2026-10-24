@@ -12,7 +12,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { loadLanesNarration, loadSceneIndex, type SceneIndex } from "../data";
 import { cellOpacity, lanesAt, tokenState, totalMs, type LanesFrame, type TokenState } from "../engine/lanes";
-import { cameraTransform, narratedAt, narratedOpacity, timeline, type Narration } from "../engine/lanesNarration";
+import { MODEL_W, cameraTransform, narratedAt, narratedOpacity, timeline, type Narration } from "../engine/lanesNarration";
+
+/** The video capture (?capture=1): plain, generic words (no field or event names on the slide before the scenario). */
+const CAPTURE = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("capture") === "1";
+const generic = (art: string) => (CAPTURE ? art.replace(/orderplaced-/i, "field-") : art);
 import "./lanes.css";
 
 /** One plain line per column of the axis, the same for every model (the lanes show how they differ). */
@@ -94,7 +98,9 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
     loadSceneIndex().then(setIdx).catch((e) => setError(String(e)));
     if (narrating) loadLanesNarration(neutral).then(setNar).catch((e) => setError(String(e)));
   }, [narrating, neutral]);
-  const tl = useMemo(() => (nar ? timeline(nar) : null), [nar]);
+  const tl = useMemo(() => (nar && idx ? timeline(nar, idx.axis) : null), [nar, idx]);
+  const namesRef = useRef<HTMLDivElement>(null);
+  const cutRef = useRef<SVGSVGElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const want = (query.get("lanes") ?? "").split(",").filter((x) => x && x !== "1");
@@ -124,8 +130,29 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
   useLayoutEffect(() => {
     const v = viewRef.current, g = gridRef.current;
     if (!v || !g || !nf) return;
-    const { tx, ty, s } = cameraTransform(nf.camera, { W: v.clientWidth, H: v.clientHeight }, { w: g.offsetWidth, h: g.offsetHeight });
+    // the model names stay at 1× on the left, as wide as the grid's own (hidden) model column; the camera frames the
+    // stops right of them; the names follow each row's height and place under the camera
+    const namesW = MODEL_W * g.offsetWidth;
+    const { tx, ty, s, cut } = cameraTransform(nf.camera, { W: v.clientWidth, H: v.clientHeight, left: namesW },
+      { w: g.offsetWidth, h: g.offsetHeight });
     g.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${s.toFixed(4)})`;
+    const names = namesRef.current, cutEl = cutRef.current;
+    if (names) {
+      names.style.width = `${namesW - 6}px`;
+      const rows = [...g.querySelectorAll<HTMLElement>(".lanes__row")].filter((r) => !r.classList.contains("lanes__row--band"));
+      [...names.children].forEach((n, i) => {
+        const r = rows[i];
+        if (!r) return;
+        const pad = i === 0 ? 0 : parseFloat(getComputedStyle(r).paddingBottom) || 0;
+        const el = n as HTMLElement;
+        el.style.top = `${(ty + s * r.offsetTop).toFixed(1)}px`;
+        el.style.height = `${(s * (r.offsetHeight - pad)).toFixed(1)}px`;
+      });
+    }
+    if (cutEl) {
+      cutEl.style.left = `${namesW - 4}px`;
+      cutEl.style.opacity = cut.toFixed(3);
+    }
   });
 
   if (error) return <div className="empty-state"><p className="error">Cannot load the scenes: {error}</p></div>;
@@ -145,7 +172,7 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
       <header className="lanes__head">
         <div>
           <h1>One change, five AI-SDLC models</h1>
-          <p className="lanes__feature">{idx.feature} · Meridian Retail (fictional)</p>
+          <p className="lanes__feature">{(CAPTURE || nf) && nar?.subtitle ? nar.subtitle : `${idx.feature} · Meridian Retail (fictional)`}</p>
         </div>
         <div className="lanes__label">{idx.label}</div>
       </header>
@@ -189,7 +216,7 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
                 {onOpen && <button type="button" className="lanes__open" onClick={() => onOpen(s.url)}>Play scene</button>}
               </div>
               {axis.map((a, i) => (
-                <Cell key={a} lane={s} a={a} i={i} gate={gate} neutral={neutral} f={f} ciCol={ciCol}
+                <Cell key={a} lane={s} a={a} i={i} gate={gate} neutral={neutral} f={f} ciCol={ciCol} fade={nf ? nf.gateFade : 1}
                   op={(nf ? narratedOpacity : cellOpacity)(f, i, { rule: s.rule.axis === a || (gate && a === "ci"), ci: a === "ci" })} />
               ))}
               {/* the change, travelling along the lane */}
@@ -201,6 +228,19 @@ export function ModelLanes({ onOpen }: { onOpen?: (url: string) => void }) {
           );
         })}
       </div>
+      {nf && (
+        <div className="lanes__names" ref={namesRef} aria-hidden="true">
+          <div className="lanes__names-head">Model</div>
+          {scenes.map((s) => <div key={s.id} className={s.id === GATE_ID ? "is-gate" : ""}><strong>{s.short}</strong></div>)}
+        </div>
+      )}
+      {nf && (
+        // a broken axis: stops left of here are out of view
+        <svg className="lanes__cut" ref={cutRef} width="22" height="100%" viewBox="0 0 22 1000" preserveAspectRatio="none" aria-hidden="true">
+          <path d={`M0 0 H22 V1000 H0 Z`} className="lanes__cut-bg" />
+          <path d={Array.from({ length: 51 }, (_, k) => `${k ? "L" : "M"}${k % 2 ? 16 : 6} ${k * 20}`).join(" ")} className="lanes__cut-line" />
+        </svg>
+      )}
       </div>
 
       <footer className="lanes__foot">
@@ -237,10 +277,12 @@ interface CellProps {
   f: LanesFrame;
   ciCol: number;
   op: number;
+  /** narration: how far the gate's red or green has faded in (1 without narration) */
+  fade?: number;
 }
 
 /** One stop of a lane: the model's own stage name, its artifact, who acts (roles), and the tags that matter. */
-function Cell({ lane: s, a, i, gate, neutral, f, ciCol, op }: CellProps) {
+function Cell({ lane: s, a, i, gate, neutral, f, ciCol, op, fade = 1 }: CellProps) {
   const c = s.columns[a];
   const rule = s.rule.axis === a;
   const reached = f.beat !== "intro" && (f.beat !== "columns" || f.now >= i);
@@ -258,8 +300,12 @@ function Cell({ lane: s, a, i, gate, neutral, f, ciCol, op }: CellProps) {
   const empty = !c || (!c.stages.length && !c.who.length);
   const cls = ["lanes__cell", i === f.now ? "is-now" : "", rule ? "is-rule" : "", gateCi !== "idle" ? `is-gate-${gateCi}` : "",
     gate && isCi ? "is-check" : "", out ? `is-out is-${s.outcome.status}` : ""].join(" ");
+  // narration: the red and the green fade in (no CSS transition: the clock sets it)
+  const mix = (a1: string, b1: string) => `color-mix(in srgb, ${a1} ${(fade * 100).toFixed(1)}%, ${b1})`;
+  const fadeStyle: CSSProperties = fade < 1 && gateCi === "fail" ? { background: mix("var(--fail-bg)", "var(--pass-bg)"), borderColor: mix("var(--fail)", "var(--pass)") }
+    : fade < 1 && gateCi === "pass" ? { background: mix("var(--pass-bg)", "var(--fail-bg)"), borderColor: mix("var(--pass)", "var(--fail)") } : {};
   return (
-    <div className={cls} role="cell" style={{ opacity: op }}>
+    <div className={cls} role="cell" style={{ opacity: op, ...fadeStyle }}>
       {c && c.stages.length > 0 && <div className="lanes__stage">{c.stages.join(" · ")}</div>}
       {isCi && !gate ? (
         <>
@@ -269,7 +315,7 @@ function Cell({ lane: s, a, i, gate, neutral, f, ciCol, op }: CellProps) {
         </>
       ) : (
         <>
-          {c && c.artifacts.length > 0 && <div className="lanes__art">{c.artifacts[0].split("/").pop()}</div>}
+          {c && c.artifacts.length > 0 && <div className="lanes__art">{generic(c.artifacts[0].split("/").pop() ?? "")}</div>}
           {gate && isCi && <div className="lanes__art">{(c?.checks ?? []).join(" · ")}</div>}
           {c && c.who.length > 0 && !(gate && isCi) && !(blocks && out) && (
             <div className="lanes__who">{roles(c.who, rule || blocks || out ? 2 : 3)}</div>
@@ -277,7 +323,7 @@ function Cell({ lane: s, a, i, gate, neutral, f, ciCol, op }: CellProps) {
           {empty && <div className="lanes__none">not described</div>}
           {rule && <div className="lanes__tag lanes__tag--rule"><i className="doc" />rule · context</div>}
           {gate && isCi && (
-            <div className={`lanes__tag lanes__tag--check is-${gateCi}`}>
+            <div className={`lanes__tag lanes__tag--check is-${gateCi}`} style={gateCi !== "idle" && fade < 1 ? { opacity: 0.25 + 0.75 * fade } : undefined}>
               {gateCi === "fail" ? "ARCH-4 fails · blocks the merge" : gateCi === "pass" ? "ARCH-4 passes after the repair"
                 : "ARCH-4 · a check in CI"}
             </div>
@@ -285,7 +331,7 @@ function Cell({ lane: s, a, i, gate, neutral, f, ciCol, op }: CellProps) {
           {review && <div className="lanes__tag lanes__tag--quiet">review (advisory)</div>}
           {blocks && <div className="lanes__tag lanes__tag--blocks">blocks the merge</div>}
           {out && <div className={`lanes__tag lanes__tag--${s.outcome.status}`}>{s.outcome.label}</div>}
-          {a === "production" && reached && (gate || (!neutral && s.outcome.status === "caught")) && (
+          {a === "production" && reached && f.pos >= i - 0.01 && (gate || (!neutral && s.outcome.status === "caught")) && (
             <div className="lanes__tag lanes__tag--caught">the other teams keep working</div>
           )}
         </>

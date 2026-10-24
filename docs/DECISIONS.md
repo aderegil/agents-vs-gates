@@ -845,3 +845,23 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
 - Without `?narration=1` the view is as before (same timing and opacities; its tests unchanged). Video: clips.mjs
   reads the length from the page (`data-total`) and writes `out/aisdlc-compare-neutral.cues.json` from the same
   engine and data. The 15 Oct clip is kept as `aisdlc-compare-neutral_56s.mp4`.
+
+### Round 2 of both clips (2026-10-24, coordinator's orders, Alfredo approved)
+- **exp-one-run (174.2 s):** the scene on the left (1200×960) and the run's real log on the right (720×960): the
+  replay's steps in the theater's plain words, real time, the current row always the event on screen; raw tool output
+  left out, repeated edits counted, each CI run as its failure and "N checks pass". Redaction in the clip: the run's
+  workspace path removed, any other drive path cut, and the render stops if a row carries avg, Users, a name,
+  cloud folder, the employer, a token or an e-mail. Sentences are A (the action starts when it ends, then ≥ 2 s with an empty
+  band) or D (its subject on screen ≥ 0.55 s before); max(3 s, words/1.8 + 1 s); band 120 px. Signs over the stage
+  (move with the camera): "✓ own tests pass (39)" from the agent's own message at 18.2 s, "✗ CI failed · ARCH-4"
+  over the tower until sentence 8. Meanwhile across the whole width (log hidden: it reads better); the ticket and
+  the record card on the left with the log. Posters: frame 0 (office, log, title) and the last frame (record card,
+  log finished), 3 s still. Fix after review: each stretch now ends exactly on its replay time (frame rounding had
+  the log ~0.2 s behind at "Green."); not re-rendered yet, waiting for Alfredo's review to batch changes.
+- **aisdlc-compare-neutral (134.6 s):** the same A/D rules in the lanes engine (timeline laid out once: sentences,
+  camera moves of 1.7 s plus 0.3 s still before the sentence, the change's 1.6 s moves, red and green fading in over
+  0.6 s); the model names fixed at 1× on the left with a broken-axis mark that fades in when stops are out of view;
+  sentence 12 moves the change to RELEASE and then PRODUCTION after it ends. Generic words for slide 7 (the
+  scenario comes at slide 13): sentences 1 and 7 new, the subtitle "One small change · a field that other teams
+  read", and "orderplaced-rename.md" shown as "field-rename.md" in capture. The close lights the rule cells and the CI
+  column, wide, 3 s still. Backups: exp-one-run_143s.mp4, aisdlc-compare-neutral_86s.mp4.

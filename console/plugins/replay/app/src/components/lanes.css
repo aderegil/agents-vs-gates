@@ -120,13 +120,28 @@
 .lanes.is-capture .lanes__band { font-size: 15px; }
 .lanes.is-capture .lanes__token span { font-size: 13px; }
 
-/* ?narration=1: the scene in the top 5/6, a black band under it with the sentence; the camera moves the grid inside
+/* ?narration=1: the scene in the top 8/9 (band 120 px at 1080), a black band under it with the sentence; the camera moves the grid inside
    its view (ModelLanes, engine/lanesNarration.ts); the grid is as tall as the view at the column zoom (COLUMN_ZOOM 1.25) */
-.lanes.lanes.is-narration { flex: none; height: 83.333vh; overflow: hidden; }
+.lanes.lanes.is-narration { flex: none; height: 88.889vh; overflow: hidden; }
 .lanes.is-narration .lanes__row { padding-bottom: 12px; }
 .lanes.is-narration .lanes__controls { display: none; }
 .lanes__view { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .lanes.is-narration .lanes__grid { flex: none; height: calc(100% / 1.25); transform-origin: 0 0; }
-.lanes__narration { position: fixed; left: 0; right: 0; bottom: 0; height: 16.667vh; z-index: 10; background: #000;
+.lanes__narration { position: fixed; left: 0; right: 0; bottom: 0; height: 11.111vh; z-index: 10; background: #000;
   display: flex; align-items: center; justify-content: center; }
-.lanes__narration div { max-width: 90%; color: #fff; font-size: 3.9vh; font-weight: 500; line-height: 1.25; text-align: center; }
+.lanes__narration div { max-width: 94%; color: #fff; font-size: 3.704vh; font-weight: 500; line-height: 1.2; text-align: center;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* narration, round 2: the model names fixed at 1× on the left, a broken-axis mark after them (it fades in when stops
+   are out of view on the left); the grid's own model column keeps its place, hidden */
+.lanes.is-narration .lanes__grid .lanes__model { visibility: hidden; }
+.lanes__names { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3; background: var(--fondo); }
+.lanes__names > div { position: absolute; left: 0; right: 0; display: flex; align-items: center; box-sizing: border-box;
+  padding: 0 12px; border-left: 4px solid var(--tinta); background: var(--superficie); border-radius: var(--radio); }
+.lanes__names > div strong { font-size: 26px; }
+.lanes__names > div.is-gate { border-left-color: var(--pass); background: var(--pass-bg); }
+.lanes__names > .lanes__names-head { border: 0; background: none; color: var(--tinta-2); font-weight: 600; font-size: 16px;
+  text-transform: uppercase; letter-spacing: 0.04em; }
+.lanes__cut { position: absolute; top: 0; z-index: 4; height: 100%; pointer-events: none; }
+.lanes__cut-bg { fill: var(--fondo); }
+.lanes__cut-line { fill: none; stroke: #b8bfca; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
