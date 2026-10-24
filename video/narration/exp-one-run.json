@@ -1,6 +1,6 @@
 {
  "clip": "exp-one-run.mp4",
- "source": "coordinator orders 2026-10-24, rounds 1-3 (Alfredo approved); text literal; 5 split in 5a/5b, 3 replaced by 3a-3d (round 3)",
+ "source": "coordinator orders 2026-10-24, rounds 1-3 (Alfredo approved); text literal; 5 split in 5a/5b, 3 replaced by 3a-3d (round 3); 15 and 16 in words, confirmed by the coordinator",
  "rule": "A (anticipates): the action starts when the sentence ends, then >= 2 s with an empty band. D (describes): the action is already on screen, still, >= 0.5 s before the sentence. Each sentence max(3 s, words/1.8 + 1.0 s). The camera arrives before the sentence.",
  "phrases": [
   {
@@ -115,15 +115,13 @@
    "id": "15",
    "type": "D",
    "moment": "green",
-   "text": "CI passes. Every check is good.",
-   "pending": "text waiting for the coordinator OK (round 3)"
+   "text": "CI passes. Every check is good."
   },
   {
    "id": "16",
    "type": "D",
    "moment": "record card",
-   "text": "Before the repair: CI said no, and two teams broke. After: every team passes.",
-   "pending": "text waiting for the coordinator OK (round 3)"
+   "text": "Before the repair: CI said no, and two teams broke. After: every team passes."
   },
   {
    "id": "17",

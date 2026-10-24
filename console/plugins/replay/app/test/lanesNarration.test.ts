@@ -25,8 +25,8 @@ test("narration: every sentence long enough to read, one at a time, generic word
     assert.doesNotMatch(c.text, /totalCents|placedAt|amountCents|createdAt|OrderPlaced|Meridian/);
   }
   assert.equal(phraseMs("Red. Rule ARCH-4 blocks the merge."), 4333.333333333333);
-  assert.equal(NAR.title, "Where does the rule live? What can block the merge?");
-  assert.equal(NAR.subtitle, "Four public AI-SDLC models + the gate · one small change");
+  assert.equal(NAR.title, "AI-SDLC models, side by side");
+  assert.equal(NAR.subtitle, "Four public models + the gate, my proposal · one small change");
 });
 
 test("narration: a column moment marks the column first, moves the change 1.5 s into its sentence, then rests", () => {
