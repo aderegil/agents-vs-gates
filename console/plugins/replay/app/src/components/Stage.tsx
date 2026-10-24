@@ -102,6 +102,12 @@ const TITLE_ROW = 0.55;
 const ZONE_Y0 = 0.1;
 const ZONE_Y1 = 0.98;
 const DIM_ALPHA = 0.32;
+/** Deck clip options (video/one-run.mjs, 2026-10-24): ?subs=0 draws no subtitle (the clip has its own narration band);
+ * ?light=<0..1> scales how much the beat's focus dims the rest (1 = as always) and lifts the unused places with it. */
+const CLIP_QUERY = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+const NO_SUBS = CLIP_QUERY.get("subs") === "0";
+const CLIP_LIGHT = CLIP_QUERY.has("light") ? Math.min(1, Math.max(0, Number(CLIP_QUERY.get("light")) || 0)) : 1;
+const UNUSED_ALPHA = 1 - (1 - DIM_ALPHA) * CLIP_LIGHT;
 /** The consumer teams sit behind their service's counter (floor y offset). */
 const OWNER_BEHIND = 0.045;
 const DIFF_ADD_BG = "#e0e7ff";
@@ -332,6 +338,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   present = bigSubs;
   qaBoxes = [];
   focus = focusAt(replay, clock);
+  if (CLIP_LIGHT < 1) focus = { ...focus, level: focus.level * CLIP_LIGHT };
   crowdScale = replay.actors.filter((a) => a.actor_type !== "system").length > 12 ? 0.82 : 1;
   ctx.clearRect(0, 0, STAGE_W, STAGE_H);
   ctx.fillStyle = c.wall;
@@ -344,7 +351,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
   const drawables: Drawable[] = [];
   const layout: Layout = { obstacles: [], figures: [], bubbles: [], labels: [], late: [], reserved: [] };
   // the subtitle's box is known before anything is placed: labels, callouts and bubbles stay out of it
-  const sub = narrationAt(state, clock, engine.end);
+  const sub = NO_SUBS ? null : narrationAt(state, clock, engine.end);
   if (sub) layout.reserved.push(subtitleBox(ctx, sub, bigSubs).rect);
   if (zones.length) {
     layout.obstacles.push(...zoneTitleRects(ctx, zones));
@@ -433,7 +440,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, engine: ReplayEngine, c: Sta
 
   if (overlay) drawOverlay(ctx, overlay, c);
   const narration = narrationAt(state, clock, engine.end);
-  if (narration) drawSubtitle(ctx, narration, c, bigSubs);
+  if (narration && !NO_SUBS) drawSubtitle(ctx, narration, c, bigSubs);
   drawWatermark(ctx, replay.meta, c);
   drawLegend(ctx, c);
   const cite = recastCitation(replay);
@@ -1558,7 +1565,7 @@ function drawPlace(ctx: CanvasRenderingContext2D, place: ReplayPlace, engine: Re
   let note = place.note && place.kind === "stage" ? place.note : null;
   const dim = isDimmed(replay, place.id);
   ctx.save();
-  ctx.globalAlpha = (dim ? DIM_ALPHA : 1) * fa(`place:${place.id}`, 0.4);
+  ctx.globalAlpha = (dim ? UNUSED_ALPHA : 1) * fa(`place:${place.id}`, 0.4);
 
   if (place.id === "users") {
     top = drawUsers(ctx, px, py, scale, c);

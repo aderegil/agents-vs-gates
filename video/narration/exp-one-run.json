@@ -1,0 +1,92 @@
+{
+ "clip": "exp-one-run.mp4",
+ "source": "coordinator order 2026-10-24 (Alfredo approved); text literal, do not edit",
+ "rule": "each sentence shows at least max(2.5 s, words/2 + 0.8 s); one at a time, 0.4 s of empty band between two; the run moves on only after the sentence is done",
+ "phrases": [
+  {
+   "n": 1,
+   "moment": "ticket card, before anything moves",
+   "text": "One real run of my experiment. The ticket: rename two fields in the order event."
+  },
+  {
+   "n": 2,
+   "moment": "ticket card",
+   "text": "Two other teams read these fields. The agent cannot see those teams."
+  },
+  {
+   "n": 3,
+   "moment": "the office comes in",
+   "text": "The code agent works on the orders team. The other teams are behind the glass."
+  },
+  {
+   "n": 4,
+   "moment": "before the agent works (x4)",
+   "text": "Now the agent reads the code and changes the two names."
+  },
+  {
+   "n": 5,
+   "moment": "before the PR opens",
+   "text": "The tests in its own repo are green. It opens a pull request."
+  },
+  {
+   "n": 6,
+   "moment": "before CI runs",
+   "text": "CI is the only reviewer. It runs ten checks."
+  },
+  {
+   "n": 7,
+   "moment": "on the red, still",
+   "text": "Red. Rule ARCH-4: another team needs the old field."
+  },
+  {
+   "n": 8,
+   "moment": "before Meanwhile: the camera goes behind the glass",
+   "text": "Now look behind the glass, at the tests of the other teams."
+  },
+  {
+   "n": 9,
+   "moment": "Meanwhile card",
+   "text": "Billing fails. Analytics fails. Billing cannot send the invoice."
+  },
+  {
+   "n": 10,
+   "moment": "Meanwhile card",
+   "text": "The agent never sees these tests."
+  },
+  {
+   "n": 11,
+   "moment": "before the red build reaches the agent",
+   "text": "What goes back to the agent is only the red build."
+  },
+  {
+   "n": 12,
+   "moment": "before the repair",
+   "text": "The agent reads the message from CI, and fixes the code."
+  },
+  {
+   "n": 13,
+   "moment": "the repair diff on screen",
+   "text": "It keeps the old names as aliases, next to the new ones."
+  },
+  {
+   "n": 14,
+   "moment": "before CI attempt 2",
+   "text": "It sends the fix. CI runs again."
+  },
+  {
+   "n": 15,
+   "moment": "green",
+   "text": "Green. Every check passes."
+  },
+  {
+   "n": 16,
+   "moment": "record card",
+   "text": "Before the repair: CI said no, and two teams broke. After: every team is green."
+  },
+  {
+   "n": 17,
+   "moment": "record card, to the end",
+   "text": "The agent did not need a meeting. It needed a red build."
+  }
+ ]
+}

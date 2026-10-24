@@ -37,7 +37,7 @@ export function mounts() {
 }
 
 /** Edge through a browser server, so the exact PID we started is known and can be stopped if close() hangs. */
-export async function launch() {
+export async function launch({ scale = 1 } = {}) {
   const { chromium } = require("playwright-core");
   const server = await chromium.launchServer({ executablePath: EDGE, headless: true, args: ["--disable-gpu-vsync", "--hide-scrollbars"] });
   const browser = await chromium.connect(server.wsEndpoint());
@@ -46,7 +46,7 @@ export async function launch() {
     await Promise.race([browser.close().then(() => server.close()), sleep(20000)]).catch(() => undefined);
     if (pid && isAlive(pid)) { try { execFileSync("taskkill", ["/PID", String(pid), "/T", "/F"], { stdio: "ignore" }); } catch { /* gone */ } }
   };
-  const context = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, colorScheme: "light",
+  const context = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: scale, colorScheme: "light",
     reducedMotion: "no-preference", locale: "en-US" });
   const table = mounts();
   await context.route(`${ORIGIN}/**`, async (route) => {
@@ -86,7 +86,8 @@ export function encoder(outFile, fps) {
 }
 
 export async function shot(page) {
-  return page.screenshot({ type: "jpeg", quality: 90, animations: "allow", caret: "hide" });
+  // scale "css": a page drawn at deviceScaleFactor 2 (the zoomed theater, one-run.mjs) is still filmed at 1920×1080
+  return page.screenshot({ type: "jpeg", quality: 90, animations: "allow", caret: "hide", scale: "css" });
 }
 
 export function ffprobeDuration(file) {

@@ -812,3 +812,21 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
 - "the employer the talk" in the Spanish build spec and "the deck's purple" in a comment and here are replaced in the GitHub copy. The one mention left is the first paragraph of `PREREGISTRATION.md`, frozen by the original lock: changing it would make `prereg --verify` fail. Kept unless Alfredo decides otherwise.
 - `scan_history.py` now also fails on any "the employer" but that line, on endpoint tooling names and on the restricted folder's name (allowed once: the teams test that asserts no citation points into it). Final scan of the copy: OK; the four locks verify.
 - Docs: one line per paragraph and list item in 24 Markdown files (`release-tools/unwrap_md.py`; CommonMark token stream checked equal with soft breaks as spaces). Not touched: the frozen PREREGISTRATION files, the agents' inputs (scenario, prompts, texts), generated results and `docs/REVIEW-CHECKLIST.md` (Readiness ids hash each item's text).
+
+### exp-one-run, third version: zoom, a narration band, the run waits for the sentence (2026-10-24)
+- Coordinator's order (Alfredo approved zoom + contrast, the 1:42 beat and the band). `video/one-run.mjs`; clips.mjs
+  calls it for `exp-one-run` (segment kind `one-run`). The 19 Oct clip is kept as `video/out/exp-one-run_119s.mp4`.
+- **Band as an overlay in the clip, not in the app.** The narration is data (`video/narration/exp-one-run.json`,
+  literal text) and drives the clock: a sentence stays max(2.5 s, words / 2 + 0.8 s), one at a time, 0.4 s apart, and
+  the replay clock stands still until it is done; the next action plays only then. The camera moves to the
+  sentence's place when it starts. The band (180 px, black, 42 px white) is drawn by the capture; the cue list is
+  written from the frames really filmed (`video/out/exp-one-run.cues.json`). A `?narration=1` mode inside the
+  Theater would need its director to wait on text; not worth it two days before the talk.
+- Theater: two URL options only the clip uses, `?subs=0` (no subtitle) and `?light=<0..1>` (the beat's focus dims
+  the rest less; unused places lifted the same way). Default behaviour unchanged; theater tests 69/69; dist rebuilt.
+- Camera: CSS zoom of the stage canvas, drawn at deviceScaleFactor 2 (`launch({ scale: 2 })`, screenshots
+  `scale: "css"`), so close-ups stay sharp. Five shots: wide, agent, CI, agent→CI, the teams behind the glass.
+- 1:42 beat: replaced. After CI green the clip cuts to the replay's own final oracle (46.5 s: every team's tests
+  pass on the final PR) instead of the first-PR line "2 of 3 break". Cards: `?nocap=1`, the ticket note timed with
+  its sentence (`?note=`); Meanwhile and the record card as they were. Stretches with no sentence are faster and
+  marked (×2, ×6, ×4).

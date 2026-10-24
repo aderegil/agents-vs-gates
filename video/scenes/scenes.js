@@ -41,6 +41,8 @@ function show(node, t, tin, tout, { fade = 450, rise = 16 } = {}) {
 
 /** Subtitles: [[fromS, toS, text], ...] in one caption box. */
 function captions(list) {
+  // ?nocap=1: no caption box (exp-one-run carries its narration in a band under the frame, video/one-run.mjs)
+  if (q.get("nocap") === "1") return () => undefined;
   const box = el("div", { class: "caption" });
   stage.append(box);
   let last = null;
@@ -508,7 +510,7 @@ async function oneIntro() {
     el("span", {}, "Two other teams read these fields. The agent cannot see them."));
   stage.append(card, note);
   const cap = captions([[0.5, 10, "One real run of the experiment, from the ticket to a green CI."]]);
-  return { duration: D, render(t) { show(card, t, 0, D + 1000); show(note, t, sec(2.5), D + 1000); cap(t); } };
+  return { duration: D, render(t) { show(card, t, 0, D + 1000); show(note, t, q.has("note") ? Number(q.get("note")) : sec(2.5), Infinity); cap(t); } };
 }
 
 async function oneOracle() {

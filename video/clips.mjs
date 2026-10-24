@@ -15,6 +15,7 @@ import path from "node:path";
 import { FFMPEG, ORIGIN, OUT, REPO, VIDEO, WORK, encoder, ffprobeDuration, freeGB, launch, shot } from "./lib.mjs";
 import { captureTour } from "./console-tour.mjs";
 import { captureFullTour } from "./console-tour-full.mjs";
+import { captureOneRun } from "./one-run.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(n);
@@ -32,10 +33,6 @@ function freeRamGB() {
 const facts = () => JSON.parse(fs.readFileSync(path.join(WORK, "clip-facts.json"), "utf8"));
 const replayMs = (rel) => JSON.parse(fs.readFileSync(path.join(WORK, rel), "utf8")).meta.duration_ms;
 
-const CH1 = "1 · The change";
-const CH2 = "2 · The red build";
-const CH3 = "3 · The repair";
-const ONE_BUBBLES = "bubbles=task_assigned,context_loaded,pr_opened";
 const SCENE_BG = "#f6f7f9";          // scenes/style.css --fondo
 const THEATER_BG = "rgb(234,237,244)"; // the theater's floor colour behind its title bar
 
@@ -87,23 +84,12 @@ function clips() {
   return [
     {
       file: "exp-one-run.mp4",
-      // three chapters fixed at the top left; the agent at work at ×3, marked; speech bubbles only for the ticket, the
-      // context file and the PR (Alfredo's review, 2026-10-19). The clean map at 16.0 s is the deck's poster frame: the
-      // first 3.2 s of the run stay at 0.5× with the run's title and the "CLAUDE.md · loaded as context" bubble as
-      // before; chapter 1's label covers the title from there on. Around "Meanwhile" (second review, same day) the
-      // pace is calm: CI's red result holds 2.5 s before the card, the theater holds 1 s when it comes back, the red
-      // build reaching the agent plays at 0.5× and holds 2 s (the CI output envelope lands at 23.9 s of the run).
-      segments: [scene("oneIntro", CH1),
-        { ...theater(`replays/${one}.json`, 0, 22800, 0.5, null, 2500), chipBase: "Real run", query: ONE_BUBBLES,
-          parts: [{ to: 3200, rate: 1, chapter: null }, { to: 17500, rate: 3, chapter: CH1 }, { to: 19300, rate: 1 },
-            { to: 22800, rate: 1, chapter: CH2 }] },
-        scene("oneOracle", CH2),
-        { ...theater(`replays/${one}.json`, 22600, 42800, 0.5, null, 3000), chipBase: "Real run", query: ONE_BUBBLES,
-          holdBefore: 1000,
-          parts: [{ to: 23900, rate: 1, chapter: CH2, holdAfter: 2000 }, { to: 30600, rate: 1 },
-            { to: 42800, rate: 1, chapter: CH3 }] },
-        scene("oneOutro", CH3)],
-      shows: `One real run (${one}, poll-PR rule): ticket → rename → its own tests pass → PR → CI red (ARCH-4: billing needs totalCents, analytics needs placedAt) → the billing team's own tests fail on that first PR → the red build goes back to the agent → it keeps the old names as @deprecated aliases → CI green.`,
+      // third version (coordinator's order, 2026-10-24, Alfredo approved): the scene in the top 900 px, zoomed to the
+      // active area of each beat, and a black band under it with the sentences Alfredo reads live, each before its
+      // action (one-run.mjs; the band's timing in out/exp-one-run.cues.json). The 19 Oct version is exp-one-run_119s.mp4.
+      segments: [{ kind: "one-run" }],
+      format: "MP4 H.264 1920×1080 30 fps, no audio, narration text in a bottom band",
+      shows: `One real run (${one}, poll-PR rule): ticket → rename → its own tests pass → PR → CI red (ARCH-4: billing needs totalCents, analytics needs placedAt) → the billing and analytics teams' own tests fail on that first PR → the red build goes back to the agent → it keeps the old names as @deprecated aliases → CI green → every team's tests pass on the final PR.`,
       source: `results/real/runs/${one} (events.jsonl → replay, record.json, diffs/fix1.diff); scenario/ contracts`,
       label: "Real run",
     },
@@ -273,12 +259,14 @@ async function captureLanes(context, enc, query = "") {
 
 async function renderSegment(seg, file) {
   for (let attempt = 1; ; attempt++) {
-    const { browser, context } = await launch();
+    // the zoomed one-run clip draws at 2× so its close-ups stay sharp
+    const { browser, context } = await launch({ scale: seg.kind === "one-run" ? 2 : 1 });
     const enc = encoder(file, FPS);
     try {
       const ms = seg.kind === "scene" ? await captureScene(context, seg, enc)
         : seg.kind === "lanes" ? await captureLanes(context, enc, seg.query)
         : seg.kind === "console" ? await captureTour(context, enc, { fps: FPS, port: Number(opt("--port", 8793)) })
+        : seg.kind === "one-run" ? await captureOneRun(context, enc, { fps: FPS, oneRunId: facts().one.run_id })
         : seg.kind === "console-full" ? await captureFullTour(context, enc, { fps: FPS, port: Number(opt("--port", 8793)) })
         : await captureTheater(context, seg, enc);
       await enc.close();
@@ -331,7 +319,7 @@ async function main() {
     const dur = ffprobeDuration(out);
     console.log(`${clip.file}: ${dur?.toFixed(1)} s · ${(fs.statSync(out).size / 1024 ** 2).toFixed(1)} MB · ${((Date.now() - t0) / 1000).toFixed(0)} s wall`);
     byFile.set(clip.file, { file: clip.file, duration_s: dur ? Math.round(dur * 10) / 10 : null, shows: clip.shows,
-      source: clip.source, label: clip.label, format: "MP4 H.264 1920×1080 30 fps, no audio, English subtitles in frame",
+      source: clip.source, label: clip.label, format: clip.format || "MP4 H.264 1920×1080 30 fps, no audio, English subtitles in frame",
       rendered_at: new Date().toISOString() });
     const order = list.map((c) => c.file);
     const clipsOut = [...byFile.values()].sort((a, b) => order.indexOf(a.file) - order.indexOf(b.file));
