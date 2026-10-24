@@ -1,90 +1,113 @@
 {
  "clip": "exp-one-run.mp4",
- "source": "coordinator order 2026-10-24 (Alfredo approved); text literal, do not edit",
- "rule": "each sentence shows at least max(2.5 s, words/2 + 0.8 s); one at a time, 0.4 s of empty band between two; the run moves on only after the sentence is done",
+ "source": "coordinator orders 2026-10-24, rounds 1 and 2 (Alfredo approved); text literal; sentence 5 split in 5a/5b as ordered",
+ "rule": "A (anticipates): the action starts when the sentence ends, then >= 2 s with an empty band. D (describes): the action is already on screen, still, >= 0.5 s before the sentence. Each sentence max(3 s, words/1.8 + 1.0 s). The camera arrives before the sentence.",
  "phrases": [
   {
-   "n": 1,
+   "id": "1",
+   "type": "D",
    "moment": "ticket card, before anything moves",
    "text": "One real run of my experiment. The ticket: rename two fields in the order event."
   },
   {
-   "n": 2,
+   "id": "2",
+   "type": "D",
    "moment": "ticket card",
    "text": "Two other teams read these fields. The agent cannot see those teams."
   },
   {
-   "n": 3,
+   "id": "3",
+   "type": "D",
    "moment": "the office comes in",
    "text": "The code agent works on the orders team. The other teams are behind the glass."
   },
   {
-   "n": 4,
+   "id": "4",
+   "type": "A",
    "moment": "before the agent works (x4)",
    "text": "Now the agent reads the code and changes the two names."
   },
   {
-   "n": 5,
-   "moment": "before the PR opens",
-   "text": "The tests in its own repo are green. It opens a pull request."
+   "id": "5a",
+   "type": "D",
+   "moment": "the agent own tests pass sign on screen",
+   "text": "The tests in its own repo are green."
   },
   {
-   "n": 6,
+   "id": "5b",
+   "type": "A",
+   "moment": "before the PR opens",
+   "text": "It opens a pull request."
+  },
+  {
+   "id": "6",
+   "type": "A",
    "moment": "before CI runs",
    "text": "CI is the only reviewer. It runs ten checks."
   },
   {
-   "n": 7,
+   "id": "7",
+   "type": "D",
    "moment": "on the red, still",
    "text": "Red. Rule ARCH-4: another team needs the old field."
   },
   {
-   "n": 8,
+   "id": "8",
+   "type": "A",
    "moment": "before Meanwhile: the camera goes behind the glass",
    "text": "Now look behind the glass, at the tests of the other teams."
   },
   {
-   "n": 9,
+   "id": "9",
+   "type": "D",
    "moment": "Meanwhile card",
    "text": "Billing fails. Analytics fails. Billing cannot send the invoice."
   },
   {
-   "n": 10,
+   "id": "10",
+   "type": "D",
    "moment": "Meanwhile card",
    "text": "The agent never sees these tests."
   },
   {
-   "n": 11,
+   "id": "11",
+   "type": "A",
    "moment": "before the red build reaches the agent",
    "text": "What goes back to the agent is only the red build."
   },
   {
-   "n": 12,
+   "id": "12",
+   "type": "A",
    "moment": "before the repair",
    "text": "The agent reads the message from CI, and fixes the code."
   },
   {
-   "n": 13,
+   "id": "13",
+   "type": "D",
    "moment": "the repair diff on screen",
    "text": "It keeps the old names as aliases, next to the new ones."
   },
   {
-   "n": 14,
+   "id": "14",
+   "type": "A",
    "moment": "before CI attempt 2",
    "text": "It sends the fix. CI runs again."
   },
   {
-   "n": 15,
+   "id": "15",
+   "type": "D",
    "moment": "green",
    "text": "Green. Every check passes."
   },
   {
-   "n": 16,
+   "id": "16",
+   "type": "D",
    "moment": "record card",
    "text": "Before the repair: CI said no, and two teams broke. After: every team is green."
   },
   {
-   "n": 17,
+   "id": "17",
+   "type": "D",
    "moment": "record card, to the end",
    "text": "The agent did not need a meeting. It needed a red build."
   }

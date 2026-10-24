@@ -90,7 +90,7 @@ function clips() {
       // action (one-run.mjs; the band's timing in out/exp-one-run.cues.json). The 19 Oct version is exp-one-run_119s.mp4.
       segments: [{ kind: "one-run" }],
       format: "MP4 H.264 1920×1080 30 fps, no audio, narration text in a bottom band",
-      shows: `One real run (${one}, poll-PR rule): ticket → rename → its own tests pass → PR → CI red (ARCH-4: billing needs totalCents, analytics needs placedAt) → the billing and analytics teams' own tests fail on that first PR → the red build goes back to the agent → it keeps the old names as @deprecated aliases → CI green → every team's tests pass on the final PR.`,
+      shows: `One real run (${one}, poll-PR rule), the scene on the left and the run's real log on the right: ticket → rename → its own tests pass → PR → CI red (ARCH-4: billing needs totalCents, analytics needs placedAt) → the billing and analytics teams' own tests fail on that first PR → the red build goes back to the agent → it keeps the old names as @deprecated aliases → CI green → every team's tests pass on the final PR.`,
       source: `results/real/runs/${one} (events.jsonl → replay, record.json, diffs/fix1.diff); scenario/ contracts`,
       label: "Real run",
     },
@@ -296,10 +296,13 @@ async function writeLanesCues(clip) {
   const app = path.join(REPO, "console", "plugins", "replay", "app");
   const { timeline } = await import(pathToFileURL(path.join(app, "src", "engine", "lanesNarration.ts")).href);
   const nar = JSON.parse(fs.readFileSync(path.join(app, "public", "narration", `${clip.cues}.json`), "utf8"));
-  const tl = timeline(nar);
+  const axis = JSON.parse(fs.readFileSync(path.join(app, "public", "scenes", "index.json"), "utf8")).axis;
+  const tl = timeline(nar, axis);
+  const s2 = (ms) => +(ms / 1000).toFixed(2);
   fs.writeFileSync(path.join(OUT, clip.file.replace(/\.mp4$/, ".cues.json")), JSON.stringify({
-    clip: clip.file, poster_s: 0.3, duration_ms: tl.total,
-    cues: tl.cues.map((c) => ({ n: c.n, start_s: c.start / 1000, end_s: c.end / 1000, focus: c.moment.focus,
+    clip: clip.file, poster_first_s: 0, poster_last_s: s2(tl.total), duration_ms: Math.round(tl.total), rule: nar.rule,
+    cues: tl.cues.map((c) => ({ n: c.n, type: c.type, start_s: s2(c.start), end_s: s2(c.end), action_s: s2(c.action),
+      margin_s: c.type === "A" ? s2(c.action - c.end) : s2(c.start - c.action), focus: c.moment.focus,
       col: c.moment.col ?? null, text: c.text })),
   }, null, 1) + "\n");
 }
