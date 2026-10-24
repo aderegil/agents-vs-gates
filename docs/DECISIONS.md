@@ -880,3 +880,14 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
   runs and is complete at its result) and `?envdelay=1200` (CI's output envelope is drawn leaving 1.2 s later, so
   the tower's ten lights read on "Red."). Neither moves a recorded event.
 - Lanes: the red and the green are held 1 s more before their sentences (`dwellMs`); sentence 14 final.
+
+### Round 5 (2026-10-24)
+- Theater diff cards in the usual diff colours, in the app (`engine/diffColors.ts`, tested for WCAG AA): added lines
+  #E6FFEC with #116329 ink, removed lines #FFEBE9 with #82071E ink, struck. The console's Run Explorer diff keeps
+  its own styles.
+- "Pass" in green only in the video (`?pass=green`, #1FB45A / ink #116329): the tower's lights, the signs, the
+  theater's badges, the log's pass rows and the record card's AFTER part. The app, the console and the deck keep
+  cyan for "pass". Lanes narration: the gate's "passes" tag and repaired change in the same green; the CI cell's
+  frame and the legend stay cyan (there cyan means "a deterministic check").
+- exp-one-run: closing sentence 18 on the record card, before the 3 s still poster. Lanes: the red and the green
+  sentences 0.3 s into their fade, 1.5 s still after them; the summary sentences ~0.5 s after their cells light.

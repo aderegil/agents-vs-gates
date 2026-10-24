@@ -5,7 +5,8 @@
 // canvas so recorded clips carry them too. One light palette (no dark variant, also in presentation mode).
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import {
-  ACCENT, FAIL, LIGHT, PASS, PORTRAIT_H, PORTRAIT_W, drawBadge, drawSystemObject, portraitGrid,
+  ACCENT, FAIL, LIGHT, PASS, PASS_GREEN, PASS_GREEN_INK, PORTRAIT_H, PORTRAIT_W, drawBadge, drawSystemObject, portraitGrid,
+  setPassColor,
   type AvatarSpec, type LightState, type Palette,
 } from "../engine/avatarStyles";
 import { lastCiResult, poseFor, type CiReaction } from "../engine/motion";
@@ -24,6 +25,7 @@ import { unitText } from "./UnitTag";
 import { runHeadline, runSource } from "./labels";
 import type { QaBox, QaKind } from "../engine/overlap";
 import { dimAmount, focusAt, type FocusFrame } from "../engine/focus";
+import { DIFF } from "../engine/diffColors";
 import { OLDER_BUBBLE_ALPHA, bubbleAlpha, figureGridScale, shownBubbles } from "../engine/stagePolicy";
 
 export const STAGE_W = 1280;
@@ -143,12 +145,15 @@ const CLIP_LIGHT = CLIP_QUERY.has("light") ? Math.min(1, Math.max(0, Number(CLIP
 const UNUSED_ALPHA = 1 - (1 - DIM_ALPHA) * CLIP_LIGHT;
 /** The consumer teams sit behind their service's counter (floor y offset). */
 const OWNER_BEHIND = 0.045;
-const DIFF_ADD_BG = "#e0e7ff";
 /** Where the rule lives as context (read before generation; probabilistic): the deck's purple, dashed. */
 const RULE = "#7500c0";
-/** Text on a cyan (pass / deterministic) surface. */
-const PASS_INK = "#0e7490";
-const DIFF_DEL_BG = "#eef0f3";
+/** Text on a cyan (pass / deterministic) surface (green ink with the clip's ?pass=green). */
+let PASS_INK = "#0e7490";
+/** ?pass=green (the clip, round 5): "pass" drawn in a green that reads as green, not the deck's cyan; fail unchanged. */
+if (CLIP_QUERY.get("pass") === "green") {
+  setPassColor(PASS_GREEN);
+  PASS_INK = PASS_GREEN_INK;
+}
 
 export interface StageHandle {
   draw: () => void;
@@ -1122,9 +1127,11 @@ function drawDiffCard(ctx: CanvasRenderingContext2D, engine: ReplayEngine, card:
   ctx.font = `400 12px ${MONO}`;
   card.lines.forEach((l, i) => {
     const ly = y + 30 + i * lh;
-    ctx.fillStyle = l.op === "+" ? DIFF_ADD_BG : DIFF_DEL_BG;
+    // the usual diff colours (engine/diffColors.ts): light green / dark green ink, light red / dark red ink, struck
+    const tone = l.op === "+" ? DIFF.add : DIFF.del;
+    ctx.fillStyle = tone.bg;
     ctx.fillRect(x + 1, ly, w - 2, lh - 1);
-    ctx.fillStyle = l.op === "+" ? c.ink : c.ink2;
+    ctx.fillStyle = tone.ink;
     let text = `${l.op} ${l.text}`;
     while (text.length > 4 && ctx.measureText(text).width > w - 20) text = `${text.slice(0, -2)}…`;
     ctx.fillText(text, x + 10, ly + lh / 2);

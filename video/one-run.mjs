@@ -148,11 +148,11 @@ const CHROME_CSS = `
 #clip-log li .t{font-variant-numeric:tabular-nums;color:#5b6474;}
 #clip-log li .x{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
 #clip-log li .w{font-weight:600;margin-right:8px;}
-#clip-log li.fail .x{color:#be123c;} #clip-log li.pass .x{color:#0e7490;}
+#clip-log li.fail .x{color:#be123c;} #clip-log li.pass .x{color:#116329;}
 #clip-log li.now{opacity:1;background:#111827;color:#fff;}
 #clip-log li.now .t{color:#cbd5e1;} #clip-log li.now .x{white-space:normal;display:-webkit-box;-webkit-line-clamp:3;
   -webkit-box-orient:vertical;}
-#clip-log li.now.fail .x{color:#fda4af;} #clip-log li.now.pass .x{color:#67e8f9;}
+#clip-log li.now.fail .x{color:#fda4af;} #clip-log li.now.pass .x{color:#86efac;}
 #clip-log li.future{display:none;}
 #clip-title{position:fixed;left:0;top:0;z-index:99999;box-sizing:border-box;padding:14px 26px;max-width:${SCENE_W}px;
   font:600 30px/1.2 'IBM Plex Sans',system-ui,sans-serif;color:#111827;}
@@ -161,7 +161,7 @@ const CHROME_CSS = `
 #clip-signs{position:fixed;transform-origin:0 0;z-index:99980;pointer-events:none;}
 #clip-signs div{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;padding:2px 8px;border-radius:3px;
   font:600 13px/1.35 'IBM Plex Sans',system-ui,sans-serif;}
-#clip-signs .pass{color:#0e7490;background:#fff;border:2px solid #22c3e6;}
+#clip-signs .pass{color:#116329;background:#fff;border:2px solid #1fb45a;}
 #clip-signs .fail{color:#fff;background:#e11d5f;}
 #clip-signs .big{font-size:16px;padding:3px 10px;}`;
 
@@ -328,6 +328,8 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
     const err = await page.evaluate(() => window.SCENE_ERROR || null);
     if (err) throw new Error(`${id}: ${err}`);
     await installChrome(page, rows, { log });
+    // round 5: "pass" in the clip's green (as the theater's ?pass=green); fail stays pink
+    await page.addStyleTag({ content: ":root{--pass:#1fb45a;--pass-tinta:#116329;--pass-suave:#e6ffec;}" });
     // the card's content (all of it shown), its box, then scaled to fill the area under the chapter label
     const area = { w: log ? SCENE_W : W, h: SCENE_H };
     await page.evaluate(([area]) => {
@@ -355,7 +357,7 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
     kind = "theater"; logOn = true;
     await page.clock.install({ time: new Date("2026-10-13T12:00:00Z") });
     await page.clock.pauseAt(new Date("2026-10-13T12:00:01Z"));
-    await page.goto(`${ORIGIN}/theater/index.html?replay=/replays/${oneRunId}.json&present=1&subs=0&header=0&stagger=1&envdelay=1200&bubbles=none&light=0.45&t=${from}`);
+    await page.goto(`${ORIGIN}/theater/index.html?replay=/replays/${oneRunId}.json&present=1&subs=0&header=0&stagger=1&envdelay=1200&pass=green&bubbles=none&light=0.45&t=${from}`);
     await page.waitForSelector("canvas", { timeout: 60000 });
     // the player in the left 1200×960 (its 16:9 stage centred there), the log on the right, the band under both
     await page.addStyleTag({ content: `html,body,#root{width:${SCENE_W}px!important;height:${SCENE_H}px!important;overflow:visible!important}
@@ -469,6 +471,7 @@ export async function captureOneRun(context, enc, { fps, oneRunId }) {
   shown(3500 + 450);                             // the card's last line at 3.5 s
   await say("16");
   await say("17");
+  await say("18");                               // the closing line (round 5); then the still poster, empty band
   await holdUntil(lastEnd + 3000);
   await page.close();
 

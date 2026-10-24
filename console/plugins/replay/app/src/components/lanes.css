@@ -149,3 +149,9 @@
   background: linear-gradient(to right, var(--fondo), rgba(246, 247, 249, 0)); }
 /* a sentence may carry its own line break (round 3: no single word alone on the second line) */
 .lanes__narration div { white-space: pre-line; }
+/* narration (the video, round 5): "passes" in the same green as exp-one-run's ?pass=green: the gate's repaired change
+   and its "ARCH-4 passes after the repair" tag. The cyan frame of the CI cell and the legend's cyan box stay cyan:
+   there cyan means "a deterministic check", not "passes". Fail stays pink. */
+.lanes.is-narration .lanes__tag--check.is-pass { background: #1a7f37; }
+.lanes.is-narration .lanes__token.is-repaired span { background: #1a7f37; }
+.lanes.is-narration .lanes__token.is-repaired i { background: #1fb45a; }

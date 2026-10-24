@@ -23,7 +23,14 @@ export interface AvatarSpec {
 }
 
 export const ACCENT = "#2563eb";
-export const PASS = "#00BCD4";
+export let PASS = "#00BCD4";
+/** The video clip's green "pass" (?pass=green, Stage.tsx); the console and the deck keep cyan. */
+export const PASS_GREEN = "#1fb45a";
+export const PASS_GREEN_INK = "#116329";
+/** Only the clip calls it, once, before anything is drawn. */
+export function setPassColor(c: string): void {
+  PASS = c;
+}
 export const FAIL = "#E91E63";
 
 /** Paints the PORTRAIT_W × PORTRAIT_H grid of a human or agent into a 2D context at (0, 0). */
