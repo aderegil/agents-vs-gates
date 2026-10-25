@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -98,11 +99,83 @@ def verify(repo: Path | None = None) -> tuple[bool, list[str]]:
     for rel, sha in sorted(want.items()):
         if have.get(rel) is None:
             problems.append(f"missing: {rel}")
-        elif have[rel] != sha:
+        elif have[rel] != sha and not erratum_for(repo, rel, sha):
             problems.append(f"changed: {rel}")
     for rel in sorted(set(have) - set(want)):
         problems.append(f"new (not frozen): {rel}")
     return not problems, problems
+
+
+# ---------------------------------------------------------------- errata -----------------------------------------
+# A published correction to a frozen file, never a re-freeze (2026-10-25, Alfredo's OK in the builder's terminal: the
+# event affiliation removed from one line of PREREGISTRATION.md). PREREGISTRATION-ERRATUM-<n>.md carries a JSON record:
+# the file, the line, its new text, the original sha256 (must equal the lock), the new sha256 and the sha256 of every
+# original line. A changed frozen file verifies only if the lock holds the original sha256, the file has the new
+# sha256, it has as many lines as the original, every other line hashes to the original, and that line is exactly the
+# documented text. The original lock is not edited.
+
+ERRATUM_GLOB = "PREREGISTRATION-ERRATUM-*.md"
+
+
+def errata(repo: Path) -> list[dict]:
+    out = []
+    for f in sorted(Path(repo).glob(ERRATUM_GLOB)):
+        m = re.search(r"```json\n(.*?)\n```", f.read_text(encoding="utf-8"), re.S)
+        if not m:
+            continue
+        try:
+            d = json.loads(m.group(1))
+        except ValueError:
+            continue
+        out.append(dict(d, _doc=f.name))
+    return out
+
+
+def check_erratum(repo: Path, e: dict, lock_sha: str) -> list[str]:
+    """Why erratum e does not account for its file's change ([] = it does)."""
+    rel = e.get("file", "")
+    p = Path(repo) / rel
+    if e.get("original_sha256") != lock_sha:
+        return [f"{e['_doc']}: original sha256 is not the one in {LOCK_NAME}"]
+    if not p.is_file():
+        return [f"{e['_doc']}: {rel} missing"]
+    raw = p.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != e.get("new_sha256"):
+        return [f"{e['_doc']}: {rel} is not the corrected file it documents"]
+    lines, want = raw.splitlines(keepends=True), e.get("original_line_sha256") or []
+    if len(lines) != len(want):
+        return [f"{e['_doc']}: {rel} has {len(lines)} lines, the original had {len(want)}"]
+    n = int(e.get("line", 0))
+    bad = [i + 1 for i, (ln, h) in enumerate(zip(lines, want)) if i + 1 != n and hashlib.sha256(ln).hexdigest() != h]
+    if bad:
+        return [f"{e['_doc']}: {rel} lines {bad[:5]} differ from the original, beyond the documented line {n}"]
+    if not 1 <= n <= len(lines) or lines[n - 1].rstrip(b"\r\n").decode("utf-8", "replace") != e.get("after"):
+        return [f"{e['_doc']}: {rel} line {n} is not the documented text"]
+    return []
+
+
+def erratum_for(repo: Path, rel: str, lock_sha: str) -> dict | None:
+    for e in errata(repo):
+        if e.get("file") == rel and not check_erratum(repo, e, lock_sha):
+            return e
+    return None
+
+
+def verify_notes(repo: Path | None = None) -> list[str]:
+    """The errata the verification relied on, for the printed result."""
+    repo = Path(repo or paths.REPO)
+    try:
+        want = json.loads((repo / LOCK_NAME).read_text(encoding="utf-8")).get("files", {})
+    except (OSError, ValueError):
+        return []
+    have = compute(repo)
+    notes = []
+    for rel, sha in sorted(want.items()):
+        if have.get(rel) not in (None, sha):
+            e = erratum_for(repo, rel, sha)
+            if e:
+                notes.append(f"verified with erratum {e.get('erratum')} ({rel}, line {e.get('line')}; {e['_doc']})")
+    return notes
 
 
 # ---------------------------------------------------------------- addendum ---------------------------------------
@@ -243,7 +316,7 @@ def main(argv=None) -> int:
             print(json.dumps({"ok": ok, "problems": problems, "lock": lock_info(repo),
                               "addendum": addendum_info(a.verify_addendum, repo)}, indent=2))
         else:
-            print("OK" if ok else "\n".join(problems))
+            print("\n".join(["OK"] + verify_notes(repo)) if ok else "\n".join(problems))
         return 0 if ok else 1
     if a.freeze:
         try:
@@ -254,10 +327,11 @@ def main(argv=None) -> int:
         print(f"FROZEN {data['frozen_at']} {data['aggregate_sha256'][:12]} ({len(data['files'])} files)")
         return 0
     ok, problems = verify(repo)
+    notes = verify_notes(repo) if ok else []
     if a.json:
-        print(json.dumps({"ok": ok, "problems": problems, "lock": lock_info(repo)}, indent=2))
+        print(json.dumps({"ok": ok, "problems": problems, "notes": notes, "lock": lock_info(repo)}, indent=2))
     else:
-        print("OK" if ok else "\n".join(problems))
+        print("\n".join(["OK"] + notes) if ok else "\n".join(problems))
     return 0 if ok else 1
 
 
