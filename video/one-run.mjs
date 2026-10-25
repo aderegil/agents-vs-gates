@@ -67,7 +67,7 @@ function redact(s) {
 }
 const clean = (s) => redact(String(s ?? "")).replace(/```/g, "").replace(/`/g, "").replace(/\*\*/g, "").replace(/\t/g, " ")
   .replace(/\s*\n+\s*/g, " · ").replace(/\s{2,}/g, " ").replace(/\bfixed_code\b/g, "fixed").trim();
-const FORBIDDEN = /avg|\\Users|alfredo|cloud folder|\\w\d\\|token|password|@gmail/i;
+const FORBIDDEN = /\\avg\\|\\Users|alfredo|cloud folder|\\w\d\\|token|password|@gmail/i;
 const mmss = (ms) => { const s = Math.round((ms ?? 0) / 1000); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
 
 /** The log's rows from the replay's steps: tool calls without their raw output, repeated edits counted, each CI run
