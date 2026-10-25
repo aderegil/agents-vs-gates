@@ -925,3 +925,9 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
   in `harness/adapters/agy.py`; changing them would break their locks.
 - LICENSE: the draft line removed, the text otherwise unchanged (Alfredo's decision). NOTICE: the theater's origin and
   its code-drawn art, the neutral unit monograms, the video tools' npm packages.
+- Clean-clone test (2026-10-25, a new folder, Python 3.14 venv, `npm ci`): prereg (4 locks, "verified with
+  erratum 1"), `selftest --quick` 5/5, `console --check` CHECK OK, the own-repo try with the mock: all pass. The bare
+  `harness.doctor` reports the real-run worker folders as not set up (they are, by design, the real-run readiness
+  check); its line now says the command that sets them up.
+- Kept: `docs/RESUMEN-fuentes-ai-sdlc.md` (Spanish summary of the public AI-SDLC sources the scripted scenes
+  paraphrase; the Teams page cites it and a test requires every cited file).

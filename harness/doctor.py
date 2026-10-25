@@ -135,13 +135,16 @@ def checks(workers: int = 2) -> list[dict]:
     g = paths.EMPTY_GITCONFIG
     add("GIT_CONFIG_GLOBAL file empty", g.exists() and g.stat().st_size == 0, str(g.relative_to(paths.REPO)))
     for k in range(1, workers + 1):
-        add(f"worker w{k} node_modules", worker_ready("real", k), str(paths.worker_dir("real", k)))
+        ready = worker_ready("real", k)
+        # the real-run worker folders; a new clone has none yet (the mock, self-test and try use their own folders)
+        add(f"worker w{k} node_modules", ready, str(paths.worker_dir("real", k)) if ready else
+            f"{paths.worker_dir('real', k)} not set up: python -m harness.doctor --setup-workers {workers} (for real runs)")
     env = paths.env_file()
     has_token = False
     if env.exists():
         has_token = any(l.strip().startswith("CLAUDE_CODE_OAUTH_TOKEN=") and len(l.strip()) > 24
                         for l in env.read_text(encoding="utf-8").splitlines())
-    add("C:\\avg\\.env has CLAUDE_CODE_OAUTH_TOKEN", has_token, "present" if has_token else "missing (needed only for real runs)", required=False)
+    add(f"{env} has CLAUDE_CODE_OAUTH_TOKEN", has_token, "present" if has_token else "missing (needed only for real runs)", required=False)
     return res
 
 
