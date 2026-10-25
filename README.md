@@ -49,7 +49,11 @@ The same guide also covers exploring the runs, demos with the mock agent, your r
 
 ## Videos
 
-One real run, the AI-SDLC models side by side, and a tour of the console are files of the [Releases](../../releases) page. They are not in the repository.
+Watch them on the [Releases](../../releases) page (MP4, 1920×1080, no audio; they are files of the release, so the repository stays small):
+
+- [One real run](../../releases/latest/download/exp-one-run.mp4) (3:51): the ticket, the change, CI's red build, the other teams' tests, the repair, with the run's own log next to the animation.
+- [AI-SDLC models, side by side](../../releases/latest/download/aisdlc-compare-neutral.mp4) (2:15): where the architecture rule lives in four public models, and what can block the merge. An illustration scripted from public documentation.
+- [A tour of the console](../../releases/latest/download/console-tour-full.mp4) (1:52): the scenario, the results, one run, the Replay Theater.
 
 ## More
 

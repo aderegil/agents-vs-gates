@@ -10,12 +10,18 @@ date-released: "2026-10-27"
 repository-code: "https://github.com/aderegil/agents-vs-gates"
 license-url: "https://polyformproject.org/licenses/strict/1.0.0"
 keywords:
-  - coding agents
   - AI-SDLC
+  - coding agents
+  - AI governance
   - architecture governance
   - fitness functions
   - consumer-driven contracts
+  - continuous integration
+  - Claude Code
+  - Codex
+  - Gemini
   - pre-registration
+  - empirical software engineering
 abstract: >-
   A pre-registered experiment with 1,187 recorded runs of Claude Code, Codex and Gemini (Antigravity CLI) on a
   fictional retailer's four repos. Two tickets ask the agent to rename or remove an event field that other teams
