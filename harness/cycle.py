@@ -52,19 +52,29 @@ def load_units() -> dict:
 
 def execute_run(entry: dict, *, ns: str, worker_ns: str, worker: int, units: dict | None = None,
                 pipeline=None, on_event=None, mock_script: dict | None = None, seed: int = 0,
-                infra_retries: int = 0, archive: bool = True, context_text: str | None = None) -> dict:
+                infra_retries: int = 0, archive: bool = True, context_text: str | None = None,
+                own=None) -> dict:
     """entry: a manifest run ({run_id, stage, unit, ticket, wording, paraphrase, visibility, spec, replicate, cell}).
     ns: results namespace (real|mock|try). worker_ns: worker-dir family (real|mock|selftest|try).
-    context_text: the agent's context file instead of the frozen S text (harness.try_rules only)."""
+    context_text: the agent's context file instead of the frozen S text (harness.try_rules only).
+    own: a harness.try_own.OwnProject (try_rules --repo): the user's repo copy as the workspace and the user's ticket
+    text as the prompt; CI, other teams' tests and acceptance come with its OwnPipeline."""
     units = units or load_units()
     pipeline = pipeline or Pipeline()
     run_id, ticket, V, S = entry["run_id"], entry["ticket"], entry["visibility"], entry["spec"]
     unit = dict(units[entry["unit"]], name=entry["unit"])
     adapter = load_adapter(unit["adapter"])
     started, t0 = now_iso(), time.monotonic()
-    ws = materialize(worker_ns, worker, entry["unit"], ticket, V, S, units=units, context_text=context_text)
+    own_ticket = own.tickets.get(ticket) if own is not None else None
+    if own is not None and own.repo is not None:
+        from harness.try_own import materialize_own
+        ws = materialize_own(own, ns=worker_ns, worker=worker, unit=entry["unit"], ticket=ticket, units=units,
+                             context_text=context_text or "")
+    else:
+        ws = materialize(worker_ns, worker, entry["unit"], ticket, V, S, units=units, context_text=context_text)
     ws.mock_script = mock_script
-    prompt = scenario_io.ticket_text(ticket, entry.get("wording", "W1"), entry.get("paraphrase"))
+    prompt = own_ticket.text if own_ticket else scenario_io.ticket_text(ticket, entry.get("wording", "W1"),
+                                                                        entry.get("paraphrase"))
     def cb(ev):
         if on_event:
             on_event(ev)

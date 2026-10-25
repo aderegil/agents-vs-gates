@@ -2,14 +2,13 @@
 
 This repo is an experiment. It asks one question: does a coding agent break other teams it cannot see? And what stops it: rules in the agent's context, or checks in CI?
 
-You can use it in four ways. The first two make no model calls and cost nothing.
+You can use it in five ways. The first two make no model calls and cost nothing.
 
 1. **Explore the experiment** with its real runs: the results, every run, the Replay Theater.
 2. **Learn and demo** with the mock agent: a script, no model.
 3. **Try your rules**: one file of yours, the scenario's tickets.
 4. **Try your agents**: Claude Code, Codex or Gemini (Antigravity CLI), one or all three, or your own.
-
-Your own repos are not supported: every try runs on the experiment's scenario, a fictional retailer with four repos.
+5. **Try your repo, your rules and your tickets**: your own service, your CI, your other teams' tests.
 
 Every command runs from the repo folder on Windows 11, in a `.venv` with `requirements.txt`. Uses 2 to 4 also need Node 24 and `npm ci` in the repo folder. Worker folders go to `C:\avg` and results to `results\`. To put them somewhere else, set `AVG_ROOT` and `AVG_RESULTS_ROOT`.
 
@@ -161,3 +160,52 @@ Add your agent to a units file of your own. Do not edit `harness\units.json` or 
 .venv\Scripts\python.exe -X utf8 -m harness.doctor --setup-workers 1 --ns try
 .venv\Scripts\python.exe -X utf8 -m harness.try_rules --units-file my-units.json --unit my-agent --live --context scenario\context\orders-service\S2.md --tickets X-rename --n 1
 ```
+
+## 5. Try your repo, your rules and your tickets
+
+The same cycle as section 3, on your code instead of the scenario. You bring four things:
+
+1. **Your repo**: a folder (a git checkout works). The agent works on a clean copy of it: no `.git`, no history, no remotes, nothing else in its workspace.
+2. **Your rules**: one file, as in section 3. It goes into the copy as the file the agent reads (`CLAUDE.md`, `AGENTS.md` or `GEMINI.md`).
+3. **Your tickets**: plain-text files, one ticket each (`--tickets a.md,b.md`). The file name, without its extension, is the ticket's id.
+4. **Your gates**:
+   - **CI**: one command (`--ci`), run in the agent's copy. Exit 0 passes; anything else fails, and its output goes back to the agent, which gets up to 3 repairs. Without `--ci` nothing gates the pull request.
+   - **The other teams**: tests you bring (`--their-tests <folder>`, one subfolder per team, and `--their-cmd`). The agent never sees them. They run outside its workspace, on a copy of the result, once on the first try and once at the end. `SERVICE_DIR` points at that copy.
+   - Optional: `--accept-cmd` says whether the ticket is done (exit 0). It runs from the folder you start the try in, with `SERVICE_DIR` and `TICKET` set. Without it, the ticket is "not evaluated".
+   - Optional: `--setup-cmd` runs once in every fresh copy before the agent starts (for example `npm ci`).
+
+Try it first with the example and the mock agent. No model calls, about a minute, Node 24 on `PATH`:
+
+```
+.venv\Scripts\python.exe -X utf8 -m harness.try_rules --unit mock ^
+  --repo examples\try-own-repo\my-service ^
+  --context examples\try-own-repo\my-rules.md ^
+  --tickets examples\try-own-repo\tickets\rename-total.md,examples\try-own-repo\tickets\add-currency.md ^
+  --ci "npm run ci" ^
+  --their-tests examples\try-own-repo\other-teams --their-cmd "node --test" ^
+  --accept-cmd "node examples\try-own-repo\accept.mjs" ^
+  --mock-script examples\try-own-repo\mock\mock.json --n 1
+```
+
+The mock agent does not read your rules. It applies the patches in `--mock-script`. In the example it renames a field that the invoicing team reads: your CI fails, the invoicing team's test breaks, and the repair keeps the old name next to the new one.
+
+Then your own, with a real agent (real sessions, real quota):
+
+```
+.venv\Scripts\python.exe -X utf8 -m harness.try_rules --unit cc-sonnet --live --n 3 ^
+  --repo C:\code\my-service --context C:\code\my-rules.md ^
+  --tickets C:\code\tickets\first.md,C:\code\tickets\second.md ^
+  --ci "npm test" --their-tests C:\code\other-teams --their-cmd "npm test"
+```
+
+The verdict is printed as in section 3: how often the first try broke another team, how often your CI caught it, what is left at the end, and whether the ticket is done.
+
+What it does not do. Read this before you use the numbers:
+- **Your CI and your other teams' tests are yours.** The experiment's ARCH-1…8, its contract checks and its consumer repos do not apply to your repo. If your CI does not check what the other teams read, nothing catches a break before their tests run.
+- **It is not comparable with the experiment.** Different code, different gates, different tickets. Use it to see how your agent, your rules and your gates behave on your code, not to compare with the talk's numbers.
+- **One repo in the agent's workspace.** No monorepo or several-repo setups (the experiment's V1 and V2). The other teams exist only as your tests.
+- **It does not install anything for you.** Leave the repo ready to run your commands, or give `--setup-cmd`.
+- **No git URLs.** Clone first and pass the folder. Nothing goes to the network from the harness; the agent runs with the same isolation as in section 4.
+- **Folders it refuses**: your repo or your other teams' tests inside the experiment's `scenario\`, `oracle\`, `ci\`, `harness\` or `results\`, and other teams' tests inside your repo (the agent would see them).
+
+Where it writes: as in section 3, only `results\try\` and the worker folders `C:\avg\wt<k>`.

@@ -1,0 +1,7 @@
+{
+ "_comment": "The mock agent's patches for the example tickets (patch paths relative to this file). It never reads your rules: rename-total plays an agent that renames the field (CI and invoicing fail), then keeps the old name as an alias on CI's feedback; add-currency adds a field.",
+ "rename-total": {"gen": "rename-total.gen.patch", "repairs": ["rename-total.fix1.patch"],
+                  "messages": {"gen": "I renamed total to amountCents. The unit tests pass.",
+                               "fix1": "CI said invoicing needs total: I kept total as a deprecated alias next to amountCents."}},
+ "add-currency": {"gen": "add-currency.gen.patch", "messages": {"gen": "I added currency: \"EUR\" to the event."}}
+}

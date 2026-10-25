@@ -1,0 +1,6 @@
+{
+  "name": "my-service",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test", "ci": "node --test && node ci-contracts.mjs" }
+}

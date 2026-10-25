@@ -9,8 +9,10 @@ from harness import jsonio, outcome as outcome_mod, paths, scenario_io
 
 SCHEMA = paths.CONTRACTS / "record.schema.json"
 # harness.try_rules records: same contract, except the namespace is "try", the spec is "custom" (your rules file) and
-# the adapter may be one of your own. Experiment records keep the strict enums.
-TRY_OPEN = {"namespace": {"const": paths.TRY_NS}, "spec": {"type": "string"}, "adapter": {"type": "string"}}
+# the adapter may be one of your own, and the ticket may be one of your own ticket files (harness.try_own). Experiment
+# records keep the strict enums.
+TRY_OPEN = {"namespace": {"const": paths.TRY_NS}, "spec": {"type": "string"}, "adapter": {"type": "string"},
+            "ticket": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,48}$"}}
 
 
 @lru_cache(maxsize=2)

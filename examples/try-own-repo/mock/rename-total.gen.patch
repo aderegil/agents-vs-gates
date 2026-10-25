@@ -1,0 +1,13 @@
+diff --git a/src/order-event.js b/src/order-event.js
+index 5883f63..2239e4d 100644
+--- a/src/order-event.js
++++ b/src/order-event.js
+@@ -2,7 +2,7 @@
+ export function orderPlacedEvent(order) {
+   return {
+     orderId: order.id,
+-    total: order.lines.reduce((s, l) => s + l.qty * l.priceCents, 0),
++    amountCents: order.lines.reduce((s, l) => s + l.qty * l.priceCents, 0),
+     placedAt: order.placedAt,
+   };
+ }

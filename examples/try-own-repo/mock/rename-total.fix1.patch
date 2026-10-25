@@ -1,0 +1,17 @@
+diff --git a/src/order-event.js b/src/order-event.js
+index 5883f63..fdb0593 100644
+--- a/src/order-event.js
++++ b/src/order-event.js
+@@ -1,8 +1,11 @@
+ // The event this service publishes when an order is placed. Other teams read it.
+ export function orderPlacedEvent(order) {
++  const amountCents = order.lines.reduce((s, l) => s + l.qty * l.priceCents, 0);
+   return {
+     orderId: order.id,
+-    total: order.lines.reduce((s, l) => s + l.qty * l.priceCents, 0),
++    amountCents,
++    /** @deprecated same value as amountCents; kept until invoicing migrates */
++    total: amountCents,
+     placedAt: order.placedAt,
+   };
+ }

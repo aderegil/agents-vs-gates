@@ -891,3 +891,22 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
   frame and the legend stay cyan (there cyan means "a deterministic check").
 - exp-one-run: closing sentence 18 on the record card, before the 3 s still poster. Lanes: the red and the green
   sentences 0.3 s into their fade, 1.5 s still after them; the summary sentences ~0.5 s after their cells light.
+
+### Try it on your own repo, rules and tickets (2026-10-24, branch try-own-1024)
+- Coordinator's order (Alfredo: "your repo, your rules, your tickets"); scope agreed before building. `harness/try_own.py`
+  plus options of `harness.try_rules`: `--repo` (a folder; the agent works on a clean copy, no .git), `--ci` (one
+  command; exit 0 passes; its output is the repair feedback), `--their-tests` + `--their-cmd` (the other teams: one
+  subfolder per team, run outside the workspace on a copy of the result with SERVICE_DIR), `--accept-cmd` (optional
+  ticket check, run from the launch folder with SERVICE_DIR and TICKET), `--setup-cmd`, `--mock-script`, and ticket
+  files in `--tickets` (also allowed on the scenario: their ticket check is "not evaluated").
+- Hooks, not forks: `cycle.execute_run(own=…)` materializes the user's copy and takes the ticket text; the CI, other
+  teams and acceptance come through the same Pipeline seam the tests use (`try_own.OwnPipeline`). The mock adapter
+  applies `file:` patches. try records accept a ticket id outside the six (the experiment's records keep the enum).
+- Out by design: the scenario's ARCH-1..8 and contracts on a user repo, V1/V2 (several repos), installing
+  dependencies, git URLs, and any comparison with the experiment; the verdict says "not comparable".
+- Refuses a repo or tests inside scenario/, oracle/, ci/, harness/, results/ or the repo itself (examples/ is fine),
+  and other teams' tests inside the user's repo. Commands run without env vars that look like secrets.
+- Example: `examples/try-own-repo` (a Node service without dependencies, a contract check in its CI, two teams, two
+  tickets, an acceptance script and the mock's patches). Tests: `tests/test_try_own.py` (11, one full mock run).
+- Found while testing: the repo's `.venv` points at a Python 3.13 that is no longer installed (only 3.14 since
+  20 Oct); tests ran with Python 3.14 (jsonschema present). Recreating `.venv` is Alfredo's call.
