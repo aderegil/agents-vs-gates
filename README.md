@@ -55,7 +55,7 @@ One real run, the AI-SDLC models side by side, and a tour of the console are fil
 
 - **Pre-registration:** [PREREGISTRATION.md](PREREGISTRATION.md) and its addenda [1](PREREGISTRATION-ADDENDUM-1.md), [2](PREREGISTRATION-ADDENDUM-2.md) and [3](PREREGISTRATION-ADDENDUM-3.md), each frozen by a lock file before its runs, and [erratum 1](PREREGISTRATION-ERRATUM-1.md) (one line of the introduction, nothing of the plan). `python -m harness.prereg --verify` checks them.
 - **Results:** every run in `results/real/` (record, diffs, CI, the other teams' tests, transcript, trace); the summary in [`results/real/summary.md`](results/real/summary.md); the numbers above in [`results/real/deck-numbers-ext.md`](results/real/deck-numbers-ext.md). Machine and account identifiers in the published copy are redacted.
-- **Decisions:** every deviation and decision taken along the way, in [`docs/DECISIONS.md`](docs/DECISIONS.md).
+- **Decisions:** every deviation and decision taken along the way, in [`docs/DECISIONS.md`](docs/DECISIONS.md). The internal build documents it and the pre-registration name (the build spec, the build log, QA screenshots) are not published.
 - **Formats:** the trace and record contracts in [`docs/contracts/`](docs/contracts/README.md).
 
 Made for the talk *The AI-SDLC Governance Gap*. Meridian Retail, its teams and its people are fictional.
