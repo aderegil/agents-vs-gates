@@ -13,8 +13,13 @@ This repository includes third-party works, unchanged, under their own licenses:
    Files: console/web/icons.js and console/plugins/replay/app/src/components/Icons.tsx. The license text is in
    console/web/LICENCIAS.txt.
 
+3. The Replay Theater (console/plugins/replay/app) is adapted from pixel-souls, the author's own repository; see its
+   ORIGIN.md. Its art (avatars, objects, the office floor) is drawn by code; it contains no third-party images.
+   The agents are shown with neutral monograms ("CC", "CX"), not with the vendors' logos.
+
 npm and Python packages are not included; `npm ci` and `pip install` fetch them under their own licenses
-(package-lock.json files, requirements.txt).
+(package-lock.json files, requirements.txt). The video tools (video/package.json) fetch ffmpeg-static and
+playwright-core the same way. The videos themselves are not in the repository: they are files of the GitHub Release.
 
 Meridian Retail, its teams and its people are fictional. Anthropic, Claude, OpenAI, Codex, Google, Gemini, Antigravity,
 AWS, Kiro and GitHub are trademarks of their owners. They are named only to say which tools were tested or which public

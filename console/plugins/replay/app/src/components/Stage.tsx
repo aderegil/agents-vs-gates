@@ -145,7 +145,7 @@ const CLIP_LIGHT = CLIP_QUERY.has("light") ? Math.min(1, Math.max(0, Number(CLIP
 const UNUSED_ALPHA = 1 - (1 - DIM_ALPHA) * CLIP_LIGHT;
 /** The consumer teams sit behind their service's counter (floor y offset). */
 const OWNER_BEHIND = 0.045;
-/** Where the rule lives as context (read before generation; probabilistic): the deck's purple, dashed. */
+/** Where the rule lives as context (read before generation; probabilistic): purple, dashed. */
 const RULE = "#7500c0";
 /** Text on a cyan (pass / deterministic) surface (green ink with the clip's ?pass=green). */
 let PASS_INK = "#0e7490";

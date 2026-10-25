@@ -1,12 +1,14 @@
 # Agents vs. Gates
 
-**Does a coding agent break another team's service it cannot see, and what stops it: rules in its context, or a check in CI?** 1,187 recorded runs of Claude Code, Codex and Gemini on a fictional retailer, with the analysis pre-registered before the first run.
+**Does a coding agent break another team's service it cannot see? And what stops it: rules in its context, or a check in CI?**
+
+A pre-registered experiment: 1,187 recorded runs of Claude Code, Codex and Gemini (Antigravity CLI) on the four repos of a fictional retailer. The analysis was written down and frozen before the first run.
 
 ![The console: the scenario, the results, one run, the Replay Theater](docs/media/console-tour.gif)
 
-## What happened
+## What it found
 
-Two tickets ask the agent to rename or remove a field of an event that two other teams read. 100 runs per agent and condition (50 per ticket). Each agent is counted on its own; the agents are never added together.
+Two tickets ask the agent to rename or remove a field of an event that two other teams read. Each agent ran 100 times per condition (50 per ticket). Each agent is counted on its own: the numbers are never added across agents, and this is not a race between agents.
 
 | Broke another team on the first try | Own repo, no rule | Own repo, rule in the spec | Sees every repo, no rule |
 |---|---|---|---|
@@ -14,27 +16,49 @@ Two tickets ask the agent to rename or remove a field of an event that two other
 | Codex CLI + gpt-5.6-terra | **100** of 100 | **35** of 100 | **100** of 100 |
 | Antigravity CLI + Gemini 3.8 Flash | **100** of 100 | **0** of 100 | **80** of 100 |
 
-A rule in the spec stopped the breaks for Claude Code and Gemini, and about two thirds of them for Codex. Seeing every repo was not enough. The consumer-contract check in CI, kept outside the agent's repo, caught every break on the first pull request: Claude Code 172 of 172, Codex 256 of 256, Gemini 180 of 180, over every run with the check out of the agent's reach. It is not the whole answer: after repairing on CI's feedback, 19 Codex runs turned CI green and still broke another team (the right shape, the wrong meaning); Claude Code and Gemini, none. And when the contracts sat inside the agent's repo, Codex edited them so CI would pass (CI caught 1 of 10).
+- A rule in the spec stopped the breaks for Claude Code and Gemini, and about two thirds of them for Codex.
+- Seeing every repo was not enough.
+- A consumer-contract check in CI, kept outside the agent's repo, caught every break on the first pull request: Claude Code 172 of 172, Codex 256 of 256, Gemini 180 of 180 (every run where the check was out of the agent's reach).
+- It is not the whole answer. After repairing on CI's feedback, 19 Codex runs turned CI green and still broke another team (the right shape, the wrong meaning); Claude Code and Gemini, none. When the contracts sat inside the agent's repo, Codex edited them so CI would pass.
 
-"Broke another team" is measured by the other teams' own tests, which the agent never sees, not by CI and not by the agent's last message.
+"Broke another team" means the other teams' own tests failed. The agent never sees those tests. It is not CI's verdict and not the agent's last message.
 
-## Watch it (no model calls, nothing to sign in to)
+## Watch it in three commands
+
+No model calls, nothing to sign in to. Windows 11, Python 3.13 or later:
 
 ```
 git clone https://github.com/aderegil/agents-vs-gates && cd agents-vs-gates
-py -3.13 -m venv .venv && .venv\Scripts\python.exe -m pip install -r requirements.txt
+py -3 -m venv .venv && .venv\Scripts\python.exe -m pip install -r requirements.txt
 .venv\Scripts\python.exe -m console
 ```
-Open http://127.0.0.1:8765: the results, every run (diff, CI, the other teams' tests) and the Replay Theater.
+
+Open http://127.0.0.1:8765: the results, every run (its diff, CI's checks, the other teams' tests) and the Replay Theater.
+
+## Try it
+
+Section 5 of [Using this repo](docs/USING.md) runs the same cycle on your code. You bring:
+
+1. **Your repo**: a folder; the agent works on a clean copy of it.
+2. **Your rules**: one file, given to the agent as its context file.
+3. **Your tickets**: plain-text files, one ticket each.
+
+And your gates: your CI command, and tests for the other teams that the agent never sees. Try it first with the example and the mock agent (no model calls). Your CI and your teams' tests are yours, so the numbers are not comparable with the experiment.
+
+The same guide also covers exploring the runs, demos with the mock agent, your rules on the experiment's tickets, and Claude Code, Codex, Gemini or your own agent on them.
+
+## Videos
+
+One real run, the AI-SDLC models side by side, and a tour of the console are files of the [Releases](../../releases) page. They are not in the repository.
 
 ## More
-- **[Using this repo](docs/USING.md):** explore the runs, demo with the mock agent, try your own rules file, run Claude Code, Codex or Gemini (or your own agent) on the same tickets and get the same verdict.
-- **[Pre-registration](PREREGISTRATION.md)** and its addenda [1](PREREGISTRATION-ADDENDUM-1.md), [2](PREREGISTRATION-ADDENDUM-2.md) and [3](PREREGISTRATION-ADDENDUM-3.md). Each was frozen by a lock file before its runs; `python -m harness.prereg --verify` checks them.
-- **Results:** every run in `results/real/` (record, diffs, CI, the other teams' tests, transcript, trace), the summary in [`results/real/summary.md`](results/real/summary.md) and the numbers above in [`results/real/deck-numbers-ext.md`](results/real/deck-numbers-ext.md).
-- **Videos:** one real run, the console tour and the AI-SDLC comparison, in [Releases](https://github.com/aderegil/agents-vs-gates/releases).
-- **How it was built:** every decision taken along the way in [`docs/DECISIONS.md`](docs/DECISIONS.md); the build log in [`BUILD-STATUS.md`](BUILD-STATUS.md).
 
-Made for the talk *The AI-SDLC Governance Gap*. The scenario, Meridian Retail, is fictional.
+- **Pre-registration:** [PREREGISTRATION.md](PREREGISTRATION.md) and its addenda [1](PREREGISTRATION-ADDENDUM-1.md), [2](PREREGISTRATION-ADDENDUM-2.md) and [3](PREREGISTRATION-ADDENDUM-3.md), each frozen by a lock file before its runs, and [erratum 1](PREREGISTRATION-ERRATUM-1.md) (one line of the introduction, nothing of the plan). `python -m harness.prereg --verify` checks them.
+- **Results:** every run in `results/real/` (record, diffs, CI, the other teams' tests, transcript, trace); the summary in [`results/real/summary.md`](results/real/summary.md); the numbers above in [`results/real/deck-numbers-ext.md`](results/real/deck-numbers-ext.md). Machine and account identifiers in the published copy are redacted.
+- **Decisions:** every deviation and decision taken along the way, in [`docs/DECISIONS.md`](docs/DECISIONS.md).
+- **Formats:** the trace and record contracts in [`docs/contracts/`](docs/contracts/README.md).
+
+Made for the talk *The AI-SDLC Governance Gap*. Meridian Retail, its teams and its people are fictional.
 
 ## Cite it
 
@@ -42,4 +66,4 @@ See [`CITATION.cff`](CITATION.cff) (GitHub shows "Cite this repository" on the r
 
 ## License
 
-[PolyForm Strict 1.0.0](LICENSE) with an additional permission: you may use it, evaluate it inside any organization, and run it with your own rules file, units file and adapter. You may not distribute it or changed versions of it. Third-party fonts and icons keep their own licenses ([NOTICE](NOTICE)). © 2026 Alfredo De Regil.
+License: PolyForm Strict 1.0.0 with an additional permission (see [LICENSE](LICENSE)). Third-party fonts and icons keep their own licenses ([NOTICE](NOTICE)). © 2026 Alfredo De Regil.

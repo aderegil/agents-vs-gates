@@ -6,7 +6,7 @@
 //   interval  rows of {group,label,sub,x,n,ci:[lo,hi],tone}  → a point and a Clopper-Pearson interval, "x of N" in text
 //   stacked   rows of {group,label,sub,n,segments:[{key,value}]} + series [{key,label,tone}] → counts as stacked bars
 //   matrix    panels of 2×2 counts (mutation test, CI vs. oracle)
-// Two styles: "app" (the console's light style) and "deck" (black, deck purple, cyan = pass, pink = fail).
+// Two styles: "app" (the console's light style) and "deck" (black, deck purples, cyan = pass, pink = fail).
 // Two modes: renderChart() draws the chart alone (on screen); renderSlide() draws a 1920×1080 slide with title,
 // source note bottom left and, for a mock namespace, a MOCK watermark that cannot be turned off.
 

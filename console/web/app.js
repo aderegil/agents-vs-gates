@@ -93,7 +93,7 @@ function authCard(titleText, lead, formChildren, onSubmit) {
       h("header", {}, h("span", { class: "brand", "aria-hidden": "true" }, "AG"),
         h("div", {}, h("div", { class: "title" }, "Agents vs. Gates — Console"), h("div", { class: "sub" }, "Local console · 127.0.0.1 only"))),
       form),
-    h("p", { class: "auth-foot" }, "experiment console")));
+    h("p", { class: "auth-foot" }, "Agents vs. Gates · experiment console")));
 }
 
 const input = (name, type, label, extra = {}) =>

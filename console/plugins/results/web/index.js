@@ -433,7 +433,7 @@ export async function mount(el, shell) {
     const chips = st.length ? st.map((s) => badge(`${withCode(s.stage)} · ${s.visible ? (["P0", "X1", "X2", "selftest"].includes(s.stage) ? "always visible" : "unblinded") : BLINDED}`, s.visible ? "accent" : "neutral"))
       : [h("span", { class: "small muted" }, "No stage has runs in this namespace yet.")];
     const seg = h("div", { class: "res-seg", role: "group", "aria-label": "Export style" },
-      ["app", "deck"].map((id) => h("button", { type: "button", "aria-pressed": String(S.style === id), title: id === "app" ? "App: the console's light style" : "Deck: black, deck purple, cyan = pass, pink = fail",
+      ["app", "deck"].map((id) => h("button", { type: "button", "aria-pressed": String(S.style === id), title: id === "app" ? "App: the console's light style" : "Deck: black, deck purples, cyan = pass, pink = fail",
         onclick: () => { S.style = id; store.set("style", id); draw(); } }, id === "app" ? "App" : "Deck")));
     return h("div", { class: "res-toolbar" }, h("div", { class: "row" }, chips),
       h("div", { class: "row" }, h("span", { class: "small muted" }, "Export style"), seg, h("span", { class: "small muted" }, "SVG and PNG · 1920×1080")));
