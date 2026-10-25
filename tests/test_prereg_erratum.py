@@ -73,6 +73,37 @@ class Erratum(unittest.TestCase):
         self.assertEqual(prereg.verify_notes(self.repo), [])
 
 
+class SeveralLines(unittest.TestCase):
+    """An erratum record with several lines ("lines"), in a list of records (erratum 2's shape)."""
+
+    def setUp(self):
+        self.repo = Path(tempfile.mkdtemp(prefix="avg-erratum2-"))
+        sha = lambda b: hashlib.sha256(b).hexdigest()
+        orig = b"a\nold one\nb\nold two\nc\n"
+        lines = orig.splitlines(keepends=True)
+        new = b"a\nnew one\nb\nnew two\nc\n"
+        (self.repo / "F.py").write_bytes(new)
+        (self.repo / prereg.LOCK_NAME).write_text(json.dumps({"files": {"F.py": sha(orig)}}), encoding="utf-8")
+        rec = [{"erratum": 2, "file": "F.py", "lines": {"2": "new one", "4": "new two"}, "original_sha256": sha(orig),
+                "new_sha256": sha(new), "original_line_sha256": [sha(ln) for ln in lines]}]
+        (self.repo / "PREREGISTRATION-ERRATUM-2.md").write_text("```json\n" + json.dumps(rec) + "\n```\n", encoding="utf-8")
+        self._compute = prereg.compute
+        prereg.compute = lambda repo: {"F.py": prereg._sha(Path(repo) / "F.py")}
+
+    def tearDown(self):
+        prereg.compute = self._compute
+        shutil.rmtree(self.repo, ignore_errors=True)
+
+    def test_both_lines_verify(self):
+        self.assertTrue(prereg.verify(self.repo)[0])
+        self.assertEqual(prereg.verify_notes(self.repo), ["verified with erratum 2 (F.py, lines 2, 4; PREREGISTRATION-ERRATUM-2.md)"])
+
+    def test_an_undocumented_line_fails(self):
+        p = self.repo / "F.py"
+        p.write_bytes(p.read_bytes().replace(b"c\n", b"d\n"))
+        self.assertFalse(prereg.verify(self.repo)[0])
+
+
 class RealRepo(unittest.TestCase):
     def test_the_repo_verifies_with_erratum_1(self):
         out = io.StringIO()
@@ -80,6 +111,7 @@ class RealRepo(unittest.TestCase):
             code = prereg.main(["--verify"])
         self.assertEqual(code, 0, out.getvalue())
         self.assertIn("verified with erratum 1", out.getvalue())
+        self.assertIn("verified with erratum 2", out.getvalue())
         text = (paths.REPO / "PREREGISTRATION-ERRATUM-1.md").read_text(encoding="utf-8")
         self.assertNotRegex(text.lower(), "the employer|the talk")
 

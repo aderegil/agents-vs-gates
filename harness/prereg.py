@@ -127,8 +127,17 @@ def errata(repo: Path) -> list[dict]:
             d = json.loads(m.group(1))
         except ValueError:
             continue
-        out.append(dict(d, _doc=f.name))
+        # one record, or a list of records (an erratum that corrects several files)
+        for rec in d if isinstance(d, list) else [d]:
+            out.append(dict(rec, _doc=f.name))
     return out
+
+
+def _documented_lines(e: dict) -> dict[int, str]:
+    """{line number: its corrected text}: "lines" (several) or "line" + "after" (one)."""
+    if isinstance(e.get("lines"), dict):
+        return {int(k): v for k, v in e["lines"].items()}
+    return {int(e.get("line", 0)): e.get("after")}
 
 
 def check_erratum(repo: Path, e: dict, lock_sha: str) -> list[str]:
@@ -145,12 +154,13 @@ def check_erratum(repo: Path, e: dict, lock_sha: str) -> list[str]:
     lines, want = raw.splitlines(keepends=True), e.get("original_line_sha256") or []
     if len(lines) != len(want):
         return [f"{e['_doc']}: {rel} has {len(lines)} lines, the original had {len(want)}"]
-    n = int(e.get("line", 0))
-    bad = [i + 1 for i, (ln, h) in enumerate(zip(lines, want)) if i + 1 != n and hashlib.sha256(ln).hexdigest() != h]
+    doc = _documented_lines(e)
+    bad = [i + 1 for i, (ln, h) in enumerate(zip(lines, want)) if i + 1 not in doc and hashlib.sha256(ln).hexdigest() != h]
     if bad:
-        return [f"{e['_doc']}: {rel} lines {bad[:5]} differ from the original, beyond the documented line {n}"]
-    if not 1 <= n <= len(lines) or lines[n - 1].rstrip(b"\r\n").decode("utf-8", "replace") != e.get("after"):
-        return [f"{e['_doc']}: {rel} line {n} is not the documented text"]
+        return [f"{e['_doc']}: {rel} lines {bad[:5]} differ from the original, beyond the documented lines {sorted(doc)}"]
+    for n, text in sorted(doc.items()):
+        if not 1 <= n <= len(lines) or lines[n - 1].rstrip(b"\r\n").decode("utf-8", "replace") != text:
+            return [f"{e['_doc']}: {rel} line {n} is not the documented text"]
     return []
 
 
@@ -161,20 +171,28 @@ def erratum_for(repo: Path, rel: str, lock_sha: str) -> dict | None:
     return None
 
 
-def verify_notes(repo: Path | None = None) -> list[str]:
-    """The errata the verification relied on, for the printed result."""
+def verify_notes(repo: Path | None = None, addendum: int | None = None) -> list[str]:
+    """The errata the verification relied on (the original lock's files, and addendum n's), for the printed result."""
     repo = Path(repo or paths.REPO)
     try:
-        want = json.loads((repo / LOCK_NAME).read_text(encoding="utf-8")).get("files", {})
+        want = dict(json.loads((repo / LOCK_NAME).read_text(encoding="utf-8")).get("files", {}))
     except (OSError, ValueError):
         return []
     have = compute(repo)
+    if addendum is not None:
+        try:
+            want.update(json.loads(addendum_lock_path(addendum, repo).read_text(encoding="utf-8")).get("files", {}))
+        except (OSError, ValueError):
+            pass
+        have.update({rel: _sha(p) for rel, p in addendum_files(addendum, repo).items()})
     notes = []
     for rel, sha in sorted(want.items()):
         if have.get(rel) not in (None, sha):
             e = erratum_for(repo, rel, sha)
             if e:
-                notes.append(f"verified with erratum {e.get('erratum')} ({rel}, line {e.get('line')}; {e['_doc']})")
+                where = sorted(_documented_lines(e))
+                notes.append(f"verified with erratum {e.get('erratum')} ({rel}, line{'s' if len(where) > 1 else ''} "
+                             f"{', '.join(map(str, where))}; {e['_doc']})")
     return notes
 
 
@@ -264,7 +282,7 @@ def verify_addendum(n: int, repo: Path | None = None) -> tuple[bool, list[str]]:
     for rel, sha in sorted((data.get("files") or {}).items()):
         if have.get(rel) is None:
             problems.append(f"addendum {n}: missing: {rel}")
-        elif have[rel] != sha:
+        elif have[rel] != sha and not erratum_for(repo, rel, sha):
             problems.append(f"addendum {n}: changed: {rel}")
     for rel in sorted(set(have) - set(data.get("files") or {})):
         problems.append(f"addendum {n}: new (not frozen): {rel}")
@@ -316,7 +334,7 @@ def main(argv=None) -> int:
             print(json.dumps({"ok": ok, "problems": problems, "lock": lock_info(repo),
                               "addendum": addendum_info(a.verify_addendum, repo)}, indent=2))
         else:
-            print("\n".join(["OK"] + verify_notes(repo)) if ok else "\n".join(problems))
+            print("\n".join(["OK"] + verify_notes(repo, a.verify_addendum)) if ok else "\n".join(problems))
         return 0 if ok else 1
     if a.freeze:
         try:
