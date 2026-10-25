@@ -1,0 +1,1 @@
+{ "invoicing": ["orderId", "total"], "reporting": ["orderId", "placedAt"] }

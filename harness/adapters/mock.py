@@ -62,6 +62,10 @@ def patch_files(patch_text: str) -> list[str]:
 
 
 def apply_patch(ws, key: str) -> list[str]:
+    if key.startswith("file:"):           # harness.try_own --mock-script: a patch file of the user's own repo
+        p = Path(key[5:])
+        gitutil.git(ws.root, "apply", "--whitespace=nowarn", str(p))
+        return patch_files(p.read_text(encoding="utf-8"))
     sol = scenario_io.solution(key)
     p = Path(sol["path"])
     text = p.read_text(encoding="utf-8")
@@ -140,7 +144,10 @@ def run_session(ws, prompt: str, *, resume=None, unit=None, limits=None, on_even
         return res
 
     key = _patch_key_for(script, session)
-    sol = scenario_io.solution(key) if key else None
+    if key and key.startswith("file:"):    # harness.try_own: a patch of the user's own repo (root-relative paths)
+        sol = {"path": key[5:], "root": "repo"}
+    else:
+        sol = scenario_io.solution(key) if key else None
     root = Path(ws.root)
     svc = "orders-service/" if ws.V == "V2" else ""
     if session == "gen":
@@ -164,9 +171,11 @@ def run_session(ws, prompt: str, *, resume=None, unit=None, limits=None, on_even
                  f"The file {root / f} has been updated successfully.")
         tool("Bash", {"command": "npm test", "description": "Run the unit tests"},
              "# tests 14\n# suites 4\n# pass 14\n# fail 0")
-    else:
+    elif (root / svc / "src" / "core" / "events.ts").exists():
         tool("Read", {"file_path": str(root / svc / "src" / "core" / "events.ts")},
              _head(root / svc / "src" / "core" / "events.ts"))
+    else:                                  # a user's own repo (harness.try_own): look around, change nothing
+        tool("Glob", {"pattern": "**/*"}, "\n".join(sorted(p.name for p in root.iterdir())[:12]))
     msg = (script.get("messages") or {}).get(session) or (sol or {}).get("final_message") \
         or script.get("final_message") or ("I made the change." if sol else "I did not change anything.")
     cap = (script.get("caps") or {}).get(session) or ("wall-clock-only" if infra == "timeout" else None)

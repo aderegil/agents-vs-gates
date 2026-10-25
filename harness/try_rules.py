@@ -24,6 +24,17 @@ Options:
                                 for S0 (no rules), S1 or S2 (rules)
   --units-file my-units.json    extra units, e.g. one for your own adapter (never replaces a frozen unit)
   --quiet                       print only the verdict
+
+Your own repo (harness/try_own.py; docs/USING.md "Your repo, your rules, your tickets"):
+  --repo my-service             a folder (a git checkout works): the agent works on a clean copy of it
+  --tickets t1.md,t2.md         ticket files (plain text, one ticket each); with --repo, tickets must be files
+  --ci "npm test"               your CI: one command run in the agent's copy; exit 0 passes (none: no gate)
+  --their-tests other-teams     the other teams' tests (outside --repo; one subfolder per team), never shown to
+  --their-cmd "node --test"     the agent; run in each team folder with SERVICE_DIR = a copy of the result
+  --accept-cmd "…"              optional: exit 0 = the ticket is done (run from this folder, with SERVICE_DIR and
+                                TICKET set; without it the ticket is "not evaluated")
+  --setup-cmd "npm ci"          optional: run once in every fresh copy before the agent starts
+  --mock-script my-mock.json    the mock agent's patches for your tickets (examples/try-own-repo/mock/mock.json)
 Exit codes: 0 done, 2 refused (bad input or isolation guard), 3 rate-limited, 4 isolation breach.
 """
 from __future__ import annotations
@@ -52,7 +63,8 @@ MAX_CONTEXT_BYTES = 256 * 1024
 MAX_INFRA_RETRIES = 2
 EXPERIMENT_WORKERS = range(1, 9)     # the runner accepts up to 8 workers: w1..w8, wm1..wm8
 EXIT_OK, EXIT_GUARD, EXIT_RATE, EXIT_BREACH = 0, 2, 3, 4
-TICKET_WORDS = {"done": "done", "deprecated": "kept as deprecated", "not_done": "not done"}
+TICKET_WORDS = {"done": "done", "deprecated": "kept as deprecated", "not_done": "not done",
+                "unknown": "not evaluated (no --accept-cmd)"}
 
 
 class Refused(Exception):
@@ -159,12 +171,30 @@ def context_file_name(unit: dict) -> str:
     return name
 
 
-def parse_tickets(text: str) -> list[str]:
-    tickets = list(dict.fromkeys(t.strip() for t in text.split(",") if t.strip()))
-    bad = [t for t in tickets if t not in scenario_io.TICKETS]
-    if bad or not tickets:
-        raise Refused(f"--tickets: unknown {', '.join(bad) or '(none)'}; choose from {', '.join(scenario_io.TICKETS)}")
-    return tickets
+def parse_tickets(text: str, *, own_repo: bool = False) -> tuple[list[str], dict]:
+    """Ticket ids of scenario/tasks, or ticket files (your own tickets). Returns (ids, {id: OwnTicket})."""
+    from harness.try_own import OwnRefused, load_ticket_file
+    items = list(dict.fromkeys(t.strip() for t in text.split(",") if t.strip()))
+    ids, own, bad = [], {}, []
+    for t in items:
+        if Path(t).is_file():
+            try:
+                tk = load_ticket_file(Path(t))
+            except OwnRefused as e:
+                raise Refused(str(e)) from None
+            while tk.id in own or tk.id in scenario_io.TICKETS:
+                tk.id += "-2"
+            own[tk.id] = tk
+            ids.append(tk.id)
+        elif t in scenario_io.TICKETS and not own_repo:
+            ids.append(t)
+        else:
+            bad.append(t)
+    if bad or not ids:
+        hint = ("with --repo, give ticket files (plain text, one ticket each)" if own_repo
+                else f"choose from {', '.join(scenario_io.TICKETS)} or give ticket files")
+        raise Refused(f"--tickets: unknown {', '.join(bad) or '(none)'}; {hint}")
+    return ids, own
 
 
 # ---------------------------------------------------------------- verdict ----------------------------------------
@@ -213,7 +243,15 @@ def format_verdict(v: dict) -> str:
     m = v["meta"]
     lines = [f"Try {m['try_id']}: your rules = {m['context']['name']} (sha256 {m['context']['sha256'][:12]}), "
              f"unit {m['unit']}, {m['visibility']}, {m['n']} run(s) per ticket."]
-    if m.get("mock_as"):
+    if m.get("own"):
+        o = m["own"]
+        lines += [f"Your repo: {o['repo'] or 'the scenario (orders-service)'} · your CI: {o['ci_cmd'] or 'none (no gate)'}"
+                  f" · the other teams: {', '.join(o['teams']) or 'none'}.",
+                  "Not comparable with the experiment: your CI and your other teams' tests are yours."]
+    if m.get("mock_as") and m.get("own", {}).get("repo"):
+        lines += ["Note: the mock agent is scripted. It does not read your file. It applies the patches of "
+                  "--mock-script (none: no change)."]
+    elif m.get("mock_as"):
         lines += [f"Note: the mock agent is scripted. It does not read your file. Here it plays the experiment's "
                   f"{m['mock_as']} script.",
                   "      To test your rules, use a real agent (--live) or your own adapter (docs/USING.md)."]
@@ -249,10 +287,32 @@ def format_verdict(v: dict) -> str:
     return "\n".join(lines)
 
 
+class _ScenarioWithOwnTickets:
+    """The experiment's pipeline for your own ticket files on the scenario: CI and the other teams' tests as always;
+    the ticket-done check exists only for the experiment's tickets, so yours is "not evaluated"."""
+
+    def __init__(self, inner, own_ids: set):
+        self.inner, self.own_ids = inner, own_ids
+
+    def run_ci(self, *a, **k):
+        return self.inner.run_ci(*a, **k)
+
+    def run_oracle(self, *a, **k):
+        return self.inner.run_oracle(*a, **k)
+
+    def check_ticket(self, service_dir, ticket):
+        if ticket in self.own_ids:
+            return {"ticket": ticket, "ticket_done": None, "captured": {}, "arch9_signal": False, "arch9_fields": [],
+                    "detail": "not evaluated (your own ticket)"}
+        return self.inner.check_ticket(service_dir, ticket)
+
+
 # ---------------------------------------------------------------- batch ------------------------------------------
 
 class TryBatch:
-    def __init__(self, *, entries, units, pipeline, context_text, context_meta, scripts, workers, quiet, state):
+    def __init__(self, *, entries, units, pipeline, context_text, context_meta, scripts, workers, quiet, state,
+                 own=None):
+        self.own = own
         self.queue = list(entries)
         self.units, self.pipeline, self.scripts = units, pipeline, scripts
         self.context_text, self.context_meta = context_text, context_meta
@@ -308,7 +368,7 @@ class TryBatch:
                 rec = cycle.execute_run(entry, ns=NS, worker_ns=NS, worker=k, units=self.units, pipeline=self.pipeline,
                                         on_event=None if self.quiet else on_event,
                                         mock_script=self.scripts.get(rid), seed=0, infra_retries=attempt,
-                                        context_text=self.context_text)
+                                        context_text=self.context_text, own=self.own)
                 infra = rec.get("infra_failure") if rec["outcome"] == "infra_failure" else None
             except Exception as e:  # harness error: counts as an infrastructure failure of this run
                 traceback.print_exc(file=sys.stderr)
@@ -389,6 +449,14 @@ def build_parser() -> argparse.ArgumentParser:
                     help="mock unit only: which experiment script the scripted agent plays (default S0, no rules)")
     ap.add_argument("--units-file", help="extra units (JSON {name: unit}), e.g. for your own adapter")
     ap.add_argument("--quiet", action="store_true", help="print only the verdict")
+    g = ap.add_argument_group("your own repo (harness/try_own.py)")
+    g.add_argument("--repo", help="your repo folder: the agent works on a clean copy of it")
+    g.add_argument("--ci", help="your CI command, run in the agent's copy (exit 0 = pass)")
+    g.add_argument("--their-tests", help="the other teams' tests (a folder outside --repo, one subfolder per team)")
+    g.add_argument("--their-cmd", help="the command that runs one team's tests (SERVICE_DIR = a copy of the result)")
+    g.add_argument("--accept-cmd", help="optional: exit 0 = the ticket is done")
+    g.add_argument("--setup-cmd", help="optional: run once in every fresh copy (e.g. npm ci)")
+    g.add_argument("--mock-script", help="the mock agent's patches for your tickets (JSON)")
     return ap
 
 
@@ -409,7 +477,20 @@ def _main(a, *, pipeline, mock_scripts) -> int:
         raise Refused(f"--n must be 1..{MAX_N}")
     if not 1 <= a.workers <= MAX_WORKERS:
         raise Refused(f"--workers must be 1..{MAX_WORKERS}")
-    tickets = parse_tickets(a.tickets)
+    from harness import try_own
+    tickets, own_tickets = parse_tickets(a.tickets, own_repo=bool(a.repo))
+    own = None
+    if a.repo:
+        try:
+            own = try_own.make_project(a)
+        except try_own.OwnRefused as e:
+            raise Refused(str(e)) from None
+    elif a.ci or a.their_tests or a.their_cmd or a.accept_cmd or a.setup_cmd:
+        raise Refused("--ci, --their-tests, --their-cmd, --accept-cmd and --setup-cmd need --repo (your own repo)")
+    elif own_tickets:
+        own = try_own.OwnProject(repo=None, ci_cmd=None, their_tests=None, their_cmd=None)
+    if own is not None:
+        own.tickets = own_tickets
     text, ctx_meta = load_context(a.context)
     units = load_units(a.units_file)
     if a.unit not in units:
@@ -428,13 +509,21 @@ def _main(a, *, pipeline, mock_scripts) -> int:
     problems = isolation_problems(a.workers)
     if problems:
         raise Refused("; ".join(problems))
-    if not is_mock or pipeline is None:     # a real agent and the real CI both run `npm test` in the worker folder
+    own_repo = own is not None and own.repo is not None
+    if own_repo and pipeline is None:
+        pipeline = try_own.OwnPipeline(own)
+    elif own is not None and pipeline is None:
+        pipeline = _ScenarioWithOwnTickets(cycle.Pipeline(), set(own_tickets))
+    if own_repo:
+        for k in range(1, a.workers + 1):    # your repo needs no npm in the worker folder; only the folder itself
+            paths.worker_dir(NS, k).mkdir(parents=True, exist_ok=True)
+    elif not is_mock or pipeline is None:     # a real agent and the real CI both run `npm test` in the worker folder
         from harness import doctor
         missing = [k for k in range(1, a.workers + 1) if not doctor.worker_ready(NS, k)]
         if missing:
             raise Refused(f"worker folder(s) {', '.join(str(paths.worker_dir(NS, k)) for k in missing)} not ready: "
                           f"run `python -m harness.doctor --setup-workers {a.workers} --ns {NS}`")
-    if pipeline is None:
+    if pipeline is None or isinstance(pipeline, _ScenarioWithOwnTickets):
         missing = cycle.wp1_missing()
         if missing:
             raise Refused("experiment pieces missing: " + ", ".join(missing))
@@ -458,7 +547,14 @@ def _main(a, *, pipeline, mock_scripts) -> int:
                             "replicate": k, "cell": f"{t}|{a.visibility}|{SPEC}|W1|{a.unit}", "try_id": try_id,
                             "mock_as": a.mock_as if is_mock else None})
     scripts = {}
-    if is_mock:
+    if is_mock and own_repo:
+        try:
+            mine = {**try_own.load_mock_scripts(a.mock_script), **(mock_scripts or {})}
+        except try_own.OwnRefused as e:
+            raise Refused(str(e)) from None
+        for e in entries:
+            scripts[e["run_id"]] = mine.get(e["ticket"]) or {"gen": None, "repairs": []}
+    elif is_mock:
         from harness.adapters.mock import load_scripts
         table = {**load_scripts(), **(mock_scripts or {})}
         for e in entries:
@@ -473,6 +569,11 @@ def _main(a, *, pipeline, mock_scripts) -> int:
             "context_file": context_file_name(unit), "context": dict(ctx_meta, copy=ctx_copy.relative_to(ns_dir).as_posix()),
             "visibility": a.visibility, "tickets": tickets, "n": a.n, "mock_as": a.mock_as if is_mock else None,
             "verdict_file": str(verdict_file)}
+    if own_repo:
+        meta["own"] = own.describe()
+        meta["visibility"] = "your repo"
+    if own_tickets:
+        meta["own_tickets"] = {k: str(v.path) for k, v in own_tickets.items()}
     manifest = jsonio.read_json(paths.manifest_path(NS)) or {"schema": "try-manifest/1", "namespace": NS,
                                                                "tries": {}, "runs": []}
     manifest["tries"][try_id] = {k: v for k, v in meta.items() if k != "verdict_file"}
@@ -486,10 +587,10 @@ def _main(a, *, pipeline, mock_scripts) -> int:
     lock = _in_try(paths.runner_lock_path(NS))
     lock.write_text(str(os.getpid()), encoding="utf-8")
     batch = TryBatch(entries=entries, units=units, pipeline=pipeline, context_text=text, context_meta=meta["context"],
-                     scripts=scripts, workers=a.workers, quiet=a.quiet, state=state)
+                     scripts=scripts, workers=a.workers, quiet=a.quiet, state=state, own=own)
     batch.save()
     batch.say(f"Try {try_id}: {len(entries)} run(s) = {len(tickets)} ticket(s) x {a.n}, unit {a.unit}, "
-              f"{a.visibility}; your file goes in as {meta['context_file']}.")
+              f"{meta['visibility']}; your file goes in as {meta['context_file']}.")
     code = EXIT_OK
     try:
         code = batch.run()
