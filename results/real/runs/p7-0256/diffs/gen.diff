@@ -1,0 +1,45 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..a4b9378 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -12,11 +12,15 @@ export interface OrderPlaced {
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
++  readonly createdAt: string;
++  /** @deprecated Use `createdAt`; kept for deployed consumers (ARCH-4). Same value. */
+   readonly placedAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
++  readonly amountCents: number;
++  /** @deprecated Use `amountCents`; kept for deployed consumers (ARCH-4). Same value. */
+   readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+@@ -46,9 +50,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    createdAt: order.placedAt,
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
++    amountCents: totalCents(order),
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..e8f119b 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -49,6 +49,8 @@ describe("POST /orders", () => {
+     );
+     assert.equal(res.status, 201);
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).amountCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).createdAt, (publisher.events[0] as OrderPlaced).placedAt);
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {

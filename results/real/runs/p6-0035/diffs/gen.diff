@@ -1,0 +1,96 @@
+diff --git a/src/api/ordersController.ts b/src/api/ordersController.ts
+index d64f0cf..669f16f 100644
+--- a/src/api/ordersController.ts
++++ b/src/api/ordersController.ts
+@@ -2,7 +2,7 @@ import type { OrderService } from "../core/orderService.js";
+ import { toErrorResponse } from "./errorMapper.js";
+ import { errorResponse, json, queryOf, splitPath, type HttpRequest, type HttpResponse } from "./http.js";
+ import { parseCancelRequest, parseListOrdersQuery, parsePlaceOrderRequest } from "./requestParsing.js";
+-import { toOrderListResponse, toOrderResponse } from "./responses.js";
++import { toOrderDetailResponse, toOrderListResponse, toOrderResponse } from "./responses.js";
+ 
+ export interface OrdersController {
+   handle(request: HttpRequest): Promise<HttpResponse>;
+@@ -53,7 +53,7 @@ async function dispatch(service: OrderService, request: HttpRequest): Promise<Ht
+       return json(200, { status: "ok" });
+     case "getOrder": {
+       const order = await service.getOrder(route.id);
+-      return json(200, toOrderResponse(order));
++      return json(200, toOrderDetailResponse(order));
+     }
+     case "cancelOrder": {
+       const { reason } = parseCancelRequest(request.body);
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..92dd2eb 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -2,19 +2,27 @@ import { totalCents, type Order } from "../core/order.js";
+ import type { OrderPage } from "../core/orderService.js";
+ import { encodeCursor } from "./cursor.js";
+ 
+-/** Body of `GET /orders/{id}` (200). Also returned by `POST /orders` and `POST /orders/{id}/cancel`. */
++/** Body returned by `POST /orders`, `GET /orders`, and `POST /orders/{id}/cancel`. */
+ export interface OrderResponse {
+   readonly id: string;
+   readonly status: string;
+   readonly placedAt: string;
+   readonly currency: string;
+   readonly totalCents: number;
+-  readonly lines: ReadonlyArray<{
+-    readonly sku: string;
+-    readonly name: string;
+-    readonly qty: number;
+-    readonly unitPriceCents: number;
+-  }>;
++  readonly lines: readonly OrderItemResponse[];
++}
++
++export interface OrderItemResponse {
++  readonly sku: string;
++  readonly name: string;
++  readonly qty: number;
++  readonly unitPriceCents: number;
++}
++
++/** Body of `GET /orders/{id}` (200). */
++export interface OrderDetailResponse extends OrderResponse {
++  /** Preferred name for the order contents. */
++  readonly items: readonly OrderItemResponse[];
+ }
+ 
+ export interface OrderListResponse {
+@@ -40,6 +48,17 @@ export function toOrderResponse(order: Order): OrderResponse {
+   };
+ }
+ 
++/**
++ * Maps the order-read representation.
++ *
++ * `lines` remains during the deprecation period because web-storefront consumes
++ * this endpoint; clients should use `items` instead.
++ */
++export function toOrderDetailResponse(order: Order): OrderDetailResponse {
++  const response = toOrderResponse(order);
++  return { ...response, items: response.lines };
++}
++
+ export function toOrderListResponse(page: OrderPage): OrderListResponse {
+   const orders = page.orders.map(toOrderResponse);
+   return page.next === undefined ? { orders } : { orders, nextCursor: encodeCursor(page.next) };
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..77768cd 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -89,7 +89,11 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines", "items"]);
++    assert.deepEqual((res.body as { items: unknown }).items, [
++      { sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 },
++    ]);
++    assert.deepEqual((res.body as { lines: unknown }).lines, (res.body as { items: unknown }).items);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

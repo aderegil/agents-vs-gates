@@ -1,0 +1,52 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..71ad144 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -11,13 +11,17 @@ export interface OrderPlaced {
+   readonly customerId: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+-  /** ISO-8601 instant. */
++  /** ISO-8601 instant. Deprecated: use `createdAt`; kept for existing consumers. */
+   readonly placedAt: string;
++  /** ISO-8601 instant; same value as `placedAt`, named as in the Payments and Customer APIs. */
++  readonly createdAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+-  /** Integer, minor units. */
++  /** Integer, minor units. Deprecated: use `amountCents`; kept for existing consumers. */
+   readonly totalCents: number;
++  /** Integer, minor units; same value as `totalCents`, named as in the Payments and Customer APIs. */
++  readonly amountCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -47,9 +51,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    createdAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
++    amountCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..5a78c05 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,9 +25,11 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      createdAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
+       totalCents: 1250,
++      amountCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [

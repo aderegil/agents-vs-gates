@@ -1,0 +1,101 @@
+diff --git a/src/api/ordersController.ts b/src/api/ordersController.ts
+index d64f0cf..669f16f 100644
+--- a/src/api/ordersController.ts
++++ b/src/api/ordersController.ts
+@@ -2,7 +2,7 @@ import type { OrderService } from "../core/orderService.js";
+ import { toErrorResponse } from "./errorMapper.js";
+ import { errorResponse, json, queryOf, splitPath, type HttpRequest, type HttpResponse } from "./http.js";
+ import { parseCancelRequest, parseListOrdersQuery, parsePlaceOrderRequest } from "./requestParsing.js";
+-import { toOrderListResponse, toOrderResponse } from "./responses.js";
++import { toOrderDetailResponse, toOrderListResponse, toOrderResponse } from "./responses.js";
+ 
+ export interface OrdersController {
+   handle(request: HttpRequest): Promise<HttpResponse>;
+@@ -53,7 +53,7 @@ async function dispatch(service: OrderService, request: HttpRequest): Promise<Ht
+       return json(200, { status: "ok" });
+     case "getOrder": {
+       const order = await service.getOrder(route.id);
+-      return json(200, toOrderResponse(order));
++      return json(200, toOrderDetailResponse(order));
+     }
+     case "cancelOrder": {
+       const { reason } = parseCancelRequest(request.body);
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..4dba087 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -2,7 +2,7 @@ import { totalCents, type Order } from "../core/order.js";
+ import type { OrderPage } from "../core/orderService.js";
+ import { encodeCursor } from "./cursor.js";
+ 
+-/** Body of `GET /orders/{id}` (200). Also returned by `POST /orders` and `POST /orders/{id}/cancel`. */
++/** Body returned when an order is placed, cancelled, or included in a list. */
+ export interface OrderResponse {
+   readonly id: string;
+   readonly status: string;
+@@ -17,6 +17,21 @@ export interface OrderResponse {
+   }>;
+ }
+ 
++/** Body of `GET /orders/{id}` (200). */
++export interface OrderDetailResponse {
++  readonly id: string;
++  readonly status: string;
++  readonly placedAt: string;
++  readonly currency: string;
++  readonly totalCents: number;
++  readonly items: ReadonlyArray<{
++    readonly sku: string;
++    readonly name: string;
++    readonly qty: number;
++    readonly unitPriceCents: number;
++  }>;
++}
++
+ export interface OrderListResponse {
+   readonly orders: readonly OrderResponse[];
+   /** Pass as `cursor` to fetch the next page; absent on the last page. */
+@@ -40,6 +55,23 @@ export function toOrderResponse(order: Order): OrderResponse {
+   };
+ }
+ 
++/** Maps an order to the representation used by the single-order read endpoint. */
++export function toOrderDetailResponse(order: Order): OrderDetailResponse {
++  return {
++    id: order.id,
++    status: order.status,
++    placedAt: order.placedAt,
++    currency: order.currency,
++    totalCents: totalCents(order),
++    items: order.lines.map((line) => ({
++      sku: line.sku,
++      name: line.name,
++      qty: line.qty,
++      unitPriceCents: line.unitPriceCents,
++    })),
++  };
++}
++
+ export function toOrderListResponse(page: OrderPage): OrderListResponse {
+   const orders = page.orders.map(toOrderResponse);
+   return page.next === undefined ? { orders } : { orders, nextCursor: encodeCursor(page.next) };
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..ef1483b 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -89,7 +89,14 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(res.body, {
++      id: "ord-1",
++      status: "placed",
++      placedAt: FIXED_NOW,
++      currency: "USD",
++      totalCents: 1250,
++      items: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
++    });
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

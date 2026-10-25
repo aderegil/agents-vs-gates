@@ -1,0 +1,3254 @@
+{
+  "generated_at": "2026-10-11T07:27:45+00:00",
+  "service_build": "svc-5ee9a617d8bf2bc937c34ce7",
+  "suites_dir": "C:\\avg\\agents-vs-gates\\oracle\\suites",
+  "control": {
+    "ci": false,
+    "oracle": false
+  },
+  "counts": {
+    "both": 78,
+    "ci_only": 0,
+    "oracle_only": 15,
+    "neither": 11
+  },
+  "by_family": {
+    "array": {
+      "both": 2,
+      "ci_only": 0,
+      "oracle_only": 3,
+      "neither": 1
+    },
+    "currency": {
+      "both": 0,
+      "ci_only": 0,
+      "oracle_only": 6,
+      "neither": 0
+    },
+    "date": {
+      "both": 7,
+      "ci_only": 0,
+      "oracle_only": 0,
+      "neither": 3
+    },
+    "null": {
+      "both": 12,
+      "ci_only": 0,
+      "oracle_only": 0,
+      "neither": 0
+    },
+    "remove": {
+      "both": 20,
+      "ci_only": 0,
+      "oracle_only": 0,
+      "neither": 2
+    },
+    "rename": {
+      "both": 21,
+      "ci_only": 0,
+      "oracle_only": 0,
+      "neither": 2
+    },
+    "type": {
+      "both": 13,
+      "ci_only": 0,
+      "oracle_only": 0,
+      "neither": 2
+    },
+    "units": {
+      "both": 3,
+      "ci_only": 0,
+      "oracle_only": 6,
+      "neither": 1
+    }
+  },
+  "cells": {
+    "both": [
+      "ev-rename-orderId",
+      "ev-rename-customerId",
+      "ev-rename-customerEmail",
+      "ev-rename-placedAt",
+      "ev-rename-channel",
+      "ev-rename-currency",
+      "ev-rename-totalCents",
+      "ev-rename-lines",
+      "ev-rename-lines[].sku",
+      "ev-rename-lines[].qty",
+      "ev-remove-orderId",
+      "ev-remove-customerId",
+      "ev-remove-customerEmail",
+      "ev-remove-placedAt",
+      "ev-remove-channel",
+      "ev-remove-currency",
+      "ev-remove-totalCents",
+      "ev-remove-lines",
+      "ev-remove-lines[].sku",
+      "ev-remove-lines[].qty",
+      "rest-rename-id",
+      "rest-rename-status",
+      "rest-rename-currency",
+      "rest-rename-totalCents",
+      "rest-rename-lines",
+      "rest-rename-lines[].sku",
+      "rest-rename-lines[].name",
+      "rest-rename-lines[].qty",
+      "rest-rename-lines[].unitPriceCents",
+      "rest-remove-id",
+      "rest-remove-status",
+      "rest-remove-currency",
+      "rest-remove-totalCents",
+      "rest-remove-lines",
+      "rest-remove-lines[].sku",
+      "rest-remove-lines[].name",
+      "rest-remove-lines[].qty",
+      "rest-remove-lines[].unitPriceCents",
+      "ev-type-orderId-number",
+      "ev-type-customerId-number",
+      "ev-type-totalCents-string",
+      "ev-type-qty-string",
+      "ev-type-currency-object",
+      "ev-type-lines-object",
+      "rest-type-id-number",
+      "rest-type-totalCents-string",
+      "rest-type-qty-string",
+      "rest-type-unitPrice-string",
+      "rest-type-status-boolean",
+      "ev-null-totalCents",
+      "ev-null-currency",
+      "ev-null-channel",
+      "ev-null-placedAt",
+      "ev-null-customerEmail",
+      "ev-null-lines",
+      "ev-null-lines[].sku",
+      "rest-null-totalCents",
+      "rest-null-currency",
+      "rest-null-lines",
+      "rest-null-status",
+      "rest-null-lines[].name",
+      "ev-units-total-div100",
+      "rest-units-total-div100",
+      "rest-units-price-div100",
+      "ev-date-date_only",
+      "ev-date-epoch_ms",
+      "ev-date-epoch_s",
+      "ev-date-utc_string",
+      "ev-date-no_zone",
+      "ev-date-us_date",
+      "cancel-date-date_only",
+      "cancel-rename-cancelledAt",
+      "cancel-remove-cancelledAt",
+      "ev-array-lines-empty",
+      "rest-array-lines-empty",
+      "ev-enum-channel-upper",
+      "ev-enum-channel-online",
+      "ev-type-name"
+    ],
+    "ci_only": [],
+    "oracle_only": [
+      "ev-units-total-x100",
+      "ev-units-total-round",
+      "ev-units-total-floor",
+      "rest-units-total-x100",
+      "rest-units-total-round",
+      "rest-units-price-round",
+      "ev-array-lines-duplicate",
+      "rest-array-lines-duplicate",
+      "rest-array-lines-reverse",
+      "ev-currency-EUR",
+      "ev-currency-lower",
+      "ev-currency-numeric",
+      "ev-currency-symbol",
+      "rest-currency-EUR",
+      "rest-currency-lower"
+    ],
+    "neither": [
+      "ev-rename-lines[].unitPriceCents",
+      "ev-remove-lines[].unitPriceCents",
+      "rest-rename-placedAt",
+      "rest-remove-placedAt",
+      "ev-type-unitPrice-string",
+      "ev-units-price-div100",
+      "rest-date-date_only",
+      "rest-date-epoch_ms",
+      "rest-date-utc_string",
+      "ev-array-lines-reverse",
+      "ev-schemaVersion-4"
+    ]
+  },
+  "mutants": [
+    {
+      "id": "control",
+      "family": "control",
+      "target": "none",
+      "description": "no mutation (sanity control)",
+      "ops": [],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "ev-rename-orderId",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename orderId -> id",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "orderId",
+          "to": "id"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.orderId missing (required string)",
+          "ARCH-4 FAIL billing-service: OrderPlaced.orderId missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: orderId: expected a non-empty string, got missing | analytics records order B with the right channel, date and units: analy",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: orderId: expected a non-empty string, got missing | billing emails the order A invoice to the customerEmail: billing could not "
+        }
+      }
+    },
+    {
+      "id": "ev-rename-customerId",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename customerId -> customer_id",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "customerId",
+          "to": "customer_id"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.customerId missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: customerId: expected a non-empty string, got missing | billing emails the order A invoice to the customerEmail: billing could n"
+        }
+      }
+    },
+    {
+      "id": "ev-rename-customerEmail",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename customerEmail -> email",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "customerEmail",
+          "to": "email"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.customerEmail missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: customerEmail: expected a non-empty string, got missing | billing emails the order A invoice to the customerEmail: billing coul"
+        }
+      }
+    },
+    {
+      "id": "ev-rename-placedAt",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename placedAt -> createdAt",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "placedAt",
+          "to": "createdAt"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got missing | analytics records order B with the right channel, date and units: an"
+        }
+      }
+    },
+    {
+      "id": "ev-rename-channel",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename channel -> salesChannel",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "channel",
+          "to": "salesChannel"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.channel missing (required enum:web|store|marketplace)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: channel: expected one of web|store|marketplace, got missing | analytics records order B with the right channel, date and un"
+        }
+      }
+    },
+    {
+      "id": "ev-rename-currency",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename currency -> currencyCode",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "currency",
+          "to": "currencyCode"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.currency missing (required string)",
+          "ARCH-4 FAIL billing-service: OrderPlaced.currency missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got missing | analytics records order B with the right channel, date and units: analyt",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got missing | billing emails the order A invoice to the customerEmail: billing could not i"
+        }
+      }
+    },
+    {
+      "id": "ev-rename-totalCents",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename totalCents -> amountCents",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "totalCents",
+          "to": "amountCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got missing | billing emails the order A invoice to the customerEmail: billing"
+        }
+      }
+    },
+    {
+      "id": "ev-rename-lines",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename lines -> items",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines",
+          "to": "items"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines missing (required array for lines[].sku)",
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines missing (required array for lines[].qty)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines: expected an array, got missing | analytics records order B with the right channel, date and units: analytics could n"
+        }
+      }
+    },
+    {
+      "id": "ev-rename-lines[].sku",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename lines[].sku -> productSku",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines[].sku",
+          "to": "productSku"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines[0].sku missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines[0].sku: expected a non-empty string, got missing; lines[1].sku: expected a non-empty string, got missing | analytics "
+        }
+      }
+    },
+    {
+      "id": "ev-rename-lines[].qty",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename lines[].qty -> quantity",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines[].qty",
+          "to": "quantity"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines[0].qty missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines[0].qty: expected a positive integer, got missing; lines[1].qty: expected a positive integer, got missing | analytics "
+        }
+      }
+    },
+    {
+      "id": "ev-rename-lines[].unitPriceCents",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "rename lines[].unitPriceCents -> unitPrice",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines[].unitPriceCents",
+          "to": "unitPrice"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "ev-remove-orderId",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove orderId",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "orderId"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.orderId missing (required string)",
+          "ARCH-4 FAIL billing-service: OrderPlaced.orderId missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: orderId: expected a non-empty string, got missing | analytics records order B with the right channel, date and units: analy",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: orderId: expected a non-empty string, got missing | billing emails the order A invoice to the customerEmail: billing could not "
+        }
+      }
+    },
+    {
+      "id": "ev-remove-customerId",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove customerId",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "customerId"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.customerId missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: customerId: expected a non-empty string, got missing | billing emails the order A invoice to the customerEmail: billing could n"
+        }
+      }
+    },
+    {
+      "id": "ev-remove-customerEmail",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove customerEmail",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "customerEmail"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.customerEmail missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: customerEmail: expected a non-empty string, got missing | billing emails the order A invoice to the customerEmail: billing coul"
+        }
+      }
+    },
+    {
+      "id": "ev-remove-placedAt",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove placedAt",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "placedAt"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got missing | analytics records order B with the right channel, date and units: an"
+        }
+      }
+    },
+    {
+      "id": "ev-remove-channel",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove channel",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "channel"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.channel missing (required enum:web|store|marketplace)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: channel: expected one of web|store|marketplace, got missing | analytics records order B with the right channel, date and un"
+        }
+      }
+    },
+    {
+      "id": "ev-remove-currency",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove currency",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "currency"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.currency missing (required string)",
+          "ARCH-4 FAIL billing-service: OrderPlaced.currency missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got missing | analytics records order B with the right channel, date and units: analyt",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got missing | billing emails the order A invoice to the customerEmail: billing could not i"
+        }
+      }
+    },
+    {
+      "id": "ev-remove-totalCents",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove totalCents",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "totalCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got missing | billing emails the order A invoice to the customerEmail: billing"
+        }
+      }
+    },
+    {
+      "id": "ev-remove-lines",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove lines",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines missing (required array for lines[].sku)",
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines missing (required array for lines[].qty)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines: expected an array, got missing | analytics records order B with the right channel, date and units: analytics could n"
+        }
+      }
+    },
+    {
+      "id": "ev-remove-lines[].sku",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove lines[].sku",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines[].sku"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines[0].sku missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines[0].sku: expected a non-empty string, got missing; lines[1].sku: expected a non-empty string, got missing | analytics "
+        }
+      }
+    },
+    {
+      "id": "ev-remove-lines[].qty",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove lines[].qty",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines[].qty"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines[0].qty missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines[0].qty: expected a positive integer, got missing; lines[1].qty: expected a positive integer, got missing | analytics "
+        }
+      }
+    },
+    {
+      "id": "ev-remove-lines[].unitPriceCents",
+      "family": "remove",
+      "target": "OrderPlaced",
+      "description": "remove lines[].unitPriceCents",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines[].unitPriceCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "rest-rename-id",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename id -> orderId",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "id",
+          "to": "orderId"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.id missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: id: expected a non-empty string, got missing | storefront lists the line of order B and shows €19.90: storefront could not fetch"
+        }
+      }
+    },
+    {
+      "id": "rest-rename-status",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename status -> state",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "status",
+          "to": "state"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.status missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: status: expected a non-empty string, got missing | storefront lists the line of order B and shows €19.90: storefront could not f"
+        }
+      }
+    },
+    {
+      "id": "rest-rename-placedAt",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename placedAt -> createdAt",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "placedAt",
+          "to": "createdAt"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "rest-rename-currency",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename currency -> currencyCode",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "currency",
+          "to": "currencyCode"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.currency missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: currency: expected an ISO-4217 code, got missing | storefront lists the line of order B and shows €19.90: storefront could not f"
+        }
+      }
+    },
+    {
+      "id": "rest-rename-totalCents",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename totalCents -> amountCents",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "totalCents",
+          "to": "amountCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.totalCents missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: totalCents: expected an integer number of minor units, got missing | storefront lists the line of order B and shows €19.90: stor"
+        }
+      }
+    },
+    {
+      "id": "rest-rename-lines",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename lines -> items",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines",
+          "to": "items"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array for lines[].sku)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array for lines[].name)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array for lines[].qty)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array for lines[].unitPriceCents)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines: expected an array, got missing | storefront lists the line of order B and shows €19.90: storefront could not fetch order "
+        }
+      }
+    },
+    {
+      "id": "rest-rename-lines[].sku",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename lines[].sku -> productSku",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines[].sku",
+          "to": "productSku"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].sku missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].sku: expected a non-empty string, got missing; lines[1].sku: expected a non-empty string, got missing | storefront list"
+        }
+      }
+    },
+    {
+      "id": "rest-rename-lines[].name",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename lines[].name -> title",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines[].name",
+          "to": "title"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].name missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].name: expected a non-empty string, got missing; lines[1].name: expected a non-empty string, got missing | storefront li"
+        }
+      }
+    },
+    {
+      "id": "rest-rename-lines[].qty",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename lines[].qty -> quantity",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines[].qty",
+          "to": "quantity"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].qty missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].qty: expected a positive integer, got missing; lines[1].qty: expected a positive integer, got missing | storefront list"
+        }
+      }
+    },
+    {
+      "id": "rest-rename-lines[].unitPriceCents",
+      "family": "rename",
+      "target": "GET /orders/{id}",
+      "description": "rename lines[].unitPriceCents -> unitPrice",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "lines[].unitPriceCents",
+          "to": "unitPrice"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].unitPriceCents missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].unitPriceCents: expected an integer number of minor units, got missing; lines[1].unitPriceCents: expected an integer nu"
+        }
+      }
+    },
+    {
+      "id": "rest-remove-id",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove id",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "id"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.id missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: id: expected a non-empty string, got missing | storefront lists the line of order B and shows €19.90: storefront could not fetch"
+        }
+      }
+    },
+    {
+      "id": "rest-remove-status",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove status",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "status"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.status missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: status: expected a non-empty string, got missing | storefront lists the line of order B and shows €19.90: storefront could not f"
+        }
+      }
+    },
+    {
+      "id": "rest-remove-placedAt",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove placedAt",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "placedAt"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "rest-remove-currency",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove currency",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "currency"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.currency missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: currency: expected an ISO-4217 code, got missing | storefront lists the line of order B and shows €19.90: storefront could not f"
+        }
+      }
+    },
+    {
+      "id": "rest-remove-totalCents",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove totalCents",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "totalCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.totalCents missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: totalCents: expected an integer number of minor units, got missing | storefront lists the line of order B and shows €19.90: stor"
+        }
+      }
+    },
+    {
+      "id": "rest-remove-lines",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove lines",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array for lines[].sku)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array for lines[].name)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array for lines[].qty)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines missing (required array for lines[].unitPriceCents)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines: expected an array, got missing | storefront lists the line of order B and shows €19.90: storefront could not fetch order "
+        }
+      }
+    },
+    {
+      "id": "rest-remove-lines[].sku",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove lines[].sku",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines[].sku"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].sku missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].sku: expected a non-empty string, got missing; lines[1].sku: expected a non-empty string, got missing | storefront list"
+        }
+      }
+    },
+    {
+      "id": "rest-remove-lines[].name",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove lines[].name",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines[].name"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].name missing (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].name: expected a non-empty string, got missing; lines[1].name: expected a non-empty string, got missing | storefront li"
+        }
+      }
+    },
+    {
+      "id": "rest-remove-lines[].qty",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove lines[].qty",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines[].qty"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].qty missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].qty: expected a positive integer, got missing; lines[1].qty: expected a positive integer, got missing | storefront list"
+        }
+      }
+    },
+    {
+      "id": "rest-remove-lines[].unitPriceCents",
+      "family": "remove",
+      "target": "GET /orders/{id}",
+      "description": "remove lines[].unitPriceCents",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "lines[].unitPriceCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].unitPriceCents missing (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].unitPriceCents: expected an integer number of minor units, got missing; lines[1].unitPriceCents: expected an integer nu"
+        }
+      }
+    },
+    {
+      "id": "ev-type-orderId-number",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "orderId as a number",
+      "ops": [
+        {
+          "op": "set",
+          "value": 12345,
+          "path": "orderId"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.orderId is 12345 (required string)",
+          "ARCH-4 FAIL billing-service: OrderPlaced.orderId is 12345 (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: orderId: expected a non-empty string, got number 12345 | analytics records order B with the right channel, date and units: ",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: orderId: expected a non-empty string, got number 12345 | billing emails the order A invoice to the customerEmail: billing could"
+        }
+      }
+    },
+    {
+      "id": "ev-type-customerId-number",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "customerId as a number",
+      "ops": [
+        {
+          "op": "set",
+          "value": 42,
+          "path": "customerId"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.customerId is 42 (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: customerId: expected a non-empty string, got number 42 | billing emails the order A invoice to the customerEmail: billing could"
+        }
+      }
+    },
+    {
+      "id": "ev-type-totalCents-string",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "totalCents as a string",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "string",
+          "path": "totalCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.totalCents is \"1250\" (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got string \"2497\" | billing emails the order A invoice to the customerEmail: b"
+        }
+      }
+    },
+    {
+      "id": "ev-type-qty-string",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "lines[].qty as a string",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "string",
+          "path": "lines[].qty"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines[0].qty is \"2\" (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines[0].qty: expected a positive integer, got string \"3\"; lines[1].qty: expected a positive integer, got string \"1\" | anal"
+        }
+      }
+    },
+    {
+      "id": "ev-type-unitPrice-string",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "lines[].unitPriceCents as a string",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "string",
+          "path": "lines[].unitPriceCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "ev-type-currency-object",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "currency wrapped in an object",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "wrap_object",
+          "path": "currency"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.currency is {\"value\":\"USD\"} (required string)",
+          "ARCH-4 FAIL billing-service: OrderPlaced.currency is {\"value\":\"USD\"} (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got object {\"value\":\"USD\"} | analytics records order B with the right channel, date an",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got object {\"value\":\"USD\"} | billing emails the order A invoice to the customerEmail: bill"
+        }
+      }
+    },
+    {
+      "id": "ev-type-lines-object",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "lines wrapped in an object",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "wrap_object",
+          "path": "lines"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines is {\"value\":[{\"sku\":\"SKU-CHK-1\",\"qty\":2,\"unitPriceCents\":625}]} (required array for lines[].sku)",
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines is {\"value\":[{\"sku\":\"SKU-CHK-1\",\"qty\":2,\"unitPriceCents\":625}]} (required array for lines[].qty)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines: expected an array, got object {\"value\":[{\"sku\":\"SKU-TEE\",\"qty\":3,\"unitPriceCents\":499},{\"sku\":\"SKU-MUG\",\"qty\":1,\"uni"
+        }
+      }
+    },
+    {
+      "id": "rest-type-id-number",
+      "family": "type",
+      "target": "GET /orders/{id}",
+      "description": "id as a number",
+      "ops": [
+        {
+          "op": "set",
+          "value": 12345,
+          "path": "id"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.id is 12345 (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: id: expected a non-empty string, got number 12345 | storefront lists the line of order B and shows €19.90: storefront could not "
+        }
+      }
+    },
+    {
+      "id": "rest-type-totalCents-string",
+      "family": "type",
+      "target": "GET /orders/{id}",
+      "description": "totalCents as a string",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "string",
+          "path": "totalCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.totalCents is \"1250\" (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: totalCents: expected an integer number of minor units, got string \"2497\" | storefront lists the line of order B and shows €19.90"
+        }
+      }
+    },
+    {
+      "id": "rest-type-qty-string",
+      "family": "type",
+      "target": "GET /orders/{id}",
+      "description": "lines[].qty as a string",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "string",
+          "path": "lines[].qty"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].qty is \"2\" (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].qty: expected a positive integer, got string \"3\"; lines[1].qty: expected a positive integer, got string \"1\" | storefron"
+        }
+      }
+    },
+    {
+      "id": "rest-type-unitPrice-string",
+      "family": "type",
+      "target": "GET /orders/{id}",
+      "description": "lines[].unitPriceCents as a string",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "string",
+          "path": "lines[].unitPriceCents"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].unitPriceCents is \"625\" (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].unitPriceCents: expected an integer number of minor units, got string \"499\"; lines[1].unitPriceCents: expected an integ"
+        }
+      }
+    },
+    {
+      "id": "rest-type-status-boolean",
+      "family": "type",
+      "target": "GET /orders/{id}",
+      "description": "status as a boolean",
+      "ops": [
+        {
+          "op": "map",
+          "fn": "boolean",
+          "path": "status"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.status is true (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: status: expected a non-empty string, got boolean true | storefront lists the line of order B and shows €19.90: storefront could "
+        }
+      }
+    },
+    {
+      "id": "ev-null-totalCents",
+      "family": "null",
+      "target": "OrderPlaced",
+      "description": "totalCents = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "totalCents",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.totalCents is null (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got null | billing emails the order A invoice to the customerEmail: billing co"
+        }
+      }
+    },
+    {
+      "id": "ev-null-currency",
+      "family": "null",
+      "target": "OrderPlaced",
+      "description": "currency = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "currency",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.currency is null (required string)",
+          "ARCH-4 FAIL billing-service: OrderPlaced.currency is null (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got null | analytics records order B with the right channel, date and units: analytics",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got null | billing emails the order A invoice to the customerEmail: billing could not invo"
+        }
+      }
+    },
+    {
+      "id": "ev-null-channel",
+      "family": "null",
+      "target": "OrderPlaced",
+      "description": "channel = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "channel",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.channel is null (required enum:web|store|marketplace)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: channel: expected one of web|store|marketplace, got null | analytics records order B with the right channel, date and units"
+        }
+      }
+    },
+    {
+      "id": "ev-null-placedAt",
+      "family": "null",
+      "target": "OrderPlaced",
+      "description": "placedAt = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "placedAt",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt is null (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got null | analytics records order B with the right channel, date and units: analy"
+        }
+      }
+    },
+    {
+      "id": "ev-null-customerEmail",
+      "family": "null",
+      "target": "OrderPlaced",
+      "description": "customerEmail = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "customerEmail",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.customerEmail is null (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: customerEmail: expected a non-empty string, got null | billing emails the order A invoice to the customerEmail: billing could n"
+        }
+      }
+    },
+    {
+      "id": "ev-null-lines",
+      "family": "null",
+      "target": "OrderPlaced",
+      "description": "lines = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "lines",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines is null (required array for lines[].sku)",
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines is null (required array for lines[].qty)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines: expected an array, got null | analytics records order B with the right channel, date and units: analytics could not "
+        }
+      }
+    },
+    {
+      "id": "ev-null-lines[].sku",
+      "family": "null",
+      "target": "OrderPlaced",
+      "description": "lines[].sku = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "lines[].sku",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines[0].sku is null (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: lines[0].sku: expected a non-empty string, got null; lines[1].sku: expected a non-empty string, got null | analytics record"
+        }
+      }
+    },
+    {
+      "id": "rest-null-totalCents",
+      "family": "null",
+      "target": "GET /orders/{id}",
+      "description": "totalCents = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "totalCents",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.totalCents is null (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: totalCents: expected an integer number of minor units, got null | storefront lists the line of order B and shows €19.90: storefr"
+        }
+      }
+    },
+    {
+      "id": "rest-null-currency",
+      "family": "null",
+      "target": "GET /orders/{id}",
+      "description": "currency = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "currency",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.currency is null (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: currency: expected an ISO-4217 code, got null | storefront lists the line of order B and shows €19.90: storefront could not fetc"
+        }
+      }
+    },
+    {
+      "id": "rest-null-lines",
+      "family": "null",
+      "target": "GET /orders/{id}",
+      "description": "lines = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "lines",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is null (required array)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is null (required array for lines[].sku)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is null (required array for lines[].name)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is null (required array for lines[].qty)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is null (required array for lines[].unitPriceCents)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines: expected an array, got null | storefront lists the line of order B and shows €19.90: storefront could not fetch order B: "
+        }
+      }
+    },
+    {
+      "id": "rest-null-status",
+      "family": "null",
+      "target": "GET /orders/{id}",
+      "description": "status = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "status",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.status is null (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: status: expected a non-empty string, got null | storefront lists the line of order B and shows €19.90: storefront could not fetc"
+        }
+      }
+    },
+    {
+      "id": "rest-null-lines[].name",
+      "family": "null",
+      "target": "GET /orders/{id}",
+      "description": "lines[].name = null",
+      "ops": [
+        {
+          "op": "set",
+          "path": "lines[].name",
+          "value": null
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].name is null (required string)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].name: expected a non-empty string, got null; lines[1].name: expected a non-empty string, got null | storefront lists th"
+        }
+      }
+    },
+    {
+      "id": "ev-units-total-x100",
+      "family": "units",
+      "target": "OrderPlaced",
+      "description": "totalCents x100",
+      "ops": [
+        {
+          "op": "map",
+          "path": "totalCents",
+          "fn": "x100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "3 of 5 tests failed: billing invoices order A for the order total, in its currency: billing invoiced order A for 249700 cents, expected 2497 | billing invoices order B for the order total, in its currency: billing invoiced order B for 199000 cents, expected 1990 | billing invoices A and B side by si"
+        }
+      }
+    },
+    {
+      "id": "ev-units-total-div100",
+      "family": "units",
+      "target": "OrderPlaced",
+      "description": "totalCents /100 (dollars)",
+      "ops": [
+        {
+          "op": "map",
+          "path": "totalCents",
+          "fn": "div100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL billing-service: OrderPlaced.totalCents is 12.5 (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got number 24.97 | billing emails the order A invoice to the customerEmail: bi"
+        }
+      }
+    },
+    {
+      "id": "ev-units-total-round",
+      "family": "units",
+      "target": "OrderPlaced",
+      "description": "totalCents in rounded dollars",
+      "ops": [
+        {
+          "op": "map",
+          "path": "totalCents",
+          "fn": "round_div100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "3 of 5 tests failed: billing invoices order A for the order total, in its currency: billing invoiced order A for 25 cents, expected 2497 | billing invoices order B for the order total, in its currency: billing invoiced order B for 20 cents, expected 1990 | billing invoices A and B side by side in on"
+        }
+      }
+    },
+    {
+      "id": "ev-units-total-floor",
+      "family": "units",
+      "target": "OrderPlaced",
+      "description": "totalCents in truncated dollars",
+      "ops": [
+        {
+          "op": "map",
+          "path": "totalCents",
+          "fn": "floor_div100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "billing-service"
+        ],
+        "messages": {
+          "billing-service": "3 of 5 tests failed: billing invoices order A for the order total, in its currency: billing invoiced order A for 24 cents, expected 2497 | billing invoices order B for the order total, in its currency: billing invoiced order B for 19 cents, expected 1990 | billing invoices A and B side by side in on"
+        }
+      }
+    },
+    {
+      "id": "ev-units-price-div100",
+      "family": "units",
+      "target": "OrderPlaced",
+      "description": "lines[].unitPriceCents /100",
+      "ops": [
+        {
+          "op": "map",
+          "path": "lines[].unitPriceCents",
+          "fn": "div100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "rest-units-total-x100",
+      "family": "units",
+      "target": "GET /orders/{id}",
+      "description": "totalCents x100",
+      "ops": [
+        {
+          "op": "map",
+          "path": "totalCents",
+          "fn": "x100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront shows $2,497.00 as the total of order A, expected $24.97 | storefront lists the line of order B and shows €19.90: storefront shows €1,990.00 as the total of order B, expected €19.90 | storefront receipt for each "
+        }
+      }
+    },
+    {
+      "id": "rest-units-total-div100",
+      "family": "units",
+      "target": "GET /orders/{id}",
+      "description": "totalCents /100 (dollars)",
+      "ops": [
+        {
+          "op": "map",
+          "path": "totalCents",
+          "fn": "div100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.totalCents is 12.5 (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: totalCents: expected an integer number of minor units, got number 24.97 | storefront lists the line of order B and shows €19.90:"
+        }
+      }
+    },
+    {
+      "id": "rest-units-total-round",
+      "family": "units",
+      "target": "GET /orders/{id}",
+      "description": "totalCents in rounded dollars",
+      "ops": [
+        {
+          "op": "map",
+          "path": "totalCents",
+          "fn": "round_div100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront shows $0.25 as the total of order A, expected $24.97 | storefront lists the line of order B and shows €19.90: storefront shows €0.20 as the total of order B, expected €19.90 | storefront receipt for each order sh"
+        }
+      }
+    },
+    {
+      "id": "rest-units-price-div100",
+      "family": "units",
+      "target": "GET /orders/{id}",
+      "description": "lines[].unitPriceCents /100",
+      "ops": [
+        {
+          "op": "map",
+          "path": "lines[].unitPriceCents",
+          "fn": "div100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines[0].unitPriceCents is 6.25 (required integer)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: lines[0].unitPriceCents: expected an integer number of minor units, got number 4.99 | storefront lists the line of order B and s"
+        }
+      }
+    },
+    {
+      "id": "rest-units-price-round",
+      "family": "units",
+      "target": "GET /orders/{id}",
+      "description": "lines[].unitPriceCents in rounded dollars",
+      "ops": [
+        {
+          "op": "map",
+          "path": "lines[].unitPriceCents",
+          "fn": "round_div100"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "2 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront does not list the lines of order A as 3 x $4.99 and 1 x $10.00 | storefront lists the line of order B and shows €19.90: storefront does not list the line of order B as 1 x €19.90"
+        }
+      }
+    },
+    {
+      "id": "ev-date-date_only",
+      "family": "date",
+      "target": "OrderPlaced",
+      "description": "placedAt as date_only",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "date_only"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt is \"2026-10-10\" (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got string \"2026-10-10\" | analytics records order B with the right channel, date a"
+        }
+      }
+    },
+    {
+      "id": "ev-date-epoch_ms",
+      "family": "date",
+      "target": "OrderPlaced",
+      "description": "placedAt as epoch_ms",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "epoch_ms"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt is 1791633600000 (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got number 1791633600000 | analytics records order B with the right channel, date "
+        }
+      }
+    },
+    {
+      "id": "ev-date-epoch_s",
+      "family": "date",
+      "target": "OrderPlaced",
+      "description": "placedAt as epoch_s",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "epoch_s"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt is 1791633600 (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got number 1791633600 | analytics records order B with the right channel, date and"
+        }
+      }
+    },
+    {
+      "id": "ev-date-utc_string",
+      "family": "date",
+      "target": "OrderPlaced",
+      "description": "placedAt as utc_string",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "utc_string"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt is \"Sat, 10 Oct 2026 12:00:00 GMT\" (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got string \"Sat, 10 Oct 2026 12:00:00 GMT\" | analytics records order B with the ri"
+        }
+      }
+    },
+    {
+      "id": "ev-date-no_zone",
+      "family": "date",
+      "target": "OrderPlaced",
+      "description": "placedAt as no_zone",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "no_zone"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt is \"2026-10-10T12:00:00\" (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got string \"2026-10-10T12:00:00\" | analytics records order B with the right channe"
+        }
+      }
+    },
+    {
+      "id": "ev-date-us_date",
+      "family": "date",
+      "target": "OrderPlaced",
+      "description": "placedAt as us_date",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "us_date"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt is \"10/10/2026\" (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got string \"10/10/2026\" | analytics records order B with the right channel, date a"
+        }
+      }
+    },
+    {
+      "id": "rest-date-date_only",
+      "family": "date",
+      "target": "GET /orders/{id}",
+      "description": "placedAt as date_only",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "date_only"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "rest-date-epoch_ms",
+      "family": "date",
+      "target": "GET /orders/{id}",
+      "description": "placedAt as epoch_ms",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "epoch_ms"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "rest-date-utc_string",
+      "family": "date",
+      "target": "GET /orders/{id}",
+      "description": "placedAt as utc_string",
+      "ops": [
+        {
+          "op": "map",
+          "path": "placedAt",
+          "fn": "utc_string"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "cancel-date-date_only",
+      "family": "date",
+      "target": "OrderCancelled",
+      "description": "OrderCancelled.cancelledAt as date only",
+      "ops": [
+        {
+          "op": "map",
+          "path": "cancelledAt",
+          "fn": "date_only"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderCancelled.cancelledAt is \"2026-10-10\" (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "2 of 5 tests failed: analytics records the cancellation of order B: analytics could not ingest the cancellation of order B: ContractViolationError OrderCancelled contract violated: cancelledAt: expected an ISO-8601 datetime, got string \"2026-10-10\" | analytics routes the emitted events by type (inge"
+        }
+      }
+    },
+    {
+      "id": "cancel-rename-cancelledAt",
+      "family": "rename",
+      "target": "OrderCancelled",
+      "description": "OrderCancelled: rename cancelledAt -> createdAt",
+      "ops": [
+        {
+          "op": "rename",
+          "path": "cancelledAt",
+          "to": "createdAt"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderCancelled.cancelledAt missing (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "2 of 5 tests failed: analytics records the cancellation of order B: analytics could not ingest the cancellation of order B: ContractViolationError OrderCancelled contract violated: cancelledAt: expected an ISO-8601 datetime, got missing | analytics routes the emitted events by type (ingestEvent) and"
+        }
+      }
+    },
+    {
+      "id": "cancel-remove-cancelledAt",
+      "family": "remove",
+      "target": "OrderCancelled",
+      "description": "OrderCancelled: remove cancelledAt",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "cancelledAt"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderCancelled.cancelledAt missing (required iso-datetime)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "2 of 5 tests failed: analytics records the cancellation of order B: analytics could not ingest the cancellation of order B: ContractViolationError OrderCancelled contract violated: cancelledAt: expected an ISO-8601 datetime, got missing | analytics routes the emitted events by type (ingestEvent) and"
+        }
+      }
+    },
+    {
+      "id": "ev-array-lines-empty",
+      "family": "array",
+      "target": "OrderPlaced",
+      "description": "lines empty",
+      "ops": [
+        {
+          "op": "array",
+          "path": "lines",
+          "fn": "empty"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines is empty (cannot satisfy lines[].sku)",
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.lines is empty (cannot satisfy lines[].qty)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "3 of 5 tests failed: analytics records order A with the right channel, date and units: analytics counted 0 units for order A, expected 4 | analytics records order B with the right channel, date and units: analytics counted 0 units for order B, expected 1 | analytics records the per-SKU units of orde"
+        }
+      }
+    },
+    {
+      "id": "ev-array-lines-duplicate",
+      "family": "array",
+      "target": "OrderPlaced",
+      "description": "lines duplicate",
+      "ops": [
+        {
+          "op": "array",
+          "path": "lines",
+          "fn": "duplicate"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "3 of 5 tests failed: analytics records order A with the right channel, date and units: analytics counted 8 units for order A, expected 4 | analytics records order B with the right channel, date and units: analytics counted 2 units for order B, expected 1 | analytics records the per-SKU units of orde"
+        }
+      }
+    },
+    {
+      "id": "ev-array-lines-reverse",
+      "family": "array",
+      "target": "OrderPlaced",
+      "description": "lines reverse",
+      "ops": [
+        {
+          "op": "array",
+          "path": "lines",
+          "fn": "reverse"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    },
+    {
+      "id": "rest-array-lines-empty",
+      "family": "array",
+      "target": "GET /orders/{id}",
+      "description": "lines empty",
+      "ops": [
+        {
+          "op": "array",
+          "path": "lines",
+          "fn": "empty"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "fail",
+        "caught": true,
+        "findings": [
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is empty (cannot satisfy lines[].sku)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is empty (cannot satisfy lines[].name)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is empty (cannot satisfy lines[].qty)",
+          "ARCH-8 FAIL web-storefront: GET /orders/{id}.lines is empty (cannot satisfy lines[].unitPriceCents)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "3 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront lists 0 lines for order A, expected 2 | storefront lists the line of order B and shows €19.90: storefront lists 0 lines for order B, expected 1 | storefront receipt for each order shows its lines and total: store"
+        }
+      }
+    },
+    {
+      "id": "rest-array-lines-duplicate",
+      "family": "array",
+      "target": "GET /orders/{id}",
+      "description": "lines duplicate",
+      "ops": [
+        {
+          "op": "array",
+          "path": "lines",
+          "fn": "duplicate"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "2 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront lists 4 lines for order A, expected 2 | storefront lists the line of order B and shows €19.90: storefront lists 2 lines for order B, expected 1"
+        }
+      }
+    },
+    {
+      "id": "rest-array-lines-reverse",
+      "family": "array",
+      "target": "GET /orders/{id}",
+      "description": "lines reverse",
+      "ops": [
+        {
+          "op": "array",
+          "path": "lines",
+          "fn": "reverse"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "1 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront does not list the lines of order A as 3 x $4.99 and 1 x $10.00"
+        }
+      }
+    },
+    {
+      "id": "ev-currency-EUR",
+      "family": "currency",
+      "target": "OrderPlaced",
+      "description": "currency -> EUR",
+      "ops": [
+        {
+          "op": "set",
+          "path": "currency",
+          "value": "EUR"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "1 of 5 tests failed: analytics records order A with the right channel, date and units: analytics recorded currency EUR for order A",
+          "billing-service": "2 of 5 tests failed: billing invoices order A for the order total, in its currency: billing invoiced order A in EUR, expected USD | billing invoices A and B side by side in one app without mixing them up: billing produced wrong amounts or currencies for orders A and B"
+        }
+      }
+    },
+    {
+      "id": "ev-currency-lower",
+      "family": "currency",
+      "target": "OrderPlaced",
+      "description": "currency -> lower",
+      "ops": [
+        {
+          "op": "map",
+          "path": "currency",
+          "fn": "lower"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got string \"usd\" | analytics records order B with the right channel, date and units: a",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got string \"usd\" | billing emails the order A invoice to the customerEmail: billing could "
+        }
+      }
+    },
+    {
+      "id": "ev-currency-numeric",
+      "family": "currency",
+      "target": "OrderPlaced",
+      "description": "currency -> 840",
+      "ops": [
+        {
+          "op": "set",
+          "path": "currency",
+          "value": "840"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got string \"840\" | analytics records order B with the right channel, date and units: a",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got string \"840\" | billing emails the order A invoice to the customerEmail: billing could "
+        }
+      }
+    },
+    {
+      "id": "ev-currency-symbol",
+      "family": "currency",
+      "target": "OrderPlaced",
+      "description": "currency -> $",
+      "ops": [
+        {
+          "op": "set",
+          "path": "currency",
+          "value": "$"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got string \"$\" | analytics records order B with the right channel, date and units: ana",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: currency: expected an ISO-4217 code, got string \"$\" | billing emails the order A invoice to the customerEmail: billing could no"
+        }
+      }
+    },
+    {
+      "id": "rest-currency-EUR",
+      "family": "currency",
+      "target": "GET /orders/{id}",
+      "description": "currency -> EUR",
+      "ops": [
+        {
+          "op": "set",
+          "path": "currency",
+          "value": "EUR"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "3 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront does not list the lines of order A as 3 x $4.99 and 1 x $10.00 | storefront receipt for each order shows its lines and total: storefront receipt of order A does not show $24.97 | storefront facade (createStorefro"
+        }
+      }
+    },
+    {
+      "id": "rest-currency-lower",
+      "family": "currency",
+      "target": "GET /orders/{id}",
+      "description": "currency -> lower",
+      "ops": [
+        {
+          "op": "map",
+          "path": "currency",
+          "fn": "lower"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "web-storefront"
+        ],
+        "messages": {
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: storefront could not fetch order A: ContractViolationError GET /orders/{id} contract violated: currency: expected an ISO-4217 code, got string \"usd\" | storefront lists the line of order B and shows €19.90: storefront could "
+        }
+      }
+    },
+    {
+      "id": "ev-enum-channel-upper",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "channel upper-cased (WEB)",
+      "ops": [
+        {
+          "op": "map",
+          "path": "channel",
+          "fn": "upper"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.channel is \"WEB\" (required enum:web|store|marketplace)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: channel: expected one of web|store|marketplace, got string \"WEB\" | analytics records order B with the right channel, date a"
+        }
+      }
+    },
+    {
+      "id": "ev-enum-channel-online",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "channel = online (not an allowed value)",
+      "ops": [
+        {
+          "op": "set",
+          "path": "channel",
+          "value": "online"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced.channel is \"online\" (required enum:web|store|marketplace)"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: channel: expected one of web|store|marketplace, got string \"online\" | analytics records order B with the right channel, dat"
+        }
+      }
+    },
+    {
+      "id": "ev-type-name",
+      "family": "rename",
+      "target": "OrderPlaced",
+      "description": "type OrderPlaced -> OrderCreated",
+      "ops": [
+        {
+          "op": "set",
+          "path": "type",
+          "value": "OrderCreated"
+        }
+      ],
+      "ci": {
+        "ARCH-4": "fail",
+        "ARCH-8": "pass",
+        "caught": true,
+        "findings": [
+          "ARCH-4 FAIL analytics-ingest: OrderPlaced not published by the sample order (event types published: \"OrderCreated\", \"OrderCancelled\")",
+          "ARCH-4 FAIL billing-service: OrderPlaced not published by the sample order (event types published: \"OrderCreated\", \"OrderCancelled\")"
+        ]
+      },
+      "oracle": {
+        "caught": true,
+        "failed": [
+          "analytics-ingest",
+          "billing-service",
+          "web-storefront"
+        ],
+        "messages": {
+          "analytics-ingest": "5 of 5 tests failed: analytics records order A with the right channel, date and units: orders-service published no OrderPlaced event for order A (emitted: [{\"type\":\"OrderCreated\",\"schemaVersion\":3,\"orderId\":\"id-0001\",\"customerId\":\"cust-alice-001\",\"customerEmail\":\"alice@example.com\",\"placedAt\":\"2026-",
+          "billing-service": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: orders-service published no OrderPlaced event for order A (emitted: [{\"type\":\"OrderCreated\",\"schemaVersion\":3,\"orderId\":\"id-0001\",\"customerId\":\"cust-alice-001\",\"customerEmail\":\"alice@example.com\",\"placedAt\":\"2026-10-",
+          "web-storefront": "4 of 4 tests failed: storefront lists the lines of order A and shows $24.97: orders-service published no OrderPlaced event for order A (emitted: [{\"type\":\"OrderCreated\",\"schemaVersion\":3,\"orderId\":\"id-0001\",\"customerId\":\"cust-alice-001\",\"customerEmail\":\"alice@example.com\",\"placedAt\":\"2026-10-10T12:0"
+        }
+      }
+    },
+    {
+      "id": "ev-schemaVersion-4",
+      "family": "type",
+      "target": "OrderPlaced",
+      "description": "schemaVersion 3 -> 4",
+      "ops": [
+        {
+          "op": "set",
+          "path": "schemaVersion",
+          "value": 4
+        }
+      ],
+      "ci": {
+        "ARCH-4": "pass",
+        "ARCH-8": "pass",
+        "caught": false,
+        "findings": []
+      },
+      "oracle": {
+        "caught": false,
+        "failed": [],
+        "messages": {}
+      }
+    }
+  ]
+}

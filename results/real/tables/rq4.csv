@@ -1,0 +1,4 @@
+condition,sens_x,sens_n,spec_x,spec_n,reviews,errors,mean_duration_ms,mean_cost_usd
+R-S0,14,20,18,20,60,0,27040,0.059632
+R-S2,20,20,20,20,40,0,23666,0.053508
+R-C,20,20,20,20,60,0,24328,0.060676

@@ -1,0 +1,317 @@
+diff --git a/src/adapters/httpStockChecker.ts b/src/adapters/httpStockChecker.ts
+new file mode 100644
+index 0000000..930b1af
+--- /dev/null
++++ b/src/adapters/httpStockChecker.ts
+@@ -0,0 +1,53 @@
++import { StockUnavailableError } from "../core/errors.js";
++import type { StockChecker } from "../core/ports.js";
++
++const STOCK_BASE_URL = "https://stock.inventory.internal";
++
++type FetchFunction = (input: string, init?: RequestInit) => Promise<Response>;
++
++export interface HttpStockCheckerOptions {
++  readonly baseUrl?: string;
++  readonly timeoutMs?: number;
++  /** Replaces the global `fetch`; used by tests so that no network is involved. */
++  readonly fetchFunction?: FetchFunction;
++}
++
++/** Inventory Stock API client: `GET /v1/stock/{sku}` -> `{ sku, available }`. */
++export class HttpStockChecker implements StockChecker {
++  private readonly baseUrl: string;
++  private readonly timeoutMs: number;
++  private readonly fetchFunction: FetchFunction | undefined;
++
++  constructor(options: HttpStockCheckerOptions = {}) {
++    this.baseUrl = options.baseUrl ?? STOCK_BASE_URL;
++    this.timeoutMs = options.timeoutMs ?? 5_000;
++    this.fetchFunction = options.fetchFunction;
++  }
++
++  async availableUnits(sku: string): Promise<number> {
++    const send = this.fetchFunction ?? globalThis.fetch;
++    let response: Response;
++    try {
++      response = await send(`${this.baseUrl}/v1/stock/${encodeURIComponent(sku)}`, {
++        method: "GET",
++        signal: AbortSignal.timeout(this.timeoutMs),
++      });
++    } catch (cause) {
++      throw new StockUnavailableError("Stock API request failed", { cause });
++    }
++    if (!response.ok) {
++      throw new StockUnavailableError(`Stock API answered ${response.status}`);
++    }
++    let body: unknown;
++    try {
++      body = await response.json();
++    } catch (cause) {
++      throw new StockUnavailableError("Stock API answered with invalid JSON", { cause });
++    }
++    const available = (body as { available?: unknown } | null)?.available;
++    if (typeof available !== "number" || !Number.isFinite(available)) {
++      throw new StockUnavailableError("Stock API answered without a numeric `available`");
++    }
++    return available;
++  }
++}
+diff --git a/src/api/errorMapper.ts b/src/api/errorMapper.ts
+index fefdf0a..23aedc4 100644
+--- a/src/api/errorMapper.ts
++++ b/src/api/errorMapper.ts
+@@ -1,9 +1,11 @@
+ import {
+   DomainError,
++  InsufficientStockError,
+   InvalidStateError,
+   OrderNotFoundError,
+   PaymentDeclinedError,
+   PaymentUnavailableError,
++  StockUnavailableError,
+   ValidationError,
+ } from "../core/errors.js";
+ import { errorResponse, type HttpResponse } from "./http.js";
+@@ -22,6 +24,12 @@ export function toErrorResponse(error: unknown): HttpResponse {
+   if (error instanceof InvalidStateError) {
+     return errorResponse(409, error.code, error.message);
+   }
++  if (error instanceof InsufficientStockError) {
++    return errorResponse(409, error.code, error.message);
++  }
++  if (error instanceof StockUnavailableError) {
++    return errorResponse(502, error.code, "The stock service is unavailable");
++  }
+   if (error instanceof PaymentDeclinedError) {
+     return errorResponse(402, error.code, error.message);
+   }
+diff --git a/src/core/errors.ts b/src/core/errors.ts
+index 0f50f9e..c90a394 100644
+--- a/src/core/errors.ts
++++ b/src/core/errors.ts
+@@ -62,6 +62,28 @@ export class PaymentDeclinedError extends DomainError {
+   }
+ }
+ 
++/** At least one SKU is requested in a larger quantity than the inventory reports as available. */
++export class InsufficientStockError extends DomainError {
++  readonly code = "insufficient_stock";
++
++  constructor(
++    readonly sku: string,
++    readonly requested: number,
++    readonly available: number,
++  ) {
++    super(`Insufficient stock for ${sku}: requested ${requested}, available ${available}`);
++  }
++}
++
++/** The Stock API could not be reached or answered unexpectedly. */
++export class StockUnavailableError extends DomainError {
++  readonly code = "stock_unavailable";
++
++  constructor(message: string, options?: ErrorOptions) {
++    super(message, options);
++  }
++}
++
+ /** The payment provider could not be reached or answered with a server error. */
+ export class PaymentUnavailableError extends DomainError {
+   readonly code = "payment_unavailable";
+diff --git a/src/core/orderService.ts b/src/core/orderService.ts
+index 4627934..31f17ee 100644
+--- a/src/core/orderService.ts
++++ b/src/core/orderService.ts
+@@ -1,4 +1,4 @@
+-import { OrderNotFoundError, PaymentDeclinedError, ValidationError } from "./errors.js";
++import { InsufficientStockError, OrderNotFoundError, PaymentDeclinedError, ValidationError } from "./errors.js";
+ import { orderCancelled, orderPlaced } from "./events.js";
+ import { cancel, createOrder, totalCents, type NewOrder, type Order } from "./order.js";
+ import type {
+@@ -9,6 +9,7 @@ import type {
+   OrderCursor,
+   OrderRepository,
+   PaymentGateway,
++  StockChecker,
+ } from "./ports.js";
+ 
+ export const MAX_LIST_LIMIT = 100;
+@@ -23,6 +24,7 @@ export interface OrderServiceDeps {
+   readonly orders: OrderRepository;
+   readonly events: EventPublisher;
+   readonly payments: PaymentGateway;
++  readonly stock: StockChecker;
+   readonly clock: Clock;
+   readonly ids: IdGenerator;
+ }
+@@ -46,6 +48,8 @@ export class OrderService {
+       placedAt: clock.now().toISOString(),
+     });
+ 
++    await this.ensureInStock(order);
++
+     const authorization = await payments.authorize({
+       orderId: order.id,
+       customerId: order.customerId,
+@@ -61,6 +65,20 @@ export class OrderService {
+     return order;
+   }
+ 
++  /** Rejects the order when any SKU is requested in a larger total quantity than is available. */
++  private async ensureInStock(order: Order): Promise<void> {
++    const requested = new Map<string, number>();
++    for (const line of order.lines) {
++      requested.set(line.sku, (requested.get(line.sku) ?? 0) + line.qty);
++    }
++    for (const [sku, qty] of requested) {
++      const available = await this.deps.stock.availableUnits(sku);
++      if (qty > available) {
++        throw new InsufficientStockError(sku, qty, available);
++      }
++    }
++  }
++
+   async getOrder(id: string): Promise<Order> {
+     const order = await this.deps.orders.findById(id);
+     if (order === undefined) {
+diff --git a/src/core/ports.ts b/src/core/ports.ts
+index 26f1f73..d805e82 100644
+--- a/src/core/ports.ts
++++ b/src/core/ports.ts
+@@ -52,6 +52,14 @@ export interface PaymentGateway {
+   authorize(request: PaymentAuthorizationRequest): Promise<PaymentAuthorization>;
+ }
+ 
++/**
++ * Reads available stock from the inventory system.
++ * Implementations throw `StockUnavailableError` when availability cannot be determined.
++ */
++export interface StockChecker {
++  availableUnits(sku: string): Promise<number>;
++}
++
+ export interface Clock {
+   now(): Date;
+ }
+diff --git a/src/main.ts b/src/main.ts
+index f2c809a..849c647 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -2,16 +2,18 @@ import { InMemoryOrderRepository } from "./adapters/inMemoryOrderRepository.js";
+ import { KafkaEventPublisher } from "./adapters/kafkaEventPublisher.js";
+ import { HttpPaymentGateway } from "./adapters/httpPaymentGateway.js";
+ import { RandomIdGenerator } from "./adapters/randomIdGenerator.js";
++import { HttpStockChecker } from "./adapters/httpStockChecker.js";
+ import { SystemClock } from "./adapters/systemClock.js";
+ import { createOrdersController } from "./api/ordersController.js";
+ import { OrderService } from "./core/orderService.js";
+-import type { Clock, EventPublisher, IdGenerator, OrderRepository, PaymentGateway } from "./core/ports.js";
++import type { Clock, EventPublisher, IdGenerator, OrderRepository, PaymentGateway, StockChecker } from "./core/ports.js";
+ 
+ /** Every dependency is optional; omitted ones fall back to the production adapters. */
+ export interface AppDeps {
+   readonly orderRepository?: OrderRepository;
+   readonly eventPublisher?: EventPublisher;
+   readonly paymentGateway?: PaymentGateway;
++  readonly stockChecker?: StockChecker;
+   readonly clock?: Clock;
+   readonly idGenerator?: IdGenerator;
+ }
+@@ -30,6 +32,7 @@ export function createApp(deps: AppDeps = {}): App {
+     orders: deps.orderRepository ?? new InMemoryOrderRepository(),
+     events: eventPublisher,
+     payments: deps.paymentGateway ?? new HttpPaymentGateway(),
++    stock: deps.stockChecker ?? new HttpStockChecker(),
+     clock: deps.clock ?? new SystemClock(),
+     ids: deps.idGenerator ?? new RandomIdGenerator(),
+   });
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..3927b8e 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -1,7 +1,7 @@
+ import assert from "node:assert/strict";
+ import { describe, it } from "node:test";
+ import type { OrderCancelled, OrderPlaced } from "../src/core/events.js";
+-import { FIXED_NOW, FakePayments, makeApp, placeOrderBody } from "./helpers.js";
++import { FIXED_NOW, FakePayments, FakeStock, makeApp, placeOrderBody } from "./helpers.js";
+ 
+ describe("POST /orders", () => {
+   it("places an order, answers 201 and publishes OrderPlaced v3", async () => {
+@@ -207,3 +207,25 @@ describe("routing", () => {
+     assert.equal((await app.handle("get", "/orders/ord-1/?verbose=1")).status, 200);
+   });
+ });
++
++describe("POST /orders stock check", () => {
++  it("answers 409 when a line asks for more than is available", async () => {
++    const { app, publisher, payments } = makeApp(undefined, new FakeStock({ "SKU-1": 1 }));
++    const res = await app.handle("POST", "/orders", placeOrderBody());
++    assert.equal(res.status, 409);
++    assert.equal(publisher.events.length, 0);
++    assert.equal(payments.requests.length, 0);
++  });
++
++  it("sums repeated SKUs across lines", async () => {
++    const { app } = makeApp(undefined, new FakeStock({ "SKU-1": 3 }));
++    const line = { sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 };
++    const res = await app.handle("POST", "/orders", placeOrderBody({ lines: [line, line] }));
++    assert.equal(res.status, 409);
++  });
++
++  it("accepts an order that exactly matches availability", async () => {
++    const { app } = makeApp(undefined, new FakeStock({ "SKU-1": 2 }));
++    assert.equal((await app.handle("POST", "/orders", placeOrderBody())).status, 201);
++  });
++});
+diff --git a/test/helpers.ts b/test/helpers.ts
+index f9cb257..3fafe4f 100644
+--- a/test/helpers.ts
++++ b/test/helpers.ts
+@@ -7,6 +7,7 @@ import type {
+   PaymentAuthorization,
+   PaymentAuthorizationRequest,
+   PaymentGateway,
++  StockChecker,
+ } from "../src/core/ports.js";
+ 
+ export const FIXED_NOW = "2026-10-10T12:00:00.000Z";
+@@ -51,6 +52,17 @@ export class FakePayments implements PaymentGateway {
+   }
+ }
+ 
++export class FakeStock implements StockChecker {
++  constructor(
++    private readonly units: Record<string, number> = {},
++    private readonly fallback = 1000,
++  ) {}
++
++  async availableUnits(sku: string): Promise<number> {
++    return this.units[sku] ?? this.fallback;
++  }
++}
++
+ export interface TestApp {
+   app: App;
+   publisher: CapturingPublisher;
+@@ -58,7 +70,10 @@ export interface TestApp {
+   clock: FixedClock;
+ }
+ 
+-export function makeApp(payments: FakePayments = new FakePayments()): TestApp {
++export function makeApp(
++  payments: FakePayments = new FakePayments(),
++  stock: StockChecker = new FakeStock(),
++): TestApp {
+   const publisher = new CapturingPublisher();
+   const clock = new FixedClock();
+   const app = createApp({
+@@ -66,6 +81,7 @@ export function makeApp(payments: FakePayments = new FakePayments()): TestApp {
+     clock,
+     idGenerator: new SequenceIds(),
+     paymentGateway: payments,
++    stockChecker: stock,
+   });
+   return { app, publisher, payments, clock };
+ }

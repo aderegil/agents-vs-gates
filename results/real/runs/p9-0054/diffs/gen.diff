@@ -1,0 +1,15 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..4db010b 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -13,6 +13,10 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /**
++   * @deprecated Candidate for removal: orders-service no longer reads it, but analytics-ingest may
++   * still consume it. Remove only after the Data team confirms (ADR 0002).
++   */
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;

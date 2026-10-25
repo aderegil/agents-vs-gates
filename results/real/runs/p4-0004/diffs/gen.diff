@@ -1,0 +1,90 @@
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 1ec650b..e6bcf12 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -17,6 +17,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const customerEmail = reader.string("customerEmail");
+   const channel = reader.string("channel");
+   const currency = reader.string("currency");
++  const couponCode = reader.optionalString("couponCode");
+ 
+   const lines: OrderLine[] = [];
+   reader.array("lines").forEach((raw, index) => {
+@@ -37,7 +38,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+     throw new ValidationError(reader.issues);
+   }
+   // The core validates that `channel` is one of the supported values.
+-  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
++  return { customerId, customerEmail, channel: channel as Channel, currency, lines, ...(couponCode === undefined ? {} : { couponCode }) };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..4f5938e 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -18,6 +18,7 @@ export interface OrderPlaced {
+   readonly currency: string;
+   /** Integer, minor units. */
+   readonly totalCents: number;
++  readonly couponCode?: string;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -50,6 +51,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
++    ...(order.couponCode === undefined ? {} : { couponCode: order.couponCode }),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..178c07e 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -24,6 +24,7 @@ export interface Order {
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  readonly couponCode?: string;
+   /** ISO-8601 instant, set when the order is cancelled. */
+   readonly cancelledAt?: string;
+ }
+@@ -35,6 +36,7 @@ export interface NewOrder {
+   readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
++  readonly couponCode?: string;
+ }
+ 
+ export const LIMITS = {
+@@ -44,6 +46,7 @@ export const LIMITS = {
+   maxNameLength: 200,
+   maxIdLength: 100,
+   maxEmailLength: 254,
++  maxCouponCodeLength: 64,
+   /** Upper bound of an order total in minor units; protects against absurd inputs. */
+   maxTotalMinor: 100_000_000,
+ } as const;
+@@ -75,6 +78,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+     channel: input.channel,
+     currency: input.currency,
+     placedAt: meta.placedAt,
++    ...(input.couponCode === undefined ? {} : { couponCode: input.couponCode }),
+   };
+ }
+ 
+@@ -121,6 +125,12 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   ) {
+     fail("customerEmail", "must be a valid email address");
+   }
++  if (
++    input.couponCode !== undefined &&
++    (!isNonBlank(input.couponCode) || input.couponCode.length > LIMITS.maxCouponCodeLength)
++  ) {
++    fail("couponCode", `must be 1-${LIMITS.maxCouponCodeLength} characters`);
++  }
+   if (!(CHANNELS as readonly unknown[]).includes(input.channel)) {
+     fail("channel", `must be one of ${CHANNELS.join(", ")}`);
+   }

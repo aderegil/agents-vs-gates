@@ -1,0 +1,70 @@
+diff --git a/src/api/ordersController.ts b/src/api/ordersController.ts
+index d64f0cf..669f16f 100644
+--- a/src/api/ordersController.ts
++++ b/src/api/ordersController.ts
+@@ -2,7 +2,7 @@ import type { OrderService } from "../core/orderService.js";
+ import { toErrorResponse } from "./errorMapper.js";
+ import { errorResponse, json, queryOf, splitPath, type HttpRequest, type HttpResponse } from "./http.js";
+ import { parseCancelRequest, parseListOrdersQuery, parsePlaceOrderRequest } from "./requestParsing.js";
+-import { toOrderListResponse, toOrderResponse } from "./responses.js";
++import { toOrderDetailResponse, toOrderListResponse, toOrderResponse } from "./responses.js";
+ 
+ export interface OrdersController {
+   handle(request: HttpRequest): Promise<HttpResponse>;
+@@ -53,7 +53,7 @@ async function dispatch(service: OrderService, request: HttpRequest): Promise<Ht
+       return json(200, { status: "ok" });
+     case "getOrder": {
+       const order = await service.getOrder(route.id);
+-      return json(200, toOrderResponse(order));
++      return json(200, toOrderDetailResponse(order));
+     }
+     case "cancelOrder": {
+       const { reason } = parseCancelRequest(request.body);
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..4a2d803 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -2,7 +2,7 @@ import { totalCents, type Order } from "../core/order.js";
+ import type { OrderPage } from "../core/orderService.js";
+ import { encodeCursor } from "./cursor.js";
+ 
+-/** Body of `GET /orders/{id}` (200). Also returned by `POST /orders` and `POST /orders/{id}/cancel`. */
++/** Body of `POST /orders` (201) and `POST /orders/{id}/cancel` (200); also each entry of the order list. */
+ export interface OrderResponse {
+   readonly id: string;
+   readonly status: string;
+@@ -17,6 +17,9 @@ export interface OrderResponse {
+   }>;
+ }
+ 
++/** Body of `GET /orders/{id}` (200): the order representation with its lines named `items`. */
++export type OrderDetailResponse = Omit<OrderResponse, "lines"> & { readonly items: OrderResponse["lines"] };
++
+ export interface OrderListResponse {
+   readonly orders: readonly OrderResponse[];
+   /** Pass as `cursor` to fetch the next page; absent on the last page. */
+@@ -40,6 +43,11 @@ export function toOrderResponse(order: Order): OrderResponse {
+   };
+ }
+ 
++export function toOrderDetailResponse(order: Order): OrderDetailResponse {
++  const { lines, ...rest } = toOrderResponse(order);
++  return { ...rest, items: lines };
++}
++
+ export function toOrderListResponse(page: OrderPage): OrderListResponse {
+   const orders = page.orders.map(toOrderResponse);
+   return page.next === undefined ? { orders } : { orders, nextCursor: encodeCursor(page.next) };
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..f59653e 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -89,7 +89,7 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "items"]);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

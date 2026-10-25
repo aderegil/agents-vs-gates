@@ -1,0 +1,97 @@
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 1ec650b..c79f5dc 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -17,6 +17,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const customerEmail = reader.string("customerEmail");
+   const channel = reader.string("channel");
+   const currency = reader.string("currency");
++  const couponCode = reader.optionalString("couponCode");
+ 
+   const lines: OrderLine[] = [];
+   reader.array("lines").forEach((raw, index) => {
+@@ -37,7 +38,14 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+     throw new ValidationError(reader.issues);
+   }
+   // The core validates that `channel` is one of the supported values.
+-  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
++  return {
++    customerId,
++    customerEmail,
++    channel: channel as Channel,
++    currency,
++    lines,
++    ...(couponCode === undefined ? {} : { couponCode }),
++  };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..166df10 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -11,6 +11,7 @@ export interface OrderPlaced {
+   readonly customerId: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
++  readonly couponCode?: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+   readonly channel: Channel;
+@@ -46,6 +47,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    ...(order.couponCode === undefined ? {} : { couponCode: order.couponCode }),
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..750da5a 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -19,6 +19,7 @@ export interface Order {
+   /** Legacy: kept on the order for receipts until the customer profile lookup exists. */
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
++  readonly couponCode?: string;
+   readonly status: OrderStatus;
+   readonly channel: Channel;
+   readonly currency: string;
+@@ -35,6 +36,7 @@ export interface NewOrder {
+   readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
++  readonly couponCode?: string;
+ }
+ 
+ export const LIMITS = {
+@@ -44,6 +46,7 @@ export const LIMITS = {
+   maxNameLength: 200,
+   maxIdLength: 100,
+   maxEmailLength: 254,
++  maxCouponCodeLength: 64,
+   /** Upper bound of an order total in minor units; protects against absurd inputs. */
+   maxTotalMinor: 100_000_000,
+ } as const;
+@@ -71,6 +74,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+       qty: line.qty,
+       unitPriceCents: line.unitPriceCents,
+     })),
++    ...(input.couponCode === undefined ? {} : { couponCode: input.couponCode }),
+     status: "placed",
+     channel: input.channel,
+     currency: input.currency,
+@@ -121,6 +125,12 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   ) {
+     fail("customerEmail", "must be a valid email address");
+   }
++  if (
++    input.couponCode !== undefined &&
++    (!isNonBlank(input.couponCode) || input.couponCode.length > LIMITS.maxCouponCodeLength)
++  ) {
++    fail("couponCode", `must be 1-${LIMITS.maxCouponCodeLength} characters`);
++  }
+   if (!(CHANNELS as readonly unknown[]).includes(input.channel)) {
+     fail("channel", `must be one of ${CHANNELS.join(", ")}`);
+   }

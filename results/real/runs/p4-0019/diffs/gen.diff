@@ -1,0 +1,75 @@
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..7bd9ff3 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -9,12 +9,16 @@ export interface OrderResponse {
+   readonly placedAt: string;
+   readonly currency: string;
+   readonly totalCents: number;
+-  readonly lines: ReadonlyArray<{
+-    readonly sku: string;
+-    readonly name: string;
+-    readonly qty: number;
+-    readonly unitPriceCents: number;
+-  }>;
++  readonly items: ReadonlyArray<OrderItemResponse>;
++  /** @deprecated Same content as `items`; kept for web-storefront (ARCH-8). Use `items`. */
++  readonly lines: ReadonlyArray<OrderItemResponse>;
++}
++
++export interface OrderItemResponse {
++  readonly sku: string;
++  readonly name: string;
++  readonly qty: number;
++  readonly unitPriceCents: number;
+ }
+ 
+ export interface OrderListResponse {
+@@ -25,18 +29,20 @@ export interface OrderListResponse {
+ 
+ /** The single place where an order is mapped to its REST representation. */
+ export function toOrderResponse(order: Order): OrderResponse {
++  const items = order.lines.map((line) => ({
++    sku: line.sku,
++    name: line.name,
++    qty: line.qty,
++    unitPriceCents: line.unitPriceCents,
++  }));
+   return {
+     id: order.id,
+     status: order.status,
+     placedAt: order.placedAt,
+     currency: order.currency,
+     totalCents: totalCents(order),
+-    lines: order.lines.map((line) => ({
+-      sku: line.sku,
+-      name: line.name,
+-      qty: line.qty,
+-      unitPriceCents: line.unitPriceCents,
+-    })),
++    items,
++    lines: items,
+   };
+ }
+ 
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..8d5aac9 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -15,6 +15,7 @@ describe("POST /orders", () => {
+       placedAt: FIXED_NOW,
+       currency: "USD",
+       totalCents: 1250,
++      items: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+       lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+     assert.equal(publisher.events.length, 1);
+@@ -89,7 +90,7 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "items", "lines"]);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

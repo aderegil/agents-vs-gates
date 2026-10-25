@@ -1,0 +1,54 @@
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..e6e0d9f 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -9,12 +9,16 @@ export interface OrderResponse {
+   readonly placedAt: string;
+   readonly currency: string;
+   readonly totalCents: number;
+-  readonly lines: ReadonlyArray<{
+-    readonly sku: string;
+-    readonly name: string;
+-    readonly qty: number;
+-    readonly unitPriceCents: number;
+-  }>;
++  readonly items: readonly OrderItemResponse[];
++  /** @deprecated Use `items`. Kept for web-storefront (ARCH-8); identical content. */
++  readonly lines: readonly OrderItemResponse[];
++}
++
++export interface OrderItemResponse {
++  readonly sku: string;
++  readonly name: string;
++  readonly qty: number;
++  readonly unitPriceCents: number;
+ }
+ 
+ export interface OrderListResponse {
+@@ -25,18 +29,20 @@ export interface OrderListResponse {
+ 
+ /** The single place where an order is mapped to its REST representation. */
+ export function toOrderResponse(order: Order): OrderResponse {
++  const items = order.lines.map((line) => ({
++    sku: line.sku,
++    name: line.name,
++    qty: line.qty,
++    unitPriceCents: line.unitPriceCents,
++  }));
+   return {
+     id: order.id,
+     status: order.status,
+     placedAt: order.placedAt,
+     currency: order.currency,
+     totalCents: totalCents(order),
+-    lines: order.lines.map((line) => ({
+-      sku: line.sku,
+-      name: line.name,
+-      qty: line.qty,
+-      unitPriceCents: line.unitPriceCents,
+-    })),
++    items,
++    lines: items,
+   };
+ }
+ 

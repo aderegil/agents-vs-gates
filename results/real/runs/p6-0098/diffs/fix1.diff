@@ -1,0 +1,192 @@
+diff --git a/orders-service/README.md b/orders-service/README.md
+index da1a38c..f76e405 100644
+--- a/orders-service/README.md
++++ b/orders-service/README.md
+@@ -15,7 +15,7 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ 
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+-const res = await app.handle("POST", "/orders", { customerId, customerEmail, currency, lines });
++const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+ // 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/orders-service/src/api/requestParsing.ts b/orders-service/src/api/requestParsing.ts
+index 0e8f7e8..689f805 100644
+--- a/orders-service/src/api/requestParsing.ts
++++ b/orders-service/src/api/requestParsing.ts
+@@ -1,5 +1,7 @@
+ import { ValidationError, type ValidationIssue } from "../core/errors.js";
+-import type { NewOrder, OrderLine, OrderStatus } from "../core/order.js";
++import type { Channel } from "../core/events.js";
++import type { PlaceOrderCommand } from "../core/orderService.js";
++import type { OrderLine, OrderStatus } from "../core/order.js";
+ import type { CustomerOrdersQuery } from "../core/ports.js";
+ import { decodeCursor } from "./cursor.js";
+ import { InputReader, isJsonObject } from "./inputReader.js";
+@@ -8,13 +10,14 @@ import { InputReader, isJsonObject } from "./inputReader.js";
+  * Turns the untrusted body of `POST /orders` into a typed command.
+  * Only the shape is checked here; the core enforces the business invariants.
+  */
+-export function parsePlaceOrderRequest(body: unknown): NewOrder {
++export function parsePlaceOrderRequest(body: unknown): PlaceOrderCommand {
+   if (!isJsonObject(body)) {
+     throw new ValidationError([{ path: "body", message: "must be a JSON object" }]);
+   }
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
++  const channel = reader.string("channel");
+   const currency = reader.string("currency");
+ 
+   const lines: OrderLine[] = [];
+@@ -35,7 +38,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   if (reader.issues.length > 0) {
+     throw new ValidationError(reader.issues);
+   }
+-  return { customerId, customerEmail, currency, lines };
++  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/orders-service/src/core/events.ts b/orders-service/src/core/events.ts
+index c4e435f..3159c36 100644
+--- a/orders-service/src/core/events.ts
++++ b/orders-service/src/core/events.ts
+@@ -3,6 +3,10 @@ import { totalCents, type Order } from "./order.js";
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+ 
++/** Retained for the analytics event contract; this is not stored on an Order. */
++export const CHANNELS = ["web", "store", "marketplace"] as const;
++export type Channel = (typeof CHANNELS)[number];
++
+ /** Published when an order has been accepted and its payment authorized. */
+ export interface OrderPlaced {
+   readonly type: "OrderPlaced";
+@@ -13,6 +17,7 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -38,7 +43,7 @@ export interface OrderCancelled {
+ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+-export function orderPlaced(order: Order): OrderPlaced {
++export function orderPlaced(order: Order, channel: Channel): OrderPlaced {
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+@@ -46,6 +51,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/orders-service/src/core/orderService.ts b/orders-service/src/core/orderService.ts
+index 4627934..479c9b7 100644
+--- a/orders-service/src/core/orderService.ts
++++ b/orders-service/src/core/orderService.ts
+@@ -1,5 +1,5 @@
+ import { OrderNotFoundError, PaymentDeclinedError, ValidationError } from "./errors.js";
+-import { orderCancelled, orderPlaced } from "./events.js";
++import { CHANNELS, orderCancelled, orderPlaced, type Channel } from "./events.js";
+ import { cancel, createOrder, totalCents, type NewOrder, type Order } from "./order.js";
+ import type {
+   Clock,
+@@ -31,6 +31,11 @@ export interface CancelOrderOptions {
+   readonly reason?: string;
+ }
+ 
++/** Request-only event metadata; it is deliberately not persisted on `Order`. */
++export interface PlaceOrderCommand extends NewOrder {
++  readonly channel: Channel;
++}
++
+ /**
+  * Application service: orchestrates the order use cases over the ports.
+  * It owns the order of side effects: authorize, persist, then publish.
+@@ -38,9 +43,13 @@ export interface CancelOrderOptions {
+ export class OrderService {
+   constructor(private readonly deps: OrderServiceDeps) {}
+ 
+-  async placeOrder(command: NewOrder): Promise<Order> {
++  async placeOrder(command: PlaceOrderCommand): Promise<Order> {
+     const { orders, events, payments, clock, ids } = this.deps;
+ 
++    if (!(CHANNELS as readonly unknown[]).includes(command.channel)) {
++      throw new ValidationError([{ path: "channel", message: `must be one of ${CHANNELS.join(", ")}` }]);
++    }
++
+     const order = createOrder(command, {
+       id: ids.nextId(),
+       placedAt: clock.now().toISOString(),
+@@ -57,7 +66,7 @@ export class OrderService {
+     }
+ 
+     await orders.save(order);
+-    await events.publish(orderPlaced(order));
++    await events.publish(orderPlaced(order, command.channel));
+     return order;
+   }
+ 
+diff --git a/orders-service/test/adapters.test.ts b/orders-service/test/adapters.test.ts
+index bda47cd..953ee7d 100644
+--- a/orders-service/test/adapters.test.ts
++++ b/orders-service/test/adapters.test.ts
+@@ -39,7 +39,7 @@ describe("KafkaEventPublisher", () => {
+   it("buffers records with topic, key and headers", async () => {
+     const publisher = new KafkaEventPublisher();
+     const order = sampleOrder("ord-1", "2026-10-10T12:00:00.000Z");
+-    await publisher.publish(orderPlaced(order));
++    await publisher.publish(orderPlaced(order, "store"));
+     await publisher.publish(orderCancelled(order, "2026-10-11T00:00:00.000Z"));
+ 
+     const [placed, cancelled] = publisher.records;
+@@ -54,7 +54,7 @@ describe("KafkaEventPublisher", () => {
+ 
+   it("fails when the buffer limit is reached", async () => {
+     const publisher = new KafkaEventPublisher({ maxBuffered: 1 });
+-    const event = orderPlaced(sampleOrder("ord-1", "2026-10-10T12:00:00.000Z"));
++    const event = orderPlaced(sampleOrder("ord-1", "2026-10-10T12:00:00.000Z"), "store");
+     await publisher.publish(event);
+     await assert.rejects(publisher.publish(event), BufferOverflowError);
+   });
+diff --git a/orders-service/test/app.test.ts b/orders-service/test/app.test.ts
+index d8fd1bb..a1bbe8d 100644
+--- a/orders-service/test/app.test.ts
++++ b/orders-service/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+@@ -106,6 +107,7 @@ describe("POST /orders/{id}/cancel", () => {
+       "POST",
+       "/orders",
+       placeOrderBody({
++        channel: "marketplace",
+         currency: "EUR",
+         lines: [{ sku: "EU-1", name: "Mug", qty: 1, unitPriceCents: 1990 }],
+       }),
+diff --git a/orders-service/test/helpers.ts b/orders-service/test/helpers.ts
+index 1c1bebe..f9cb257 100644
+--- a/orders-service/test/helpers.ts
++++ b/orders-service/test/helpers.ts
+@@ -74,6 +74,7 @@ export function placeOrderBody(overrides: Record<string, unknown> = {}): Record<
+   return {
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
++    channel: "web",
+     currency: "USD",
+     lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     ...overrides,

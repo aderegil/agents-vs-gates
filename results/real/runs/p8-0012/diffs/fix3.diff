@@ -1,0 +1,168 @@
+diff --git a/orders-service/README.md b/orders-service/README.md
+index da1a38c..f76e405 100644
+--- a/orders-service/README.md
++++ b/orders-service/README.md
+@@ -15,7 +15,7 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ 
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+-const res = await app.handle("POST", "/orders", { customerId, customerEmail, currency, lines });
++const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+ // 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/orders-service/src/api/requestParsing.ts b/orders-service/src/api/requestParsing.ts
+index 0e8f7e8..1ec650b 100644
+--- a/orders-service/src/api/requestParsing.ts
++++ b/orders-service/src/api/requestParsing.ts
+@@ -1,5 +1,5 @@
+ import { ValidationError, type ValidationIssue } from "../core/errors.js";
+-import type { NewOrder, OrderLine, OrderStatus } from "../core/order.js";
++import type { Channel, NewOrder, OrderLine, OrderStatus } from "../core/order.js";
+ import type { CustomerOrdersQuery } from "../core/ports.js";
+ import { decodeCursor } from "./cursor.js";
+ import { InputReader, isJsonObject } from "./inputReader.js";
+@@ -15,6 +15,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
++  const channel = reader.string("channel");
+   const currency = reader.string("currency");
+ 
+   const lines: OrderLine[] = [];
+@@ -35,7 +36,8 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   if (reader.issues.length > 0) {
+     throw new ValidationError(reader.issues);
+   }
+-  return { customerId, customerEmail, currency, lines };
++  // The core validates that `channel` is one of the supported values.
++  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/orders-service/src/core/events.ts b/orders-service/src/core/events.ts
+index c4e435f..48d7867 100644
+--- a/orders-service/src/core/events.ts
++++ b/orders-service/src/core/events.ts
+@@ -1,4 +1,4 @@
+-import { totalCents, type Order } from "./order.js";
++import { totalCents, type Channel, type Order } from "./order.js";
+ 
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+@@ -13,6 +13,10 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /**
++   * @deprecated Retained for downstream consumers (analytics-ingest) per ARCH-4 until migrated.
++   */
++  readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -46,6 +50,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/orders-service/src/core/order.ts b/orders-service/src/core/order.ts
+index b946024..7688701 100644
+--- a/orders-service/src/core/order.ts
++++ b/orders-service/src/core/order.ts
+@@ -1,3 +1,6 @@
++import { InvalidStateError, ValidationError, type ValidationIssue } from "./errors.js";
++import { isMinorUnits, isSupportedCurrency, money, multiply, sum } from "./money.js";
++
+ export const CHANNELS = ["web", "store", "marketplace"] as const;
+ export type Channel = (typeof CHANNELS)[number];
+ 
+@@ -75,6 +78,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+       unitPriceCents: line.unitPriceCents,
+     })),
+     status: "placed",
++    channel: input.channel,
+     currency: input.currency,
+     placedAt: meta.placedAt,
+   };
+@@ -123,6 +127,9 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   ) {
+     fail("customerEmail", "must be a valid email address");
+   }
++  if (!(CHANNELS as readonly unknown[]).includes(input.channel)) {
++    fail("channel", `must be one of ${CHANNELS.join(", ")}`);
++  }
+   if (!isSupportedCurrency(input.currency)) {
+     fail("currency", "must be a supported ISO-4217 currency code");
+   }
+diff --git a/orders-service/test/adapters.test.ts b/orders-service/test/adapters.test.ts
+index bda47cd..1849efc 100644
+--- a/orders-service/test/adapters.test.ts
++++ b/orders-service/test/adapters.test.ts
+@@ -15,6 +15,7 @@ function sampleOrder(id: string, placedAt: string) {
+     {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
++      channel: "store",
+       currency: "USD",
+       lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     },
+diff --git a/orders-service/test/app.test.ts b/orders-service/test/app.test.ts
+index d8fd1bb..a1bbe8d 100644
+--- a/orders-service/test/app.test.ts
++++ b/orders-service/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+@@ -106,6 +107,7 @@ describe("POST /orders/{id}/cancel", () => {
+       "POST",
+       "/orders",
+       placeOrderBody({
++        channel: "marketplace",
+         currency: "EUR",
+         lines: [{ sku: "EU-1", name: "Mug", qty: 1, unitPriceCents: 1990 }],
+       }),
+diff --git a/orders-service/test/helpers.ts b/orders-service/test/helpers.ts
+index 1c1bebe..f9cb257 100644
+--- a/orders-service/test/helpers.ts
++++ b/orders-service/test/helpers.ts
+@@ -74,6 +74,7 @@ export function placeOrderBody(overrides: Record<string, unknown> = {}): Record<
+   return {
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
++    channel: "web",
+     currency: "USD",
+     lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     ...overrides,
+diff --git a/orders-service/test/order.test.ts b/orders-service/test/order.test.ts
+index 31400d5..226d6f8 100644
+--- a/orders-service/test/order.test.ts
++++ b/orders-service/test/order.test.ts
+@@ -9,6 +9,7 @@ function newOrder(overrides: Partial<NewOrder> = {}): NewOrder {
+   return {
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
++    channel: "web",
+     currency: "USD",
+     lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     ...overrides,
+@@ -62,9 +63,9 @@ describe("createOrder", () => {
+ 
+   it("reports every problem at once", () => {
+     const paths = issuePaths(() =>
+-      createOrder(newOrder({ customerId: " ", customerEmail: "nope", currency: "ZZZ" }), META),
++      createOrder(newOrder({ customerId: " ", customerEmail: "nope", currency: "ZZZ", channel: "fax" as never }), META),
+     );
+-    assert.deepEqual(paths, ["customerId", "customerEmail", "currency"]);
++    assert.deepEqual(paths, ["customerId", "customerEmail", "channel", "currency"]);
+   });
+ 
+   it("bounds the order total", () => {

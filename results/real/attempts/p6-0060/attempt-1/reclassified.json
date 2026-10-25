@@ -1,0 +1,22 @@
+{
+  "run_id": "p6-0060",
+  "at": "2026-10-12T18:23:38Z",
+  "by": "harness.reclassify_infra",
+  "from_outcome": "no_change",
+  "infra_failure": {
+    "kind": "sandbox_unavailable",
+    "detail": "sandbox could not start a command: MXC launcher: failed to create the process security environment: CreateProcessSecurityEnvironment failed (HRESULT = 0x80070020)",
+    "reset_at": null
+  },
+  "evidence": {
+    "bash_calls": 5,
+    "sandbox_dead": 5,
+    "first": {
+      "session": "gen",
+      "bash_call": 1,
+      "ts": "2026-10-12T16:15:03.490Z",
+      "output": "MXC launcher: failed to create the process security environment: CreateProcessSecurityEnvironment failed (HRESULT = 0x80070020)"
+    }
+  },
+  "rule": "PREREGISTRATION §5: infrastructure failures are re-queued"
+}

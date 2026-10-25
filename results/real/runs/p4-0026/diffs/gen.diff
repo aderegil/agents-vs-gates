@@ -1,0 +1,86 @@
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 1ec650b..e6bcf12 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -17,6 +17,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const customerEmail = reader.string("customerEmail");
+   const channel = reader.string("channel");
+   const currency = reader.string("currency");
++  const couponCode = reader.optionalString("couponCode");
+ 
+   const lines: OrderLine[] = [];
+   reader.array("lines").forEach((raw, index) => {
+@@ -37,7 +38,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+     throw new ValidationError(reader.issues);
+   }
+   // The core validates that `channel` is one of the supported values.
+-  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
++  return { customerId, customerEmail, channel: channel as Channel, currency, lines, ...(couponCode === undefined ? {} : { couponCode }) };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..ed6cbf2 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -16,6 +16,7 @@ export interface OrderPlaced {
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
++  readonly couponCode?: string;
+   /** Integer, minor units. */
+   readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+@@ -49,6 +50,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
++    ...(order.couponCode === undefined ? {} : { couponCode: order.couponCode }),
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..1f735f7 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -19,6 +19,7 @@ export interface Order {
+   /** Legacy: kept on the order for receipts until the customer profile lookup exists. */
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
++  readonly couponCode?: string;
+   readonly status: OrderStatus;
+   readonly channel: Channel;
+   readonly currency: string;
+@@ -35,9 +36,11 @@ export interface NewOrder {
+   readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
++  readonly couponCode?: string;
+ }
+ 
+ export const LIMITS = {
++  maxCouponCodeLength: 64,
+   maxLines: 100,
+   maxQtyPerLine: 1000,
+   maxSkuLength: 64,
+@@ -71,6 +74,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+       qty: line.qty,
+       unitPriceCents: line.unitPriceCents,
+     })),
++    ...(input.couponCode === undefined ? {} : { couponCode: input.couponCode }),
+     status: "placed",
+     channel: input.channel,
+     currency: input.currency,
+@@ -121,6 +125,12 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   ) {
+     fail("customerEmail", "must be a valid email address");
+   }
++  if (
++    input.couponCode !== undefined &&
++    (!isNonBlank(input.couponCode) || input.couponCode.length > LIMITS.maxCouponCodeLength)
++  ) {
++    fail("couponCode", `must be 1-${LIMITS.maxCouponCodeLength} characters`);
++  }
+   if (!(CHANNELS as readonly unknown[]).includes(input.channel)) {
+     fail("channel", `must be one of ${CHANNELS.join(", ")}`);
+   }

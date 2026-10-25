@@ -1,0 +1,16 @@
+diff --git a/catalog/orders-service.yaml b/catalog/orders-service.yaml
+index 5583fc8..c7b560b 100644
+--- a/catalog/orders-service.yaml
++++ b/catalog/orders-service.yaml
+@@ -1,2 +1,10 @@
++name: orders-service
++owner: checkout
++provides:
++  apis:   [{ name: orders-api, host: orders.checkout.internal, version: 1, envAliases: ["ORDERS_API_URL", "ORDERS_API_BASE_URL", "ORDERS_API_HOST"] }]
++  events: [{ name: OrderPlaced, topic: orders.placed, version: 3 },
++           { name: OrderCancelled, topic: orders.cancelled, version: 1 }]
+ dependsOn:
+-  - inventory-service
++  - { service: payments-service, api: payments-api, host: payments.payments.internal }
++  - { service: inventory-service, api: stock-api, host: stock.inventory.internal }
++consumes: []

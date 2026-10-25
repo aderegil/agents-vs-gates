@@ -1,0 +1,48 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index c4e435f..6b7ff4a 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -3,6 +3,14 @@ import { totalCents, type Order } from "./order.js";
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+ 
++/**
++ * Compatibility value required by analytics-ingest while it migrates off the
++ * retired order channel. This is deliberately not part of the order model.
++ */
++export const LEGACY_ORDER_CHANNELS = ["web", "store", "marketplace"] as const;
++export type LegacyOrderChannel = (typeof LEGACY_ORDER_CHANNELS)[number];
++const LEGACY_ORDER_CHANNEL: LegacyOrderChannel = "web";
++
+ /** Published when an order has been accepted and its payment authorized. */
+ export interface OrderPlaced {
+   readonly type: "OrderPlaced";
+@@ -13,6 +21,8 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /** @deprecated Retained for analytics-ingest compatibility. Always `web`. */
++  readonly channel: LegacyOrderChannel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -46,6 +56,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    channel: LEGACY_ORDER_CHANNEL,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/test/app.test.ts b/test/app.test.ts
+index d8fd1bb..bc44505 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],

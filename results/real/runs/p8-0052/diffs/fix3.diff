@@ -1,0 +1,56 @@
+diff --git a/test/app.test.ts b/test/app.test.ts
+index d8fd1bb..a1bbe8d 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+@@ -106,6 +107,7 @@ describe("POST /orders/{id}/cancel", () => {
+       "POST",
+       "/orders",
+       placeOrderBody({
++        channel: "marketplace",
+         currency: "EUR",
+         lines: [{ sku: "EU-1", name: "Mug", qty: 1, unitPriceCents: 1990 }],
+       }),
+diff --git a/test/helpers.ts b/test/helpers.ts
+index 1c1bebe..f9cb257 100644
+--- a/test/helpers.ts
++++ b/test/helpers.ts
+@@ -74,6 +74,7 @@ export function placeOrderBody(overrides: Record<string, unknown> = {}): Record<
+   return {
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
++    channel: "web",
+     currency: "USD",
+     lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     ...overrides,
+diff --git a/test/order.test.ts b/test/order.test.ts
+index 31400d5..226d6f8 100644
+--- a/test/order.test.ts
++++ b/test/order.test.ts
+@@ -9,6 +9,7 @@ function newOrder(overrides: Partial<NewOrder> = {}): NewOrder {
+   return {
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
++    channel: "web",
+     currency: "USD",
+     lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     ...overrides,
+@@ -62,9 +63,9 @@ describe("createOrder", () => {
+ 
+   it("reports every problem at once", () => {
+     const paths = issuePaths(() =>
+-      createOrder(newOrder({ customerId: " ", customerEmail: "nope", currency: "ZZZ" }), META),
++      createOrder(newOrder({ customerId: " ", customerEmail: "nope", currency: "ZZZ", channel: "fax" as never }), META),
+     );
+-    assert.deepEqual(paths, ["customerId", "customerEmail", "currency"]);
++    assert.deepEqual(paths, ["customerId", "customerEmail", "channel", "currency"]);
+   });
+ 
+   it("bounds the order total", () => {

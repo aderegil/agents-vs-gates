@@ -1,0 +1,72 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..982d713 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -11,13 +11,17 @@ export interface OrderPlaced {
+   readonly customerId: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+-  /** ISO-8601 instant. */
++  /** ISO-8601 instant. @deprecated Use `createdAt`. */
+   readonly placedAt: string;
++  /** ISO-8601 instant. */
++  readonly createdAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+-  /** Integer, minor units. */
++  /** Integer, minor units. @deprecated Use `amountCents`. */
+   readonly totalCents: number;
++  /** Integer, minor units. */
++  readonly amountCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -47,9 +51,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    createdAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
++    amountCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index 1849efc..e74bc79 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -48,6 +48,7 @@ describe("KafkaEventPublisher", () => {
+     assert.equal(placed?.key, "ord-1");
+     assert.equal(placed?.headers["schema-version"], "3");
+     assert.equal(JSON.parse(placed?.value ?? "{}").totalCents, 1250);
++    assert.equal(JSON.parse(placed?.value ?? "{}").amountCents, 1250);
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+     assert.equal(publisher.records.length, 0);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..a0970c6 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,9 +25,11 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      createdAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
+       totalCents: 1250,
++      amountCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [
+@@ -49,6 +51,7 @@ describe("POST /orders", () => {
+     );
+     assert.equal(res.status, 201);
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).amountCents, 2497);
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {

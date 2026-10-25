@@ -1,0 +1,141 @@
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 0e8f7e8..8391f91 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -1,5 +1,5 @@
+ import { ValidationError, type ValidationIssue } from "../core/errors.js";
+-import type { NewOrder, OrderLine, OrderStatus } from "../core/order.js";
++import type { Channel, NewOrder, OrderLine, OrderStatus } from "../core/order.js";
+ import type { CustomerOrdersQuery } from "../core/ports.js";
+ import { decodeCursor } from "./cursor.js";
+ import { InputReader, isJsonObject } from "./inputReader.js";
+@@ -15,6 +15,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
++  const channel = reader.optionalString("channel");
+   const currency = reader.string("currency");
+ 
+   const lines: OrderLine[] = [];
+@@ -35,7 +36,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   if (reader.issues.length > 0) {
+     throw new ValidationError(reader.issues);
+   }
+-  return { customerId, customerEmail, currency, lines };
++  return { customerId, customerEmail, ...(channel === undefined ? {} : { channel: channel as Channel }), currency, lines };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index c4e435f..2439d70 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -1,4 +1,4 @@
+-import { totalCents, type Order } from "./order.js";
++import { totalCents, type Channel, type Order } from "./order.js";
+ 
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+@@ -13,6 +13,8 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /** Sales channel; required by analytics-ingest. */
++  readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -46,6 +48,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/src/core/order.ts b/src/core/order.ts
+index dc68061..696f3b2 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -1,6 +1,9 @@
+ import { InvalidStateError, ValidationError, type ValidationIssue } from "./errors.js";
+ import { isMinorUnits, isSupportedCurrency, money, multiply, sum } from "./money.js";
+ 
++export const CHANNELS = ["web", "store", "marketplace"] as const;
++export type Channel = (typeof CHANNELS)[number];
++
+ export type OrderStatus = "placed" | "cancelled";
+ 
+ export interface OrderLine {
+@@ -17,6 +20,8 @@ export interface Order {
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
++  /** Retained for the OrderPlaced consumer contract. */
++  readonly channel: Channel;
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+@@ -28,6 +33,8 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
++  /** Defaults to web for callers that do not supply a channel. */
++  readonly channel?: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+ }
+@@ -67,6 +74,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+       unitPriceCents: line.unitPriceCents,
+     })),
+     status: "placed",
++    channel: input.channel ?? "web",
+     currency: input.currency,
+     placedAt: meta.placedAt,
+   };
+@@ -115,6 +123,9 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   ) {
+     fail("customerEmail", "must be a valid email address");
+   }
++  if (input.channel !== undefined && !(CHANNELS as readonly unknown[]).includes(input.channel)) {
++    fail("channel", `must be one of ${CHANNELS.join(", ")}`);
++  }
+   if (!isSupportedCurrency(input.currency)) {
+     fail("currency", "must be a supported ISO-4217 currency code");
+   }
+diff --git a/test/app.test.ts b/test/app.test.ts
+index d8fd1bb..bc44505 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+diff --git a/test/order.test.ts b/test/order.test.ts
+index 31400d5..7803be0 100644
+--- a/test/order.test.ts
++++ b/test/order.test.ts
+@@ -37,6 +37,7 @@ describe("createOrder", () => {
+       META,
+     );
+     assert.equal(order.status, "placed");
++    assert.equal(order.channel, "web");
+     assert.equal(order.placedAt, META.placedAt);
+     assert.equal(totalCents(order), 2497);
+   });
+@@ -67,6 +68,11 @@ describe("createOrder", () => {
+     assert.deepEqual(paths, ["customerId", "customerEmail", "currency"]);
+   });
+ 
++  it("keeps a supplied channel and rejects an unsupported one", () => {
++    assert.equal(createOrder(newOrder({ channel: "store" }), META).channel, "store");
++    assert.deepEqual(issuePaths(() => createOrder(newOrder({ channel: "fax" as never }), META)), ["channel"]);
++  });
++
+   it("bounds the order total", () => {
+     const huge = newOrder({ lines: [{ sku: "A", name: "x", qty: 1000, unitPriceCents: 999_999 }] });
+     assert.deepEqual(issuePaths(() => createOrder(huge, META)), ["lines"]);

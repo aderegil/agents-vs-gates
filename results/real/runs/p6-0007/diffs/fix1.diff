@@ -1,0 +1,143 @@
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 0e8f7e8..46bb72a 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -1,5 +1,5 @@
+ import { ValidationError, type ValidationIssue } from "../core/errors.js";
+-import type { NewOrder, OrderLine, OrderStatus } from "../core/order.js";
++import type { LegacyOrderPlacedChannel, NewOrder, OrderLine, OrderStatus } from "../core/order.js";
+ import type { CustomerOrdersQuery } from "../core/ports.js";
+ import { decodeCursor } from "./cursor.js";
+ import { InputReader, isJsonObject } from "./inputReader.js";
+@@ -15,6 +15,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
++  const channel = reader.optionalString("channel");
+   const currency = reader.string("currency");
+ 
+   const lines: OrderLine[] = [];
+@@ -35,7 +36,13 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   if (reader.issues.length > 0) {
+     throw new ValidationError(reader.issues);
+   }
+-  return { customerId, customerEmail, currency, lines };
++  return {
++    customerId,
++    customerEmail,
++    ...(channel === undefined ? {} : { channel: channel as LegacyOrderPlacedChannel }),
++    currency,
++    lines,
++  };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index c4e435f..d351086 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -1,4 +1,4 @@
+-import { totalCents, type Order } from "./order.js";
++import { totalCents, type LegacyOrderPlacedChannel, type Order } from "./order.js";
+ 
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+@@ -13,6 +13,11 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /**
++   * Deprecated compatibility field required by analytics-ingest. It is not
++   * stored on orders; omitted command values are published as `web`.
++   */
++  readonly channel: LegacyOrderPlacedChannel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -38,7 +43,7 @@ export interface OrderCancelled {
+ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+-export function orderPlaced(order: Order): OrderPlaced {
++export function orderPlaced(order: Order, channel: LegacyOrderPlacedChannel = "web"): OrderPlaced {
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+@@ -46,6 +51,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/src/core/order.ts b/src/core/order.ts
+index dc68061..7594af6 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -1,6 +1,9 @@
+ import { InvalidStateError, ValidationError, type ValidationIssue } from "./errors.js";
+ import { isMinorUnits, isSupportedCurrency, money, multiply, sum } from "./money.js";
+ 
++export const LEGACY_ORDER_PLACED_CHANNELS = ["web", "store", "marketplace"] as const;
++export type LegacyOrderPlacedChannel = (typeof LEGACY_ORDER_PLACED_CHANNELS)[number];
++
+ export type OrderStatus = "placed" | "cancelled";
+ 
+ export interface OrderLine {
+@@ -28,6 +31,11 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
++  /**
++   * Compatibility input for the deprecated OrderPlaced event field. It is not
++   * persisted on the order and new callers can omit it.
++   */
++  readonly channel?: LegacyOrderPlacedChannel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+ }
+@@ -115,6 +123,9 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   ) {
+     fail("customerEmail", "must be a valid email address");
+   }
++  if (input.channel !== undefined && !(LEGACY_ORDER_PLACED_CHANNELS as readonly unknown[]).includes(input.channel)) {
++    fail("channel", `must be one of ${LEGACY_ORDER_PLACED_CHANNELS.join(", ")}`);
++  }
+   if (!isSupportedCurrency(input.currency)) {
+     fail("currency", "must be a supported ISO-4217 currency code");
+   }
+diff --git a/src/core/orderService.ts b/src/core/orderService.ts
+index 4627934..7af9703 100644
+--- a/src/core/orderService.ts
++++ b/src/core/orderService.ts
+@@ -57,7 +57,7 @@ export class OrderService {
+     }
+ 
+     await orders.save(order);
+-    await events.publish(orderPlaced(order));
++    await events.publish(orderPlaced(order, command.channel));
+     return order;
+   }
+ 
+diff --git a/test/app.test.ts b/test/app.test.ts
+index d8fd1bb..5a9a457 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -6,7 +6,7 @@ import { FIXED_NOW, FakePayments, makeApp, placeOrderBody } from "./helpers.js";
+ describe("POST /orders", () => {
+   it("places an order, answers 201 and publishes OrderPlaced v3", async () => {
+     const { app, publisher, payments } = makeApp();
+-    const res = await app.handle("POST", "/orders", placeOrderBody());
++    const res = await app.handle("POST", "/orders", placeOrderBody({ channel: "marketplace" }));
+ 
+     assert.equal(res.status, 201);
+     assert.deepEqual(res.body, {
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "marketplace",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],

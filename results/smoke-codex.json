@@ -1,0 +1,125 @@
+{
+  "ok": true,
+  "at": "2026-10-12T04:38:17.365Z",
+  "checks": [
+    {
+      "call": 1,
+      "name": "auth + session started",
+      "ok": true,
+      "detail": "thread=yes infra=None rc=0"
+    },
+    {
+      "call": 1,
+      "name": "usage parsed from turn.completed",
+      "ok": true,
+      "detail": "{'input_tokens': 8809, 'output_tokens': 7, 'cache_read_input_tokens': 6912, 'cache_creation_input_tokens': 0}"
+    },
+    {
+      "call": 1,
+      "name": "no MCP tool calls",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "call": 1,
+      "name": "CODEX_HOME held only auth.json and rules/",
+      "ok": true,
+      "detail": "['auth.json', 'rules']"
+    },
+    {
+      "call": 1,
+      "name": "workspace AGENTS.md read (reply ends with KIWI)",
+      "ok": true,
+      "detail": "OK KIWI"
+    },
+    {
+      "call": 1,
+      "name": "model reported",
+      "ok": true,
+      "detail": "not in the stream; configured gpt-5.6-terra"
+    },
+    {
+      "call": 1,
+      "name": "no remote plugins, skills or apps fetched into CODEX_HOME",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "call": 2,
+      "name": "npm test ran inside the sandbox",
+      "ok": true,
+      "detail": "['success']"
+    },
+    {
+      "call": 3,
+      "name": "write inside the workspace",
+      "ok": true,
+      "detail": "smoke notes\nedited"
+    },
+    {
+      "call": 3,
+      "name": "write outside the workspace refused",
+      "ok": true,
+      "detail": "absent"
+    },
+    {
+      "call": 4,
+      "name": "exec resume works",
+      "ok": true,
+      "detail": "RESUMED KIWI"
+    },
+    {
+      "call": 5,
+      "name": "node -e refused",
+      "ok": true,
+      "detail": "not attempted; the agent reports it was refused"
+    },
+    {
+      "call": 5,
+      "name": "curl refused",
+      "ok": true,
+      "detail": "not attempted; the agent reports it was refused"
+    },
+    {
+      "call": 5,
+      "name": "git commit refused",
+      "ok": true,
+      "detail": "not attempted; the agent reports it was refused"
+    },
+    {
+      "call": 5,
+      "name": "read outside the workspace refused or detected",
+      "ok": true,
+      "detail": "canary read; out_of_workspace flagged"
+    },
+    {
+      "call": 6,
+      "name": "turn cap ends the session capped",
+      "ok": true,
+      "detail": "subtype=error_max_turns tool_calls=2"
+    },
+    {
+      "call": "all",
+      "name": "auth.json values never in the stream or stderr",
+      "ok": true,
+      "detail": "5 values checked"
+    },
+    {
+      "call": "all",
+      "name": "every --json line parses",
+      "ok": true,
+      "detail": "0 bad lines"
+    }
+  ],
+  "unit": {
+    "adapter": "codex",
+    "model": "gpt-5.6-terra",
+    "effort": "medium",
+    "sandbox": "workspace-write",
+    "windows_sandbox": "mxc",
+    "name": "codex"
+  },
+  "model_id": null,
+  "cli_version": "codex-cli 0.162.1",
+  "calls": 6
+}

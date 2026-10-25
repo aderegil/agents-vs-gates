@@ -1,0 +1,38 @@
+diff --git a/orders-service/src/core/order.ts b/orders-service/src/core/order.ts
+index dc68061..b9d7819 100644
+--- a/orders-service/src/core/order.ts
++++ b/orders-service/src/core/order.ts
+@@ -1,6 +1,9 @@
+ import { InvalidStateError, ValidationError, type ValidationIssue } from "./errors.js";
+ import { isMinorUnits, isSupportedCurrency, money, multiply, sum } from "./money.js";
+ 
++export const CHANNELS = ["web", "store", "marketplace"] as const;
++export type Channel = (typeof CHANNELS)[number];
++
+ export type OrderStatus = "placed" | "cancelled";
+ 
+ export interface OrderLine {
+@@ -17,6 +20,7 @@ export interface Order {
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
++  readonly channel: Channel;
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+@@ -28,6 +32,7 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
++  readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+ }
+@@ -67,6 +72,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+       unitPriceCents: line.unitPriceCents,
+     })),
+     status: "placed",
++    channel: input.channel,
+     currency: input.currency,
+     placedAt: meta.placedAt,
+   };

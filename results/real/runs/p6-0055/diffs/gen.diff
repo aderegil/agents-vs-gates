@@ -1,0 +1,125 @@
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 1ec650b..5b7e0df 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -15,6 +15,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
++  const couponCode = reader.optionalString("couponCode");
+   const channel = reader.string("channel");
+   const currency = reader.string("currency");
+ 
+@@ -37,7 +38,14 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+     throw new ValidationError(reader.issues);
+   }
+   // The core validates that `channel` is one of the supported values.
+-  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
++  return {
++    customerId,
++    customerEmail,
++    ...(couponCode === undefined ? {} : { couponCode }),
++    channel: channel as Channel,
++    currency,
++    lines,
++  };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..d9caf6d 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -9,6 +9,8 @@ export interface OrderPlaced {
+   readonly schemaVersion: 3;
+   readonly orderId: string;
+   readonly customerId: string;
++  /** Optional promotion code supplied when the order was placed. */
++  readonly couponCode?: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+@@ -45,6 +47,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     schemaVersion: 3,
+     orderId: order.id,
+     customerId: order.customerId,
++    ...(order.couponCode === undefined ? {} : { couponCode: order.couponCode }),
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
+     channel: order.channel,
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..841329b 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -16,6 +16,8 @@ export interface OrderLine {
+ export interface Order {
+   readonly id: string;
+   readonly customerId: string;
++  /** Optional promotion code supplied when the order was placed. */
++  readonly couponCode?: string;
+   /** Legacy: kept on the order for receipts until the customer profile lookup exists. */
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
+@@ -32,6 +34,7 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
++  readonly couponCode?: string;
+   readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+@@ -65,6 +68,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+     id: meta.id,
+     customerId: input.customerId,
+     customerEmail: input.customerEmail,
++    ...(input.couponCode === undefined ? {} : { couponCode: input.couponCode }),
+     lines: input.lines.map((line) => ({
+       sku: line.sku,
+       name: line.name,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..f82dcca 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -51,6 +51,16 @@ describe("POST /orders", () => {
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
+   });
+ 
++  it("stores an optional coupon code and includes it in OrderPlaced", async () => {
++    const { app, publisher } = makeApp();
++    const res = await app.handle("POST", "/orders", placeOrderBody({ couponCode: "WELCOME10" }));
++
++    assert.equal(res.status, 201);
++    assert.equal((publisher.events[0] as OrderPlaced).couponCode, "WELCOME10");
++    const order = await app.handle("GET", "/orders/ord-1", undefined);
++    assert.equal(order.status, 200);
++  });
++
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {
+     const { app, publisher, payments } = makeApp();
+     const res = await app.handle(
+@@ -70,6 +80,8 @@ describe("POST /orders", () => {
+     const { app } = makeApp();
+     const wrongType = await app.handle("POST", "/orders", placeOrderBody({ customerId: 42, lines: "none" }));
+     assert.equal(wrongType.status, 400);
++    const invalidCouponCode = await app.handle("POST", "/orders", placeOrderBody({ couponCode: 10 }));
++    assert.equal(invalidCouponCode.status, 400);
+     const missing = await app.handle("POST", "/orders", undefined);
+     assert.equal(missing.status, 400);
+   });
+diff --git a/test/order.test.ts b/test/order.test.ts
+index 226d6f8..6106dd9 100644
+--- a/test/order.test.ts
++++ b/test/order.test.ts
+@@ -40,6 +40,12 @@ describe("createOrder", () => {
+     assert.equal(order.status, "placed");
+     assert.equal(order.placedAt, META.placedAt);
+     assert.equal(totalCents(order), 2497);
++    assert.equal(order.couponCode, undefined);
++  });
++
++  it("retains an optional coupon code", () => {
++    const order = createOrder(newOrder({ couponCode: "WELCOME10" }), META);
++    assert.equal(order.couponCode, "WELCOME10");
+   });
+ 
+   it("requires at least one line", () => {

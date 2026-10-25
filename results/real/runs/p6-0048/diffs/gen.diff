@@ -1,0 +1,78 @@
+diff --git a/README.md b/README.md
+index f76e405..b5057a1 100644
+--- a/README.md
++++ b/README.md
+@@ -16,6 +16,6 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+ const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+-// 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
++// 201 { id, status, placedAt, currency, totalCents, totalDollars, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..f1e37c4 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -9,6 +9,8 @@ export interface OrderResponse {
+   readonly placedAt: string;
+   readonly currency: string;
+   readonly totalCents: number;
++  /** Total expressed in dollars so clients do not need to convert cents. */
++  readonly totalDollars: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly name: string;
+@@ -25,12 +27,14 @@ export interface OrderListResponse {
+ 
+ /** The single place where an order is mapped to its REST representation. */
+ export function toOrderResponse(order: Order): OrderResponse {
++  const orderTotalCents = totalCents(order);
+   return {
+     id: order.id,
+     status: order.status,
+     placedAt: order.placedAt,
+     currency: order.currency,
+-    totalCents: totalCents(order),
++    totalCents: orderTotalCents,
++    totalDollars: orderTotalCents / 100,
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       name: line.name,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..b8c3fb1 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -15,6 +15,7 @@ describe("POST /orders", () => {
+       placedAt: FIXED_NOW,
+       currency: "USD",
+       totalCents: 1250,
++      totalDollars: 12.5,
+       lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+     assert.equal(publisher.events.length, 1);
+@@ -89,7 +90,15 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(Object.keys(res.body as object), [
++      "id",
++      "status",
++      "placedAt",
++      "currency",
++      "totalCents",
++      "totalDollars",
++      "lines",
++    ]);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {
+@@ -157,6 +166,7 @@ describe("GET /orders", () => {
+     assert.equal(all.status, 200);
+     const ids = (all.body as { orders: Array<{ id: string }> }).orders.map((o) => o.id);
+     assert.deepEqual(ids, ["ord-2", "ord-1"]);
++    assert.equal((all.body as { orders: Array<{ totalDollars: number }> }).orders[0]?.totalDollars, 12.5);
+ 
+     const placed = await app.handle("GET", "/orders?customerId=cust-1&status=placed&limit=5");
+     assert.deepEqual((placed.body as { orders: Array<{ id: string }> }).orders.map((o) => o.id), ["ord-2"]);

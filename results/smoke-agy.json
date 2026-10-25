@@ -1,0 +1,225 @@
+{
+  "ok": true,
+  "at": "2026-10-16T10:21:59.300Z",
+  "checks": [
+    {
+      "call": 1,
+      "name": "auth with the per-run HOME: result event, no infrastructure failure",
+      "ok": true,
+      "info": false,
+      "detail": "subtype=success infra=None detail="
+    },
+    {
+      "call": 1,
+      "name": "usage parsed from the result event",
+      "ok": true,
+      "info": false,
+      "detail": "{'input_tokens': 12896, 'output_tokens': 245, 'cache_read_input_tokens': 0, 'cache_creation_input_tokens': 0, 'output_tokens_raw': 125, 'thinking_tokens': 120, 'total_tokens': 13021, 'cli_duration_s': 3.0927916}"
+    },
+    {
+      "call": 1,
+      "name": "conversation id in the stream",
+      "ok": true,
+      "info": false,
+      "detail": "92f86028-2365-4133-a53b-a981166f21d3"
+    },
+    {
+      "call": 1,
+      "name": "model reported",
+      "ok": true,
+      "info": false,
+      "detail": "gemini-3.8-flash-medium"
+    },
+    {
+      "call": 1,
+      "name": "no MCP tool calls",
+      "ok": true,
+      "info": false,
+      "detail": "none"
+    },
+    {
+      "call": 1,
+      "name": "workspace GEMINI.md read (reply ends with KIWI)",
+      "ok": true,
+      "info": false,
+      "detail": "OK.\n\nKIWI"
+    },
+    {
+      "call": 1,
+      "name": "unknown stream events (parser coverage)",
+      "ok": true,
+      "info": true,
+      "detail": "none"
+    },
+    {
+      "call": 1,
+      "name": "names agy created in the per-run HOME",
+      "ok": true,
+      "info": true,
+      "detail": ".gemini, .gemini/antigravity-cli, .gemini/antigravity-cli/annotations, .gemini/antigravity-cli/bin, .gemini/antigravity-cli/brain, .gemini/antigravity-cli/builtin, .gemini/antigravity-cli/cache, .gemini/antigravity-cli/cli.log, .gemini/antigravity-cli/conversation_summaries.db, .gemini/antigravity-c"
+    },
+    {
+      "call": 2,
+      "name": "npm test ran under --sandbox",
+      "ok": true,
+      "info": false,
+      "detail": "['success']"
+    },
+    {
+      "call": 3,
+      "name": "write inside the workspace",
+      "ok": true,
+      "info": false,
+      "detail": "smoke notes\nedited"
+    },
+    {
+      "call": 3,
+      "name": "write outside the workspace refused or detected",
+      "ok": true,
+      "info": false,
+      "detail": "written; out_of_workspace flagged"
+    },
+    {
+      "call": 3,
+      "name": "read outside the workspace refused or detected",
+      "ok": true,
+      "info": false,
+      "detail": "canary read; out_of_workspace flagged"
+    },
+    {
+      "call": 4,
+      "name": "resume with --conversation works",
+      "ok": true,
+      "info": false,
+      "detail": "RESUMED.\n\nKIWI"
+    },
+    {
+      "call": 5,
+      "name": "--print-timeout ends the session capped (wall clock), not as infrastructure",
+      "ok": true,
+      "info": false,
+      "detail": "subtype=wall_clock capped=True infra=None duration_ms=28257"
+    },
+    {
+      "call": 6,
+      "name": "AGENTS.md in the workspace is read (MANGO)",
+      "ok": true,
+      "info": true,
+      "detail": "read"
+    },
+    {
+      "call": "all",
+      "name": "real ~\\.gemini\\antigravity-cli memory unchanged",
+      "ok": true,
+      "info": false,
+      "detail": "unchanged"
+    },
+    {
+      "call": "all",
+      "name": "no seeded sign-in value in any stream",
+      "info": false,
+      "ok": true,
+      "detail": "14 values checked"
+    },
+    {
+      "call": "all",
+      "name": "every stdout line parses as JSON",
+      "ok": true,
+      "info": false,
+      "detail": "0 bad lines"
+    }
+  ],
+  "unit": {
+    "adapter": "agy",
+    "model": "gemini-3.8-flash-medium",
+    "effort": "medium",
+    "effort_flag": false,
+    "sandbox": true,
+    "context_file": "GEMINI.md",
+    "name": "agy-flash"
+  },
+  "model_id": "gemini-3.8-flash-medium",
+  "cli_version": "1.4.0",
+  "calls": 7,
+  "quota": {
+    "ok": true,
+    "at": "2026-10-16T10:21:54.946Z",
+    "data": {
+      "conversation_id": "",
+      "status": "SUCCESS",
+      "response": "Gemini Models\tWeekly Limit Remaining\t99%\t2026-10-23T10:08:37Z\nGemini Models\tFive Hour Limit Remaining\t98%\t2026-10-16T15:08:37Z\nClaude and GPT models\tWeekly Limit Remaining\t100%\t2026-10-23T10:21:58Z\nClaude and GPT models\tFive Hour Limit Remaining\t100%\t2026-10-16T15:21:58Z\nGemini 4 Argon\tGemini 4 Argon Weekly Limit\t100%\t2026-10-23T10:21:58Z\n",
+      "duration_seconds": 0,
+      "num_turns": 0,
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "thinking_tokens": 0,
+        "cache_read_tokens": 0,
+        "total_tokens": 0
+      },
+      "command": {
+        "name": "usage",
+        "data": {
+          "description": "Within each group, models share a weekly limit and a 5-hour limit. Quota is consumed proportionally to the cost of the tokens. Thus, limits will last longer with shorter tasks or using more cost-effective models. The 5-hour limit smooths out aggregate demand to fairly distribute global capacity across all users, while your weekly limit is tied directly to your individual tier.",
+          "groups": [
+            {
+              "name": "Gemini Models",
+              "description": "Models within this group: Gemini Flash, Gemini Pro",
+              "buckets": [
+                {
+                  "id": "gemini-weekly",
+                  "name": "Weekly Limit Remaining",
+                  "description": "You have used some of your weekly limit, it will fully refresh in 6 days, 23 hours.",
+                  "window": "weekly",
+                  "remaining_fraction": 0.9888749718666077,
+                  "reset_time": "2026-10-23T10:08:37Z"
+                },
+                {
+                  "id": "gemini-5h",
+                  "name": "Five Hour Limit Remaining",
+                  "description": "You have used some of your 5-hour limit, it will fully refresh in 4 hours, 46 minutes.",
+                  "window": "5h",
+                  "remaining_fraction": 0.9793825149536133,
+                  "reset_time": "2026-10-16T15:08:37Z"
+                }
+              ]
+            },
+            {
+              "name": "Claude and GPT models",
+              "description": "Models within this group: Claude Opus, Claude Sonnet, GPT-OSS",
+              "buckets": [
+                {
+                  "id": "3p-weekly",
+                  "name": "Weekly Limit Remaining",
+                  "window": "weekly",
+                  "remaining_fraction": 1,
+                  "reset_time": "2026-10-23T10:21:58Z"
+                },
+                {
+                  "id": "3p-5h",
+                  "name": "Five Hour Limit Remaining",
+                  "window": "5h",
+                  "remaining_fraction": 1,
+                  "reset_time": "2026-10-16T15:21:58Z"
+                }
+              ]
+            },
+            {
+              "name": "Gemini 4 Argon",
+              "description": "For paid Pro plans, Argon quota is separate. Higher Argon quota (included as part of the larger Gemini quota bucket) is available on Ultra plans.",
+              "buckets": [
+                {
+                  "id": "gemini-argon-wtu-weekly",
+                  "name": "Gemini 4 Argon Weekly Limit",
+                  "window": "weekly",
+                  "remaining_fraction": 1,
+                  "reset_time": "2026-10-23T10:21:58Z"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

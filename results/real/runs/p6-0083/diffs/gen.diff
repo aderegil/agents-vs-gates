@@ -1,0 +1,132 @@
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 1ec650b..5b7e0df 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -15,6 +15,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
++  const couponCode = reader.optionalString("couponCode");
+   const channel = reader.string("channel");
+   const currency = reader.string("currency");
+ 
+@@ -37,7 +38,14 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+     throw new ValidationError(reader.issues);
+   }
+   // The core validates that `channel` is one of the supported values.
+-  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
++  return {
++    customerId,
++    customerEmail,
++    ...(couponCode === undefined ? {} : { couponCode }),
++    channel: channel as Channel,
++    currency,
++    lines,
++  };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..166df10 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -11,6 +11,7 @@ export interface OrderPlaced {
+   readonly customerId: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
++  readonly couponCode?: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+   readonly channel: Channel;
+@@ -46,6 +47,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    ...(order.couponCode === undefined ? {} : { couponCode: order.couponCode }),
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..eed0129 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -18,6 +18,7 @@ export interface Order {
+   readonly customerId: string;
+   /** Legacy: kept on the order for receipts until the customer profile lookup exists. */
+   readonly customerEmail: string;
++  readonly couponCode?: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
+   readonly channel: Channel;
+@@ -32,6 +33,7 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
++  readonly couponCode?: string;
+   readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+@@ -65,6 +67,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+     id: meta.id,
+     customerId: input.customerId,
+     customerEmail: input.customerEmail,
++    ...(input.couponCode === undefined ? {} : { couponCode: input.couponCode }),
+     lines: input.lines.map((line) => ({
+       sku: line.sku,
+       name: line.name,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..4050f07 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -51,6 +51,15 @@ describe("POST /orders", () => {
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
+   });
+ 
++  it("retains an optional coupon code and includes it in OrderPlaced", async () => {
++    const { app, repository, publisher } = makeApp();
++    const res = await app.handle("POST", "/orders", placeOrderBody({ couponCode: "WELCOME10" }));
++
++    assert.equal(res.status, 201);
++    assert.equal((await repository.findById("ord-1"))?.couponCode, "WELCOME10");
++    assert.equal((publisher.events[0] as OrderPlaced).couponCode, "WELCOME10");
++  });
++
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {
+     const { app, publisher, payments } = makeApp();
+     const res = await app.handle(
+diff --git a/test/helpers.ts b/test/helpers.ts
+index f9cb257..8fc2a06 100644
+--- a/test/helpers.ts
++++ b/test/helpers.ts
+@@ -1,4 +1,5 @@
+ import { createApp, type App } from "../src/main.js";
++import { InMemoryOrderRepository } from "../src/adapters/inMemoryOrderRepository.js";
+ import type { DomainEvent } from "../src/core/events.js";
+ import type {
+   Clock,
+@@ -53,21 +54,24 @@ export class FakePayments implements PaymentGateway {
+ 
+ export interface TestApp {
+   app: App;
++  repository: InMemoryOrderRepository;
+   publisher: CapturingPublisher;
+   payments: FakePayments;
+   clock: FixedClock;
+ }
+ 
+ export function makeApp(payments: FakePayments = new FakePayments()): TestApp {
++  const repository = new InMemoryOrderRepository();
+   const publisher = new CapturingPublisher();
+   const clock = new FixedClock();
+   const app = createApp({
++    orderRepository: repository,
+     eventPublisher: publisher,
+     clock,
+     idGenerator: new SequenceIds(),
+     paymentGateway: payments,
+   });
+-  return { app, publisher, payments, clock };
++  return { app, repository, publisher, payments, clock };
+ }
+ 
+ export function placeOrderBody(overrides: Record<string, unknown> = {}): Record<string, unknown> {

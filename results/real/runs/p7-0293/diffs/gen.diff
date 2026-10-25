@@ -1,0 +1,68 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..8c80b9b 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -12,11 +12,15 @@ export interface OrderPlaced {
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
++  readonly createdAt: string;
++  /** @deprecated Use `createdAt`. Kept for deployed consumers (ARCH-4); same value. */
+   readonly placedAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
++  readonly amountCents: number;
++  /** @deprecated Use `amountCents`. Kept for deployed consumers (ARCH-4); same value. */
+   readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+@@ -46,9 +50,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    createdAt: order.placedAt,
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
++    amountCents: totalCents(order),
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index 1849efc..d55200d 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -47,6 +47,7 @@ describe("KafkaEventPublisher", () => {
+     assert.equal(placed?.topic, "orders.placed");
+     assert.equal(placed?.key, "ord-1");
+     assert.equal(placed?.headers["schema-version"], "3");
++    assert.equal(JSON.parse(placed?.value ?? "{}").amountCents, 1250);
+     assert.equal(JSON.parse(placed?.value ?? "{}").totalCents, 1250);
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..054f6e8 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -24,9 +24,11 @@ describe("POST /orders", () => {
+       orderId: "ord-1",
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
++      createdAt: FIXED_NOW,
+       placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
++      amountCents: 1250,
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+@@ -48,6 +50,7 @@ describe("POST /orders", () => {
+       }),
+     );
+     assert.equal(res.status, 201);
++    assert.equal((publisher.events[0] as OrderPlaced).amountCents, 2497);
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
+   });
+ 

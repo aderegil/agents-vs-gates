@@ -1,0 +1,84 @@
+{
+  "ok": true,
+  "at": "2026-10-11T17:00:39.536Z",
+  "checks": [
+    {
+      "call": 1,
+      "name": "auth with token + isolated CLAUDE_CONFIG_DIR",
+      "ok": true,
+      "detail": "OK"
+    },
+    {
+      "call": 1,
+      "name": "system/init clean (no MCP, plugins, skills, extra tools)",
+      "ok": true,
+      "detail": "clean"
+    },
+    {
+      "call": 1,
+      "name": "no hook events",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "call": 1,
+      "name": "model id reported",
+      "ok": true,
+      "detail": "claude-sonnet-5-5"
+    },
+    {
+      "call": 2,
+      "name": "--max-turns accepted and respected",
+      "ok": true,
+      "detail": "subtype=error_max_turns is_error=True num_turns=3"
+    },
+    {
+      "call": 3,
+      "name": "acceptEdits: file edited",
+      "ok": true,
+      "detail": "smoke notes\nedited"
+    },
+    {
+      "call": 3,
+      "name": "allowlist: npm run hello allowed",
+      "ok": true,
+      "detail": "['success']"
+    },
+    {
+      "call": 3,
+      "name": "curl denied",
+      "ok": true,
+      "detail": "['denied']"
+    },
+    {
+      "call": 3,
+      "name": "node -e denied",
+      "ok": true,
+      "detail": "['denied']"
+    },
+    {
+      "call": 4,
+      "name": "--resume works with the isolated config",
+      "ok": true,
+      "detail": "RESUMED"
+    },
+    {
+      "call": 5,
+      "name": "envcheck ran",
+      "ok": true,
+      "detail": "TOKEN_IN_ENV=no"
+    },
+    {
+      "call": 5,
+      "name": "read outside the workspace denied",
+      "ok": true,
+      "detail": "['denied']"
+    }
+  ],
+  "model_id": "claude-sonnet-5-5",
+  "cli_version": "2.1.296 (Claude Code)",
+  "max_turns_subtype": "error_max_turns",
+  "max_turns_is_error": true,
+  "token_in_env": "no",
+  "calls": 5
+}

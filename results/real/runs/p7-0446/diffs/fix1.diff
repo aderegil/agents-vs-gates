@@ -1,0 +1,45 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index c4e435f..355e79a 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -1,5 +1,8 @@
+ import { totalCents, type Order } from "./order.js";
+ 
++/** Retained solely for the analytics event compatibility contract. */
++export type LegacyOrderChannel = "web" | "store" | "marketplace";
++
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+ 
+@@ -13,6 +16,11 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /**
++   * Compatibility value for analytics-ingest. Orders no longer store or accept
++   * a channel, so all newly placed orders use the legacy default.
++   */
++  readonly channel: LegacyOrderChannel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -46,6 +54,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    channel: "web",
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/test/app.test.ts b/test/app.test.ts
+index d8fd1bb..bc44505 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],

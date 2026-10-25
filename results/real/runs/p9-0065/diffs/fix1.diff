@@ -1,0 +1,57 @@
+diff --git a/orders-service/src/core/events.ts b/orders-service/src/core/events.ts
+index 7859d58..107778d 100644
+--- a/orders-service/src/core/events.ts
++++ b/orders-service/src/core/events.ts
+@@ -13,11 +13,15 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly createdAt: string;
++  /** Legacy alias for createdAt preserved for downstream consumers (e.g. analytics-ingest). */
++  readonly placedAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+   readonly amountCents: number;
++  /** Legacy alias for amountCents preserved for downstream consumers (e.g. billing-service). */
++  readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -40,6 +44,7 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+ export function orderPlaced(order: Order): OrderPlaced {
++  const total = totalCents(order);
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+@@ -47,9 +52,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     createdAt: order.placedAt,
++    placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+-    amountCents: totalCents(order),
++    amountCents: total,
++    totalCents: total,
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/orders-service/test/app.test.ts b/orders-service/test/app.test.ts
+index a2ef0bd..f4ea1a3 100644
+--- a/orders-service/test/app.test.ts
++++ b/orders-service/test/app.test.ts
+@@ -25,9 +25,11 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       createdAt: FIXED_NOW,
++      placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
+       amountCents: 1250,
++      totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [

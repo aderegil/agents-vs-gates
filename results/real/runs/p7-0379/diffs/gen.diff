@@ -1,0 +1,86 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..8585549 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -12,11 +12,18 @@ export interface OrderPlaced {
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
++  readonly createdAt: string;
++  /**
++   * @deprecated Use `createdAt`. Kept for deployed event consumers.
++   * ISO-8601 instant.
++   */
+   readonly placedAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
++  readonly amountCents: number;
++  /** @deprecated Use `amountCents`. Kept for deployed event consumers. */
+   readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+@@ -46,9 +53,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    createdAt: order.placedAt,
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
++    amountCents: totalCents(order),
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index 1849efc..ab5c032 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -47,7 +47,11 @@ describe("KafkaEventPublisher", () => {
+     assert.equal(placed?.topic, "orders.placed");
+     assert.equal(placed?.key, "ord-1");
+     assert.equal(placed?.headers["schema-version"], "3");
+-    assert.equal(JSON.parse(placed?.value ?? "{}").totalCents, 1250);
++    const placedEvent = JSON.parse(placed?.value ?? "{}");
++    assert.equal(placedEvent.amountCents, 1250);
++    assert.equal(placedEvent.createdAt, "2026-10-10T12:00:00.000Z");
++    assert.equal(placedEvent.totalCents, 1250);
++    assert.equal(placedEvent.placedAt, "2026-10-10T12:00:00.000Z");
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+     assert.equal(publisher.records.length, 0);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..f78cc56 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -4,7 +4,7 @@ import type { OrderCancelled, OrderPlaced } from "../src/core/events.js";
+ import { FIXED_NOW, FakePayments, makeApp, placeOrderBody } from "./helpers.js";
+ 
+ describe("POST /orders", () => {
+-  it("places an order, answers 201 and publishes OrderPlaced v3", async () => {
++  it("places an order, answers 201 and publishes a compatible OrderPlaced v3 event", async () => {
+     const { app, publisher, payments } = makeApp();
+     const res = await app.handle("POST", "/orders", placeOrderBody());
+ 
+@@ -24,9 +24,11 @@ describe("POST /orders", () => {
+       orderId: "ord-1",
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
++      createdAt: FIXED_NOW,
+       placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
++      amountCents: 1250,
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+@@ -48,7 +50,7 @@ describe("POST /orders", () => {
+       }),
+     );
+     assert.equal(res.status, 201);
+-    assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).amountCents, 2497);
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {

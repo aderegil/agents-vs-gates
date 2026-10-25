@@ -1,0 +1,63 @@
+diff --git a/orders-service/src/core/events.ts b/orders-service/src/core/events.ts
+index 7859d58..1d7d9e2 100644
+--- a/orders-service/src/core/events.ts
++++ b/orders-service/src/core/events.ts
+@@ -12,11 +12,15 @@ export interface OrderPlaced {
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
++  /** @deprecated Retained for analytics-ingest compatibility. Use `createdAt`. */
++  readonly placedAt: string;
+   readonly createdAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
++  /** @deprecated Retained for billing-service compatibility. Use `amountCents`. */
++  readonly totalCents: number;
+   readonly amountCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+@@ -46,9 +50,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    placedAt: order.placedAt,
+     createdAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
++    totalCents: totalCents(order),
+     amountCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+diff --git a/orders-service/test/adapters.test.ts b/orders-service/test/adapters.test.ts
+index 8646f4d..69eb54a 100644
+--- a/orders-service/test/adapters.test.ts
++++ b/orders-service/test/adapters.test.ts
+@@ -47,7 +47,9 @@ describe("KafkaEventPublisher", () => {
+     assert.equal(placed?.topic, "orders.placed");
+     assert.equal(placed?.key, "ord-1");
+     assert.equal(placed?.headers["schema-version"], "3");
+-    assert.equal(JSON.parse(placed?.value ?? "{}").amountCents, 1250);
++    const event = JSON.parse(placed?.value ?? "{}") as { amountCents?: number; totalCents?: number };
++    assert.equal(event.amountCents, 1250);
++    assert.equal(event.totalCents, 1250);
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+     assert.equal(publisher.records.length, 0);
+diff --git a/orders-service/test/app.test.ts b/orders-service/test/app.test.ts
+index a2ef0bd..033176b 100644
+--- a/orders-service/test/app.test.ts
++++ b/orders-service/test/app.test.ts
+@@ -24,9 +24,11 @@ describe("POST /orders", () => {
+       orderId: "ord-1",
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
++      placedAt: FIXED_NOW,
+       createdAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
++      totalCents: 1250,
+       amountCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);

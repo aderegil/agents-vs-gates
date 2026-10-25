@@ -1,0 +1,47 @@
+diff --git a/orders-service/src/core/events.ts b/orders-service/src/core/events.ts
+index 7859d58..4db29ca 100644
+--- a/orders-service/src/core/events.ts
++++ b/orders-service/src/core/events.ts
+@@ -18,6 +18,10 @@ export interface OrderPlaced {
+   readonly currency: string;
+   /** Integer, minor units. */
+   readonly amountCents: number;
++  /** @deprecated Same value as `createdAt`; kept until billing-service and analytics-ingest migrate. */
++  readonly placedAt: string;
++  /** @deprecated Same value as `amountCents`; kept until billing-service and analytics-ingest migrate. */
++  readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -40,6 +44,7 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+ export function orderPlaced(order: Order): OrderPlaced {
++  const total = totalCents(order);
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+@@ -49,7 +54,9 @@ export function orderPlaced(order: Order): OrderPlaced {
+     createdAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+-    amountCents: totalCents(order),
++    amountCents: total,
++    placedAt: order.placedAt,
++    totalCents: total,
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/orders-service/test/app.test.ts b/orders-service/test/app.test.ts
+index a2ef0bd..42e126f 100644
+--- a/orders-service/test/app.test.ts
++++ b/orders-service/test/app.test.ts
+@@ -28,6 +28,8 @@ describe("POST /orders", () => {
+       channel: "web",
+       currency: "USD",
+       amountCents: 1250,
++      placedAt: FIXED_NOW,
++      totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [

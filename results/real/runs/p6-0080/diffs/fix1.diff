@@ -1,0 +1,42 @@
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 36fdf30..5993a5e 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -18,7 +18,7 @@ export interface OrderResponse {
+ }
+ 
+ /** Body of `GET /orders/{id}` (200). */
+-export interface GetOrderResponse extends Omit<OrderResponse, "lines"> {
++export interface GetOrderResponse extends OrderResponse {
+   readonly items: OrderResponse["lines"];
+ }
+ 
+@@ -45,10 +45,13 @@ export function toOrderResponse(order: Order): OrderResponse {
+   };
+ }
+ 
+-/** The read endpoint calls order lines "items", matching the public API convention. */
++/**
++ * The read endpoint calls order lines "items", matching the public API convention.
++ * `lines` remains during the storefront consumer's compatibility window.
++ */
+ export function toGetOrderResponse(order: Order): GetOrderResponse {
+-  const { lines, ...response } = toOrderResponse(order);
+-  return { ...response, items: lines };
++  const response = toOrderResponse(order);
++  return { ...response, items: response.lines };
+ }
+ 
+ export function toOrderListResponse(page: OrderPage): OrderListResponse {
+diff --git a/test/app.test.ts b/test/app.test.ts
+index ef1483b..4268e6b 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -95,6 +95,7 @@ describe("GET /orders/{id}", () => {
+       placedAt: FIXED_NOW,
+       currency: "USD",
+       totalCents: 1250,
++      lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+       items: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+   });

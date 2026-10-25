@@ -1,0 +1,82 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 7859d58..a14a4bf 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -13,11 +13,15 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly createdAt: string;
++  /** Legacy alias for createdAt; required by analytics-ingest (ARCH-4). */
++  readonly placedAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+   readonly amountCents: number;
++  /** Legacy alias for amountCents; required by billing-service (ARCH-4). */
++  readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -40,6 +44,7 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+ export function orderPlaced(order: Order): OrderPlaced {
++  const cents = totalCents(order);
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+@@ -47,9 +52,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     createdAt: order.placedAt,
++    placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+-    amountCents: totalCents(order),
++    amountCents: cents,
++    totalCents: cents,
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index 8646f4d..fbf93c4 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -47,7 +47,11 @@ describe("KafkaEventPublisher", () => {
+     assert.equal(placed?.topic, "orders.placed");
+     assert.equal(placed?.key, "ord-1");
+     assert.equal(placed?.headers["schema-version"], "3");
+-    assert.equal(JSON.parse(placed?.value ?? "{}").amountCents, 1250);
++    const placedPayload = JSON.parse(placed?.value ?? "{}");
++    assert.equal(placedPayload.amountCents, 1250);
++    assert.equal(placedPayload.totalCents, 1250);
++    assert.equal(placedPayload.createdAt, "2026-10-10T12:00:00.000Z");
++    assert.equal(placedPayload.placedAt, "2026-10-10T12:00:00.000Z");
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+     assert.equal(publisher.records.length, 0);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a2ef0bd..054f6e8 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,9 +25,11 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       createdAt: FIXED_NOW,
++      placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
+       amountCents: 1250,
++      totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [
+@@ -49,6 +51,7 @@ describe("POST /orders", () => {
+     );
+     assert.equal(res.status, 201);
+     assert.equal((publisher.events[0] as OrderPlaced).amountCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {

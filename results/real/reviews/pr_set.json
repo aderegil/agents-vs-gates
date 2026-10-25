@@ -1,0 +1,620 @@
+{
+  "schema": "prset/1",
+  "ns": "real",
+  "seed": 20261011,
+  "generated_at": "2026-10-13T01:09:05+00:00",
+  "prs": [
+    {
+      "pr_id": "pr-001",
+      "run_id": "p1-0001",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V2",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-002",
+      "run_id": "p1-0002",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-003",
+      "run_id": "p1-0006",
+      "stage": "P1",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-004",
+      "run_id": "p1-0008",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V2",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-005",
+      "run_id": "p1-0018",
+      "stage": "P1",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-006",
+      "run_id": "p1-0026",
+      "stage": "P1",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-007",
+      "run_id": "p1-0030",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-008",
+      "run_id": "p1-0035",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V2",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-009",
+      "run_id": "p1-0044",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-010",
+      "run_id": "p1-0045",
+      "stage": "P1",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-011",
+      "run_id": "p1-0059",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-012",
+      "run_id": "p4-0001",
+      "stage": "P4",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-013",
+      "run_id": "p4-0008",
+      "stage": "P4",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-014",
+      "run_id": "p4-0014",
+      "stage": "P4",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S1",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-015",
+      "run_id": "p4-0023",
+      "stage": "P4",
+      "ticket": "X-api",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "web-storefront"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-016",
+      "run_id": "p4-0028",
+      "stage": "P4",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S1",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-017",
+      "run_id": "p4-0031",
+      "stage": "P4",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-018",
+      "run_id": "p4-0033",
+      "stage": "P4",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest",
+        "billing-service"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-019",
+      "run_id": "p4-0049",
+      "stage": "P4",
+      "ticket": "X-remove",
+      "visibility": "V0",
+      "spec": "S1",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "analytics-ingest"
+      ],
+      "repeat_subsample": true
+    },
+    {
+      "pr_id": "pr-020",
+      "run_id": "p4-0051",
+      "stage": "P4",
+      "ticket": "X-api",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "breaking",
+      "ci_first_ok": false,
+      "oracle_gen_ok": false,
+      "affected_consumers": [
+        "web-storefront"
+      ],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-021",
+      "run_id": "p1-0005",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-022",
+      "run_id": "p1-0011",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-023",
+      "run_id": "p1-0024",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-024",
+      "run_id": "p1-0028",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-025",
+      "run_id": "p1-0033",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-026",
+      "run_id": "p1-0040",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-027",
+      "run_id": "p1-0047",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-028",
+      "run_id": "p1-0051",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-029",
+      "run_id": "p1-0057",
+      "stage": "P1",
+      "ticket": "X-rename",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-030",
+      "run_id": "p4-0004",
+      "stage": "P4",
+      "ticket": "X-add",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-031",
+      "run_id": "p4-0005",
+      "stage": "P4",
+      "ticket": "X-units",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-032",
+      "run_id": "p4-0006",
+      "stage": "P4",
+      "ticket": "X-api",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-033",
+      "run_id": "p4-0019",
+      "stage": "P4",
+      "ticket": "X-api",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-034",
+      "run_id": "p4-0022",
+      "stage": "P4",
+      "ticket": "X-add",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-035",
+      "run_id": "p4-0026",
+      "stage": "P4",
+      "ticket": "X-add",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-036",
+      "run_id": "p4-0032",
+      "stage": "P4",
+      "ticket": "X-units",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-037",
+      "run_id": "p4-0034",
+      "stage": "P4",
+      "ticket": "X-units",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-038",
+      "run_id": "p4-0038",
+      "stage": "P4",
+      "ticket": "X-add",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-039",
+      "run_id": "p4-0043",
+      "stage": "P4",
+      "ticket": "X-units",
+      "visibility": "V0",
+      "spec": "S2",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    },
+    {
+      "pr_id": "pr-040",
+      "run_id": "p4-0045",
+      "stage": "P4",
+      "ticket": "X-add",
+      "visibility": "V0",
+      "spec": "S0",
+      "unit": "cc-sonnet",
+      "category": "benign",
+      "ci_first_ok": true,
+      "oracle_gen_ok": true,
+      "affected_consumers": [],
+      "repeat_subsample": false
+    }
+  ],
+  "shortfall": {
+    "semantic": 10
+  }
+}

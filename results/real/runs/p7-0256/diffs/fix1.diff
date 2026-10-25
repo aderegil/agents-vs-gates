@@ -1,0 +1,16 @@
+diff --git a/test/app.test.ts b/test/app.test.ts
+index e8f119b..619367d 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -24,9 +24,11 @@ describe("POST /orders", () => {
+       orderId: "ord-1",
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
++      createdAt: FIXED_NOW,
+       placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
++      amountCents: 1250,
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);

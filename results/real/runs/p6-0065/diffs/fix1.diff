@@ -1,0 +1,57 @@
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index b263851..a6a2baf 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -30,6 +30,13 @@ export interface OrderDetailResponse {
+     readonly qty: number;
+     readonly unitPriceCents: number;
+   }>;
++  /** @deprecated Use `items`; retained for existing storefront consumers. */
++  readonly lines: ReadonlyArray<{
++    readonly sku: string;
++    readonly name: string;
++    readonly qty: number;
++    readonly unitPriceCents: number;
++  }>;
+ }
+ 
+ export interface OrderListResponse {
+@@ -56,18 +63,20 @@ export function toOrderResponse(order: Order): OrderResponse {
+ }
+ 
+ export function toOrderDetailResponse(order: Order): OrderDetailResponse {
++  const items = order.lines.map((line) => ({
++    sku: line.sku,
++    name: line.name,
++    qty: line.qty,
++    unitPriceCents: line.unitPriceCents,
++  }));
+   return {
+     id: order.id,
+     status: order.status,
+     placedAt: order.placedAt,
+     currency: order.currency,
+     totalCents: totalCents(order),
+-    items: order.lines.map((line) => ({
+-      sku: line.sku,
+-      name: line.name,
+-      qty: line.qty,
+-      unitPriceCents: line.unitPriceCents,
+-    })),
++    items,
++    lines: items,
+   };
+ }
+ 
+diff --git a/test/app.test.ts b/test/app.test.ts
+index ef1483b..1f75273 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -96,6 +96,7 @@ describe("GET /orders/{id}", () => {
+       currency: "USD",
+       totalCents: 1250,
+       items: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
++      lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+   });
+ 

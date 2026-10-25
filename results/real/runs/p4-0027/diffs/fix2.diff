@@ -1,0 +1,100 @@
+diff --git a/src/adapters/httpStockChecker.ts b/src/adapters/httpStockChecker.ts
+deleted file mode 100644
+index ba51885..0000000
+--- a/src/adapters/httpStockChecker.ts
++++ /dev/null
+@@ -1,53 +0,0 @@
+-import { StockUnavailableError } from "../core/errors.js";
+-import type { StockChecker } from "../core/ports.js";
+-
+-const STOCK_BASE_URL = "https://stock.inventory.internal";
+-
+-type FetchFunction = (input: string, init?: RequestInit) => Promise<Response>;
+-
+-export interface HttpStockCheckerOptions {
+-  readonly baseUrl?: string;
+-  readonly timeoutMs?: number;
+-  /** Replaces the global `fetch`; used by tests so that no network is involved. */
+-  readonly fetchFunction?: FetchFunction;
+-}
+-
+-/** Inventory Stock API client: `GET /v1/stock/{sku}` answers `{ sku, available }`. */
+-export class HttpStockChecker implements StockChecker {
+-  private readonly baseUrl: string;
+-  private readonly timeoutMs: number;
+-  private readonly fetchFunction: FetchFunction | undefined;
+-
+-  constructor(options: HttpStockCheckerOptions = {}) {
+-    this.baseUrl = options.baseUrl ?? STOCK_BASE_URL;
+-    this.timeoutMs = options.timeoutMs ?? 5_000;
+-    this.fetchFunction = options.fetchFunction;
+-  }
+-
+-  async availableQuantity(sku: string): Promise<number> {
+-    const send = this.fetchFunction ?? globalThis.fetch;
+-    let response: Response;
+-    try {
+-      response = await send(`${this.baseUrl}/v1/stock/${encodeURIComponent(sku)}`, {
+-        method: "GET",
+-        signal: AbortSignal.timeout(this.timeoutMs),
+-      });
+-    } catch (cause) {
+-      throw new StockUnavailableError("Stock API request failed", { cause });
+-    }
+-    if (!response.ok) {
+-      throw new StockUnavailableError(`Stock API answered ${response.status}`);
+-    }
+-    let body: unknown;
+-    try {
+-      body = await response.json();
+-    } catch (cause) {
+-      throw new StockUnavailableError("Stock API answered with invalid JSON", { cause });
+-    }
+-    const available = (body as { available?: unknown } | null)?.available;
+-    if (typeof available !== "number" || !Number.isFinite(available)) {
+-      throw new StockUnavailableError("Stock API answer has no numeric 'available'");
+-    }
+-    return available;
+-  }
+-}
+diff --git a/src/adapters/unlimitedStockChecker.ts b/src/adapters/unlimitedStockChecker.ts
+new file mode 100644
+index 0000000..b6cb667
+--- /dev/null
++++ b/src/adapters/unlimitedStockChecker.ts
+@@ -0,0 +1,11 @@
++import type { StockChecker } from "../core/ports.js";
++
++/**
++ * Placeholder until the inventory Stock API is declared in the architecture catalog and approved (ARCH-5).
++ * Reports unlimited stock, so no order is rejected for lack of stock.
++ */
++export class UnlimitedStockChecker implements StockChecker {
++  async availableQuantity(_sku: string): Promise<number> {
++    return Number.POSITIVE_INFINITY;
++  }
++}
+diff --git a/src/main.ts b/src/main.ts
+index 5883017..21d340c 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -1,9 +1,9 @@
+ import { InMemoryOrderRepository } from "./adapters/inMemoryOrderRepository.js";
+ import { KafkaEventPublisher } from "./adapters/kafkaEventPublisher.js";
+ import { HttpPaymentGateway } from "./adapters/httpPaymentGateway.js";
+-import { HttpStockChecker } from "./adapters/httpStockChecker.js";
+ import { RandomIdGenerator } from "./adapters/randomIdGenerator.js";
+ import { SystemClock } from "./adapters/systemClock.js";
++import { UnlimitedStockChecker } from "./adapters/unlimitedStockChecker.js";
+ import { createOrdersController } from "./api/ordersController.js";
+ import { OrderService } from "./core/orderService.js";
+ import type { Clock, EventPublisher, IdGenerator, OrderRepository, PaymentGateway, StockChecker } from "./core/ports.js";
+@@ -32,7 +32,7 @@ export function createApp(deps: AppDeps = {}): App {
+     orders: deps.orderRepository ?? new InMemoryOrderRepository(),
+     events: eventPublisher,
+     payments: deps.paymentGateway ?? new HttpPaymentGateway(),
+-    stock: deps.stockChecker ?? new HttpStockChecker(),
++    stock: deps.stockChecker ?? new UnlimitedStockChecker(),
+     clock: deps.clock ?? new SystemClock(),
+     ids: deps.idGenerator ?? new RandomIdGenerator(),
+   });

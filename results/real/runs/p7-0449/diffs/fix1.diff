@@ -1,0 +1,293 @@
+diff --git a/analytics-ingest/README.md b/analytics-ingest/README.md
+index 9629b59..71d03fb 100644
+--- a/analytics-ingest/README.md
++++ b/analytics-ingest/README.md
+@@ -24,7 +24,7 @@ Tables: `orders` (`order_id, placed_date, channel, currency, units`), `order_lin
+ `order_cancellations` (`order_id, cancelled_date`). Dates are UTC `YYYY-MM-DD`. Writes are upserts keyed by order.
+ 
+ ## Contract with orders-service
+-- `OrderPlaced`: `orderId`, `placedAt` (ISO-8601 datetime), `channel` (`web|store|marketplace`), `currency`,
++- `OrderPlaced`: `orderId`, `createdAt` (ISO-8601 datetime), `channel` (`web|store|marketplace`), `currency`,
+   `lines[].sku`, `lines[].qty` (positive integer). Other fields are ignored.
+ - `OrderCancelled`: `orderId`, `cancelledAt` (ISO-8601 datetime).
+ 
+diff --git a/analytics-ingest/src/core/events.ts b/analytics-ingest/src/core/events.ts
+index d42ce12..4ecb2d2 100644
+--- a/analytics-ingest/src/core/events.ts
++++ b/analytics-ingest/src/core/events.ts
+@@ -6,7 +6,7 @@ export type Channel = (typeof CHANNELS)[number];
+ /** The part of `OrderPlaced` that analytics-ingest relies on. Other fields are ignored. */
+ export interface OrderPlacedEvent {
+   readonly orderId: string;
+-  readonly placedAt: Date;
++  readonly createdAt: Date;
+   readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: ReadonlyArray<{ readonly sku: string; readonly qty: number }>;
+@@ -20,7 +20,7 @@ export interface OrderCancelledEvent {
+ 
+ /**
+  * Validates an untrusted `OrderPlaced` event. Every problem is collected;
+- * any problem throws `ContractViolationError` (missing or unknown `channel`, unparseable `placedAt`, ...).
++ * any problem throws `ContractViolationError` (missing or unknown `channel`, unparseable `createdAt`, ...).
+  */
+ export function decodeOrderPlaced(raw: unknown): OrderPlacedEvent {
+   const event = asObject("OrderPlaced", raw);
+@@ -30,7 +30,7 @@ export function decodeOrderPlaced(raw: unknown): OrderPlacedEvent {
+     reader.issues.push(`type: expected "OrderPlaced", got ${JSON.stringify(event.type)}`);
+   }
+   const orderId = reader.string("orderId");
+-  const placedAt = reader.isoInstant("placedAt");
++  const createdAt = reader.isoInstant("createdAt");
+   const channel = reader.oneOf("channel", CHANNELS);
+   const currency = reader.currency("currency");
+ 
+@@ -42,7 +42,7 @@ export function decodeOrderPlaced(raw: unknown): OrderPlacedEvent {
+   });
+ 
+   reader.assertValid("OrderPlaced");
+-  return { orderId, placedAt, channel, currency, lines };
++  return { orderId, createdAt, channel, currency, lines };
+ }
+ 
+ export function decodeOrderCancelled(raw: unknown): OrderCancelledEvent {
+diff --git a/analytics-ingest/src/core/rows.ts b/analytics-ingest/src/core/rows.ts
+index 427f49c..05c2ec3 100644
+--- a/analytics-ingest/src/core/rows.ts
++++ b/analytics-ingest/src/core/rows.ts
+@@ -3,7 +3,7 @@ import type { Channel } from "./events.js";
+ /** Table `orders`: one row per placed order. */
+ export interface OrderRow {
+   readonly order_id: string;
+-  /** UTC calendar date of `placedAt`, `YYYY-MM-DD`. */
++  /** UTC calendar date of `createdAt`, `YYYY-MM-DD`. */
+   readonly placed_date: string;
+   readonly channel: Channel;
+   readonly currency: string;
+diff --git a/analytics-ingest/src/ingest.ts b/analytics-ingest/src/ingest.ts
+index cb43aff..7ad54e5 100644
+--- a/analytics-ingest/src/ingest.ts
++++ b/analytics-ingest/src/ingest.ts
+@@ -13,7 +13,7 @@ import type { CancellationRow, OrderLineRow, OrderRow } from "./core/rows.js";
+ export function toOrderRow(event: OrderPlacedEvent): OrderRow {
+   return {
+     order_id: event.orderId,
+-    placed_date: utcDate(event.placedAt),
++    placed_date: utcDate(event.createdAt),
+     channel: event.channel,
+     currency: event.currency,
+     units: event.lines.reduce((total, line) => total + line.qty, 0),
+diff --git a/analytics-ingest/test/ingest.test.ts b/analytics-ingest/test/ingest.test.ts
+index 90aa748..1bf394c 100644
+--- a/analytics-ingest/test/ingest.test.ts
++++ b/analytics-ingest/test/ingest.test.ts
+@@ -10,10 +10,10 @@ function placed(overrides: Record<string, unknown> = {}): Record<string, unknown
+     orderId: "ord-1",
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
+-    placedAt: "2026-10-10T23:30:00.000Z",
++    createdAt: "2026-10-10T23:30:00.000Z",
+     channel: "web",
+     currency: "USD",
+-    totalCents: 2497,
++    amountCents: 2497,
+     lines: [
+       { sku: "CAB-1", qty: 3, unitPriceCents: 499 },
+       { sku: "ADP-1", qty: 1, unitPriceCents: 1000 },
+@@ -53,7 +53,7 @@ describe("OrderPlaced ingestion", () => {
+ 
+   it("uses the UTC date and accepts offsets", async () => {
+     const app = createAnalyticsIngest();
+-    const row = await app.ingestOrderPlaced(placed({ placedAt: "2026-10-11T01:30:00+02:00" }));
++    const row = await app.ingestOrderPlaced(placed({ createdAt: "2026-10-11T01:30:00+02:00" }));
+     assert.equal(row.placed_date, "2026-10-10");
+   });
+ 
+@@ -93,16 +93,16 @@ describe("OrderPlaced contract checks (fail loudly)", () => {
+     assert.match(await violations(placed({ channel: "phone" })), /channel/);
+   });
+ 
+-  it("requires a parseable placedAt", async () => {
+-    assert.match(await violations(without(placed(), "placedAt")), /placedAt: expected an ISO-8601 datetime, got missing/);
++  it("requires a parseable createdAt", async () => {
++    assert.match(await violations(without(placed(), "createdAt")), /createdAt: expected an ISO-8601 datetime, got missing/);
+     for (const bad of ["yesterday", "2026-10-10", "2026-13-01T00:00:00Z", "2026-02-30T00:00:00Z", "2026-10-10 12:00:00", 1760000000, null]) {
+-      assert.match(await violations(placed({ placedAt: bad })), /placedAt/);
++      assert.match(await violations(placed({ createdAt: bad })), /createdAt/);
+     }
+   });
+ 
+-  it("rejects an event that renamed placedAt", async () => {
+-    const renamed = { ...without(placed(), "placedAt"), createdAt: "2026-10-10T12:00:00Z" };
+-    assert.match(await violations(renamed), /placedAt/);
++  it("rejects the legacy placedAt field", async () => {
++    const legacy = { ...without(placed(), "createdAt"), placedAt: "2026-10-10T12:00:00Z" };
++    assert.match(await violations(legacy), /createdAt/);
+   });
+ 
+   it("validates lines: array, sku and positive integer qty", async () => {
+@@ -114,7 +114,7 @@ describe("OrderPlaced contract checks (fail loudly)", () => {
+   });
+ 
+   it("reports every problem at once and rejects wrong types or payloads", async () => {
+-    const issues = await violations(placed({ orderId: 7, channel: undefined, placedAt: "x", currency: "usd" }));
++    const issues = await violations(placed({ orderId: 7, channel: undefined, createdAt: "x", currency: "usd" }));
+     assert.equal(issues.split("\n").length, 4);
+     await violations("OrderPlaced");
+     await violations(null);
+diff --git a/billing-service/README.md b/billing-service/README.md
+index 6ce1687..7691f6d 100644
+--- a/billing-service/README.md
++++ b/billing-service/README.md
+@@ -23,12 +23,12 @@ await app.handleMessage({ topic: "orders.placed", value: json });   // bus entry
+ await app.handle("GET", "/invoices?orderId=ord-1");                 // { status, body }
+ app.sentEmails;                                                     // emails delivered by the simulated sender
+ ```
+-`Invoice.amountCents` equals `evt.totalCents` (integer minor units). Optional deps: `invoiceRepository`, `emailSender`,
++`Invoice.amountCents` equals `evt.amountCents` (integer minor units). Optional deps: `invoiceRepository`, `emailSender`,
+ `clock`, `invoiceNumbers`.
+ 
+ ## Contract with orders-service
+-Reads these `OrderPlaced` fields: `orderId`, `customerId`, `customerEmail`, `totalCents` (integer, cents), `currency`.
+-Anything else is ignored. A missing field, a non-integer `totalCents` or a wrong type makes `onOrderPlaced` reject with
++Reads these `OrderPlaced` fields: `orderId`, `customerId`, `customerEmail`, `amountCents` (integer, cents), `currency`.
++Anything else is ignored. A missing field, a non-integer `amountCents` or a wrong type makes `onOrderPlaced` reject with
+ `ContractViolationError`; nothing is stored and no email is sent.
+ 
+ ## Behaviour
+diff --git a/billing-service/src/core/invoice.ts b/billing-service/src/core/invoice.ts
+index 76a32f7..43b53a2 100644
+--- a/billing-service/src/core/invoice.ts
++++ b/billing-service/src/core/invoice.ts
+@@ -8,7 +8,7 @@ export interface Invoice {
+   readonly orderId: string;
+   readonly customerId: string;
+   readonly customerEmail: string;
+-  /** Equal to the order total (`totalCents` of the event), integer minor units. */
++  /** Equal to the order amount (`amountCents` of the event), integer minor units. */
+   readonly amountCents: number;
+   readonly currency: string;
+   readonly status: InvoiceStatus;
+@@ -31,7 +31,7 @@ export function issueInvoice(event: OrderPlacedEvent, meta: { id: string; issued
+     orderId: event.orderId,
+     customerId: event.customerId,
+     customerEmail: event.customerEmail,
+-    amountCents: event.totalCents,
++    amountCents: event.amountCents,
+     currency: event.currency,
+     status: "issued",
+     issuedAt: meta.issuedAt.toISOString(),
+diff --git a/billing-service/src/core/orderPlacedEvent.ts b/billing-service/src/core/orderPlacedEvent.ts
+index 87c62c6..c79fe2c 100644
+--- a/billing-service/src/core/orderPlacedEvent.ts
++++ b/billing-service/src/core/orderPlacedEvent.ts
+@@ -7,7 +7,7 @@ export interface OrderPlacedEvent {
+   readonly customerId: string;
+   readonly customerEmail: string;
+   /** Integer, minor units (cents). */
+-  readonly totalCents: number;
++  readonly amountCents: number;
+   /** ISO-4217 code. */
+   readonly currency: string;
+ }
+@@ -35,19 +35,19 @@ export function decodeOrderPlaced(raw: unknown): OrderPlacedEvent {
+     issues.push("customerEmail: expected an email address");
+   }
+ 
+-  const totalCents = event.totalCents;
+-  if (!isMinorUnits(totalCents)) {
+-    issues.push(`totalCents: expected an integer number of cents, got ${describe(totalCents)}`);
++  const amountCents = event.amountCents;
++  if (!isMinorUnits(amountCents)) {
++    issues.push(`amountCents: expected an integer number of cents, got ${describe(amountCents)}`);
+   }
+   const currency = event.currency;
+   if (!isCurrencyCode(currency)) {
+     issues.push(`currency: expected an ISO-4217 code, got ${describe(currency)}`);
+   }
+ 
+-  if (issues.length > 0 || !isMinorUnits(totalCents) || !isCurrencyCode(currency)) {
++  if (issues.length > 0 || !isMinorUnits(amountCents) || !isCurrencyCode(currency)) {
+     throw new ContractViolationError(CONTRACT, issues);
+   }
+-  return { orderId, customerId, customerEmail, totalCents, currency };
++  return { orderId, customerId, customerEmail, amountCents, currency };
+ }
+ 
+ function requireString(event: Record<string, unknown>, key: string, issues: string[]): string {
+diff --git a/billing-service/test/helpers.ts b/billing-service/test/helpers.ts
+index 4852349..85faa73 100644
+--- a/billing-service/test/helpers.ts
++++ b/billing-service/test/helpers.ts
+@@ -14,10 +14,10 @@ export function sampleEvent(overrides: Record<string, unknown> = {}): Record<str
+     orderId: "ord-1",
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
+-    placedAt: "2026-10-10T11:59:00.000Z",
++    createdAt: "2026-10-10T11:59:00.000Z",
+     channel: "web",
+     currency: "USD",
+-    totalCents: 1250,
++    amountCents: 1250,
+     lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     ...overrides,
+   };
+diff --git a/billing-service/test/onOrderPlaced.test.ts b/billing-service/test/onOrderPlaced.test.ts
+index 31317ed..5b97df4 100644
+--- a/billing-service/test/onOrderPlaced.test.ts
++++ b/billing-service/test/onOrderPlaced.test.ts
+@@ -26,7 +26,7 @@ describe("onOrderPlaced", () => {
+ 
+   it("keeps whole units for zero-decimal currencies", async () => {
+     const sender = new SimulatedEmailSender();
+-    await makeApp(sender).onOrderPlaced(sampleEvent({ currency: "JPY", totalCents: 1980 }));
++    await makeApp(sender).onOrderPlaced(sampleEvent({ currency: "JPY", amountCents: 1980 }));
+     assert.match(sender.outbox[0]?.body ?? "", /Amount due: 1980 JPY/);
+   });
+ 
+@@ -53,7 +53,7 @@ describe("onOrderPlaced", () => {
+   });
+ 
+   it("works through the one-shot helper with injected dependencies", async () => {
+-    const invoice = await handleOrderPlaced(sampleEvent({ totalCents: 2497 }), { clock: fixedClock });
++    const invoice = await handleOrderPlaced(sampleEvent({ amountCents: 2497 }), { clock: fixedClock });
+     assert.equal(invoice.amountCents, 2497);
+   });
+ });
+@@ -73,19 +73,19 @@ describe("contract checks (fail loudly)", () => {
+     assert.fail("expected a ContractViolationError");
+   }
+ 
+-  it("rejects a missing totalCents", async () => {
+-    const issues = await violations(withoutField(sampleEvent(), "totalCents"));
+-    assert.match(issues.join(), /totalCents: expected an integer number of cents, got missing/);
++  it("rejects a missing amountCents", async () => {
++    const issues = await violations(withoutField(sampleEvent(), "amountCents"));
++    assert.match(issues.join(), /amountCents: expected an integer number of cents, got missing/);
+   });
+ 
+-  it("rejects totalCents that is not an integer (dollars instead of cents)", async () => {
+-    const issues = await violations(sampleEvent({ totalCents: 12.5 }));
+-    assert.match(issues.join(), /totalCents/);
++  it("rejects amountCents that is not an integer (dollars instead of cents)", async () => {
++    const issues = await violations(sampleEvent({ amountCents: 12.5 }));
++    assert.match(issues.join(), /amountCents/);
+   });
+ 
+-  it("rejects totalCents of the wrong type, negative or unsafe", async () => {
++  it("rejects amountCents of the wrong type, negative or unsafe", async () => {
+     for (const bad of ["1250", null, -1, Number.NaN, Number.MAX_SAFE_INTEGER + 2]) {
+-      await violations(sampleEvent({ totalCents: bad }));
++      await violations(sampleEvent({ amountCents: bad }));
+     }
+   });
+ 
+@@ -103,7 +103,7 @@ describe("contract checks (fail loudly)", () => {
+   });
+ 
+   it("ignores fields it does not use", async () => {
+-    const invoice = await makeApp().onOrderPlaced(sampleEvent({ channel: undefined, placedAt: undefined, lines: [] }));
++    const invoice = await makeApp().onOrderPlaced(sampleEvent({ channel: undefined, createdAt: undefined, lines: [] }));
+     assert.equal(invoice.amountCents, 1250);
+   });
+ });

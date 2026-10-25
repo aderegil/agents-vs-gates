@@ -1,0 +1,222 @@
+diff --git a/README.md b/README.md
+index f76e405..da1a38c 100644
+--- a/README.md
++++ b/README.md
+@@ -15,7 +15,7 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ 
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+-const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
++const res = await app.handle("POST", "/orders", { customerId, customerEmail, currency, lines });
+ // 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 1ec650b..0e8f7e8 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -1,5 +1,5 @@
+ import { ValidationError, type ValidationIssue } from "../core/errors.js";
+-import type { Channel, NewOrder, OrderLine, OrderStatus } from "../core/order.js";
++import type { NewOrder, OrderLine, OrderStatus } from "../core/order.js";
+ import type { CustomerOrdersQuery } from "../core/ports.js";
+ import { decodeCursor } from "./cursor.js";
+ import { InputReader, isJsonObject } from "./inputReader.js";
+@@ -15,7 +15,6 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
+-  const channel = reader.string("channel");
+   const currency = reader.string("currency");
+ 
+   const lines: OrderLine[] = [];
+@@ -36,8 +35,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   if (reader.issues.length > 0) {
+     throw new ValidationError(reader.issues);
+   }
+-  // The core validates that `channel` is one of the supported values.
+-  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
++  return { customerId, customerEmail, currency, lines };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..e5ef3d8 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -1,4 +1,4 @@
+-import { totalCents, type Channel, type Order } from "./order.js";
++import { totalCents, type Order } from "./order.js";
+ 
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+@@ -6,14 +6,13 @@ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+ /** Published when an order has been accepted and its payment authorized. */
+ export interface OrderPlaced {
+   readonly type: "OrderPlaced";
+-  readonly schemaVersion: 3;
++  readonly schemaVersion: 4;
+   readonly orderId: string;
+   readonly customerId: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+-  readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -42,12 +41,11 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ export function orderPlaced(order: Order): OrderPlaced {
+   return {
+     type: "OrderPlaced",
+-    schemaVersion: 3,
++    schemaVersion: 4,
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
+-    channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..dc68061 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -1,9 +1,6 @@
+ import { InvalidStateError, ValidationError, type ValidationIssue } from "./errors.js";
+ import { isMinorUnits, isSupportedCurrency, money, multiply, sum } from "./money.js";
+ 
+-export const CHANNELS = ["web", "store", "marketplace"] as const;
+-export type Channel = (typeof CHANNELS)[number];
+-
+ export type OrderStatus = "placed" | "cancelled";
+ 
+ export interface OrderLine {
+@@ -20,7 +17,6 @@ export interface Order {
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
+-  readonly channel: Channel;
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+@@ -32,7 +28,6 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
+-  readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+ }
+@@ -72,7 +67,6 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+       unitPriceCents: line.unitPriceCents,
+     })),
+     status: "placed",
+-    channel: input.channel,
+     currency: input.currency,
+     placedAt: meta.placedAt,
+   };
+@@ -121,9 +115,6 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   ) {
+     fail("customerEmail", "must be a valid email address");
+   }
+-  if (!(CHANNELS as readonly unknown[]).includes(input.channel)) {
+-    fail("channel", `must be one of ${CHANNELS.join(", ")}`);
+-  }
+   if (!isSupportedCurrency(input.currency)) {
+     fail("currency", "must be a supported ISO-4217 currency code");
+   }
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index 1849efc..f530e99 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -15,7 +15,6 @@ function sampleOrder(id: string, placedAt: string) {
+     {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+-      channel: "store",
+       currency: "USD",
+       lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     },
+@@ -46,7 +45,7 @@ describe("KafkaEventPublisher", () => {
+     const [placed, cancelled] = publisher.records;
+     assert.equal(placed?.topic, "orders.placed");
+     assert.equal(placed?.key, "ord-1");
+-    assert.equal(placed?.headers["schema-version"], "3");
++    assert.equal(placed?.headers["schema-version"], "4");
+     assert.equal(JSON.parse(placed?.value ?? "{}").totalCents, 1250);
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..7645eb1 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -4,7 +4,7 @@ import type { OrderCancelled, OrderPlaced } from "../src/core/events.js";
+ import { FIXED_NOW, FakePayments, makeApp, placeOrderBody } from "./helpers.js";
+ 
+ describe("POST /orders", () => {
+-  it("places an order, answers 201 and publishes OrderPlaced v3", async () => {
++  it("places an order, answers 201 and publishes OrderPlaced v4", async () => {
+     const { app, publisher, payments } = makeApp();
+     const res = await app.handle("POST", "/orders", placeOrderBody());
+ 
+@@ -20,12 +20,11 @@ describe("POST /orders", () => {
+     assert.equal(publisher.events.length, 1);
+     assert.deepEqual(publisher.events[0], {
+       type: "OrderPlaced",
+-      schemaVersion: 3,
++      schemaVersion: 4,
+       orderId: "ord-1",
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
+-      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+@@ -107,7 +106,6 @@ describe("POST /orders/{id}/cancel", () => {
+       "POST",
+       "/orders",
+       placeOrderBody({
+-        channel: "marketplace",
+         currency: "EUR",
+         lines: [{ sku: "EU-1", name: "Mug", qty: 1, unitPriceCents: 1990 }],
+       }),
+diff --git a/test/helpers.ts b/test/helpers.ts
+index f9cb257..1c1bebe 100644
+--- a/test/helpers.ts
++++ b/test/helpers.ts
+@@ -74,7 +74,6 @@ export function placeOrderBody(overrides: Record<string, unknown> = {}): Record<
+   return {
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
+-    channel: "web",
+     currency: "USD",
+     lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     ...overrides,
+diff --git a/test/order.test.ts b/test/order.test.ts
+index 226d6f8..31400d5 100644
+--- a/test/order.test.ts
++++ b/test/order.test.ts
+@@ -9,7 +9,6 @@ function newOrder(overrides: Partial<NewOrder> = {}): NewOrder {
+   return {
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
+-    channel: "web",
+     currency: "USD",
+     lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     ...overrides,
+@@ -63,9 +62,9 @@ describe("createOrder", () => {
+ 
+   it("reports every problem at once", () => {
+     const paths = issuePaths(() =>
+-      createOrder(newOrder({ customerId: " ", customerEmail: "nope", currency: "ZZZ", channel: "fax" as never }), META),
++      createOrder(newOrder({ customerId: " ", customerEmail: "nope", currency: "ZZZ" }), META),
+     );
+-    assert.deepEqual(paths, ["customerId", "customerEmail", "channel", "currency"]);
++    assert.deepEqual(paths, ["customerId", "customerEmail", "currency"]);
+   });
+ 
+   it("bounds the order total", () => {

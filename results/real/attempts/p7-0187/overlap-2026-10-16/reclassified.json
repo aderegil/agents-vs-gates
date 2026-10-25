@@ -1,0 +1,14 @@
+{
+  "run_id": "p7-0187",
+  "kind": "runner_overlap",
+  "at": "2026-10-16T15:02:50Z",
+  "why": "runner overlap 2026-10-16 14:54:00-14:56:22 UTC: a second runner process (builder's resume script misread state.json during an atomic replace and relaunched) shared worker folders w1-w3 with the running batch; this run executed during the overlap, so its workspace may have been reset under it. Archived unchanged and re-queued with the same id; not counted as the run's own infrastructure failure.",
+  "state_before": {
+    "status": "done",
+    "worker": 2,
+    "started_at": "2026-10-16T14:54:36Z",
+    "ended_at": "2026-10-16T15:00:11Z",
+    "attempts": 2,
+    "last_error": null
+  }
+}

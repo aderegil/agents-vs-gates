@@ -1,0 +1,47 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..81b225d 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -18,6 +18,10 @@ export interface OrderPlaced {
+   readonly currency: string;
+   /** Integer, minor units. */
+   readonly totalCents: number;
++  /** Same value as `placedAt`, named as in the Payments and Customer APIs. */
++  readonly createdAt: string;
++  /** Same value as `totalCents`, named as in the Payments and Customer APIs. */
++  readonly amountCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -40,6 +44,7 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+ export function orderPlaced(order: Order): OrderPlaced {
++  const total = totalCents(order);
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+@@ -49,7 +54,9 @@ export function orderPlaced(order: Order): OrderPlaced {
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+-    totalCents: totalCents(order),
++    totalCents: total,
++    createdAt: order.placedAt,
++    amountCents: total,
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..4796834 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -28,6 +28,8 @@ describe("POST /orders", () => {
+       channel: "web",
+       currency: "USD",
+       totalCents: 1250,
++      createdAt: FIXED_NOW,
++      amountCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [

@@ -1,0 +1,71 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index f76e405..d351fd9 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -16,6 +16,6 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+ const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+-// 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
++// 201 { id, status, placedAt, currency, totalCents, total, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/README.md b/README.md
+index f76e405..d351fd9 100644
+--- a/README.md
++++ b/README.md
+@@ -16,6 +16,6 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+ const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+-// 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
++// 201 { id, status, placedAt, currency, totalCents, total, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..b0dc3ac 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -1,3 +1,4 @@
++import { minorUnitDigits } from "../core/money.js";
+ import { totalCents, type Order } from "../core/order.js";
+ import type { OrderPage } from "../core/orderService.js";
+ import { encodeCursor } from "./cursor.js";
+@@ -9,6 +10,8 @@ export interface OrderResponse {
+   readonly placedAt: string;
+   readonly currency: string;
+   readonly totalCents: number;
++  /** Order total in major units (e.g. 12.5 for $12.50), honouring the currency's minor-unit digits. */
++  readonly total: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly name: string;
+@@ -31,6 +34,7 @@ export function toOrderResponse(order: Order): OrderResponse {
+     placedAt: order.placedAt,
+     currency: order.currency,
+     totalCents: totalCents(order),
++    total: totalCents(order) / 10 ** minorUnitDigits(order.currency),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       name: line.name,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..954c089 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -15,6 +15,7 @@ describe("POST /orders", () => {
+       placedAt: FIXED_NOW,
+       currency: "USD",
+       totalCents: 1250,
++      total: 12.5,
+       lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+     assert.equal(publisher.events.length, 1);
+@@ -89,7 +90,7 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "total", "lines"]);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

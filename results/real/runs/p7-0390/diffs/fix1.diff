@@ -1,0 +1,86 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index c4e435f..e72cc05 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -1,4 +1,4 @@
+-import { totalCents, type Order } from "./order.js";
++import { totalCents, type Channel, type Order } from "./order.js";
+ 
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+@@ -13,6 +13,8 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /** @deprecated Required by analytics-ingest until its contract migration completes. */
++  readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -46,6 +48,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/src/core/order.ts b/src/core/order.ts
+index dc68061..0419a15 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -1,6 +1,10 @@
+ import { InvalidStateError, ValidationError, type ValidationIssue } from "./errors.js";
+ import { isMinorUnits, isSupportedCurrency, money, multiply, sum } from "./money.js";
+ 
++export const CHANNELS = ["web", "store", "marketplace"] as const;
++export type Channel = (typeof CHANNELS)[number];
++const DEFAULT_CHANNEL: Channel = "web";
++
+ export type OrderStatus = "placed" | "cancelled";
+ 
+ export interface OrderLine {
+@@ -17,6 +21,8 @@ export interface Order {
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
++  /** @deprecated Retained until downstream OrderPlaced consumers complete migration. */
++  readonly channel: Channel;
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+@@ -67,6 +73,7 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+       unitPriceCents: line.unitPriceCents,
+     })),
+     status: "placed",
++    channel: DEFAULT_CHANNEL,
+     currency: input.currency,
+     placedAt: meta.placedAt,
+   };
+diff --git a/test/app.test.ts b/test/app.test.ts
+index 6eabf24..a22a5d5 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+@@ -50,12 +51,12 @@ describe("POST /orders", () => {
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
+   });
+ 
+-  it("ignores the legacy channel property", async () => {
++  it("ignores the legacy channel property and uses the compatibility default", async () => {
+     const { app, publisher } = makeApp();
+     const res = await app.handle("POST", "/orders", placeOrderBody({ channel: "fax" }));
+ 
+     assert.equal(res.status, 201);
+-    assert.equal("channel" in (publisher.events[0] as object), false);
++    assert.equal((publisher.events[0] as OrderPlaced).channel, "web");
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {

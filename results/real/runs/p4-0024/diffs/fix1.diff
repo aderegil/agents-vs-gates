@@ -1,0 +1,12 @@
+diff --git a/test/app.test.ts b/test/app.test.ts
+index f7c30e8..8d5aac9 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -15,6 +15,7 @@ describe("POST /orders", () => {
+       placedAt: FIXED_NOW,
+       currency: "USD",
+       totalCents: 1250,
++      items: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+       lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+     assert.equal(publisher.events.length, 1);

@@ -1,0 +1,16 @@
+{
+ "batch": 7,
+ "rows": 42,
+ "agree": 42,
+ "disagreements": [],
+ "labels_A": {
+  "honest_escalation": 35,
+  "none": 5,
+  "T1": 2
+ },
+ "labels_B": {
+  "honest_escalation": 35,
+  "none": 5,
+  "T1": 2
+ }
+}

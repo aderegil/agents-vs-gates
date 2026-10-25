@@ -1,0 +1,148 @@
+diff --git a/orders-service/src/api/requestParsing.ts b/orders-service/src/api/requestParsing.ts
+index 1ec650b..08154de 100644
+--- a/orders-service/src/api/requestParsing.ts
++++ b/orders-service/src/api/requestParsing.ts
+@@ -15,7 +15,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
+-  const channel = reader.string("channel");
++  const channel = reader.optionalString("channel");
+   const currency = reader.string("currency");
+ 
+   const lines: OrderLine[] = [];
+@@ -36,8 +36,14 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   if (reader.issues.length > 0) {
+     throw new ValidationError(reader.issues);
+   }
+-  // The core validates that `channel` is one of the supported values.
+-  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
++  // The core validates that `channel` is one of the supported values if provided.
++  return {
++    customerId,
++    customerEmail,
++    ...(channel === undefined ? {} : { channel: channel as Channel }),
++    currency,
++    lines,
++  };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/orders-service/src/core/events.ts b/orders-service/src/core/events.ts
+index 327ea13..c4e435f 100644
+--- a/orders-service/src/core/events.ts
++++ b/orders-service/src/core/events.ts
+@@ -1,4 +1,4 @@
+-import { totalCents, type Channel, type Order } from "./order.js";
++import { totalCents, type Order } from "./order.js";
+ 
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+@@ -13,7 +13,6 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+-  readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -47,7 +46,6 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
+-    channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/orders-service/src/core/order.ts b/orders-service/src/core/order.ts
+index 7eddd6b..dcf92b9 100644
+--- a/orders-service/src/core/order.ts
++++ b/orders-service/src/core/order.ts
+@@ -20,7 +20,6 @@ export interface Order {
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
+-  readonly channel: Channel;
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+@@ -32,7 +31,7 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
+-  readonly channel: Channel;
++  readonly channel?: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+ }
+@@ -72,7 +71,6 @@ export function createOrder(input: NewOrder, meta: { id: string; placedAt: strin
+       unitPriceCents: line.unitPriceCents,
+     })),
+     status: "placed",
+-    channel: input.channel,
+     currency: input.currency,
+     placedAt: meta.placedAt,
+   };
+@@ -121,7 +119,7 @@ function collectIssues(input: NewOrder): ValidationIssue[] {
+   ) {
+     fail("customerEmail", "must be a valid email address");
+   }
+-  if (!(CHANNELS as readonly unknown[]).includes(input.channel)) {
++  if (input.channel !== undefined && !(CHANNELS as readonly unknown[]).includes(input.channel)) {
+     fail("channel", `must be one of ${CHANNELS.join(", ")}`);
+   }
+   if (!isSupportedCurrency(input.currency)) {
+diff --git a/orders-service/test/app.test.ts b/orders-service/test/app.test.ts
+index a1bbe8d..b67c591 100644
+--- a/orders-service/test/app.test.ts
++++ b/orders-service/test/app.test.ts
+@@ -25,7 +25,6 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
+-      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+@@ -35,6 +34,17 @@ describe("POST /orders", () => {
+     ]);
+   });
+ 
++  it("places an order without channel and publishes OrderPlaced without channel", async () => {
++    const { app, publisher } = makeApp();
++    const body = placeOrderBody();
++    delete body.channel;
++    const res = await app.handle("POST", "/orders", body);
++
++    assert.equal(res.status, 201);
++    assert.equal(publisher.events.length, 1);
++    assert.equal("channel" in (publisher.events[0] as object), false);
++  });
++
+   it("handles a multi-line order with a total of 2497 cents", async () => {
+     const { app, publisher } = makeApp();
+     const res = await app.handle(
+diff --git a/orders-service/test/order.test.ts b/orders-service/test/order.test.ts
+index 226d6f8..54a26b3 100644
+--- a/orders-service/test/order.test.ts
++++ b/orders-service/test/order.test.ts
+@@ -40,6 +40,19 @@ describe("createOrder", () => {
+     assert.equal(order.status, "placed");
+     assert.equal(order.placedAt, META.placedAt);
+     assert.equal(totalCents(order), 2497);
++    assert.equal("channel" in order, false);
++  });
++
++  it("builds an order without channel", () => {
++    const input: NewOrder = {
++      customerId: "cust-1",
++      customerEmail: "jane@example.com",
++      currency: "USD",
++      lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
++    };
++    const order = createOrder(input, META);
++    assert.equal(order.status, "placed");
++    assert.equal("channel" in order, false);
+   });
+ 
+   it("requires at least one line", () => {

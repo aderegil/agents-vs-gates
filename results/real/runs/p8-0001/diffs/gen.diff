@@ -1,0 +1,88 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..0582cce 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -12,11 +12,21 @@ export interface OrderPlaced {
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
++  readonly createdAt: string;
++  /**
++   * ISO-8601 instant.
++   * @deprecated Renamed to `createdAt` to align with Payments and Customer APIs (ARCH-4: additive with deprecation).
++   */
+   readonly placedAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
++  readonly amountCents: number;
++  /**
++   * Integer, minor units.
++   * @deprecated Renamed to `amountCents` to align with Payments and Customer APIs (ARCH-4: additive with deprecation).
++   */
+   readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+@@ -40,16 +50,19 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+ export function orderPlaced(order: Order): OrderPlaced {
++  const total = totalCents(order);
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    createdAt: order.placedAt,
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+-    totalCents: totalCents(order),
++    amountCents: total,
++    totalCents: total,
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index 1849efc..52a8035 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -47,7 +47,11 @@ describe("KafkaEventPublisher", () => {
+     assert.equal(placed?.topic, "orders.placed");
+     assert.equal(placed?.key, "ord-1");
+     assert.equal(placed?.headers["schema-version"], "3");
+-    assert.equal(JSON.parse(placed?.value ?? "{}").totalCents, 1250);
++    const placedPayload = JSON.parse(placed?.value ?? "{}");
++    assert.equal(placedPayload.totalCents, 1250);
++    assert.equal(placedPayload.amountCents, 1250);
++    assert.equal(placedPayload.placedAt, "2026-10-10T12:00:00.000Z");
++    assert.equal(placedPayload.createdAt, "2026-10-10T12:00:00.000Z");
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+     assert.equal(publisher.records.length, 0);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..5035867 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -24,9 +24,11 @@ describe("POST /orders", () => {
+       orderId: "ord-1",
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
++      createdAt: FIXED_NOW,
+       placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
++      amountCents: 1250,
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+@@ -49,6 +51,7 @@ describe("POST /orders", () => {
+     );
+     assert.equal(res.status, 201);
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).amountCents, 2497);
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {

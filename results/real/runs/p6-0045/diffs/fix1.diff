@@ -1,0 +1,45 @@
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index e4ecdfc..f35f109 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -24,6 +24,8 @@ export interface OrderDetailResponse {
+   readonly placedAt: string;
+   readonly currency: string;
+   readonly totalCents: number;
++  /** @deprecated Compatibility field for consumers that have not adopted `items` yet. */
++  readonly lines: OrderResponse["lines"];
+   readonly items: OrderResponse["lines"];
+ }
+ 
+@@ -50,7 +52,7 @@ export function toOrderResponse(order: Order): OrderResponse {
+   };
+ }
+ 
+-/** Maps an order to the detail representation, whose collection is named `items`. */
++/** Maps an order to the detail representation, with `lines` retained as a compatibility alias. */
+ export function toOrderDetailResponse(order: Order): OrderDetailResponse {
+   const response = toOrderResponse(order);
+   return {
+@@ -59,6 +61,7 @@ export function toOrderDetailResponse(order: Order): OrderDetailResponse {
+     placedAt: response.placedAt,
+     currency: response.currency,
+     totalCents: response.totalCents,
++    lines: response.lines,
+     items: response.lines,
+   };
+ }
+diff --git a/test/app.test.ts b/test/app.test.ts
+index f59653e..83915dc 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -89,7 +89,9 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "items"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines", "items"]);
++    const body = res.body as { lines: unknown; items: unknown };
++    assert.deepEqual(body.items, body.lines);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

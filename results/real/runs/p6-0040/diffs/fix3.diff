@@ -1,0 +1,11 @@
+diff --git a/catalog/orders-service.yaml b/catalog/orders-service.yaml
+index ace846c..e465412 100644
+--- a/catalog/orders-service.yaml
++++ b/catalog/orders-service.yaml
+@@ -1,4 +1,3 @@
+-service: orders-service
++name: orders-service
+ dependsOn:
+-  - service: inventory-service
+-    api: stock-api
++  - inventory-service/stock-api

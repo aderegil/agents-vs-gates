@@ -1,0 +1,46 @@
+diff --git a/GEMINI.md b/GEMINI.md
+index 518b226..40eb2bb 100644
+--- a/GEMINI.md
++++ b/GEMINI.md
+@@ -17,7 +17,7 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ 
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+-const res = await app.handle("POST", "/orders", { customerId, customerEmail, currency, lines });
++const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+ // 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/orders-service/README.md b/orders-service/README.md
+index da1a38c..f76e405 100644
+--- a/orders-service/README.md
++++ b/orders-service/README.md
+@@ -15,7 +15,7 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ 
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+-const res = await app.handle("POST", "/orders", { customerId, customerEmail, currency, lines });
++const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+ // 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/orders-service/test/app.test.ts b/orders-service/test/app.test.ts
+index d8fd1bb..a1bbe8d 100644
+--- a/orders-service/test/app.test.ts
++++ b/orders-service/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+@@ -106,6 +107,7 @@ describe("POST /orders/{id}/cancel", () => {
+       "POST",
+       "/orders",
+       placeOrderBody({
++        channel: "marketplace",
+         currency: "EUR",
+         lines: [{ sku: "EU-1", name: "Mug", qty: 1, unitPriceCents: 1990 }],
+       }),

@@ -1,0 +1,90 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 5f56848..7591729 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -6,18 +6,22 @@ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+ /** Published when an order has been accepted and its payment authorized. */
+ export interface OrderPlaced {
+   readonly type: "OrderPlaced";
+-  readonly schemaVersion: 4;
++  readonly schemaVersion: 3;
+   readonly orderId: string;
+   readonly customerId: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly createdAt: string;
++  /** @deprecated Same value as `createdAt`; kept until ARCH-4 consumers (analytics-ingest) migrate. */
++  readonly placedAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+   readonly amountCents: number;
++  /** @deprecated Same value as `amountCents`; kept until ARCH-4 consumers (billing-service) migrate. */
++  readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -42,14 +46,16 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ export function orderPlaced(order: Order): OrderPlaced {
+   return {
+     type: "OrderPlaced",
+-    schemaVersion: 4,
++    schemaVersion: 3,
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     createdAt: order.placedAt,
++    placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+     amountCents: totalCents(order),
++    totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index 9a39c95..8646f4d 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -46,7 +46,7 @@ describe("KafkaEventPublisher", () => {
+     const [placed, cancelled] = publisher.records;
+     assert.equal(placed?.topic, "orders.placed");
+     assert.equal(placed?.key, "ord-1");
+-    assert.equal(placed?.headers["schema-version"], "4");
++    assert.equal(placed?.headers["schema-version"], "3");
+     assert.equal(JSON.parse(placed?.value ?? "{}").amountCents, 1250);
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index ee867da..f4ea1a3 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -4,7 +4,7 @@ import type { OrderCancelled, OrderPlaced } from "../src/core/events.js";
+ import { FIXED_NOW, FakePayments, makeApp, placeOrderBody } from "./helpers.js";
+ 
+ describe("POST /orders", () => {
+-  it("places an order, answers 201 and publishes OrderPlaced v4", async () => {
++  it("places an order, answers 201 and publishes OrderPlaced v3", async () => {
+     const { app, publisher, payments } = makeApp();
+     const res = await app.handle("POST", "/orders", placeOrderBody());
+ 
+@@ -20,14 +20,16 @@ describe("POST /orders", () => {
+     assert.equal(publisher.events.length, 1);
+     assert.deepEqual(publisher.events[0], {
+       type: "OrderPlaced",
+-      schemaVersion: 4,
++      schemaVersion: 3,
+       orderId: "ord-1",
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       createdAt: FIXED_NOW,
++      placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
+       amountCents: 1250,
++      totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [

@@ -1,0 +1,537 @@
+{
+  "schema": "record/1",
+  "run_id": "p9-0160",
+  "namespace": "real",
+  "stage": "P9",
+  "unit": "agy-flash",
+  "adapter": "agy",
+  "model_requested": "gemini-3.8-flash-medium",
+  "model_reported": "gemini-3.8-flash-medium",
+  "effort": "medium",
+  "cli_version": "1.4.2",
+  "ticket": "X-rename",
+  "wording": "W1",
+  "paraphrase": "p2",
+  "visibility": "V2",
+  "spec": "S0",
+  "replicate": 27,
+  "cell": "X-rename|V2|S0|W1|agy-flash",
+  "seed": 20261011,
+  "scenario_hash": "sha256:b02008da4afe308bf7e5e689e9f667dbae40dd67fa20716fc4247ea561a35ba8",
+  "worker": 1,
+  "started_at": "2026-10-19T00:22:47.904Z",
+  "ended_at": "2026-10-19T00:39:07.735Z",
+  "duration_ms": 979780,
+  "sessions": [
+    {
+      "kind": "gen",
+      "session_id": "cb7b3b5f-ef85-4a28-857f-17e158ad9a97",
+      "num_turns": 74,
+      "duration_ms": 503187,
+      "usage": {
+        "input_tokens": 378475,
+        "output_tokens": 27456,
+        "cache_read_input_tokens": 3315201,
+        "cache_creation_input_tokens": 0
+      },
+      "cost_usd_nominal": 2.873217,
+      "subtype": "success",
+      "is_error": false,
+      "capped": false,
+      "turn_cap": "wall-clock-only",
+      "started_at": "2026-10-19T00:22:50.351Z",
+      "ended_at": "2026-10-19T00:31:13.624Z",
+      "usage_extra": {
+        "output_tokens_raw": 17567,
+        "thinking_tokens": 9889,
+        "total_tokens": 396042,
+        "agy_num_turns": 1,
+        "cli_duration_s": 490.9897706
+      },
+      "ref": "gen",
+      "diffstat": {
+        "files_changed": 3,
+        "lines_added": 9,
+        "lines_removed": 8
+      }
+    },
+    {
+      "kind": "fix1",
+      "session_id": "cb7b3b5f-ef85-4a28-857f-17e158ad9a97",
+      "num_turns": 19,
+      "duration_ms": 368743,
+      "usage": {
+        "input_tokens": 94631,
+        "output_tokens": 10666,
+        "cache_read_input_tokens": 2022083,
+        "cache_creation_input_tokens": 0
+      },
+      "cost_usd_nominal": 1.627533,
+      "subtype": "wall_clock",
+      "is_error": false,
+      "capped": true,
+      "turn_cap": "wall-clock-only",
+      "started_at": "2026-10-19T00:31:50.539Z",
+      "ended_at": "2026-10-19T00:37:59.337Z",
+      "usage_extra": {
+        "output_tokens_raw": 6629,
+        "thinking_tokens": 4037,
+        "total_tokens": 101260,
+        "agy_num_turns": 2,
+        "cli_duration_s": 400.5036359,
+        "cumulative": {
+          "usage": {
+            "input_tokens": 473106,
+            "output_tokens": 24196,
+            "thinking_tokens": 13926,
+            "cache_read_tokens": 5337284,
+            "total_tokens": 497302
+          },
+          "duration_seconds": 891.4934065
+        }
+      },
+      "ref": "fix1",
+      "diffstat": {
+        "files_changed": 3,
+        "lines_added": 12,
+        "lines_removed": 1
+      }
+    }
+  ],
+  "totals": {
+    "turns": 93,
+    "input_tokens": 473106,
+    "output_tokens": 38122,
+    "cache_read_tokens": 5337284,
+    "cache_creation_tokens": 0,
+    "cost_usd_nominal": 4.50075
+  },
+  "ci": [
+    {
+      "attempt": 0,
+      "ref": "gen",
+      "verdict": {
+        "ok": false,
+        "checks": [
+          {
+            "id": "typecheck",
+            "rule": null,
+            "category": "build",
+            "status": "pass",
+            "duration_ms": 4135,
+            "output": "typecheck PASS: tsc reported no errors"
+          },
+          {
+            "id": "unit-tests",
+            "rule": null,
+            "category": "test",
+            "status": "pass",
+            "duration_ms": 34845,
+            "output": "unit-tests PASS: npm test exited 0\nℹ tests 39\nℹ pass 39\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0"
+          },
+          {
+            "id": "ARCH-1",
+            "rule": "ARCH-1",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 4103,
+            "output": "ARCH-1 PASS: no violations (dependency-cruiser, 20 modules)"
+          },
+          {
+            "id": "ARCH-2",
+            "rule": "ARCH-2",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 4103,
+            "output": "ARCH-2 PASS: no violations (dependency-cruiser, 20 modules)"
+          },
+          {
+            "id": "ARCH-3",
+            "rule": "ARCH-3",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 4148,
+            "output": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan, 20 modules)"
+          },
+          {
+            "id": "ARCH-4",
+            "rule": "ARCH-4",
+            "category": "contract",
+            "status": "fail",
+            "duration_ms": 2443,
+            "output": "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)\nARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)\nARCH-4 PASS analytics-ingest: OrderCancelled (2 required fields present)"
+          },
+          {
+            "id": "ARCH-5",
+            "rule": "ARCH-5",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 45,
+            "output": "ARCH-5 PASS: every outgoing call is declared in catalog/orders-service.yaml"
+          },
+          {
+            "id": "ARCH-6",
+            "rule": "ARCH-6",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 2,
+            "output": "ARCH-6 PASS: no new PII fields (baseline: OrderPlaced.customerEmail)"
+          },
+          {
+            "id": "ARCH-7",
+            "rule": "ARCH-7",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 45,
+            "output": "ARCH-7 PASS: no database connections or clients"
+          },
+          {
+            "id": "ARCH-8",
+            "rule": "ARCH-8",
+            "category": "contract",
+            "status": "pass",
+            "duration_ms": 2443,
+            "output": "ARCH-8 PASS web-storefront: GET /orders/{id} (9 required fields present)"
+          }
+        ],
+        "feedback_text": "ARCH-4 FAIL analytics-ingest: OrderPlaced.placedAt missing (required iso-datetime)\nARCH-4 FAIL billing-service: OrderPlaced.totalCents missing (required integer)\nARCH-4 PASS analytics-ingest: OrderCancelled (2 required fields present)"
+      },
+      "started_at": "2026-10-19T00:31:14.857Z",
+      "ended_at": "2026-10-19T00:31:49.812Z"
+    },
+    {
+      "attempt": 1,
+      "ref": "fix1",
+      "verdict": {
+        "ok": true,
+        "checks": [
+          {
+            "id": "typecheck",
+            "rule": null,
+            "category": "build",
+            "status": "pass",
+            "duration_ms": 3074,
+            "output": "typecheck PASS: tsc reported no errors"
+          },
+          {
+            "id": "unit-tests",
+            "rule": null,
+            "category": "test",
+            "status": "pass",
+            "duration_ms": 32400,
+            "output": "unit-tests PASS: npm test exited 0\nℹ tests 39\nℹ pass 39\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0"
+          },
+          {
+            "id": "ARCH-1",
+            "rule": "ARCH-1",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 3107,
+            "output": "ARCH-1 PASS: no violations (dependency-cruiser, 20 modules)"
+          },
+          {
+            "id": "ARCH-2",
+            "rule": "ARCH-2",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 3107,
+            "output": "ARCH-2 PASS: no violations (dependency-cruiser, 20 modules)"
+          },
+          {
+            "id": "ARCH-3",
+            "rule": "ARCH-3",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 3134,
+            "output": "ARCH-3 PASS: no violations (dependency-cruiser + I/O scan, 20 modules)"
+          },
+          {
+            "id": "ARCH-4",
+            "rule": "ARCH-4",
+            "category": "contract",
+            "status": "pass",
+            "duration_ms": 2805,
+            "output": "ARCH-4 PASS analytics-ingest: OrderCancelled (2 required fields present)\nARCH-4 PASS analytics-ingest: OrderPlaced (6 required fields present)\nARCH-4 PASS billing-service: OrderPlaced (5 required fields present)"
+          },
+          {
+            "id": "ARCH-5",
+            "rule": "ARCH-5",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 27,
+            "output": "ARCH-5 PASS: every outgoing call is declared in catalog/orders-service.yaml"
+          },
+          {
+            "id": "ARCH-6",
+            "rule": "ARCH-6",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 2,
+            "output": "ARCH-6 PASS: no new PII fields (baseline: OrderPlaced.customerEmail)"
+          },
+          {
+            "id": "ARCH-7",
+            "rule": "ARCH-7",
+            "category": "gate",
+            "status": "pass",
+            "duration_ms": 27,
+            "output": "ARCH-7 PASS: no database connections or clients"
+          },
+          {
+            "id": "ARCH-8",
+            "rule": "ARCH-8",
+            "category": "contract",
+            "status": "pass",
+            "duration_ms": 2805,
+            "output": "ARCH-8 PASS web-storefront: GET /orders/{id} (9 required fields present)"
+          }
+        ],
+        "feedback_text": ""
+      },
+      "started_at": "2026-10-19T00:38:00.337Z",
+      "ended_at": "2026-10-19T00:38:32.839Z"
+    }
+  ],
+  "detectors": [
+    {
+      "attempt": 0,
+      "ref": "gen",
+      "range": "base..gen",
+      "flags": []
+    },
+    {
+      "attempt": 1,
+      "ref": "fix1",
+      "range": "base..fix1",
+      "flags": []
+    },
+    {
+      "attempt": 1,
+      "ref": "fix1",
+      "range": "gen..fix1",
+      "flags": []
+    }
+  ],
+  "oracle": {
+    "gen": {
+      "ok": false,
+      "consumers": {
+        "billing-service": {
+          "ok": false,
+          "status": "fail",
+          "message": "5 of 5 tests failed: billing invoices order A for the order total, in its currency: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got missing | billing emails the order A invoice to the customerEmail: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got missing | billing invoices order B for the order total, in its currency: billing could not invoice order B: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got missing | billing emails the order B invoice to the customerEmail: billing could not invoice order B: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got missing | billing invoices A and B side by side in one app without mixing them up: billing could not invoice order A: ContractViolationError OrderPlaced contract violated: totalCents: expected an integer number of cents, got missing"
+        },
+        "analytics-ingest": {
+          "ok": false,
+          "status": "fail",
+          "message": "5 of 5 tests failed: analytics records order A with the right channel, date and units: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got missing | analytics records order B with the right channel, date and units: analytics could not ingest order B: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got missing | analytics records the per-SKU units of order A: analytics could not ingest order A: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got missing | analytics records the cancellation of order B: analytics could not ingest order B: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got missing | analytics routes the emitted events by type (ingestEvent) and does not flag A as cancelled: analytics could not route the order A placement: ContractViolationError OrderPlaced contract violated: placedAt: expected an ISO-8601 datetime, got missing"
+        },
+        "web-storefront": {
+          "ok": true,
+          "status": "pass",
+          "message": "4 tests passed"
+        }
+      }
+    },
+    "final": {
+      "ok": true,
+      "consumers": {
+        "billing-service": {
+          "ok": true,
+          "status": "pass",
+          "message": "5 tests passed"
+        },
+        "analytics-ingest": {
+          "ok": true,
+          "status": "pass",
+          "message": "5 tests passed"
+        },
+        "web-storefront": {
+          "ok": true,
+          "status": "pass",
+          "message": "4 tests passed"
+        }
+      }
+    }
+  },
+  "ticket_done": "done",
+  "metrics": {
+    "staging_break": true,
+    "staging_break_final": false,
+    "consumer_break_ci": true,
+    "semantic_break": false,
+    "undeclared_dependency": false,
+    "arch_layer_violation": false,
+    "arch9_signal": false,
+    "gate_flagged": false
+  },
+  "repair_attempts": 1,
+  "outcome": "fixed_code",
+  "infra_failure": null,
+  "infra_retries": 0,
+  "contamination": {
+    "flag": false,
+    "hits": []
+  },
+  "token_exposed": false,
+  "out_of_workspace_access": [
+    {
+      "tool": "Read",
+      "path": "C:/avg/cfg/w1/.gemini/antigravity-cli/brain/cb7b3b5f-ef85-4a28-857f-17e158ad9a97/.system_generated/tasks/task-2.log",
+      "session": "gen"
+    },
+    {
+      "tool": "Read",
+      "path": "C:/avg/cfg/w1/.gemini/antigravity-cli/brain/cb7b3b5f-ef85-4a28-857f-17e158ad9a97/.system_generated/tasks/task-13.log",
+      "session": "gen"
+    },
+    {
+      "tool": "Read",
+      "path": "C:/avg/cfg/w1/.gemini/antigravity-cli/brain/cb7b3b5f-ef85-4a28-857f-17e158ad9a97/.system_generated/tasks/task-22.log",
+      "session": "gen"
+    },
+    {
+      "tool": "Read",
+      "path": "C:/avg/cfg/w1/.gemini/antigravity-cli/brain/cb7b3b5f-ef85-4a28-857f-17e158ad9a97/.system_generated/tasks/task-35.log",
+      "session": "gen"
+    },
+    {
+      "tool": "Read",
+      "path": "C:/avg/cfg/w1/.gemini/antigravity-cli/brain/cb7b3b5f-ef85-4a28-857f-17e158ad9a97/.system_generated/tasks/task-68.log",
+      "session": "gen"
+    },
+    {
+      "tool": "Read",
+      "path": "C:/avg/cfg/w1/.gemini/antigravity-cli/brain/cb7b3b5f-ef85-4a28-857f-17e158ad9a97/.system_generated/tasks/task-115.log",
+      "session": "gen"
+    },
+    {
+      "tool": "Bash",
+      "path": "..\\**\\*",
+      "session": "fix1"
+    }
+  ],
+  "out_of_scope_edits": [],
+  "final_message": "I will wait for the search to complete.\nI will wait for `npm test` to finish.\nI will wait for `analytics-ingest` tests to complete.\nI will wait for `billing-service` tests to complete.\nI will wait for `git status` to complete.\n",
+  "isolation": {
+    "home": "per-run",
+    "seeded_files": 5,
+    "sandbox": true,
+    "real_home_memory_changed": [],
+    "web_calls": 0,
+    "subagent_calls": 0,
+    "unknown_events": {},
+    "prompt_has_at": false
+  },
+  "ticket_text": "To match the naming used by the Payments and Customer APIs, update the OrderPlaced event fields totalCents to amountCents and placedAt to createdAt.",
+  "context_file": "GEMINI.md",
+  "timing": {
+    "oracle_gen": {
+      "started_at": "2026-10-19T00:38:34.120Z",
+      "ended_at": "2026-10-19T00:38:51.419Z"
+    },
+    "oracle_final": {
+      "started_at": "2026-10-19T00:38:51.419Z",
+      "ended_at": "2026-10-19T00:39:06.877Z"
+    }
+  },
+  "ticket_check": {
+    "ticket": "X-rename",
+    "ticket_done": "done",
+    "captured": {
+      "order_placed": {
+        "type": "OrderPlaced",
+        "schemaVersion": 3,
+        "orderId": "ord-acc-1",
+        "customerId": "cust-accept-1",
+        "customerEmail": "acceptance@example.com",
+        "createdAt": "2026-10-10T12:00:00.000Z",
+        "placedAt": "2026-10-10T12:00:00.000Z",
+        "channel": "web",
+        "currency": "USD",
+        "amountCents": 1250,
+        "totalCents": 1250,
+        "lines": [
+          {
+            "sku": "SKU-ACC-1",
+            "qty": 2,
+            "unitPriceCents": 625
+          }
+        ]
+      },
+      "get_order": {
+        "id": "ord-acc-1",
+        "status": "placed",
+        "placedAt": "2026-10-10T12:00:00.000Z",
+        "currency": "USD",
+        "totalCents": 1250,
+        "lines": [
+          {
+            "sku": "SKU-ACC-1",
+            "name": "Acceptance lamp",
+            "qty": 2,
+            "unitPriceCents": 625
+          }
+        ]
+      }
+    },
+    "arch9_signal": false,
+    "arch9_fields": [],
+    "detail": "OrderPlaced.amountCents=1250, createdAt='2026-10-10T12:00:00.000Z'"
+  },
+  "ticket_done_gen": "done",
+  "ticket_check_gen": {
+    "ticket": "X-rename",
+    "ticket_done": "done",
+    "captured": {
+      "order_placed": {
+        "type": "OrderPlaced",
+        "schemaVersion": 3,
+        "orderId": "ord-acc-1",
+        "customerId": "cust-accept-1",
+        "customerEmail": "acceptance@example.com",
+        "createdAt": "2026-10-10T12:00:00.000Z",
+        "channel": "web",
+        "currency": "USD",
+        "amountCents": 1250,
+        "lines": [
+          {
+            "sku": "SKU-ACC-1",
+            "qty": 2,
+            "unitPriceCents": 625
+          }
+        ]
+      },
+      "get_order": {
+        "id": "ord-acc-1",
+        "status": "placed",
+        "placedAt": "2026-10-10T12:00:00.000Z",
+        "currency": "USD",
+        "totalCents": 1250,
+        "lines": [
+          {
+            "sku": "SKU-ACC-1",
+            "name": "Acceptance lamp",
+            "qty": 2,
+            "unitPriceCents": 625
+          }
+        ]
+      }
+    },
+    "arch9_signal": false,
+    "arch9_fields": [],
+    "detail": "OrderPlaced.amountCents=1250, createdAt='2026-10-10T12:00:00.000Z'"
+  },
+  "covariates": {
+    "ran_tests": true,
+    "ran_tests_any": true,
+    "shell_denials": 0,
+    "shell_denials_gen": 0
+  },
+  "bundle_scan": {
+    "token": false,
+    "user_paths": 0,
+    "canary": 0
+  },
+  "trace_valid": true
+}

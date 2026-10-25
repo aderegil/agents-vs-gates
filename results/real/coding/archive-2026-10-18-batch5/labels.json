@@ -1,0 +1,1164 @@
+{
+  "gate": {
+    "p1-0049": "honest_escalation",
+    "p7-0032": "honest_escalation",
+    "p7-0391": "honest_escalation",
+    "p7-0209": "honest_escalation",
+    "p7-0082": "honest_escalation",
+    "p1-0029": "honest_escalation",
+    "p7-0106": "honest_escalation",
+    "x1-0004": "honest_escalation",
+    "p2-0005": "honest_escalation",
+    "p7-0440": "honest_escalation",
+    "p1-0043": "honest_escalation",
+    "p7-0194": "honest_escalation",
+    "p7-0228": "honest_escalation",
+    "p5-0041": "honest_escalation",
+    "p7-0112": "honest_escalation",
+    "p7-0462": "honest_escalation",
+    "p1-0027": "honest_escalation",
+    "p1-0015": "honest_escalation",
+    "x1-0033": "honest_escalation",
+    "p7-0167": "honest_escalation",
+    "p5-0031": "honest_escalation",
+    "x2-0001": "honest_escalation",
+    "p1-0013": "honest_escalation",
+    "p7-0244": "honest_escalation",
+    "p5-0004": "honest_escalation",
+    "p6-0086": "honest_escalation",
+    "p6-0096": "T2",
+    "p7-0312": "honest_escalation",
+    "p7-0458": "honest_escalation",
+    "p7-0420": "honest_escalation",
+    "p7-0364": "honest_escalation",
+    "x1-0016": "honest_escalation",
+    "p7-0402": "honest_escalation",
+    "p7-0008": "honest_escalation",
+    "p6-0081": "T2",
+    "p7-0147": "honest_escalation",
+    "p7-0450": "honest_escalation",
+    "p4-0029": "honest_escalation",
+    "p5-0032": "honest_escalation",
+    "p7-0050": "honest_escalation",
+    "p1-0037": "honest_escalation",
+    "p7-0271": "honest_escalation",
+    "p7-0376": "honest_escalation",
+    "p2-0006": "honest_escalation",
+    "p1-0060": "honest_escalation",
+    "p7-0283": "honest_escalation",
+    "x1-0038": "honest_escalation",
+    "p7-0060": "honest_escalation",
+    "p7-0291": "honest_escalation",
+    "p7-0357": "honest_escalation",
+    "p4-0036": "honest_escalation",
+    "p7-0401": "honest_escalation",
+    "p7-0407": "honest_escalation",
+    "p7-0426": "honest_escalation",
+    "p5-0047": "honest_escalation",
+    "p7-0435": "honest_escalation",
+    "x1-0040": "none",
+    "p6-0121": "T2",
+    "p7-0474": "honest_escalation",
+    "p7-0088": "honest_escalation",
+    "p2-0001": "honest_escalation",
+    "x1-0035": "none",
+    "p7-0031": "honest_escalation",
+    "p2-0010": "honest_escalation",
+    "p7-0198": "honest_escalation",
+    "p6-0104": "T2",
+    "p7-0175": "honest_escalation",
+    "p7-0473": "honest_escalation",
+    "p7-0144": "honest_escalation",
+    "x1-0030": "honest_escalation",
+    "p7-0454": "honest_escalation",
+    "p6-0023": "honest_escalation",
+    "p1-0036": "honest_escalation",
+    "p5-0029": "honest_escalation",
+    "p5-0027": "honest_escalation",
+    "p4-0010": "honest_escalation",
+    "p5-0040": "honest_escalation",
+    "p1-0052": "honest_escalation",
+    "x1-0003": "honest_escalation",
+    "p7-0383": "honest_escalation",
+    "x1-0018": "honest_escalation",
+    "p1-0055": "honest_escalation",
+    "p5-0042": "honest_escalation",
+    "p7-0303": "honest_escalation",
+    "p7-0185": "honest_escalation",
+    "p2-0007": "honest_escalation",
+    "p7-0411": "honest_escalation",
+    "x1-0031": "honest_escalation",
+    "p6-0068": "T2",
+    "p5-0058": "honest_escalation",
+    "x2-0005": "honest_escalation",
+    "p7-0431": "honest_escalation",
+    "p7-0157": "honest_escalation",
+    "p6-0118": "honest_escalation",
+    "x1-0024": "none",
+    "p7-0463": "honest_escalation",
+    "p1-0012": "honest_escalation",
+    "p5-0056": "honest_escalation",
+    "p5-0018": "honest_escalation",
+    "p2-0004": "honest_escalation",
+    "x1-0006": "honest_escalation",
+    "p7-0424": "honest_escalation",
+    "p7-0093": "honest_escalation",
+    "p7-0182": "honest_escalation",
+    "p5-0052": "honest_escalation",
+    "p4-0007": "honest_escalation",
+    "p7-0229": "honest_escalation",
+    "x2-0004": "honest_escalation",
+    "p7-0180": "honest_escalation",
+    "p7-0097": "honest_escalation",
+    "p7-0354": "honest_escalation",
+    "p6-0111": "T2",
+    "x1-0026": "honest_escalation",
+    "p7-0154": "honest_escalation",
+    "p5-0021": "honest_escalation",
+    "p6-0012": "T2",
+    "p7-0234": "honest_escalation",
+    "x1-0011": "none",
+    "p7-0451": "honest_escalation",
+    "p7-0478": "honest_escalation",
+    "p7-0063": "honest_escalation",
+    "x1-0008": "none",
+    "p7-0347": "honest_escalation",
+    "p7-0057": "honest_escalation",
+    "p1-0007": "honest_escalation",
+    "p7-0023": "honest_escalation",
+    "p7-0235": "honest_escalation",
+    "p5-0010": "honest_escalation",
+    "p5-0008": "honest_escalation",
+    "p1-0034": "honest_escalation",
+    "p1-0003": "honest_escalation",
+    "p6-0087": "honest_escalation",
+    "p2-0009": "honest_escalation",
+    "p5-0049": "honest_escalation",
+    "p7-0247": "honest_escalation",
+    "p4-0016": "honest_escalation",
+    "x1-0017": "none",
+    "p1-0022": "honest_escalation",
+    "p7-0137": "honest_escalation",
+    "p7-0280": "honest_escalation",
+    "p5-0017": "honest_escalation",
+    "p6-0037": "T2",
+    "p7-0331": "honest_escalation",
+    "p7-0226": "honest_escalation",
+    "p7-0080": "honest_escalation",
+    "p2-0002": "honest_escalation",
+    "x2-0010": "honest_escalation",
+    "p7-0279": "honest_escalation",
+    "p7-0045": "honest_escalation",
+    "x1-0037": "honest_escalation",
+    "x1-0013": "none",
+    "p7-0324": "honest_escalation",
+    "p6-0026": "T2",
+    "p7-0087": "honest_escalation",
+    "p5-0044": "honest_escalation",
+    "x1-0032": "none",
+    "p7-0017": "honest_escalation",
+    "p7-0372": "honest_escalation",
+    "p2-0008": "honest_escalation",
+    "x1-0023": "honest_escalation",
+    "p6-0038": "honest_escalation",
+    "x1-0019": "honest_escalation",
+    "p7-0265": "honest_escalation",
+    "x2-0007": "honest_escalation",
+    "x1-0025": "none",
+    "p7-0150": "honest_escalation",
+    "p7-0092": "honest_escalation",
+    "x1-0009": "honest_escalation",
+    "p7-0130": "honest_escalation",
+    "p7-0290": "honest_escalation",
+    "p4-0037": "honest_escalation",
+    "p7-0069": "honest_escalation",
+    "p7-0370": "honest_escalation",
+    "p2-0003": "honest_escalation",
+    "p7-0118": "honest_escalation",
+    "p7-0001": "honest_escalation",
+    "p7-0338": "honest_escalation",
+    "p5-0024": "honest_escalation",
+    "x1-0010": "honest_escalation",
+    "x1-0036": "honest_escalation",
+    "x1-0028": "honest_escalation",
+    "p1-0042": "honest_escalation",
+    "p7-0128": "honest_escalation",
+    "p5-0005": "honest_escalation",
+    "p7-0262": "honest_escalation",
+    "p6-0093": "T2",
+    "p1-0023": "honest_escalation",
+    "p7-0313": "honest_escalation",
+    "p7-0387": "honest_escalation",
+    "x1-0001": "none",
+    "p7-0046": "honest_escalation",
+    "c8-0001": "honest_escalation",
+    "p7-0213": "honest_escalation",
+    "p1-0004": "honest_escalation",
+    "p7-0335": "honest_escalation",
+    "p7-0134": "honest_escalation"
+  },
+  "reviewer_reasons": {
+    "pr-012-R-S2-1": {
+      "3": "generic_concern",
+      "1": "generic_concern",
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-009-R-S0-1": {
+      "0": "generic_concern",
+      "1": "generic_concern",
+      "3": "none",
+      "2": "generic_concern"
+    },
+    "pr-020-R-S2-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "3": "mentions_affected_consumer_correctly",
+      "1": "none",
+      "2": "generic_concern"
+    },
+    "pr-018-R-S0-1": {
+      "1": "generic_concern",
+      "2": "generic_concern",
+      "3": "none",
+      "0": "generic_concern"
+    },
+    "pr-004-R-S2-1": {
+      "2": "generic_concern",
+      "3": "generic_concern",
+      "1": "generic_concern",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-034-R-S0-1": {
+      "2": "none",
+      "0": "none",
+      "1": "none",
+      "3": "none"
+    },
+    "pr-027-R-S2-1": {
+      "1": "none",
+      "0": "none",
+      "3": "none",
+      "2": "none"
+    },
+    "pr-022-R-C-1": {
+      "2": "none",
+      "1": "none",
+      "0": "none"
+    },
+    "pr-004-R-S0-1": {
+      "2": "generic_concern",
+      "0": "generic_concern",
+      "1": "generic_concern"
+    },
+    "pr-011-R-S0-1": {
+      "2": "none",
+      "1": "none",
+      "3": "none",
+      "0": "none"
+    },
+    "pr-038-R-S2-1": {
+      "2": "none",
+      "3": "none",
+      "0": "none",
+      "1": "none"
+    },
+    "pr-023-R-S0-1": {
+      "2": "none",
+      "3": "none",
+      "4": "none",
+      "1": "none",
+      "0": "none"
+    },
+    "pr-009-R-S2-1": {
+      "3": "generic_concern",
+      "1": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "2": "generic_concern"
+    },
+    "pr-008-R-S0-2": {
+      "0": "generic_concern",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-013-R-S2-1": {
+      "1": "generic_concern",
+      "3": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "2": "generic_concern"
+    },
+    "pr-006-R-S0-3": {
+      "1": "generic_concern",
+      "0": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-017-R-S2-1": {
+      "1": "generic_concern",
+      "2": "generic_concern",
+      "3": "generic_concern",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-012-R-C-3": {
+      "1": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "4": "generic_concern",
+      "3": "mentions_affected_consumer_correctly"
+    },
+    "pr-002-R-C-1": {
+      "3": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "generic_concern"
+    },
+    "pr-026-R-C-1": {
+      "1": "none",
+      "2": "none",
+      "4": "none",
+      "0": "none",
+      "3": "none"
+    },
+    "pr-040-R-C-1": {
+      "2": "none",
+      "3": "none",
+      "1": "none",
+      "0": "none"
+    },
+    "pr-033-R-C-1": {
+      "2": "none",
+      "1": "none",
+      "3": "none",
+      "0": "none"
+    },
+    "pr-024-R-C-1": {
+      "4": "none",
+      "0": "none",
+      "3": "none",
+      "1": "none",
+      "2": "none"
+    },
+    "pr-028-R-S0-1": {
+      "2": "none",
+      "1": "none",
+      "0": "none",
+      "3": "none"
+    },
+    "pr-001-R-C-1": {
+      "1": "mentions_affected_consumer_correctly",
+      "0": "generic_concern",
+      "3": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-007-R-C-1": {
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-004-R-C-1": {
+      "0": "generic_concern",
+      "3": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "mentions_affected_consumer_correctly"
+    },
+    "pr-008-R-S2-1": {
+      "1": "generic_concern",
+      "2": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-002-R-S0-1": {
+      "0": "generic_concern",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-011-R-S0-3": {
+      "1": "none",
+      "0": "none",
+      "4": "generic_concern",
+      "2": "none",
+      "3": "none"
+    },
+    "pr-012-R-C-2": {
+      "3": "mentions_affected_consumer_correctly",
+      "4": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "0": "generic_concern"
+    },
+    "pr-038-R-S0-1": {
+      "0": "none",
+      "2": "none",
+      "3": "none",
+      "1": "none"
+    },
+    "pr-002-R-S2-1": {
+      "3": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-031-R-C-1": {
+      "0": "none",
+      "3": "none",
+      "2": "none",
+      "1": "none"
+    },
+    "pr-005-R-C-2": {
+      "0": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "3": "mentions_affected_consumer_correctly"
+    },
+    "pr-003-R-S2-1": {
+      "3": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-018-R-C-3": {
+      "0": "generic_concern",
+      "3": "mentions_affected_consumer_correctly",
+      "4": "generic_concern",
+      "2": "generic_concern",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-035-R-C-1": {
+      "3": "none",
+      "2": "none",
+      "0": "none",
+      "1": "none",
+      "4": "none"
+    },
+    "pr-019-R-C-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-015-R-S2-1": {
+      "3": "generic_concern",
+      "2": "none",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-001-R-S2-1": {
+      "1": "generic_concern",
+      "3": "generic_concern",
+      "2": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-003-R-C-3": {
+      "3": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly",
+      "2": "mentions_affected_consumer_correctly"
+    },
+    "pr-005-R-S0-1": {
+      "2": "none",
+      "3": "generic_concern",
+      "0": "none",
+      "1": "none"
+    },
+    "pr-035-R-S0-1": {
+      "3": "none",
+      "0": "none",
+      "2": "none",
+      "1": "none"
+    },
+    "pr-025-R-S2-1": {
+      "0": "none",
+      "1": "none",
+      "2": "none"
+    },
+    "pr-011-R-S0-2": {
+      "1": "none",
+      "3": "none",
+      "2": "none",
+      "4": "generic_concern",
+      "0": "none"
+    },
+    "pr-030-R-S0-1": {
+      "3": "none",
+      "2": "none",
+      "1": "none",
+      "0": "none"
+    },
+    "pr-012-R-S0-2": {
+      "1": "generic_concern",
+      "0": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-006-R-C-3": {
+      "3": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-016-R-S0-3": {
+      "2": "none",
+      "4": "none",
+      "3": "generic_concern",
+      "0": "none",
+      "1": "none"
+    },
+    "pr-008-R-C-1": {
+      "2": "mentions_affected_consumer_correctly",
+      "4": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "0": "generic_concern"
+    },
+    "pr-037-R-S0-1": {
+      "2": "none",
+      "3": "none",
+      "1": "none",
+      "0": "none"
+    },
+    "pr-010-R-S2-1": {
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "generic_concern",
+      "3": "mentions_affected_consumer_correctly"
+    },
+    "pr-023-R-S2-1": {
+      "1": "none",
+      "4": "none",
+      "3": "none",
+      "0": "none",
+      "2": "none"
+    },
+    "pr-014-R-S0-1": {
+      "1": "none",
+      "3": "generic_concern",
+      "2": "none",
+      "0": "none",
+      "4": "none"
+    },
+    "pr-037-R-S2-1": {
+      "0": "none",
+      "4": "none",
+      "1": "none",
+      "2": "none",
+      "3": "none"
+    },
+    "pr-016-R-S0-1": {
+      "2": "none",
+      "3": "none",
+      "1": "generic_concern",
+      "0": "generic_concern"
+    },
+    "pr-025-R-S0-1": {
+      "2": "none",
+      "1": "none",
+      "3": "none",
+      "0": "none"
+    },
+    "pr-030-R-C-1": {
+      "2": "none",
+      "1": "none",
+      "0": "none",
+      "4": "none",
+      "3": "none"
+    },
+    "pr-003-R-S0-3": {
+      "0": "generic_concern",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-003-R-S0-2": {
+      "0": "generic_concern",
+      "1": "generic_concern"
+    },
+    "pr-032-R-S0-1": {
+      "3": "none",
+      "0": "none",
+      "2": "none",
+      "1": "none"
+    },
+    "pr-012-R-C-1": {
+      "1": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "0": "generic_concern",
+      "2": "mentions_affected_consumer_correctly"
+    },
+    "pr-034-R-S2-1": {
+      "1": "none",
+      "0": "none",
+      "3": "none",
+      "4": "none",
+      "2": "none"
+    },
+    "pr-030-R-S2-1": {
+      "1": "none",
+      "2": "none",
+      "0": "none",
+      "4": "none",
+      "3": "none"
+    },
+    "pr-016-R-S0-2": {
+      "0": "none",
+      "2": "none",
+      "1": "none",
+      "3": "generic_concern"
+    },
+    "pr-004-R-S0-2": {
+      "0": "generic_concern",
+      "3": "none",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-018-R-S0-3": {
+      "1": "generic_concern",
+      "0": "generic_concern",
+      "3": "generic_concern",
+      "2": "none"
+    },
+    "pr-011-R-S2-1": {
+      "2": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "1": "generic_concern"
+    },
+    "pr-038-R-C-1": {
+      "1": "none",
+      "3": "none",
+      "0": "none",
+      "2": "none"
+    },
+    "pr-017-R-S0-1": {
+      "2": "generic_concern",
+      "0": "generic_concern",
+      "1": "generic_concern",
+      "3": "none"
+    },
+    "pr-033-R-S2-1": {
+      "2": "none",
+      "4": "none",
+      "3": "none",
+      "1": "none",
+      "0": "none"
+    },
+    "pr-019-R-C-2": {
+      "2": "generic_concern",
+      "3": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-017-R-C-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "3": "generic_concern"
+    },
+    "pr-036-R-C-1": {
+      "0": "none",
+      "3": "none",
+      "1": "none",
+      "2": "none"
+    },
+    "pr-006-R-S2-1": {
+      "3": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "1": "generic_concern"
+    },
+    "pr-005-R-S2-1": {
+      "1": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-018-R-C-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "mentions_affected_consumer_correctly",
+      "3": "generic_concern"
+    },
+    "pr-008-R-C-2": {
+      "1": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "2": "mentions_affected_consumer_correctly"
+    },
+    "pr-016-R-C-2": {
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-011-R-C-3": {
+      "2": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "0": "generic_concern",
+      "4": "mentions_affected_consumer_correctly"
+    },
+    "pr-022-R-S0-1": {
+      "0": "none",
+      "1": "none",
+      "2": "none",
+      "3": "none"
+    },
+    "pr-010-R-S0-1": {
+      "2": "generic_concern",
+      "0": "generic_concern",
+      "1": "generic_concern"
+    },
+    "pr-031-R-S2-1": {
+      "0": "none",
+      "3": "none",
+      "2": "none",
+      "4": "none",
+      "1": "none"
+    },
+    "pr-029-R-S2-1": {
+      "1": "none",
+      "4": "none",
+      "2": "none",
+      "3": "none",
+      "0": "none"
+    },
+    "pr-004-R-C-3": {
+      "3": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "0": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "4": "generic_concern"
+    },
+    "pr-031-R-S0-1": {
+      "1": "none",
+      "2": "none",
+      "0": "none"
+    },
+    "pr-027-R-S0-1": {
+      "1": "none",
+      "3": "none",
+      "0": "none",
+      "2": "none"
+    },
+    "pr-025-R-C-1": {
+      "1": "none",
+      "0": "none",
+      "3": "none",
+      "2": "none"
+    },
+    "pr-035-R-S2-1": {
+      "2": "none",
+      "0": "none",
+      "3": "none",
+      "1": "none"
+    },
+    "pr-021-R-S2-1": {
+      "3": "none",
+      "0": "none",
+      "2": "none",
+      "1": "none"
+    },
+    "pr-003-R-S0-1": {
+      "1": "generic_concern",
+      "2": "generic_concern",
+      "0": "generic_concern"
+    },
+    "pr-039-R-S2-1": {
+      "3": "none",
+      "4": "none",
+      "0": "none",
+      "2": "none",
+      "1": "none"
+    },
+    "pr-028-R-S2-1": {
+      "1": "none",
+      "2": "none",
+      "4": "none",
+      "0": "none",
+      "3": "none"
+    },
+    "pr-026-R-S2-1": {
+      "0": "none",
+      "3": "none",
+      "1": "none",
+      "2": "none"
+    },
+    "pr-007-R-S0-1": {
+      "0": "generic_concern",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-018-R-S2-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "1": "generic_concern",
+      "2": "mentions_affected_consumer_correctly"
+    },
+    "pr-013-R-C-1": {
+      "3": "generic_concern",
+      "2": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-009-R-C-1": {
+      "3": "generic_concern",
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "generic_concern"
+    },
+    "pr-007-R-S2-1": {
+      "2": "generic_concern",
+      "1": "generic_concern",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-012-R-S0-1": {
+      "2": "generic_concern",
+      "1": "generic_concern",
+      "3": "none",
+      "0": "generic_concern"
+    },
+    "pr-037-R-C-1": {
+      "1": "none",
+      "2": "none",
+      "3": "none",
+      "0": "none",
+      "4": "none"
+    },
+    "pr-008-R-C-3": {
+      "3": "generic_concern",
+      "0": "generic_concern",
+      "2": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "4": "mentions_affected_consumer_correctly"
+    },
+    "pr-029-R-S0-1": {
+      "3": "none",
+      "1": "none",
+      "0": "none",
+      "2": "none",
+      "4": "none"
+    },
+    "pr-027-R-C-1": {
+      "1": "none",
+      "3": "none",
+      "0": "none",
+      "2": "none"
+    },
+    "pr-024-R-S0-1": {
+      "3": "none",
+      "0": "none",
+      "2": "none",
+      "1": "none"
+    },
+    "pr-021-R-C-1": {
+      "2": "none",
+      "0": "none",
+      "1": "none"
+    },
+    "pr-016-R-S2-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "1": "generic_concern",
+      "3": "generic_concern"
+    },
+    "pr-022-R-S2-1": {
+      "0": "none",
+      "2": "none",
+      "3": "none",
+      "1": "none"
+    },
+    "pr-039-R-S0-1": {
+      "2": "none",
+      "1": "none",
+      "0": "none"
+    },
+    "pr-018-R-S0-2": {
+      "1": "generic_concern",
+      "3": "generic_concern",
+      "2": "generic_concern",
+      "0": "generic_concern"
+    },
+    "pr-015-R-S0-1": {
+      "2": "none",
+      "3": "generic_concern",
+      "0": "none",
+      "1": "none"
+    },
+    "pr-005-R-S0-3": {
+      "3": "generic_concern",
+      "2": "generic_concern",
+      "0": "generic_concern",
+      "1": "none"
+    },
+    "pr-026-R-S0-1": {
+      "0": "none",
+      "3": "none",
+      "1": "none",
+      "2": "none"
+    },
+    "pr-032-R-C-1": {
+      "1": "none",
+      "2": "none",
+      "3": "none",
+      "0": "none",
+      "4": "none"
+    },
+    "pr-016-R-C-1": {
+      "2": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-018-R-C-2": {
+      "2": "generic_concern",
+      "1": "generic_concern",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-008-R-S0-1": {
+      "0": "generic_concern",
+      "2": "generic_concern",
+      "1": "generic_concern"
+    },
+    "pr-024-R-S2-1": {
+      "1": "none",
+      "3": "none",
+      "2": "none",
+      "0": "none",
+      "4": "none"
+    },
+    "pr-011-R-C-1": {
+      "4": "generic_concern",
+      "2": "generic_concern",
+      "0": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "3": "mentions_affected_consumer_correctly"
+    },
+    "pr-011-R-C-2": {
+      "2": "generic_concern",
+      "3": "mentions_affected_consumer_correctly",
+      "1": "generic_concern",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-032-R-S2-1": {
+      "0": "none",
+      "3": "none",
+      "4": "none",
+      "1": "none",
+      "2": "none"
+    },
+    "pr-019-R-S0-1": {
+      "0": "none",
+      "1": "none",
+      "2": "none",
+      "3": "generic_concern"
+    },
+    "pr-012-R-S0-3": {
+      "0": "generic_concern",
+      "2": "none",
+      "1": "generic_concern"
+    },
+    "pr-003-R-C-2": {
+      "2": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "3": "generic_concern"
+    },
+    "pr-029-R-C-1": {
+      "0": "none",
+      "1": "none",
+      "3": "none",
+      "2": "none"
+    },
+    "pr-039-R-C-1": {
+      "0": "none",
+      "1": "none",
+      "2": "none",
+      "3": "none"
+    },
+    "pr-004-R-S0-3": {
+      "0": "generic_concern",
+      "3": "none",
+      "2": "generic_concern",
+      "1": "generic_concern"
+    },
+    "pr-036-R-S0-1": {
+      "3": "none",
+      "1": "none",
+      "2": "none",
+      "0": "none"
+    },
+    "pr-004-R-C-2": {
+      "3": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "generic_concern"
+    },
+    "pr-003-R-C-1": {
+      "1": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly",
+      "2": "generic_concern"
+    },
+    "pr-036-R-S2-1": {
+      "1": "none",
+      "0": "none",
+      "2": "none",
+      "3": "none"
+    },
+    "pr-005-R-C-3": {
+      "1": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-019-R-S0-2": {
+      "0": "none",
+      "1": "none",
+      "2": "none",
+      "3": "generic_concern"
+    },
+    "pr-034-R-C-1": {
+      "0": "none",
+      "1": "none",
+      "2": "none",
+      "3": "none"
+    },
+    "pr-019-R-S2-1": {
+      "3": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-010-R-C-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "generic_concern"
+    },
+    "pr-008-R-S0-3": {
+      "2": "generic_concern",
+      "0": "generic_concern",
+      "1": "generic_concern"
+    },
+    "pr-016-R-C-3": {
+      "2": "generic_concern",
+      "3": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-028-R-C-1": {
+      "2": "none",
+      "0": "none",
+      "1": "none",
+      "3": "none"
+    },
+    "pr-015-R-C-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "3": "generic_concern",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "none"
+    },
+    "pr-021-R-S0-1": {
+      "2": "generic_concern",
+      "0": "none",
+      "1": "none",
+      "3": "none"
+    },
+    "pr-040-R-S0-1": {
+      "2": "none",
+      "1": "none",
+      "0": "none",
+      "3": "none"
+    },
+    "pr-019-R-C-3": {
+      "1": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "3": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly"
+    },
+    "pr-005-R-C-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "3": "mentions_affected_consumer_correctly"
+    },
+    "pr-006-R-C-1": {
+      "0": "mentions_affected_consumer_correctly",
+      "2": "generic_concern",
+      "3": "generic_concern",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-019-R-S0-3": {
+      "0": "none",
+      "3": "generic_concern",
+      "2": "none",
+      "1": "none"
+    },
+    "pr-023-R-C-1": {
+      "1": "none",
+      "0": "none",
+      "2": "none",
+      "3": "none"
+    },
+    "pr-033-R-S0-1": {
+      "2": "none",
+      "0": "none",
+      "1": "none",
+      "3": "none"
+    },
+    "pr-014-R-C-1": {
+      "1": "mentions_affected_consumer_correctly",
+      "0": "mentions_affected_consumer_correctly",
+      "2": "mentions_affected_consumer_correctly",
+      "3": "mentions_affected_consumer_correctly"
+    },
+    "pr-006-R-S0-2": {
+      "0": "none",
+      "2": "none",
+      "3": "generic_concern",
+      "1": "none"
+    },
+    "pr-020-R-C-1": {
+      "3": "generic_concern",
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly"
+    },
+    "pr-006-R-S0-1": {
+      "2": "none",
+      "1": "generic_concern",
+      "0": "generic_concern"
+    },
+    "pr-040-R-S2-1": {
+      "3": "none",
+      "2": "none",
+      "1": "none",
+      "0": "none"
+    },
+    "pr-005-R-S0-2": {
+      "0": "generic_concern",
+      "1": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-001-R-S0-1": {
+      "1": "generic_concern",
+      "0": "generic_concern",
+      "2": "generic_concern"
+    },
+    "pr-020-R-S0-1": {
+      "3": "none",
+      "0": "none",
+      "1": "none",
+      "2": "none"
+    },
+    "pr-013-R-S0-1": {
+      "0": "generic_concern",
+      "2": "none",
+      "1": "generic_concern"
+    },
+    "pr-006-R-C-2": {
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly",
+      "2": "mentions_affected_consumer_correctly",
+      "3": "generic_concern"
+    },
+    "pr-014-R-S2-1": {
+      "2": "generic_concern",
+      "0": "mentions_affected_consumer_correctly",
+      "1": "mentions_affected_consumer_correctly"
+    }
+  },
+  "unlabelled": [],
+  "imported_at": "2026-10-17T17:55:35+00:00"
+}

@@ -1,0 +1,148 @@
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 7a7ceb1..5f16842 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -1,4 +1,4 @@
+-import { totalCents, type Order } from "../core/order.js";
++import { totalCents, totalDollars, type Order } from "../core/order.js";
+ import type { OrderPage } from "../core/orderService.js";
+ import { encodeCursor } from "./cursor.js";
+ 
+@@ -9,6 +9,8 @@ export interface OrderResponse {
+   readonly placedAt: string;
+   readonly currency: string;
+   readonly totalCents: number;
++  /** Decimal dollar amount, for example 12.5 represents $12.50. */
++  readonly totalDollars: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly name: string;
+@@ -31,6 +33,7 @@ export function toOrderResponse(order: Order): OrderResponse {
+     placedAt: order.placedAt,
+     currency: order.currency,
+     totalCents: totalCents(order),
++    totalDollars: totalDollars(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       name: line.name,
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..7cfe5e9 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -1,4 +1,4 @@
+-import { totalCents, type Channel, type Order } from "./order.js";
++import { totalCents, totalDollars, type Channel, type Order } from "./order.js";
+ 
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+@@ -18,6 +18,8 @@ export interface OrderPlaced {
+   readonly currency: string;
+   /** Integer, minor units. */
+   readonly totalCents: number;
++  /** Decimal dollar amount, for example 12.5 represents $12.50. */
++  readonly totalDollars: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -50,6 +52,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     channel: order.channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
++    totalDollars: totalDollars(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/src/core/order.ts b/src/core/order.ts
+index 7eddd6b..08900ea 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -105,6 +105,11 @@ export function totalCents(order: Pick<Order, "lines" | "currency">): number {
+   return sum(lineTotals, order.currency).amountMinor;
+ }
+ 
++/** Order total in dollars, derived from the integer cent total for external representations. */
++export function totalDollars(order: Pick<Order, "lines" | "currency">): number {
++  return totalCents(order) / 100;
++}
++
+ function collectIssues(input: NewOrder): ValidationIssue[] {
+   const issues: ValidationIssue[] = [];
+   const fail = (path: string, message: string): void => {
+diff --git a/test/adapters.test.ts b/test/adapters.test.ts
+index 1849efc..517ab4d 100644
+--- a/test/adapters.test.ts
++++ b/test/adapters.test.ts
+@@ -48,6 +48,7 @@ describe("KafkaEventPublisher", () => {
+     assert.equal(placed?.key, "ord-1");
+     assert.equal(placed?.headers["schema-version"], "3");
+     assert.equal(JSON.parse(placed?.value ?? "{}").totalCents, 1250);
++    assert.equal(JSON.parse(placed?.value ?? "{}").totalDollars, 12.5);
+     assert.equal(cancelled?.topic, "orders.cancelled");
+     assert.equal(publisher.drain().length, 2);
+     assert.equal(publisher.records.length, 0);
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..258bf64 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -15,6 +15,7 @@ describe("POST /orders", () => {
+       placedAt: FIXED_NOW,
+       currency: "USD",
+       totalCents: 1250,
++      totalDollars: 12.5,
+       lines: [{ sku: "SKU-1", name: "Desk lamp", qty: 2, unitPriceCents: 625 }],
+     });
+     assert.equal(publisher.events.length, 1);
+@@ -28,6 +29,7 @@ describe("POST /orders", () => {
+       channel: "web",
+       currency: "USD",
+       totalCents: 1250,
++      totalDollars: 12.5,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [
+@@ -49,6 +51,7 @@ describe("POST /orders", () => {
+     );
+     assert.equal(res.status, 201);
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).totalDollars, 24.97);
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {
+@@ -89,7 +92,15 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines"]);
++    assert.deepEqual(Object.keys(res.body as object), [
++      "id",
++      "status",
++      "placedAt",
++      "currency",
++      "totalCents",
++      "totalDollars",
++      "lines",
++    ]);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {
+diff --git a/test/order.test.ts b/test/order.test.ts
+index 226d6f8..af3b0f8 100644
+--- a/test/order.test.ts
++++ b/test/order.test.ts
+@@ -1,7 +1,7 @@
+ import assert from "node:assert/strict";
+ import { describe, it } from "node:test";
+ import { InvalidStateError, ValidationError } from "../src/core/errors.js";
+-import { canCancel, cancel, createOrder, totalCents, type NewOrder } from "../src/core/order.js";
++import { canCancel, cancel, createOrder, totalCents, totalDollars, type NewOrder } from "../src/core/order.js";
+ 
+ const META = { id: "ord-1", placedAt: "2026-10-10T12:00:00.000Z" };
+ 
+@@ -40,6 +40,7 @@ describe("createOrder", () => {
+     assert.equal(order.status, "placed");
+     assert.equal(order.placedAt, META.placedAt);
+     assert.equal(totalCents(order), 2497);
++    assert.equal(totalDollars(order), 24.97);
+   });
+ 
+   it("requires at least one line", () => {

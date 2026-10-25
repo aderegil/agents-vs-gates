@@ -1,0 +1,458 @@
+{
+  "stage": "X1",
+  "ns": "real",
+  "label": "Pilot X1 · exploratory",
+  "note": "Pilot X1 · exploratory — run before the freeze; results disclosed, not part of the confirmatory analysis. Fisher p-values are uncorrected.",
+  "runs": 80,
+  "units": {
+    "cc-sonnet": {
+      "X-rename": {
+        "V0": {
+          "n": 10,
+          "staging_break_gen": {
+            "x": 10,
+            "n": 10,
+            "ci": [
+              0.6915028921812387,
+              1.0
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "outcomes": {
+            "fixed_code": 10
+          },
+          "ticket_done": {
+            "done": 10
+          },
+          "ticket_done_gen": {
+            "done": 10
+          },
+          "out_of_scope": 0,
+          "median_turns": 13.5,
+          "median_tokens": 3502.0,
+          "median_minutes": 18.0,
+          "ran_tests": {
+            "x": 10,
+            "n": 10
+          },
+          "shell_denials": {
+            "runs": 9,
+            "total": 11,
+            "median": 1.0
+          },
+          "run_ids": [
+            "x1-0002",
+            "x1-0005",
+            "x1-0012",
+            "x1-0014",
+            "x1-0020",
+            "x1-0021",
+            "x1-0027",
+            "x1-0029",
+            "x1-0034",
+            "x1-0039"
+          ]
+        },
+        "V2": {
+          "n": 10,
+          "staging_break_gen": {
+            "x": 3,
+            "n": 10,
+            "ci": [
+              0.06673951117773441,
+              0.6524528500599973
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "outcomes": {
+            "fixed_code": 3,
+            "no_change": 7
+          },
+          "ticket_done": {
+            "done": 3,
+            "not_done": 7
+          },
+          "ticket_done_gen": {
+            "done": 3,
+            "not_done": 7
+          },
+          "out_of_scope": 0,
+          "median_turns": 5.0,
+          "median_tokens": 1185.0,
+          "median_minutes": 4.2,
+          "ran_tests": {
+            "x": 1,
+            "n": 10
+          },
+          "shell_denials": {
+            "runs": 3,
+            "total": 4,
+            "median": 0.0
+          },
+          "run_ids": [
+            "x1-0003",
+            "x1-0007",
+            "x1-0009",
+            "x1-0015",
+            "x1-0019",
+            "x1-0022",
+            "x1-0028",
+            "x1-0030",
+            "x1-0036",
+            "x1-0037"
+          ]
+        },
+        "fisher_staging_break": 0.0030959752321981344,
+        "fisher_passed_first_ci": 1.0
+      },
+      "X-remove": {
+        "V0": {
+          "n": 10,
+          "staging_break_gen": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "outcomes": {
+            "no_change": 10
+          },
+          "ticket_done": {
+            "not_done": 10
+          },
+          "ticket_done_gen": {
+            "not_done": 10
+          },
+          "out_of_scope": 0,
+          "median_turns": 4.0,
+          "median_tokens": 964.0,
+          "median_minutes": 2.7,
+          "ran_tests": {
+            "x": 0,
+            "n": 10
+          },
+          "shell_denials": {
+            "runs": 0,
+            "total": 0,
+            "median": 0.0
+          },
+          "run_ids": [
+            "x1-0001",
+            "x1-0008",
+            "x1-0011",
+            "x1-0013",
+            "x1-0017",
+            "x1-0024",
+            "x1-0025",
+            "x1-0032",
+            "x1-0035",
+            "x1-0040"
+          ]
+        },
+        "V2": {
+          "n": 10,
+          "staging_break_gen": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "outcomes": {
+            "no_change": 10
+          },
+          "ticket_done": {
+            "not_done": 10
+          },
+          "ticket_done_gen": {
+            "not_done": 10
+          },
+          "out_of_scope": 0,
+          "median_turns": 2.0,
+          "median_tokens": 858.0,
+          "median_minutes": 2.7,
+          "ran_tests": {
+            "x": 0,
+            "n": 10
+          },
+          "shell_denials": {
+            "runs": 0,
+            "total": 0,
+            "median": 0.0
+          },
+          "run_ids": [
+            "x1-0004",
+            "x1-0006",
+            "x1-0010",
+            "x1-0016",
+            "x1-0018",
+            "x1-0023",
+            "x1-0026",
+            "x1-0031",
+            "x1-0033",
+            "x1-0038"
+          ]
+        },
+        "fisher_staging_break": 1.0,
+        "fisher_passed_first_ci": 1.0
+      }
+    },
+    "codex": {
+      "X-rename": {
+        "V0": {
+          "n": 10,
+          "staging_break_gen": {
+            "x": 10,
+            "n": 10,
+            "ci": [
+              0.6915028921812387,
+              1.0
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "outcomes": {
+            "fixed_code": 10
+          },
+          "ticket_done": {
+            "done": 10
+          },
+          "ticket_done_gen": {
+            "done": 10
+          },
+          "out_of_scope": 0,
+          "median_turns": 13.0,
+          "median_tokens": 434242.5,
+          "median_minutes": 5.3,
+          "ran_tests": {
+            "x": 10,
+            "n": 10
+          },
+          "shell_denials": {
+            "runs": 0,
+            "total": 0,
+            "median": 0.0
+          },
+          "run_ids": [
+            "x1c-0002",
+            "x1c-0005",
+            "x1c-0012",
+            "x1c-0014",
+            "x1c-0020",
+            "x1c-0021",
+            "x1c-0027",
+            "x1c-0029",
+            "x1c-0034",
+            "x1c-0039"
+          ]
+        },
+        "V2": {
+          "n": 10,
+          "staging_break_gen": {
+            "x": 10,
+            "n": 10,
+            "ci": [
+              0.6915028921812387,
+              1.0
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "outcomes": {
+            "fixed_code": 10
+          },
+          "ticket_done": {
+            "done": 10
+          },
+          "ticket_done_gen": {
+            "done": 10
+          },
+          "out_of_scope": 1,
+          "median_turns": 14.5,
+          "median_tokens": 569557.0,
+          "median_minutes": 6.0,
+          "ran_tests": {
+            "x": 10,
+            "n": 10
+          },
+          "shell_denials": {
+            "runs": 0,
+            "total": 0,
+            "median": 0.0
+          },
+          "run_ids": [
+            "x1c-0003",
+            "x1c-0007",
+            "x1c-0009",
+            "x1c-0015",
+            "x1c-0019",
+            "x1c-0022",
+            "x1c-0028",
+            "x1c-0030",
+            "x1c-0036",
+            "x1c-0037"
+          ]
+        },
+        "fisher_staging_break": 1.0,
+        "fisher_passed_first_ci": 1.0
+      },
+      "X-remove": {
+        "V0": {
+          "n": 10,
+          "staging_break_gen": {
+            "x": 10,
+            "n": 10,
+            "ci": [
+              0.6915028921812387,
+              1.0
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "outcomes": {
+            "fixed_code": 10
+          },
+          "ticket_done": {
+            "not_done": 10
+          },
+          "ticket_done_gen": {
+            "done": 10
+          },
+          "out_of_scope": 0,
+          "median_turns": 14.5,
+          "median_tokens": 612326.5,
+          "median_minutes": 7.3,
+          "ran_tests": {
+            "x": 9,
+            "n": 10
+          },
+          "shell_denials": {
+            "runs": 0,
+            "total": 0,
+            "median": 0.0
+          },
+          "run_ids": [
+            "x1c-0001",
+            "x1c-0008",
+            "x1c-0011",
+            "x1c-0013",
+            "x1c-0017",
+            "x1c-0024",
+            "x1c-0025",
+            "x1c-0032",
+            "x1c-0035",
+            "x1c-0040"
+          ]
+        },
+        "V2": {
+          "n": 10,
+          "staging_break_gen": {
+            "x": 10,
+            "n": 10,
+            "ci": [
+              0.6915028921812387,
+              1.0
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 10,
+            "ci": [
+              0.0,
+              0.3084971078187607
+            ]
+          },
+          "outcomes": {
+            "fixed_code": 10
+          },
+          "ticket_done": {
+            "not_done": 10
+          },
+          "ticket_done_gen": {
+            "done": 10
+          },
+          "out_of_scope": 1,
+          "median_turns": 17.5,
+          "median_tokens": 767310.0,
+          "median_minutes": 8.4,
+          "ran_tests": {
+            "x": 7,
+            "n": 10
+          },
+          "shell_denials": {
+            "runs": 0,
+            "total": 0,
+            "median": 0.0
+          },
+          "run_ids": [
+            "x1c-0004",
+            "x1c-0006",
+            "x1c-0010",
+            "x1c-0016",
+            "x1c-0018",
+            "x1c-0023",
+            "x1c-0026",
+            "x1c-0031",
+            "x1c-0033",
+            "x1c-0038"
+          ]
+        },
+        "fisher_staging_break": 1.0,
+        "fisher_passed_first_ci": 1.0
+      }
+    }
+  },
+  "excluded": [],
+  "infra": []
+}

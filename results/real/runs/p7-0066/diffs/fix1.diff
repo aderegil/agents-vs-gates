@@ -1,0 +1,173 @@
+diff --git a/src/api/ordersController.ts b/src/api/ordersController.ts
+index d64f0cf..957efab 100644
+--- a/src/api/ordersController.ts
++++ b/src/api/ordersController.ts
+@@ -42,7 +42,9 @@ async function dispatch(service: OrderService, request: HttpRequest): Promise<Ht
+   const route = matchRoute(request.method, request.path);
+   switch (route.kind) {
+     case "placeOrder": {
+-      const order = await service.placeOrder(parsePlaceOrderRequest(request.body));
++      const requestBody = parsePlaceOrderRequest(request.body);
++      const { channel, ...command } = requestBody;
++      const order = await service.placeOrder(command, channel);
+       return json(201, toOrderResponse(order));
+     }
+     case "listOrders": {
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 0e8f7e8..6fe9d57 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -1,4 +1,5 @@
+ import { ValidationError, type ValidationIssue } from "../core/errors.js";
++import { ORDER_PLACED_CHANNELS, type OrderPlacedChannel } from "../core/events.js";
+ import type { NewOrder, OrderLine, OrderStatus } from "../core/order.js";
+ import type { CustomerOrdersQuery } from "../core/ports.js";
+ import { decodeCursor } from "./cursor.js";
+@@ -8,15 +9,26 @@ import { InputReader, isJsonObject } from "./inputReader.js";
+  * Turns the untrusted body of `POST /orders` into a typed command.
+  * Only the shape is checked here; the core enforces the business invariants.
+  */
+-export function parsePlaceOrderRequest(body: unknown): NewOrder {
++/**
++ * Transport compatibility for the deprecated event field. It is deliberately
++ * separate from the persisted order command.
++ */
++export type PlaceOrderRequest = NewOrder & { readonly channel?: OrderPlacedChannel };
++
++export function parsePlaceOrderRequest(body: unknown): PlaceOrderRequest {
+   if (!isJsonObject(body)) {
+     throw new ValidationError([{ path: "body", message: "must be a JSON object" }]);
+   }
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
++  const rawChannel = reader.optionalString("channel");
+   const currency = reader.string("currency");
+ 
++  if (rawChannel !== undefined && !(ORDER_PLACED_CHANNELS as readonly string[]).includes(rawChannel)) {
++    reader.fail("channel", `must be one of ${ORDER_PLACED_CHANNELS.join(", ")}`);
++  }
++
+   const lines: OrderLine[] = [];
+   reader.array("lines").forEach((raw, index) => {
+     const line = reader.object(`lines[${index}]`, raw);
+@@ -35,7 +47,13 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   if (reader.issues.length > 0) {
+     throw new ValidationError(reader.issues);
+   }
+-  return { customerId, customerEmail, currency, lines };
++  return {
++    customerId,
++    customerEmail,
++    currency,
++    lines,
++    ...(rawChannel === undefined ? {} : { channel: rawChannel as OrderPlacedChannel }),
++  };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/events.ts b/src/core/events.ts
+index c4e435f..ba6cf47 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -3,6 +3,14 @@ import { totalCents, type Order } from "./order.js";
+ export const ORDER_PLACED_TOPIC = "orders.placed";
+ export const ORDER_CANCELLED_TOPIC = "orders.cancelled";
+ 
++/**
++ * Compatibility-only values for the deprecated `OrderPlaced.channel` field.
++ * This is intentionally not part of the Order model.
++ */
++export const ORDER_PLACED_CHANNELS = ["web", "store", "marketplace"] as const;
++export type OrderPlacedChannel = (typeof ORDER_PLACED_CHANNELS)[number];
++export const DEFAULT_ORDER_PLACED_CHANNEL: OrderPlacedChannel = "web";
++
+ /** Published when an order has been accepted and its payment authorized. */
+ export interface OrderPlaced {
+   readonly type: "OrderPlaced";
+@@ -13,6 +21,8 @@ export interface OrderPlaced {
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
++  /** @deprecated Retained for deployed event consumers; not persisted on Order. */
++  readonly channel: OrderPlacedChannel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
+@@ -38,7 +48,10 @@ export interface OrderCancelled {
+ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+-export function orderPlaced(order: Order): OrderPlaced {
++export function orderPlaced(
++  order: Order,
++  channel: OrderPlacedChannel = DEFAULT_ORDER_PLACED_CHANNEL,
++): OrderPlaced {
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+@@ -46,6 +59,7 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    channel,
+     currency: order.currency,
+     totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+diff --git a/src/core/orderService.ts b/src/core/orderService.ts
+index 4627934..9f98f8b 100644
+--- a/src/core/orderService.ts
++++ b/src/core/orderService.ts
+@@ -1,5 +1,5 @@
+ import { OrderNotFoundError, PaymentDeclinedError, ValidationError } from "./errors.js";
+-import { orderCancelled, orderPlaced } from "./events.js";
++import { orderCancelled, orderPlaced, type OrderPlacedChannel } from "./events.js";
+ import { cancel, createOrder, totalCents, type NewOrder, type Order } from "./order.js";
+ import type {
+   Clock,
+@@ -38,7 +38,7 @@ export interface CancelOrderOptions {
+ export class OrderService {
+   constructor(private readonly deps: OrderServiceDeps) {}
+ 
+-  async placeOrder(command: NewOrder): Promise<Order> {
++  async placeOrder(command: NewOrder, orderPlacedChannel?: OrderPlacedChannel): Promise<Order> {
+     const { orders, events, payments, clock, ids } = this.deps;
+ 
+     const order = createOrder(command, {
+@@ -57,7 +57,7 @@ export class OrderService {
+     }
+ 
+     await orders.save(order);
+-    await events.publish(orderPlaced(order));
++    await events.publish(orderPlaced(order, orderPlacedChannel));
+     return order;
+   }
+ 
+diff --git a/test/app.test.ts b/test/app.test.ts
+index d8fd1bb..88ec178 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,6 +25,7 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      channel: "web",
+       currency: "USD",
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+@@ -50,6 +51,15 @@ describe("POST /orders", () => {
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
+   });
+ 
++  it("passes a legacy channel through to the deprecated event field without storing it on the order", async () => {
++    const { app, publisher } = makeApp();
++    await app.handle("POST", "/orders", placeOrderBody({ channel: "marketplace" }));
++
++    assert.equal((publisher.events[0] as OrderPlaced).channel, "marketplace");
++    const stored = await app.handle("GET", "/orders/ord-1");
++    assert.equal("channel" in (stored.body as object), false);
++  });
++
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {
+     const { app, publisher, payments } = makeApp();
+     const res = await app.handle(

@@ -1,0 +1,34 @@
+diff --git a/orders-service/src/core/order.ts b/orders-service/src/core/order.ts
+index dc68061..b946024 100644
+--- a/orders-service/src/core/order.ts
++++ b/orders-service/src/core/order.ts
+@@ -1,5 +1,5 @@
+-import { InvalidStateError, ValidationError, type ValidationIssue } from "./errors.js";
+-import { isMinorUnits, isSupportedCurrency, money, multiply, sum } from "./money.js";
++export const CHANNELS = ["web", "store", "marketplace"] as const;
++export type Channel = (typeof CHANNELS)[number];
+ 
+ export type OrderStatus = "placed" | "cancelled";
+ 
+@@ -17,6 +17,10 @@ export interface Order {
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
++  /**
++   * @deprecated Retained for downstream consumers (analytics-ingest) per ARCH-4 until migrated.
++   */
++  readonly channel: Channel;
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+@@ -28,6 +32,10 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
++  /**
++   * @deprecated Retained for downstream consumers (analytics-ingest) per ARCH-4 until migrated.
++   */
++  readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+ }

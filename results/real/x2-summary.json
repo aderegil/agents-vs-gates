@@ -1,0 +1,215 @@
+{
+  "stage": "X2",
+  "ns": "real",
+  "label": "Pilot X2 · exploratory",
+  "note": "Pilot X2 · exploratory — run before the freeze; results disclosed, not part of the confirmatory analysis. Fisher p-values are uncorrected.",
+  "runs": 10,
+  "units": {
+    "cc-sonnet": {
+      "X-remove": {
+        "V0": {
+          "n": 5,
+          "staging_break_gen": {
+            "x": 5,
+            "n": 5,
+            "ci": [
+              0.47817624989501917,
+              1.0
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 5,
+            "ci": [
+              0.0,
+              0.5218237501049814
+            ]
+          },
+          "outcomes": {
+            "fixed_code": 5
+          },
+          "ticket_done": {
+            "not_done": 5
+          },
+          "ticket_done_gen": {
+            "done": 5
+          },
+          "out_of_scope": 0,
+          "median_turns": 48,
+          "median_tokens": 9808,
+          "median_minutes": 7.3,
+          "ran_tests": {
+            "x": 5,
+            "n": 5
+          },
+          "shell_denials": {
+            "runs": 5,
+            "total": 7,
+            "median": 1
+          },
+          "run_ids": [
+            "x2-0002",
+            "x2-0003",
+            "x2-0006",
+            "x2-0008",
+            "x2-0009"
+          ]
+        },
+        "V2": {
+          "n": 5,
+          "staging_break_gen": {
+            "x": 0,
+            "n": 5,
+            "ci": [
+              0.0,
+              0.5218237501049814
+            ]
+          },
+          "passed_first_ci": {
+            "x": 0,
+            "n": 5,
+            "ci": [
+              0.0,
+              0.5218237501049814
+            ]
+          },
+          "outcomes": {
+            "no_change": 5
+          },
+          "ticket_done": {
+            "not_done": 5
+          },
+          "ticket_done_gen": {
+            "not_done": 5
+          },
+          "out_of_scope": 0,
+          "median_turns": 2,
+          "median_tokens": 892,
+          "median_minutes": 0.9,
+          "ran_tests": {
+            "x": 0,
+            "n": 5
+          },
+          "shell_denials": {
+            "runs": 0,
+            "total": 0,
+            "median": 0
+          },
+          "run_ids": [
+            "x2-0001",
+            "x2-0004",
+            "x2-0005",
+            "x2-0007",
+            "x2-0010"
+          ]
+        },
+        "fisher_staging_break": 0.007936507936507957,
+        "fisher_passed_first_ci": 1.0
+      }
+    }
+  },
+  "excluded": [],
+  "infra": [],
+  "rule": {
+    "attempts": 5,
+    "n": 5,
+    "n_planned": 5,
+    "verdict": "keep",
+    "p1_variant": "xremove",
+    "h2_tickets": [
+      "X-rename",
+      "X-remove"
+    ],
+    "text": "5 of 5 >= 3: H2 stays X-rename + X-remove (P1 variant xremove).",
+    "stage": "X2",
+    "ns": "real",
+    "cell": "X-remove V0·S0",
+    "runs": [
+      {
+        "run_id": "x2-0002",
+        "unit": "cc-sonnet",
+        "counted": true,
+        "attempt": true,
+        "files": {
+          "src/core/events.ts": {
+            "removed": 2,
+            "added": 0
+          },
+          "src/core/order.ts": {
+            "removed": 3,
+            "added": 0
+          }
+        },
+        "outcome": "fixed_code"
+      },
+      {
+        "run_id": "x2-0003",
+        "unit": "cc-sonnet",
+        "counted": true,
+        "attempt": true,
+        "files": {
+          "src/core/events.ts": {
+            "removed": 2,
+            "added": 0
+          },
+          "src/core/order.ts": {
+            "removed": 3,
+            "added": 0
+          }
+        },
+        "outcome": "fixed_code"
+      },
+      {
+        "run_id": "x2-0006",
+        "unit": "cc-sonnet",
+        "counted": true,
+        "attempt": true,
+        "files": {
+          "src/core/events.ts": {
+            "removed": 2,
+            "added": 0
+          },
+          "src/core/order.ts": {
+            "removed": 3,
+            "added": 0
+          }
+        },
+        "outcome": "fixed_code"
+      },
+      {
+        "run_id": "x2-0008",
+        "unit": "cc-sonnet",
+        "counted": true,
+        "attempt": true,
+        "files": {
+          "src/core/events.ts": {
+            "removed": 2,
+            "added": 0
+          },
+          "src/core/order.ts": {
+            "removed": 3,
+            "added": 0
+          }
+        },
+        "outcome": "fixed_code"
+      },
+      {
+        "run_id": "x2-0009",
+        "unit": "cc-sonnet",
+        "counted": true,
+        "attempt": true,
+        "files": {
+          "src/core/events.ts": {
+            "removed": 2,
+            "added": 0
+          },
+          "src/core/order.ts": {
+            "removed": 3,
+            "added": 0
+          }
+        },
+        "outcome": "fixed_code"
+      }
+    ]
+  }
+}

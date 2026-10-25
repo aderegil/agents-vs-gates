@@ -1,0 +1,25 @@
+diff --git a/README.md b/README.md
+index f76e405..f71df09 100644
+--- a/README.md
++++ b/README.md
+@@ -11,10 +11,10 @@ Order management service for Meridian Retail (team Checkout). It places, lists,
+ ## Using `createApp`
+ `createApp(deps?)` in `src/main.ts` is the entry point for integration tests and the one the unit tests use. Keep it working.
+ It returns `{ handle(method, path, body), events }`; `handle` resolves to `{ status, body }` and never rejects.
+-All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`, `clock`, `idGenerator`.
++All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`, `stockGateway`, `clock`, `idGenerator`.
+ 
+ ```ts
+-const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
++const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway, stockGateway });
+ const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+ // 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
+ ```
+diff --git a/catalog/orders-service.yaml b/catalog/orders-service.yaml
+new file mode 100644
+index 0000000..5583fc8
+--- /dev/null
++++ b/catalog/orders-service.yaml
+@@ -0,0 +1,2 @@
++dependsOn:
++  - inventory-service

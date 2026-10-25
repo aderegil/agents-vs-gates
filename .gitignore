@@ -9,5 +9,12 @@ __pycache__/
 results/*
 !results/.gitkeep
 !results/summary.md
+# the published copy of the real runs (release-tools/redact_results.py) and the smoke tests the guards read
+!results/real/
+!results/smoke.json
+!results/smoke-codex.json
+!results/smoke-agy.json
+!results/mutation-matrix.json
+!results/mutation-matrix.md
 console/data/
 console/plugins/replay/app/node_modules/

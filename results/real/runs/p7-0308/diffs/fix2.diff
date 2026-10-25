@@ -1,0 +1,164 @@
+diff --git a/analytics-ingest/README.md b/analytics-ingest/README.md
+index 9629b59..4a927a1 100644
+--- a/analytics-ingest/README.md
++++ b/analytics-ingest/README.md
+@@ -20,13 +20,13 @@ await app.ingestEvent(event);                              // routes by event.ty
+ await app.handleMessage({ topic: "orders.placed", value }); // bus entry point (value: object or JSON text)
+ await app.rows("orders");                                  // rows of a lake table
+ ```
+-Tables: `orders` (`order_id, placed_date, channel, currency, units`), `order_lines` (`order_id, sku, units`),
++Tables: `orders` (`order_id, placed_date, currency, units`), `order_lines` (`order_id, sku, units`),
+ `order_cancellations` (`order_id, cancelled_date`). Dates are UTC `YYYY-MM-DD`. Writes are upserts keyed by order.
+ 
+ ## Contract with orders-service
+-- `OrderPlaced`: `orderId`, `placedAt` (ISO-8601 datetime), `channel` (`web|store|marketplace`), `currency`,
++- `OrderPlaced`: `orderId`, `placedAt` (ISO-8601 datetime), `currency`,
+   `lines[].sku`, `lines[].qty` (positive integer). Other fields are ignored.
+ - `OrderCancelled`: `orderId`, `cancelledAt` (ISO-8601 datetime).
+ 
+-A missing or mistyped field, an unknown `channel` or an unparseable date makes ingestion reject with
++A missing or mistyped required field or an unparseable date makes ingestion reject with
+ `ContractViolationError`; nothing is written.
+diff --git a/analytics-ingest/src/core/errors.ts b/analytics-ingest/src/core/errors.ts
+index 266bd51..9d7bbe0 100644
+--- a/analytics-ingest/src/core/errors.ts
++++ b/analytics-ingest/src/core/errors.ts
+@@ -9,7 +9,7 @@ export abstract class IngestError extends Error {
+ 
+ /**
+  * An incoming event does not match what analytics-ingest relies on.
+- * The event is rejected whole: a row with a guessed channel or date would silently skew every report.
++ * The event is rejected whole: a row with a guessed date would silently skew every report.
+  */
+ export class ContractViolationError extends IngestError {
+   readonly code = "contract_violation";
+diff --git a/analytics-ingest/src/core/events.ts b/analytics-ingest/src/core/events.ts
+index d42ce12..15b1347 100644
+--- a/analytics-ingest/src/core/events.ts
++++ b/analytics-ingest/src/core/events.ts
+@@ -1,13 +1,9 @@
+ import { asObject, FieldReader } from "./fieldReader.js";
+ 
+-export const CHANNELS = ["web", "store", "marketplace"] as const;
+-export type Channel = (typeof CHANNELS)[number];
+-
+ /** The part of `OrderPlaced` that analytics-ingest relies on. Other fields are ignored. */
+ export interface OrderPlacedEvent {
+   readonly orderId: string;
+   readonly placedAt: Date;
+-  readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: ReadonlyArray<{ readonly sku: string; readonly qty: number }>;
+ }
+@@ -20,7 +16,7 @@ export interface OrderCancelledEvent {
+ 
+ /**
+  * Validates an untrusted `OrderPlaced` event. Every problem is collected;
+- * any problem throws `ContractViolationError` (missing or unknown `channel`, unparseable `placedAt`, ...).
++ * any problem throws `ContractViolationError` (for example, an unparseable `placedAt`).
+  */
+ export function decodeOrderPlaced(raw: unknown): OrderPlacedEvent {
+   const event = asObject("OrderPlaced", raw);
+@@ -31,7 +27,6 @@ export function decodeOrderPlaced(raw: unknown): OrderPlacedEvent {
+   }
+   const orderId = reader.string("orderId");
+   const placedAt = reader.isoInstant("placedAt");
+-  const channel = reader.oneOf("channel", CHANNELS);
+   const currency = reader.currency("currency");
+ 
+   const lines = reader.array("lines").map((rawLine, index) => {
+@@ -42,7 +37,7 @@ export function decodeOrderPlaced(raw: unknown): OrderPlacedEvent {
+   });
+ 
+   reader.assertValid("OrderPlaced");
+-  return { orderId, placedAt, channel, currency, lines };
++  return { orderId, placedAt, currency, lines };
+ }
+ 
+ export function decodeOrderCancelled(raw: unknown): OrderCancelledEvent {
+diff --git a/analytics-ingest/src/core/rows.ts b/analytics-ingest/src/core/rows.ts
+index 427f49c..90360b1 100644
+--- a/analytics-ingest/src/core/rows.ts
++++ b/analytics-ingest/src/core/rows.ts
+@@ -1,11 +1,8 @@
+-import type { Channel } from "./events.js";
+-
+ /** Table `orders`: one row per placed order. */
+ export interface OrderRow {
+   readonly order_id: string;
+   /** UTC calendar date of `placedAt`, `YYYY-MM-DD`. */
+   readonly placed_date: string;
+-  readonly channel: Channel;
+   readonly currency: string;
+   /** Total quantity over all lines. */
+   readonly units: number;
+diff --git a/analytics-ingest/src/ingest.ts b/analytics-ingest/src/ingest.ts
+index cb43aff..13d71bd 100644
+--- a/analytics-ingest/src/ingest.ts
++++ b/analytics-ingest/src/ingest.ts
+@@ -14,7 +14,6 @@ export function toOrderRow(event: OrderPlacedEvent): OrderRow {
+   return {
+     order_id: event.orderId,
+     placed_date: utcDate(event.placedAt),
+-    channel: event.channel,
+     currency: event.currency,
+     units: event.lines.reduce((total, line) => total + line.qty, 0),
+   };
+diff --git a/analytics-ingest/test/ingest.test.ts b/analytics-ingest/test/ingest.test.ts
+index 90aa748..9aae108 100644
+--- a/analytics-ingest/test/ingest.test.ts
++++ b/analytics-ingest/test/ingest.test.ts
+@@ -11,7 +11,6 @@ function placed(overrides: Record<string, unknown> = {}): Record<string, unknown
+     customerId: "cust-1",
+     customerEmail: "jane@example.com",
+     placedAt: "2026-10-10T23:30:00.000Z",
+-    channel: "web",
+     currency: "USD",
+     totalCents: 2497,
+     lines: [
+@@ -43,7 +42,7 @@ describe("OrderPlaced ingestion", () => {
+   it("writes an orders row and one order_lines row per SKU", async () => {
+     const app = createAnalyticsIngest();
+     const row = await app.ingestOrderPlaced(placed());
+-    assert.deepEqual(row, { order_id: "ord-1", placed_date: "2026-10-10", channel: "web", currency: "USD", units: 4 });
++    assert.deepEqual(row, { order_id: "ord-1", placed_date: "2026-10-10", currency: "USD", units: 4 });
+     assert.deepEqual(await app.rows("orders"), [row]);
+     assert.deepEqual(await app.rows("order_lines"), [
+       { order_id: "ord-1", sku: "CAB-1", units: 3 },
+@@ -85,12 +84,10 @@ describe("OrderPlaced contract checks (fail loudly)", () => {
+     assert.fail("expected a ContractViolationError");
+   }
+ 
+-  it("requires channel", async () => {
+-    assert.match(await violations(without(placed(), "channel")), /channel: expected one of web\|store\|marketplace, got missing/);
+-  });
+-
+-  it("rejects an unknown channel", async () => {
+-    assert.match(await violations(placed({ channel: "phone" })), /channel/);
++  it("ignores the retired channel field", async () => {
++    const app = createAnalyticsIngest();
++    await app.ingestOrderPlaced(placed({ channel: "phone" }));
++    assert.equal((await app.rows("orders")).length, 1);
+   });
+ 
+   it("requires a parseable placedAt", async () => {
+@@ -114,8 +111,8 @@ describe("OrderPlaced contract checks (fail loudly)", () => {
+   });
+ 
+   it("reports every problem at once and rejects wrong types or payloads", async () => {
+-    const issues = await violations(placed({ orderId: 7, channel: undefined, placedAt: "x", currency: "usd" }));
+-    assert.equal(issues.split("\n").length, 4);
++    const issues = await violations(placed({ orderId: 7, placedAt: "x", currency: "usd" }));
++    assert.equal(issues.split("\n").length, 3);
+     await violations("OrderPlaced");
+     await violations(null);
+     await violations(cancelled());
+@@ -155,7 +152,7 @@ describe("routing", () => {
+     assert.equal(result.status, "ingested");
+     assert.deepEqual(await app.handleMessage({ topic: "orders.shipped", value: {} }), { status: "ignored", topic: "orders.shipped" });
+     await assert.rejects(app.handleMessage({ topic: "orders.cancelled", value: "{" }), ContractViolationError);
+-    await assert.rejects(app.handleMessage({ topic: "orders.placed", value: without(placed(), "channel") }), ContractViolationError);
++    assert.equal((await app.handleMessage({ topic: "orders.placed", value: without(placed(), "channel") })).status, "ingested");
+   });
+ 
+   it("exposes the lake through a read-only API", async () => {

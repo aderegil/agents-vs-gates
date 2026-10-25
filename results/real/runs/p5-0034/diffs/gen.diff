@@ -1,0 +1,65 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..c883f37 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -12,11 +12,15 @@ export interface OrderPlaced {
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+   /** ISO-8601 instant. */
++  readonly createdAt: string;
++  /** @deprecated Use `createdAt`; kept until billing-service and analytics-ingest have migrated (ARCH-4). */
+   readonly placedAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+   /** Integer, minor units. */
++  readonly amountCents: number;
++  /** @deprecated Use `amountCents`; kept until billing-service and analytics-ingest have migrated (ARCH-4). */
+   readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+@@ -40,16 +44,19 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+ export function orderPlaced(order: Order): OrderPlaced {
++  const amountCents = totalCents(order);
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+     orderId: order.id,
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
++    createdAt: order.placedAt,
+     placedAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+-    totalCents: totalCents(order),
++    amountCents,
++    totalCents: amountCents,
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..054f6e8 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -24,9 +24,11 @@ describe("POST /orders", () => {
+       orderId: "ord-1",
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
++      createdAt: FIXED_NOW,
+       placedAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
++      amountCents: 1250,
+       totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+@@ -48,6 +50,7 @@ describe("POST /orders", () => {
+       }),
+     );
+     assert.equal(res.status, 201);
++    assert.equal((publisher.events[0] as OrderPlaced).amountCents, 2497);
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
+   });
+ 

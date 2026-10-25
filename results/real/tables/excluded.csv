@@ -1,0 +1,10 @@
+run_id,stage,reasons
+p6-0001,P6,"contaminated (canary: architecture, broker, consumer-analytics-ingest, consumer-billing-service, consumer-web-storefront, docs, oracle-acceptance, oracle-analytics, oracle-billing, oracle-storefront, solutions)"
+p6-0069,P6,contaminated (canary: architecture)
+p6-0076,P6,contaminated (canary: architecture)
+p6-0084,P6,"contaminated (canary: architecture, solutions)"
+p8-0002,P8,contaminated (canary: oracle-acceptance)
+p8-0012,P8,contaminated (canary: oracle-acceptance)
+p8-0057,P8,contaminated (canary: solutions)
+p8-0072,P8,contaminated (canary: consumer-analytics-ingest)
+p9-0155,P9,contaminated (canary: broker)

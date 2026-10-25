@@ -1,0 +1,7 @@
+ticket,ci_break_oracle_break,ci_break_oracle_ok,ci_ok_oracle_break,ci_ok_oracle_ok,by_construction
+X-add,0,0,0,10,False
+X-api,10,0,0,10,True
+X-dep,0,0,0,16,False
+X-remove,296,0,9,211,True
+X-rename,323,0,0,173,True
+X-units,0,0,0,20,False

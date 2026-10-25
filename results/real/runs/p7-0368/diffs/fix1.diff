@@ -1,0 +1,37 @@
+diff --git a/orders-service/src/core/events.ts b/orders-service/src/core/events.ts
+index 7859d58..439a8eb 100644
+--- a/orders-service/src/core/events.ts
++++ b/orders-service/src/core/events.ts
+@@ -23,6 +23,10 @@ export interface OrderPlaced {
+     readonly qty: number;
+     readonly unitPriceCents: number;
+   }>;
++  /** @deprecated Alias of `createdAt`, kept until analytics-ingest reads `createdAt`. */
++  readonly placedAt: string;
++  /** @deprecated Alias of `amountCents`, kept until billing-service reads `amountCents`. */
++  readonly totalCents: number;
+ }
+ 
+ /** Published when a placed order is cancelled. */
+@@ -55,6 +59,8 @@ export function orderPlaced(order: Order): OrderPlaced {
+       qty: line.qty,
+       unitPriceCents: line.unitPriceCents,
+     })),
++    placedAt: order.placedAt,
++    totalCents: totalCents(order),
+   };
+ }
+ 
+diff --git a/orders-service/test/app.test.ts b/orders-service/test/app.test.ts
+index a2ef0bd..ed2d4b2 100644
+--- a/orders-service/test/app.test.ts
++++ b/orders-service/test/app.test.ts
+@@ -29,6 +29,8 @@ describe("POST /orders", () => {
+       currency: "USD",
+       amountCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
++      placedAt: FIXED_NOW,
++      totalCents: 1250,
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [
+       { orderId: "ord-1", customerId: "cust-1", amountMinor: 1250, currency: "USD" },

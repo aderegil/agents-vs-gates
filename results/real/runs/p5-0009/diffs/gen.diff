@@ -1,0 +1,75 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 327ea13..b4fb6f0 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -11,13 +11,23 @@ export interface OrderPlaced {
+   readonly customerId: string;
+   /** Legacy field; a known ARCH-6 exception tracked in the PII baseline. */
+   readonly customerEmail: string;
+-  /** ISO-8601 instant. */
++  /**
++   * ISO-8601 instant.
++   * @deprecated Use `createdAt`. Kept until billing-service and analytics-ingest have migrated (ARCH-4).
++   */
+   readonly placedAt: string;
++  /** ISO-8601 instant; same value as `placedAt`. */
++  readonly createdAt: string;
+   readonly channel: Channel;
+   /** ISO-4217 code. */
+   readonly currency: string;
+-  /** Integer, minor units. */
++  /**
++   * Integer, minor units.
++   * @deprecated Use `amountCents`. Kept until billing-service and analytics-ingest have migrated (ARCH-4).
++   */
+   readonly totalCents: number;
++  /** Integer, minor units; same value as `totalCents`. */
++  readonly amountCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -40,6 +50,7 @@ export type DomainEvent = OrderPlaced | OrderCancelled;
+ 
+ /** The single place where an `OrderPlaced` event is built. */
+ export function orderPlaced(order: Order): OrderPlaced {
++  const total = totalCents(order);
+   return {
+     type: "OrderPlaced",
+     schemaVersion: 3,
+@@ -47,9 +58,11 @@ export function orderPlaced(order: Order): OrderPlaced {
+     customerId: order.customerId,
+     customerEmail: order.customerEmail,
+     placedAt: order.placedAt,
++    createdAt: order.placedAt,
+     channel: order.channel,
+     currency: order.currency,
+-    totalCents: totalCents(order),
++    totalCents: total,
++    amountCents: total,
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index a1bbe8d..a0970c6 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -25,9 +25,11 @@ describe("POST /orders", () => {
+       customerId: "cust-1",
+       customerEmail: "jane@example.com",
+       placedAt: FIXED_NOW,
++      createdAt: FIXED_NOW,
+       channel: "web",
+       currency: "USD",
+       totalCents: 1250,
++      amountCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [
+@@ -49,6 +51,7 @@ describe("POST /orders", () => {
+     );
+     assert.equal(res.status, 201);
+     assert.equal((publisher.events[0] as OrderPlaced).totalCents, 2497);
++    assert.equal((publisher.events[0] as OrderPlaced).amountCents, 2497);
+   });
+ 
+   it("answers 400 with every issue for an invalid body and publishes nothing", async () => {

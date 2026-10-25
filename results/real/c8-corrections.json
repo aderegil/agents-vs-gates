@@ -1,0 +1,307 @@
+{
+  "why": "One-off correction of the 5 C8 calibration records (exploratory, not analysed): agy reported a resumed\nconversation's usage and duration summed over its sessions, and c8-0001 counted agy's user turns. Writes the\ncorrected records and results/real/c8-corrections.json (before/after of every changed field).",
+  "records": {
+    "c8-0001": {
+      "totals_before": {
+        "turns": 1,
+        "input_tokens": 160987,
+        "output_tokens": 30857,
+        "cache_read_tokens": 1292653,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 1.205944
+      },
+      "totals_after": {
+        "turns": 41,
+        "input_tokens": 160987,
+        "output_tokens": 30857,
+        "cache_read_tokens": 1292653,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 1.205944
+      },
+      "sessions_before": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 1,
+          "usage": {
+            "input_tokens": 160987,
+            "output_tokens": 30857,
+            "cache_read_input_tokens": 1292653,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ],
+      "sessions_after": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 41,
+          "usage": {
+            "input_tokens": 160987,
+            "output_tokens": 30857,
+            "cache_read_input_tokens": 1292653,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ]
+    },
+    "c8-0002": {
+      "totals_before": {
+        "turns": 68,
+        "input_tokens": 427796,
+        "output_tokens": 43012,
+        "cache_read_tokens": 4999164,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 4.231515
+      },
+      "totals_after": {
+        "turns": 68,
+        "input_tokens": 247639,
+        "output_tokens": 26606,
+        "cache_read_tokens": 3314079,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 2.771061
+      },
+      "sessions_before": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 46,
+          "usage": {
+            "input_tokens": 180157,
+            "output_tokens": 16406,
+            "cache_read_input_tokens": 1685085,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "kind": "fix1",
+          "subtype": "wall_clock",
+          "capped": true,
+          "num_turns": 22,
+          "usage": {
+            "input_tokens": 247639,
+            "output_tokens": 26606,
+            "cache_read_input_tokens": 3314079,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ],
+      "sessions_after": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 46,
+          "usage": {
+            "input_tokens": 180157,
+            "output_tokens": 16406,
+            "cache_read_input_tokens": 1685085,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "kind": "fix1",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 22,
+          "usage": {
+            "input_tokens": 67482,
+            "output_tokens": 10200,
+            "cache_read_input_tokens": 1628994,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ]
+    },
+    "c8-0003": {
+      "totals_before": {
+        "turns": 49,
+        "input_tokens": 209119,
+        "output_tokens": 12865,
+        "cache_read_tokens": 1566310,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 1.379815
+      },
+      "totals_after": {
+        "turns": 49,
+        "input_tokens": 209119,
+        "output_tokens": 12865,
+        "cache_read_tokens": 1566310,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 1.379815
+      },
+      "sessions_before": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 49,
+          "usage": {
+            "input_tokens": 209119,
+            "output_tokens": 12865,
+            "cache_read_input_tokens": 1566310,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ],
+      "sessions_after": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 49,
+          "usage": {
+            "input_tokens": 209119,
+            "output_tokens": 12865,
+            "cache_read_input_tokens": 1566310,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ]
+    },
+    "c8-0004": {
+      "totals_before": {
+        "turns": 74,
+        "input_tokens": 471104,
+        "output_tokens": 43105,
+        "cache_read_tokens": 5497665,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 4.63822
+      },
+      "totals_after": {
+        "turns": 74,
+        "input_tokens": 300819,
+        "output_tokens": 29647,
+        "cache_read_tokens": 4360616,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 3.607252
+      },
+      "sessions_before": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 35,
+          "usage": {
+            "input_tokens": 170285,
+            "output_tokens": 13458,
+            "cache_read_input_tokens": 1137049,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "kind": "fix1",
+          "subtype": "wall_clock",
+          "capped": true,
+          "num_turns": 39,
+          "usage": {
+            "input_tokens": 300819,
+            "output_tokens": 29647,
+            "cache_read_input_tokens": 4360616,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ],
+      "sessions_after": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 35,
+          "usage": {
+            "input_tokens": 170285,
+            "output_tokens": 13458,
+            "cache_read_input_tokens": 1137049,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "kind": "fix1",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 39,
+          "usage": {
+            "input_tokens": 130534,
+            "output_tokens": 16189,
+            "cache_read_input_tokens": 3223567,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ]
+    },
+    "c8-0005": {
+      "totals_before": {
+        "turns": 77,
+        "input_tokens": 731361,
+        "output_tokens": 44550,
+        "cache_read_tokens": 5189535,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 4.607734
+      },
+      "totals_after": {
+        "turns": 77,
+        "input_tokens": 415801,
+        "output_tokens": 27149,
+        "cache_read_tokens": 3361393,
+        "cache_creation_tokens": 0,
+        "cost_usd_nominal": 2.934704
+      },
+      "sessions_before": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 55,
+          "usage": {
+            "input_tokens": 315560,
+            "output_tokens": 17401,
+            "cache_read_input_tokens": 1828142,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "kind": "fix1",
+          "subtype": "wall_clock",
+          "capped": true,
+          "num_turns": 22,
+          "usage": {
+            "input_tokens": 415801,
+            "output_tokens": 27149,
+            "cache_read_input_tokens": 3361393,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ],
+      "sessions_after": [
+        {
+          "kind": "gen",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 55,
+          "usage": {
+            "input_tokens": 315560,
+            "output_tokens": 17401,
+            "cache_read_input_tokens": 1828142,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "kind": "fix1",
+          "subtype": "success",
+          "capped": false,
+          "num_turns": 22,
+          "usage": {
+            "input_tokens": 100241,
+            "output_tokens": 9748,
+            "cache_read_input_tokens": 1533251,
+            "cache_creation_input_tokens": 0
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,85 @@
+diff --git a/GEMINI.md b/GEMINI.md
+index da1a38c..f76e405 100644
+--- a/GEMINI.md
++++ b/GEMINI.md
+@@ -15,7 +15,7 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ 
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+-const res = await app.handle("POST", "/orders", { customerId, customerEmail, currency, lines });
++const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+ // 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/README.md b/README.md
+index da1a38c..f76e405 100644
+--- a/README.md
++++ b/README.md
+@@ -15,7 +15,7 @@ All `deps` are optional: `orderRepository`, `eventPublisher`, `paymentGateway`,
+ 
+ ```ts
+ const app = createApp({ eventPublisher, clock, idGenerator, paymentGateway });
+-const res = await app.handle("POST", "/orders", { customerId, customerEmail, currency, lines });
++const res = await app.handle("POST", "/orders", { customerId, customerEmail, channel, currency, lines });
+ // 201 { id, status, placedAt, currency, totalCents, lines }; invalid input -> 400; unknown order -> 404
+ ```
+ Routes: `POST /orders`, `GET /orders?customerId=`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `GET /health`.
+diff --git a/src/api/requestParsing.ts b/src/api/requestParsing.ts
+index 0e8f7e8..1ec650b 100644
+--- a/src/api/requestParsing.ts
++++ b/src/api/requestParsing.ts
+@@ -1,5 +1,5 @@
+ import { ValidationError, type ValidationIssue } from "../core/errors.js";
+-import type { NewOrder, OrderLine, OrderStatus } from "../core/order.js";
++import type { Channel, NewOrder, OrderLine, OrderStatus } from "../core/order.js";
+ import type { CustomerOrdersQuery } from "../core/ports.js";
+ import { decodeCursor } from "./cursor.js";
+ import { InputReader, isJsonObject } from "./inputReader.js";
+@@ -15,6 +15,7 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   const reader = new InputReader(body);
+   const customerId = reader.string("customerId");
+   const customerEmail = reader.string("customerEmail");
++  const channel = reader.string("channel");
+   const currency = reader.string("currency");
+ 
+   const lines: OrderLine[] = [];
+@@ -35,7 +36,8 @@ export function parsePlaceOrderRequest(body: unknown): NewOrder {
+   if (reader.issues.length > 0) {
+     throw new ValidationError(reader.issues);
+   }
+-  return { customerId, customerEmail, currency, lines };
++  // The core validates that `channel` is one of the supported values.
++  return { customerId, customerEmail, channel: channel as Channel, currency, lines };
+ }
+ 
+ export interface CancelOrderRequest {
+diff --git a/src/core/order.ts b/src/core/order.ts
+index dc68061..e3288ca 100644
+--- a/src/core/order.ts
++++ b/src/core/order.ts
+@@ -1,6 +1,9 @@
+ import { InvalidStateError, ValidationError, type ValidationIssue } from "./errors.js";
+ import { isMinorUnits, isSupportedCurrency, money, multiply, sum } from "./money.js";
+ 
++export const CHANNELS = ["web", "store", "marketplace"] as const;
++export type Channel = (typeof CHANNELS)[number];
++
+ export type OrderStatus = "placed" | "cancelled";
+ 
+ export interface OrderLine {
+@@ -17,6 +20,7 @@ export interface Order {
+   readonly customerEmail: string;
+   readonly lines: readonly OrderLine[];
+   readonly status: OrderStatus;
++  readonly channel: Channel;
+   readonly currency: string;
+   /** ISO-8601 instant. */
+   readonly placedAt: string;
+@@ -28,6 +32,7 @@ export interface Order {
+ export interface NewOrder {
+   readonly customerId: string;
+   readonly customerEmail: string;
++  readonly channel: Channel;
+   readonly currency: string;
+   readonly lines: readonly OrderLine[];
+ }

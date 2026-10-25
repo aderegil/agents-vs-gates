@@ -1,0 +1,60 @@
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index e51d08c..fbfc774 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -30,6 +30,13 @@ export interface GetOrderResponse {
+     readonly qty: number;
+     readonly unitPriceCents: number;
+   }>;
++  /** @deprecated Kept temporarily for web-storefront compatibility. Use `items`. */
++  readonly lines: ReadonlyArray<{
++    readonly sku: string;
++    readonly name: string;
++    readonly qty: number;
++    readonly unitPriceCents: number;
++  }>;
+ }
+ 
+ export interface OrderListResponse {
+@@ -57,18 +64,20 @@ export function toOrderResponse(order: Order): OrderResponse {
+ 
+ /** Maps the single-order endpoint to the API-wide `items` naming. */
+ export function toGetOrderResponse(order: Order): GetOrderResponse {
++  const items = order.lines.map((line) => ({
++    sku: line.sku,
++    name: line.name,
++    qty: line.qty,
++    unitPriceCents: line.unitPriceCents,
++  }));
+   return {
+     id: order.id,
+     status: order.status,
+     placedAt: order.placedAt,
+     currency: order.currency,
+     totalCents: totalCents(order),
+-    items: order.lines.map((line) => ({
+-      sku: line.sku,
+-      name: line.name,
+-      qty: line.qty,
+-      unitPriceCents: line.unitPriceCents,
+-    })),
++    items,
++    lines: items,
+   };
+ }
+ 
+diff --git a/test/app.test.ts b/test/app.test.ts
+index f59653e..1831f5c 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -89,7 +89,9 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "items"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "items", "lines"]);
++    const body = res.body as { items: unknown; lines: unknown };
++    assert.deepEqual(body.items, body.lines);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {

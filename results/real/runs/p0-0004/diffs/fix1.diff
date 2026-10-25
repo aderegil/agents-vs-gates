@@ -1,0 +1,37 @@
+diff --git a/src/core/events.ts b/src/core/events.ts
+index 5f56848..e323d5a 100644
+--- a/src/core/events.ts
++++ b/src/core/events.ts
+@@ -18,6 +18,10 @@ export interface OrderPlaced {
+   readonly currency: string;
+   /** Integer, minor units. */
+   readonly amountCents: number;
++  /** @deprecated Same value as `createdAt`; kept until analytics-ingest migrates. */
++  readonly placedAt: string;
++  /** @deprecated Same value as `amountCents`; kept until billing-service migrates. */
++  readonly totalCents: number;
+   readonly lines: ReadonlyArray<{
+     readonly sku: string;
+     readonly qty: number;
+@@ -50,6 +54,8 @@ export function orderPlaced(order: Order): OrderPlaced {
+     channel: order.channel,
+     currency: order.currency,
+     amountCents: totalCents(order),
++    placedAt: order.placedAt,
++    totalCents: totalCents(order),
+     lines: order.lines.map((line) => ({
+       sku: line.sku,
+       qty: line.qty,
+diff --git a/test/app.test.ts b/test/app.test.ts
+index ee867da..e908834 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -28,6 +28,8 @@ describe("POST /orders", () => {
+       channel: "web",
+       currency: "USD",
+       amountCents: 1250,
++      placedAt: FIXED_NOW,
++      totalCents: 1250,
+       lines: [{ sku: "SKU-1", qty: 2, unitPriceCents: 625 }],
+     } satisfies OrderPlaced);
+     assert.deepEqual(payments.requests, [

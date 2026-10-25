@@ -1,0 +1,42 @@
+diff --git a/src/api/responses.ts b/src/api/responses.ts
+index 00ce9f4..732e1a7 100644
+--- a/src/api/responses.ts
++++ b/src/api/responses.ts
+@@ -17,8 +17,11 @@ export interface OrderResponse {
+   }>;
+ }
+ 
+-/** Body of `GET /orders/{id}` (200): like {@link OrderResponse}, with the order lines named `items`. */
+-export type OrderDetailResponse = Omit<OrderResponse, "lines"> & { readonly items: OrderResponse["lines"] };
++/**
++ * Body of `GET /orders/{id}` (200): like {@link OrderResponse}, plus the order lines as `items`.
++ * `lines` is kept until web-storefront (which requires it, see ARCH-8) has migrated to `items`.
++ */
++export type OrderDetailResponse = OrderResponse & { readonly items: OrderResponse["lines"] };
+ 
+ export interface OrderListResponse {
+   readonly orders: readonly OrderResponse[];
+@@ -44,8 +47,8 @@ export function toOrderResponse(order: Order): OrderResponse {
+ }
+ 
+ export function toOrderDetailResponse(order: Order): OrderDetailResponse {
+-  const { lines, ...rest } = toOrderResponse(order);
+-  return { ...rest, items: lines };
++  const response = toOrderResponse(order);
++  return { ...response, items: response.lines };
+ }
+ 
+ export function toOrderListResponse(page: OrderPage): OrderListResponse {
+diff --git a/test/app.test.ts b/test/app.test.ts
+index f59653e..d91d7a3 100644
+--- a/test/app.test.ts
++++ b/test/app.test.ts
+@@ -89,7 +89,7 @@ describe("GET /orders/{id}", () => {
+     await app.handle("POST", "/orders", placeOrderBody());
+     const res = await app.handle("GET", "/orders/ord-1");
+     assert.equal(res.status, 200);
+-    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "items"]);
++    assert.deepEqual(Object.keys(res.body as object), ["id", "status", "placedAt", "currency", "totalCents", "lines", "items"]);
+   });
+ 
+   it("answers 404 for an unknown order", async () => {
