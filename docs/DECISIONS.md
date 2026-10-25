@@ -931,3 +931,6 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
   check); its line now says the command that sets them up.
 - Kept: `docs/RESUMEN-fuentes-ai-sdlc.md` (Spanish summary of the public AI-SDLC sources the scripted scenes
   paraphrase; the Teams page cites it and a test requires every cited file).
+- The Spanish source summary is now in English, `docs/AI-SDLC-SOURCES.md` (same section numbers; internal working
+  notes and the list of local copies left out). The Teams page's citations and the scenes' beat sources point to it;
+  the scenes were regenerated (only the cited file name changed).

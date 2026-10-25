@@ -200,15 +200,15 @@
     {
       "text": "No architect role; architecture appears only as the AutonomyPolicy option 'requireApproval: architecture-changes-only'.",
       "citation": {
-        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
-        "section": "§4 Tabla comparativa de roles (row 'Arquitectura')"
+        "file": "docs/AI-SDLC-SOURCES.md",
+        "section": "§4 Comparison of roles (row 'Architecture')"
       }
     },
     {
       "text": "The example quality gates cover coverage, security, reviewers and provenance; the reviewed docs propose no architecture-rule gate.",
       "citation": {
-        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
-        "section": "§5.1 Reglas de arquitectura verificadas en CI (fitness functions) — ai-sdlc.io"
+        "file": "docs/AI-SDLC-SOURCES.md",
+        "section": "§5.1 Architecture rules checked in CI (fitness functions) — ai-sdlc.io"
       }
     },
     {

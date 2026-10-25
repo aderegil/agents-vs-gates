@@ -273,15 +273,15 @@
     {
       "text": "The blog defines no formal roles and names no agents; the 14 agents come from the separate awslabs implementation.",
       "citation": {
-        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
+        "file": "docs/AI-SDLC-SOURCES.md",
         "section": "§1 AWS: AI-Driven Development Life Cycle (AI-DLC) — Roles"
       }
     },
     {
       "text": "No Scrum Master: 'sprints' become 'bolts', and in aidlc-workflows the Delivery Agent sequences them.",
       "citation": {
-        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
-        "section": "§4 Tabla comparativa de roles (row 'Scrum master')"
+        "file": "docs/AI-SDLC-SOURCES.md",
+        "section": "§4 Comparison of roles (row 'Scrum master')"
       }
     },
     {

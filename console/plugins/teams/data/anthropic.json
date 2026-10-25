@@ -255,8 +255,8 @@
     {
       "text": "No Scrum Master role is defined.",
       "citation": {
-        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
-        "section": "§4 Tabla comparativa de roles (row 'Scrum master')"
+        "file": "docs/AI-SDLC-SOURCES.md",
+        "section": "§4 Comparison of roles (row 'Scrum master')"
       }
     },
     {
@@ -269,15 +269,15 @@
     {
       "text": "Architecture rules are context (CLAUDE.md) checked by in-session hooks and an LLM Compliance review pass; the playbook does not propose them as deterministic CI checks.",
       "citation": {
-        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
-        "section": "§5.1 Reglas de arquitectura verificadas en CI (fitness functions) — Anthropic"
+        "file": "docs/AI-SDLC-SOURCES.md",
+        "section": "§5.1 Architecture rules checked in CI (fitness functions) — Anthropic"
       }
     },
     {
       "text": "Cross-repository work is barely addressed: a dedicated intent repo is suggested only when intent spans many repositories; CLAUDE.md, hooks and review are per repo.",
       "citation": {
-        "file": "docs/RESUMEN-fuentes-ai-sdlc.md",
-        "section": "§5.2 Cambios que cruzan repositorios — Anthropic"
+        "file": "docs/AI-SDLC-SOURCES.md",
+        "section": "§5.2 Changes that cross repositories — Anthropic"
       }
     }
   ]

@@ -14,7 +14,7 @@
   "stage": null,
   "title": "Meridian Retail · rename on OrderPlaced · Kiro",
   "scenario": "meridian-retail/illustration",
-  "trace_sha256": "94a7a76da4c7678ed90625c322d60abe52aee0d9f03f4543c6ae5da81c47bad6",
+  "trace_sha256": "7f00c05eb83bdcda5742be5be2b5f1d32b0f5854147e86c3ccfcf59e9fac94e9",
   "schema": "replay/1",
   "exporter_version": 4,
   "legend": "Illustration · scripted from public documentation",
