@@ -1,6 +1,6 @@
 # WP0 contracts — the interfaces every package builds against
 
-Authoritative spec: `docs/construccion-experimento.md` (section numbers below, "§n", refer to it). This file fixes the **seams between packages** so they can be built in parallel. If you need to change a contract, don't: write the proposal in `docs/DECISIONS.md` and work around it; the integrator decides.
+Section numbers below ("§n") refer to the author's build spec, which is not published; this file and the schemas are the public contract. This file fixes the **seams between packages** so they can be built in parallel. If you need to change a contract, don't: write the proposal in `docs/DECISIONS.md` and work around it; the integrator decides.
 
 Conventions for all Python: stdlib only (+ `jsonschema` from `.venv`), run as `.venv\Scripts\python.exe -X utf8 -m <module>` from the repo root, open files with `encoding="utf-8"`, write with `newline="\n"`, `subprocess.run([...])` with a list and **never** `shell=True`, `shutil.which("npm")` for npm. Shared helpers already written (use them, don't fork them):
 
@@ -75,5 +75,5 @@ See `docs/contracts/console-api.md`.
 ## 8. Commit and ownership rules for subagents
 - Write only inside your owned folders (listed in your brief). Need something elsewhere? Put a note in your final report; the integrator does it.
 - **Do not run `git commit`** — the integrator commits each package. Don't run `git` in the repo root except read-only commands.
-- Never call a model (`claude -p`, `codex exec`). Never touch cloud folder paths except reading the inputs.
+- Never call a model (`claude -p`, `codex exec`). Never touch folders outside the repo and the worker folders, except reading the inputs.
 - Log every unspecified decision as a bullet in your final report under "DECISIONS" (date, decision, discarded alternative, why); the integrator appends them to `docs/DECISIONS.md`.

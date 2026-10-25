@@ -88,7 +88,7 @@ test("raw HTML is kept as text; comment blocks are dropped (inside fences they a
 test("every Markdown file of the scenario and docs parses without throwing", () => {
   const root = new URL("../../../", import.meta.url);
   const files = ["README.md", "PREREGISTRATION.md", "docs/REVIEW-CHECKLIST.md", "docs/DECISIONS.md",
-    "scenario/context/orders-service/S2.md", "docs/construccion-experimento.md"];
+    "scenario/context/orders-service/S2.md", "docs/USING.md"];
   for (const f of files) {
     let text;
     try { text = readFileSync(new URL(f, root), "utf8"); } catch { continue; }

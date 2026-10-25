@@ -2,7 +2,7 @@
 
     python -m trace.validate <trace.jsonl> [--json]      exit 0 = valid, 1 = violations, 2 = usage
 
-Rules 1-8 come from docs/spec-logs-ai-sdlc.md section 5; rules 9-13 from spec 13.2. Each violation is
+Rules 1-8 come from the AISDLC-Trace log spec (section 5); rules 9-13 from the build spec (13.2). Neither is published; the schema (trace/schema/) and docs/contracts/ are the public contract. Each violation is
 {"seq": int|None, "rule": "schema"|1..13, "message": str}. `seq` is the offending event's seq (its line index if
 the event has no integer seq); None for file-level problems (unparseable lines).
 

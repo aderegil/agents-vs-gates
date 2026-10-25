@@ -1052,8 +1052,8 @@
      "responsibility": "Simulated by fixed policy: raises the problem and produces the first intent.md (M2).",
      "phase": "discovery",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Felix · Originator",
      "seed": "originator"
@@ -1067,8 +1067,8 @@
      "responsibility": "Simulated by fixed policy: approves spec.md if it meets its checklist (M2).",
      "phase": "discovery",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Amara · Product Owner",
      "seed": "product-owner"
@@ -1082,8 +1082,8 @@
      "responsibility": "Drafts intent.md and spec.md with acceptance criteria and risks (M2).",
      "phase": "discovery",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Requirements Agent",
      "seed": "requirements-agent"
@@ -1097,8 +1097,8 @@
      "responsibility": "Breaks the approved spec into tasks in plan.md (M2).",
      "phase": "planning",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Task Planner",
      "seed": "task-planner"
@@ -1112,8 +1112,8 @@
      "responsibility": "Simulated by fixed policy: approves plan.md (M2).",
      "phase": "planning",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Yusuf · Engineer",
      "seed": "engineer"
@@ -1127,8 +1127,8 @@
      "responsibility": "Simulated by fixed policy: reviews higher-risk specs and PRs and owns REVIEW.md (M2).",
      "phase": "planning",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Greta · Tech Lead",
      "seed": "tech-lead"
@@ -1142,8 +1142,8 @@
      "responsibility": "Owns ARCHITECTURE-RULES.md, the catalog and ADRs; CODEOWNER of gate paths. Fixed artifacts; does not act in runs.",
      "phase": "planning",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§13.2 Extensiones v2.1 (1. Rol humano architect); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      "file": "trace/schema/simulation-log-event-2.1.0.json",
+      "section": "AISDLC-Trace 2.1 extensions: the architect role, how a transcript becomes a trace (harness/trace.py)"
      },
      "display_name": "Maya · Architect",
      "seed": "architect"
@@ -1157,8 +1157,8 @@
      "responsibility": "Deterministic harness orchestrator: assigns the task, relays CI feedback, changes phases; coordinates M2.",
      "phase": "implementation",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§13.2 Extensiones v2.1 (2. roles de sistema); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      "file": "trace/schema/simulation-log-event-2.1.0.json",
+      "section": "AISDLC-Trace 2.1 extensions: the system roles (ci, staging), how a transcript becomes a trace (harness/trace.py)"
      },
      "display_name": "Flow engine",
      "seed": "flow-engine"
@@ -1172,8 +1172,8 @@
      "responsibility": "Implements the ticket in orders-service and fixes it after CI feedback; opens the PR.",
      "phase": "implementation",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      "file": "trace/schema/simulation-log-event-2.1.0.json",
+      "section": "AISDLC-Trace 2.1 extensions: how a transcript becomes a trace (harness/trace.py)"
      },
      "display_name": "Code Agent · orders-service",
      "seed": "code-orders"
@@ -1187,8 +1187,8 @@
      "responsibility": "One code agent per affected repo in M2; this one implements the payments-service stories.",
      "phase": "implementation",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/); §16.1 Escenario completo"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow; the full scenario in scenario/README.md"
      },
      "display_name": "Code Agent · payments-service",
      "seed": "code-payments"
@@ -1202,8 +1202,8 @@
      "responsibility": "Runs build, test, contract and architecture-gate (ARCH-n) checks on every PR attempt.",
      "phase": "review",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§13.2 Extensiones v2.1 (2. roles de sistema; 3. Eventos nuevos); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      "file": "trace/schema/simulation-log-event-2.1.0.json",
+      "section": "AISDLC-Trace 2.1 extensions: the system roles (ci, staging), the new events, how a transcript becomes a trace (harness/trace.py)"
      },
      "display_name": "CI",
      "seed": "ci"
@@ -1217,8 +1217,8 @@
      "responsibility": "Reviews PRs on a different model than the code agent; can request changes, never approves (M2).",
      "phase": "review",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Review Agent",
      "seed": "review-agent"
@@ -1232,8 +1232,8 @@
      "responsibility": "Simulated by fixed policy: approves the merge if CI is green and the reviewer requested no changes (M2).",
      "phase": "review",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Kenji · Code Owner",
      "seed": "code-owner"
@@ -1247,8 +1247,8 @@
      "responsibility": "Runs the app and tests in isolation and reports without fixing (M2).",
      "phase": "testing",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Verifier",
      "seed": "verifier"
@@ -1262,8 +1262,8 @@
      "responsibility": "Oracle instrument: checks consumers after the loop; its results are hidden from the agent and never fed back.",
      "phase": "testing",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§13.2 Extensiones v2.1 (2. roles de sistema); §13.3 De la transcripción a la traza (M1, sondas de un agente)"
+      "file": "trace/schema/simulation-log-event-2.1.0.json",
+      "section": "AISDLC-Trace 2.1 extensions: the system roles (ci, staging), how a transcript becomes a trace (harness/trace.py)"
      },
      "display_name": "Staging (oracle)",
      "seed": "staging"
@@ -1277,8 +1277,8 @@
      "responsibility": "Prepares pipelines, containers and rollback; in M2 it acts only in the permissive condition.",
      "phase": "deployment",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "DevOps Agent",
      "seed": "devops-agent"
@@ -1292,8 +1292,8 @@
      "responsibility": "Simulated by fixed policy: authorizes the production release (M2).",
      "phase": "deployment",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      },
      "display_name": "Lucía · Release Manager",
      "seed": "release-manager"
@@ -1303,29 +1303,29 @@
     {
      "text": "No Scrum Master, by design: no reviewed source includes one and the role spec does not either.",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow (module docstring)"
      }
     },
     {
      "text": "Human roles are simulated by fixed policy (simulated: true), not played by people.",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§16.2 AI-SDLC flow multi-rol (flow/); §13.2 Extensiones v2.1 (rule 13)"
+      "file": "flow/run.py",
+      "section": "the multi-role AI-SDLC flow; trace rule 13 (simulated humans) in trace/validate.py"
      }
     },
     {
      "text": "Coordination is deterministic code (flow_engine), not a supervisor agent.",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§13.2 Extensiones v2.1 (2. roles de sistema)"
+      "file": "trace/schema/simulation-log-event-2.1.0.json",
+      "section": "AISDLC-Trace 2.1 extensions: the system roles (ci, staging)"
      }
     },
     {
      "text": "Team composition is not measured in the experiment; this view exists for the visual demo.",
      "citation": {
-      "file": "docs/construccion-experimento.md",
-      "section": "§22.6 Teams & Avatars"
+      "file": "console/plugins/teams/plugin.json",
+      "section": "the Teams & Avatars plugin"
      }
     }
    ]

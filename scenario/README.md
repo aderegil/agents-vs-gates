@@ -1,7 +1,7 @@
 # scenario
 
-The synthetic "Meridian Retail" order-to-cash platform used by the experiment (spec section 5 of
-`docs/construccion-experimento.md`). Everything here is code and text the experiment consumes; nothing in this folder
+The synthetic "Meridian Retail" order-to-cash platform used by the experiment (section 5 of the author's build spec, not
+published). Everything here is code and text the experiment consumes; nothing in this folder
 calls a model.
 
 | Folder | Contents |

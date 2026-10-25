@@ -1059,5 +1059,5 @@
       }
     }
   },
-  "description": "AISDLC-Trace 2.1.0 = spec-logs 2.0.0 + the additive extensions of construccion-experimento.md 13.2 (architect, system actors ci/staging/flow_engine, CI/gate/oracle events, new artifact types) + per-event required payload fields from spec-logs section 4."
+  "description": "AISDLC-Trace 2.1.0 = spec-logs 2.0.0 + the additive extensions of the build spec (13.2) (architect, system actors ci/staging/flow_engine, CI/gate/oracle events, new artifact types) + per-event required payload fields from spec-logs section 4."
 }
