@@ -891,3 +891,9 @@ Brief from the deck session, with Alfredo's decisions in his words (GitHub under
   frame and the legend stay cyan (there cyan means "a deterministic check").
 - exp-one-run: closing sentence 18 on the record card, before the 3 s still poster. Lanes: the red and the green
   sentences 0.3 s into their fade, 1.5 s still after them; the summary sentences ~0.5 s after their cells light.
+
+### .venv recreated on Python 3.14 (2026-10-24, Alfredo: "corrige el .venv")
+- The repo's `.venv` pointed at a Python 3.13 that was no longer installed (only 3.14 since 20 Oct). Recreated with
+  `py -3.14 -m venv .venv` and the same packages the old one had: jsonschema 4.26.0 (with its pinned dependencies,
+  same versions), git-filter-repo 2.47.0, markdown-it-py 4.2.0. The old one is kept as `.venv-py313-broken`.
+  Checked: `harness.doctor` DOCTOR OK, `prereg --verify` OK, `tests.test_cycle` and `tests.test_ci_empty_inputs` OK.
